@@ -182,7 +182,7 @@ body{
   /* 登录容器在注册容器右边，所以left为100% - 600px */
   /* z-index为100，表示登录容器在注册容器之上 ,z-index越大，表示越在上面 */
   left: calc(100% - 600px);
-  z-index: 100;
+  z-index: 1;
 }
 
 .b-container{

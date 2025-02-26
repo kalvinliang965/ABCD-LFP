@@ -152,17 +152,17 @@ const Login: React.FC = () => {
           {/* 这里是welcome滑动的组件*/}
           <h2 className="switch_title title">Welcome Back!</h2>
           <p className="switch_description description">
-            Already have an account? Sign in with your personal info
+          Enter your personal details and start journey with us
           </p>
-          <button className="switch_button button switch-btn">SIGN IN</button>
+          <button className="switch_button button switch-btn">SIGN UP</button>
         </div>
         <div className="switch_container is-hidden" id="switch-c2">
           {/*这里是注册滑动的组件*/}
           <h2 className="switch_title title">Hello Friend!</h2>
           <p className="switch_description description">
-            Enter your personal details and start journey with us
+          Already have an account? Sign in with your personal info
           </p>
-          <button className="switch_button button switch-btn">SIGN UP</button>
+          <button className="switch_button button switch-btn">SIGN IN</button>
         </div>
       </div>
     </div>
