@@ -27,7 +27,7 @@ body{
  height: 600px;
  background-color: #ecf0f3;
  border-radius: 20px;
- padding: 20px;
+ padding: 0;
  box-shadow: 13px 13px 20px #d1d9e6, -13px -13px 20px #f9f9f9;
  overflow: hidden;
 }
@@ -166,7 +166,7 @@ body{
   left: 0;
   height: 100%;
   width: 400px;
-  padding: 20px;
+  padding: 50px 55px;
   z-index: 200;
   transition:1.25s;
   background-color: #ecf0f3;
@@ -187,8 +187,8 @@ body{
 }
 
 .switch_circle-t{
-  top:-30%;
-  left: -30%;
+  top: -30%;
+  left: 70%;
   width: 300px;
   height: 300px;
 }
