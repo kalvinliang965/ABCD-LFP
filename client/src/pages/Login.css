@@ -150,6 +150,9 @@ body{
 }
 
 .a-container{
+  /* 登录容器 */
+  /* 登录容器在注册容器右边，所以left为100% - 600px */
+  /* z-index为100，表示登录容器在注册容器之上 ,z-index越大，表示越在上面 */
   left: calc(100% - 600px);
   z-index: 100;
 }
@@ -160,6 +163,9 @@ body{
 }
 
 .switch{
+  /* 滑动容器 */
+  /* 滑动容器在登录容器和注册容器之间，所以left为0 */
+  /* z-index为200，表示滑动容器在登录容器和注册容器之上 ,z-index越大，表示越在上面 */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -225,18 +231,21 @@ body{
 
 /* 这个是点击之后给 .switch、.switch_circle 添加的类 */
 .is_txr{
+  /* 当元素带有is-txr时，会向右移动，left为100% - 400px */
   left: calc(100% - 400px);
   transition:1.25s;
   transform-origin: left;
 }
 
 .is_txl{
+  /* 当元素带有is-txl时，会向左移动，left为0 */
   left: 0;
   transition:1.25s;
   transform-origin: right;
 }
 
 .is-z{
+  /*修改z-index，让拥有is-z的元素在滑动容器之上*/
   z-index:1;
   transition:1.25s;
 }

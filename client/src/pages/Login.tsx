@@ -40,7 +40,7 @@ const Login: React.FC = () => {
       switchC2.classList.toggle("is-hidden"); //给所有switch-c2的元素添加is-hidden类，is-hidden会让组件在切换时隐藏
       aContainer.classList.toggle("is_txl"); //当元素带有is_txl时，会向左移动，aContainer是登录的容器,会向左移动
       bContainer.classList.toggle("is_txl"); //当元素带有is_txl时，会向左移动，bContainer是注册的容器，会向左移动
-      bContainer.classList.toggle("is-z"); //当元素带有is-z时，会向右移动，bContainer是注册的容器，会向右移动
+      bContainer.classList.toggle("is-z"); //当元素带有is-z时，会增加z-index，从而让元素在滑动容器之上
     };
 
     // 添加事件监听
@@ -108,12 +108,10 @@ const Login: React.FC = () => {
       </div>
 
       <div className="switch" id="switch-cnt">
-        {" "}
         {/* 这里是整个滑动的组件*/}
         <div className="switch_circle"></div>
         <div className="switch_circle switch_circle-t"></div>
         <div className="switch_container" id="switch-c1">
-          {" "}
           {/* 这里是welcome滑动的组件*/}
           <h2 className="switch_title title">Welcome Back!</h2>
           <p className="switch_description description">
