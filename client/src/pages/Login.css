@@ -88,22 +88,50 @@ body{
   cursor: pointer;
 }
 
-.form_input{
-  width: 350px;
-  height: 40px;
-  margin: 4px 0;
-  padding-left: 20px;
-  font-size: 14px;
+.form_input-group {
+  position: relative;
+  width: 400px;
+  height: 50px;
+  margin: 8px 0;
+}
+
+.form_input {
+  width: 100%;
+  height: 100%;
+  padding: 0 25px;
+  font-size: 16px;
   letter-spacing: 0.2px;
   border: none;
   outline: none;
   background-color: #ecf0f3;
-  transition:0.2s ease;
-  border-radius: 8px;
+  transition: 0.2s ease;
+  border-radius: 10px;
   box-shadow: inset 2px 2px 2px #cbced1, inset -2px -2px 4px #f9f9f9;
 }
 
-.form_input:focus{
+.form_input-label {
+  position: absolute;
+  left: 25px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: #a0a5a8;
+  pointer-events: none;
+  transition: 0.3s ease all;
+}
+
+.form_input:focus + .form_input-label,
+.form_input:not(:placeholder-shown) + .form_input-label {
+  top: -8px;
+  left: 20px;
+  font-size: 14px;
+  padding: 0 8px;
+  background-color: #ecf0f3;
+  border-radius: 4px;
+  color: #4B70E2;
+}
+
+.form_input:focus {
   box-shadow: inset 2px 2px 2px #cbced1, inset -2px -2px 4px #f9f9f9;
 }
 

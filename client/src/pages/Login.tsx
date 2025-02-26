@@ -77,12 +77,27 @@ const Login: React.FC = () => {
             <i className="iconfont icon-bilibili-line"></i>
           </div>
           <span className="form_span">select the way to sign in</span>
-          <input type="text" className="form_input" placeholder="Email" />
-          <input
-            type="password"
-            className="form_input"
-            placeholder="Password"
-          />
+
+          <div className="form_input-group">
+            <input
+              type="text"
+              className="form_input"
+              placeholder=" "
+              required
+            />
+            <label className="form_input-label">Email</label>
+          </div>
+
+          <div className="form_input-group">
+            <input
+              type="password"
+              className="form_input"
+              placeholder=" "
+              required
+            />
+            <label className="form_input-label">Password</label>
+          </div>
+
           <button className="form_button button submit">SIGN IN</button>
         </form>
       </div>
@@ -96,13 +111,35 @@ const Login: React.FC = () => {
             <i className="iconfont icon-bilibili-line"></i>
           </div>
           <span className="form_span">select the way to register</span>
-          <input type="text" className="form_input" placeholder="Username" />
-          <input type="text" className="form_input" placeholder="Email" />
-          <input
-            type="password"
-            className="form_input"
-            placeholder="Password"
-          />
+          <div className="form_input-group">
+            <input
+              type="text"
+              className="form_input"
+              placeholder=" "
+              required
+            />
+            <label className="form_input-label">Username</label>
+          </div>
+
+          <div className="form_input-group">
+            <input
+              type="text"
+              className="form_input"
+              placeholder=" "
+              required
+            />
+            <label className="form_input-label">Email</label>
+          </div>
+
+          <div className="form_input-group">
+            <input
+              type="password"
+              className="form_input"
+              placeholder=" "
+              required
+            />
+            <label className="form_input-label">Password</label>
+          </div>
           <button className="form_button button submit">SIGN UP</button>
         </form>
       </div>
