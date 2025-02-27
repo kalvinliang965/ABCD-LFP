@@ -1,7 +1,13 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import "./Login.css";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Login: React.FC = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
   useEffect(() => {
     // 获取DOM元素，querySelector获取的是第一个元素，querySelectorAll获取的是所有元素
     //我们为获取到的元素重新赋值，这样我们就可以使用这些元素了
@@ -14,11 +20,13 @@ const Login: React.FC = () => {
     const bContainer = document.querySelector("#b-container") as HTMLElement;
     const allButtons = document.querySelectorAll(".submit"); //只要带有submit类的按钮，都会触发这个函数
 
-    // 阻止表单默认提交行为，当用户点击登录或者注册按钮时，会触发这个函数
-    //默认情况下，当用户点击登录或者注册按钮时，会提交表单，从而刷新页面
-    //我们通过preventDefault()方法，阻止表单默认提交行为，从而实现表单不刷新页面
+    // 修改这个函数，只阻止切换按钮的默认行为
     const getButtons = (e: Event) => {
-      e.preventDefault();
+      const target = e.target as HTMLElement;
+      // 只有当点击的是切换按钮时才阻止默认行为
+      if (target.classList.contains("switch-btn")) {
+        e.preventDefault();
+      }
     };
 
     // 切换表单动画，当用户点击登录或者注册按钮时，会触发这个函数
@@ -66,10 +74,30 @@ const Login: React.FC = () => {
     };
   }, []);
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    try {
+      const response = await axios.post("http://localhost:3000/api/login", {
+        username: email,
+        password,
+      });
+
+      if (response.data.success) {
+        // 使用 React Router 的导航方法
+        navigate("/dashboard");
+      } else {
+        console.error("登录失败");
+      }
+    } catch (error) {
+      console.error("发生错误:", error);
+    }
+  };
+
   return (
     <div className="shell">
       <div className="container a-container" id="a-container">
-        <form className="form" id="a-form">
+        <form className="form" id="a-form" onSubmit={handleSubmit}>
           <h2 className="form_title title">Sign In</h2>
           <div className="form_icons">
             <i className="iconfont icon-QQ"></i>
@@ -84,6 +112,8 @@ const Login: React.FC = () => {
               className="form_input"
               placeholder=" "
               required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
             <label className="form_input-label">Email</label>
           </div>
@@ -94,11 +124,15 @@ const Login: React.FC = () => {
               className="form_input"
               placeholder=" "
               required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
             <label className="form_input-label">Password</label>
           </div>
 
-          <button className="form_button button submit">SIGN IN</button>
+          <button type="submit" className="form_button button">
+            SIGN IN
+          </button>
         </form>
       </div>
 
@@ -152,7 +186,7 @@ const Login: React.FC = () => {
           {/* 这里是welcome滑动的组件*/}
           <h2 className="switch_title title">Welcome Back!</h2>
           <p className="switch_description description">
-          Enter your personal details and start journey with us
+            Enter your personal details and start journey with us
           </p>
           <button className="switch_button button switch-btn">SIGN UP</button>
         </div>
@@ -160,7 +194,7 @@ const Login: React.FC = () => {
           {/*这里是注册滑动的组件*/}
           <h2 className="switch_title title">Hello Friend!</h2>
           <p className="switch_description description">
-          Already have an account? Sign in with your personal info
+            Already have an account? Sign in with your personal info
           </p>
           <button className="switch_button button switch-btn">SIGN IN</button>
         </div>
