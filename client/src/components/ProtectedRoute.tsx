@@ -6,10 +6,13 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  // 这里可以添加您的认证逻辑
+  // Authentication logic
   const isAuthenticated = localStorage.getItem('token') !== null;
+  
+  // Temporary set to true for development testing
+  const isAuthenticatedForDev = true;
 
-  if (!isAuthenticated) {
+  if (!isAuthenticatedForDev && !isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
