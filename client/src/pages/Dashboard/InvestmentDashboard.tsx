@@ -1,44 +1,12 @@
 import React, { useState } from 'react';
 import {
-  Box,
   Heading,
-  Text,
-  SimpleGrid,
-  useColorModeValue,
   Flex,
-  Input,
-  InputGroup,
-  InputLeftElement,
-  Select,
-  Button,
   Divider,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  FormControl,
-  FormLabel,
-  Textarea,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
   useDisclosure,
-  Icon,
   Avatar,
-  Badge,
   Container
 } from '@chakra-ui/react';
-import { 
-  FaSearch, 
-  FaPlus,
-  FaSortAmountDown,
-  FaSortAmountUp
-} from 'react-icons/fa';
 import { 
   FaBuilding, 
   FaCoins, 
@@ -47,10 +15,6 @@ import {
   FaBitcoin
 } from 'react-icons/fa';
 import Layout from '../../components/Layout';
-import InvestmentItem from '../../components/InvestmentItem';
-import InvestmentCard from '../../components/InvestmentCard';
-import EventSeriesItem from '../../components/EventSeriesItem';
-import StrategyItem from '../../components/StrategyItem';
 import AddEventSeriesModal from '../../components/AddEventSeriesModal';
 import AddStrategyModal from '../../components/AddStrategyModal';
 import FilterBar from '../../components/dashboard/FilterBar';
@@ -367,7 +331,7 @@ const InvestmentDashboard: React.FC = () => {
         />
         
         <InvestmentList
-          investments={filteredInvestments}
+          investments={filteredInvestments as any}
           onOpenInvestmentModal={onInvestmentModalOpen}
         />
         

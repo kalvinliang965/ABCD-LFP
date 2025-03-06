@@ -1,14 +1,16 @@
 import React from 'react';
 import {
-  Box,
+  Card,
+  CardHeader,
+  CardBody,
+  CardFooter,
   Heading,
   Text,
   Flex,
   Badge,
   useColorModeValue,
-  Icon
+  Box,
 } from '@chakra-ui/react';
-import { IconType } from 'react-icons';
 
 interface InvestmentItemProps {
   name: string;
@@ -16,11 +18,11 @@ interface InvestmentItemProps {
   date: string;
   value: string;
   returnRate: number;
-  status: 'In Progress' | 'Completed' | 'Pending' | 'Rejected';
   description?: string;
   expenseRatio?: number;
   returnType?: 'fixed' | 'normal' | 'gbm';
   dividendType?: 'fixed' | 'normal' | 'gbm';
+  // 只保留 taxability，用来做 Badge 展示
   taxability?: 'tax-exempt' | 'taxable';
 }
 
@@ -30,105 +32,114 @@ const InvestmentItem: React.FC<InvestmentItemProps> = ({
   date,
   value,
   returnRate,
-  status,
   description,
   expenseRatio,
   returnType,
   dividendType,
-  taxability
+  taxability,
 }) => {
+  // 根据深色 / 浅色模式切换背景和文字颜色
   const cardBg = useColorModeValue('white', 'gray.700');
   const textColor = useColorModeValue('gray.600', 'gray.200');
-  const isPositive = returnRate >= 0;
   
-  const statusColors = {
-    'In Progress': { bg: 'blue.100', color: 'blue.700' },
-    'Completed': { bg: 'green.100', color: 'green.700' },
-    'Pending': { bg: 'yellow.100', color: 'yellow.700' },
-    'Rejected': { bg: 'red.100', color: 'red.700' }
-  };
+  // 判断收益是否为正
+  const isPositive = returnRate >= 0;
 
+  // 根据 taxability 来动态设置徽章颜色
+  const taxabilityColors = {
+    'tax-exempt': { bg: 'green.100', color: 'green.700' },
+    'taxable': { bg: 'red.100', color: 'red.700' },
+  };
+  
   return (
-    <Box
-      p={5}
-      shadow="md"
-      borderWidth="1px"
-      borderRadius="lg"
+    <Card
       bg={cardBg}
+      borderRadius="lg"
+      borderWidth="1px"
+      shadow="md"
       transition="transform 0.3s, box-shadow 0.3s"
       _hover={{
         transform: 'translateY(-5px)',
         boxShadow: 'lg',
       }}
+      // 也可以根据需要添加 p={5} 或别的 spacing
     >
-      <Flex justifyContent="space-between" alignItems="center" mb={3}>
-        <Heading size="md">{name}</Heading>
-        <Box fontSize="xl">{icon}</Box>
-      </Flex>
-      
-      <Text color={textColor} fontSize="sm" mb={3}>
-        Updated: {date}
-      </Text>
-      
-      <Flex justifyContent="space-between" mb={3}>
-        <Text>Value: {value}</Text>
-        <Text
-          color={isPositive ? 'green.500' : 'red.500'}
-          fontWeight="medium"
-        >
-          {isPositive ? "+" : ""}{returnRate}%
+      {/* Header 区域 */}
+      <CardHeader>
+        <Flex justifyContent="space-between" alignItems="center">
+          <Heading size="md">{name}</Heading>
+          <Box fontSize="xl">{icon}</Box>
+        </Flex>
+      </CardHeader>
+
+      {/* Body 区域 */}
+      <CardBody>
+        <Text color={textColor} fontSize="sm" mb={3}>
+          Updated: {date}
         </Text>
-      </Flex>
-      
-      <Badge
-        px={2}
-        py={1}
-        borderRadius="full"
-        fontSize="xs"
-        fontWeight="bold"
-        textAlign="center"
-        bg={statusColors[status].bg}
-        color={statusColors[status].color}
-        mb={3}
-      >
-        {status}
-      </Badge>
-      
-      {description && (
-        <Text fontSize="sm" color={textColor} mt={2} mb={2}>
-          {description}
-        </Text>
-      )}
-      
-      {returnType && (
-        <Flex justifyContent="space-between" fontSize="sm" mt={2}>
-          <Text fontWeight="medium">Return Type:</Text>
-          <Text>{returnType}</Text>
+
+        <Flex justifyContent="space-between" mb={3}>
+          <Text>Value: {value}</Text>
+          <Text
+            color={isPositive ? 'green.500' : 'red.500'}
+            fontWeight="medium"
+          >
+            {isPositive ? '+' : ''}
+            {returnRate}%
+          </Text>
         </Flex>
-      )}
-      
-      {expenseRatio !== undefined && (
-        <Flex justifyContent="space-between" fontSize="sm" mt={1}>
-          <Text fontWeight="medium">Expense Ratio:</Text>
-          <Text>{expenseRatio}%</Text>
-        </Flex>
-      )}
-      
-      {dividendType && (
-        <Flex justifyContent="space-between" fontSize="sm" mt={1}>
-          <Text fontWeight="medium">Dividend Type:</Text>
-          <Text>{dividendType}</Text>
-        </Flex>
-      )}
-      
-      {taxability && (
-        <Flex justifyContent="space-between" fontSize="sm" mt={1}>
-          <Text fontWeight="medium">Taxability:</Text>
-          <Text>{taxability}</Text>
-        </Flex>
-      )}
-    </Box>
+
+        {/* 如果传了 description，就显示 */}
+        {description && (
+          <Text fontSize="sm" color={textColor} mt={2} mb={2}>
+            {description}
+          </Text>
+        )}
+        
+        {/* 如果设置了回报类型，就显示 */}
+        {returnType && (
+          <Flex justifyContent="space-between" fontSize="sm" mt={2}>
+            <Text fontWeight="medium">Return Type:</Text>
+            <Text>{returnType}</Text>
+          </Flex>
+        )}
+        
+        {/* 如果设置了费用率，就显示 */}
+        {expenseRatio !== undefined && (
+          <Flex justifyContent="space-between" fontSize="sm" mt={1}>
+            <Text fontWeight="medium">Expense Ratio:</Text>
+            <Text>{expenseRatio}%</Text>
+          </Flex>
+        )}
+        
+        {/* 如果设置了分红类型，就显示 */}
+        {dividendType && (
+          <Flex justifyContent="space-between" fontSize="sm" mt={1}>
+            <Text fontWeight="medium">Dividend Type:</Text>
+            <Text>{dividendType}</Text>
+          </Flex>
+        )}
+      </CardBody>
+
+      {/* Footer 区域 */}
+      <CardFooter>
+        {taxability && (
+          <Badge
+            px={3}
+            py={1}
+            borderRadius="full"
+            fontSize="xs"
+            fontWeight="bold"
+            textAlign="center"
+            bg={taxabilityColors[taxability].bg}
+            color={taxabilityColors[taxability].color}
+          >
+            {taxability}
+          </Badge>
+        )}
+      </CardFooter>
+    </Card>
   );
 };
 
-export default InvestmentItem; 
+export default InvestmentItem;
