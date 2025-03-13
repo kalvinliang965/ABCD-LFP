@@ -5,14 +5,93 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { ChakraProvider, extendTheme } from "@chakra-ui/react";
+import { ChakraProvider, extendTheme, ColorModeScript } from "@chakra-ui/react";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import InvestmentDashboard from "./pages/Dashboard/InvestmentDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Test from "./pages/Test";
+import Layout from "./components/Layout";
 
-// Custom theme
+// Placeholder components for new routes - these will need to be implemented
+const ScenariosList = () => (
+  <Layout title="My Scenarios">
+    <div>My Scenarios</div>
+  </Layout>
+);
+
+const ScenariosImportExport = () => (
+  <Layout title="Import/Export Scenarios">
+    <div>Import/Export Scenarios</div>
+  </Layout>
+);
+
+const ScenariosShared = () => (
+  <Layout title="Shared Scenarios">
+    <div>Shared Scenarios</div>
+  </Layout>
+);
+
+const BasicInfo = () => (
+  <Layout title="Basic Information">
+    <div>Scenario Basic Info</div>
+  </Layout>
+);
+
+const Investments = () => (
+  <Layout title="Investments Configuration">
+    <div>Investments Configuration</div>
+  </Layout>
+);
+
+const EventSeries = () => (
+  <Layout title="Event Series Configuration">
+    <div>Event Series Configuration</div>
+  </Layout>
+);
+
+const Strategies = () => (
+  <Layout title="Strategies Configuration">
+    <div>Strategies Configuration</div>
+  </Layout>
+);
+
+const RunSimulation = () => (
+  <Layout title="Run Simulation">
+    <div>Run Simulation</div>
+  </Layout>
+);
+
+const SimulationResults = () => (
+  <Layout title="Simulation Results">
+    <div>Simulation Results & Charts</div>
+  </Layout>
+);
+
+const OneDimensionExploration = () => (
+  <Layout title="One-Dimensional Exploration">
+    <div>One-Dimensional Scenario Exploration</div>
+  </Layout>
+);
+
+const TwoDimensionExploration = () => (
+  <Layout title="Two-Dimensional Exploration">
+    <div>Two-Dimensional Scenario Exploration</div>
+  </Layout>
+);
+
+const Settings = () => (
+  <Layout title="User Settings">
+    <div>User Settings</div>
+  </Layout>
+);
+
+const Logout = () => {
+  // Implement logout logic
+  return <Navigate to="/login" />;
+};
+
+// Custom theme with color mode config
 const theme = extendTheme({
   fonts: {
     heading: `'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`,
@@ -28,7 +107,7 @@ const theme = extendTheme({
     },
   },
   styles: {
-    global: {
+    global: (props: { colorMode: "light" | "dark" }) => ({
       // Preserve original CSS for login page
       ".main": {
         fontFamily: `'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`,
@@ -50,38 +129,165 @@ const theme = extendTheme({
           width: "500px",
         },
       },
-    },
+      // Body background color based on color mode
+      body: {
+        bg: props.colorMode === "dark" ? "gray.900" : "white",
+        color: props.colorMode === "dark" ? "white" : "gray.800",
+      },
+    }),
+  },
+  config: {
+    initialColorMode: "light",
+    useSystemColorMode: true,
   },
 });
 
 function App() {
   return (
     <ChakraProvider theme={theme}>
+      <ColorModeScript initialColorMode={theme.config.initialColorMode} />
       <Router>
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
+
+          {/* Dashboard Route */}
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <Layout title="Dashboard">
+                  <Dashboard />
+                </Layout>
               </ProtectedRoute>
             }
           />
+
+          {/* Existing Investment Dashboard Route */}
           <Route
             path="/dashboard/investment"
             element={
               <ProtectedRoute>
-                <InvestmentDashboard />
+                <Layout title="Investment Dashboard">
+                  <InvestmentDashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Scenarios Routes */}
+          <Route
+            path="/scenarios"
+            element={
+              <ProtectedRoute>
+                <ScenariosList />
               </ProtectedRoute>
             }
           />
           <Route
+            path="/scenarios/import-export"
+            element={
+              <ProtectedRoute>
+                <ScenariosImportExport />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/scenarios/shared"
+            element={
+              <ProtectedRoute>
+                <ScenariosShared />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Scenario Builder Routes */}
+          <Route
+            path="/builder/basic-info"
+            element={
+              <ProtectedRoute>
+                <BasicInfo />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/builder/investments"
+            element={
+              <ProtectedRoute>
+                <Investments />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/builder/events"
+            element={
+              <ProtectedRoute>
+                <EventSeries />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/builder/strategies"
+            element={
+              <ProtectedRoute>
+                <Strategies />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Simulation Routes */}
+          <Route
+            path="/simulation/run"
+            element={
+              <ProtectedRoute>
+                <RunSimulation />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/simulation/results"
+            element={
+              <ProtectedRoute>
+                <SimulationResults />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Exploration Routes */}
+          <Route
+            path="/exploration/one-dimension"
+            element={
+              <ProtectedRoute>
+                <OneDimensionExploration />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/exploration/two-dimension"
+            element={
+              <ProtectedRoute>
+                <TwoDimensionExploration />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Account Routes */}
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/logout" element={<Logout />} />
+
+          {/* Test Route */}
+          <Route
             path="/test"
             element={
               <ProtectedRoute>
-                <Test/>
+                <Test />
               </ProtectedRoute>
             }
           />

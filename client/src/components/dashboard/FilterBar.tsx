@@ -1,14 +1,16 @@
-import React from 'react';
+import React from "react";
 import {
+  Box,
+  Input,
+  Select,
+  HStack,
   Flex,
   InputGroup,
   InputLeftElement,
-  Input,
-  Select,
-  Box,
-  useColorModeValue
-} from '@chakra-ui/react';
-import { FaSearch } from 'react-icons/fa';
+  Icon,
+  useColorModeValue,
+} from "@chakra-ui/react";
+import { FaSearch, FaFilter, FaSort } from "react-icons/fa";
 
 interface FilterBarProps {
   searchTerm: string;
@@ -18,7 +20,7 @@ interface FilterBarProps {
   sortBy: string;
   setSortBy: (sortBy: string) => void;
   sortOrder: string;
-  setSortOrder: (order: string) => void;
+  setSortOrder: (sortOrder: string) => void;
 }
 
 const FilterBar: React.FC<FilterBarProps> = ({
@@ -29,52 +31,68 @@ const FilterBar: React.FC<FilterBarProps> = ({
   sortBy,
   setSortBy,
   sortOrder,
-  setSortOrder
+  setSortOrder,
 }) => {
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+
   return (
-    <Flex 
-      direction={{ base: "column", md: "row" }} 
-      mb={6} 
-      gap={4}
-      align={{ base: "stretch", md: "center" }}
+    <Box
+      bg={bgColor}
+      borderRadius="md"
+      borderWidth="1px"
+      borderColor={borderColor}
+      p={{ base: 3, md: 4 }}
+      mb={6}
+      width="100%"
     >
-      <InputGroup flex={{ base: "1", md: "2" }}>
-        <InputLeftElement pointerEvents="none">
-          <FaSearch color="gray.300" />
-        </InputLeftElement>
-        <Input
-          placeholder="Search investments..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          bg={useColorModeValue('white', 'gray.700')}
-        />
-      </InputGroup>
-      
-      <Flex gap={3} direction={{ base: "column", sm: "row" }} flex="1">
-        <Box flex="1">
-          <Flex alignItems="center">
-            <Box minWidth="70px">Status:</Box>
-            <Select 
-              value={status} 
+      <Flex
+        direction={{ base: "column", md: "row" }}
+        justifyContent="space-between"
+        alignItems={{ base: "flex-start", md: "center" }}
+        gap={{ base: 3, md: 4 }}
+      >
+        <InputGroup width={{ base: "100%", md: "40%" }}>
+          <InputLeftElement pointerEvents="none">
+            <Icon as={FaSearch} color="gray.300" />
+          </InputLeftElement>
+          <Input
+            placeholder="Search investments..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            size="md"
+          />
+        </InputGroup>
+
+        <HStack
+          spacing={{ base: 2, md: 4 }}
+          width={{ base: "100%", md: "auto" }}
+          alignItems="center"
+        >
+          <Flex alignItems="center" width={{ base: "100%", md: "auto" }}>
+            <Icon as={FaFilter} color="gray.400" mr={2} />
+            <Select
+              placeholder="Status"
+              value={status}
               onChange={(e) => setStatus(e.target.value)}
-              bg={useColorModeValue('white', 'gray.700')}
+              size="md"
+              width={{ base: "full", md: "150px" }}
             >
-              <option value="all">All</option>
+              <option value="all">All Status</option>
               <option value="in-progress">In Progress</option>
               <option value="completed">Completed</option>
               <option value="pending">Pending</option>
               <option value="rejected">Rejected</option>
             </Select>
           </Flex>
-        </Box>
-        
-        <Box flex="1">
-          <Flex alignItems="center">
-            <Box minWidth="70px">Sort By:</Box>
+
+          <Flex alignItems="center" width={{ base: "100%", md: "auto" }}>
+            <Icon as={FaSort} color="gray.400" mr={2} />
             <Select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              bg={useColorModeValue('white', 'gray.700')}
+              size="md"
+              width={{ base: "full", md: "150px" }}
             >
               <option value="date">Date</option>
               <option value="name">Name</option>
@@ -82,24 +100,20 @@ const FilterBar: React.FC<FilterBarProps> = ({
               <option value="return">Return</option>
             </Select>
           </Flex>
-        </Box>
-        
-        <Box flex="1">
-          <Flex alignItems="center">
-            <Box minWidth="70px">Order:</Box>
-            <Select
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value)}
-              bg={useColorModeValue('white', 'gray.700')}
-            >
-              <option value="desc">Descending</option>
-              <option value="asc">Ascending</option>
-            </Select>
-          </Flex>
-        </Box>
+
+          <Select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            size="md"
+            width={{ base: "full", md: "120px" }}
+          >
+            <option value="desc">Descending</option>
+            <option value="asc">Ascending</option>
+          </Select>
+        </HStack>
       </Flex>
-    </Flex>
+    </Box>
   );
 };
 
-export default FilterBar; 
+export default FilterBar;
