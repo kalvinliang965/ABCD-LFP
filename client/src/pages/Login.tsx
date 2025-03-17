@@ -97,7 +97,12 @@ const Login: React.FC = () => {
   return (
     <div className="shell">
       <div className="container a-container" id="a-container">
-        <form className="form" id="a-form" onSubmit={handleSubmit}>
+        <form
+          className="form"
+          id="a-form"
+          onSubmit={handleSubmit}
+          autoComplete="off"
+        >
           <h2 className="form_title title">Sign In</h2>
           <div className="form_icons">
             <i className="iconfont icon-QQ"></i>
@@ -114,6 +119,8 @@ const Login: React.FC = () => {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="new-email"
+              name="user-email"
             />
             <label className="form_input-label">Email</label>
           </div>
@@ -126,6 +133,8 @@ const Login: React.FC = () => {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
+              name="user-password"
             />
             <label className="form_input-label">Password</label>
           </div>
@@ -137,7 +146,7 @@ const Login: React.FC = () => {
       </div>
 
       <div className="container b-container" id="b-container">
-        <form className="form" id="b-form">
+        <form className="form" id="b-form" autoComplete="off">
           <h2 className="form_title title">Create Account</h2>
           <div className="form_icons">
             <i className="iconfont icon-QQ"></i>
@@ -151,6 +160,8 @@ const Login: React.FC = () => {
               className="form_input"
               placeholder=" "
               required
+              autoComplete="off"
+              name="register-username"
             />
             <label className="form_input-label">Username</label>
           </div>
@@ -161,6 +172,8 @@ const Login: React.FC = () => {
               className="form_input"
               placeholder=" "
               required
+              autoComplete="off"
+              name="register-email"
             />
             <label className="form_input-label">Email</label>
           </div>
@@ -171,6 +184,8 @@ const Login: React.FC = () => {
               className="form_input"
               placeholder=" "
               required
+              autoComplete="new-password"
+              name="register-password"
             />
             <label className="form_input-label">Password</label>
           </div>

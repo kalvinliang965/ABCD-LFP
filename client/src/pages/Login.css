@@ -28,6 +28,11 @@ body{
   padding: 0;
   box-shadow: 13px 13px 20px #d1d9e6, -13px -13px 20px #f9f9f9;
   overflow: hidden;
+  margin: 0 auto;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  position: absolute;
 }
 
 @media (max-width: 1200px) {
