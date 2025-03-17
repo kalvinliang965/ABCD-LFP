@@ -10,7 +10,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import InvestmentDashboard from "./pages/Dashboard/InvestmentDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Test from "./pages/Test";
+
 import Layout from "./components/Layout";
 
 // Placeholder components for new routes - these will need to be implemented
@@ -212,11 +212,7 @@ function App() {
           />
           <Route
             path="/builder/investments"
-            element={
-              <ProtectedRoute>
-                <Investments />
-              </ProtectedRoute>
-            }
+            element={<Navigate to="/dashboard/investment" replace />}
           />
           <Route
             path="/builder/events"
@@ -281,16 +277,6 @@ function App() {
             }
           />
           <Route path="/logout" element={<Logout />} />
-
-          {/* Test Route */}
-          <Route
-            path="/test"
-            element={
-              <ProtectedRoute>
-                <Test />
-              </ProtectedRoute>
-            }
-          />
         </Routes>
       </Router>
     </ChakraProvider>
