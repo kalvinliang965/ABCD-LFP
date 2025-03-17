@@ -1,0 +1,193 @@
+Project Requirements: Lifetime Financial Planner (LFP)
+CSE 416: Software Engineering, Spring 2025
+Professor Scott D. Stoller
+version: 2025-02-154
+1 Taxes
+Federal taxes.  If Federal tax information for the current year is not in the database, the system scrapes the following information and stores it in the database:
+Federal income tax rates and brackets from the linked page
+standard deductions for most people from Table 10-1 in IRS Publication 17
+capital gains tax rates and thresholds from IRS’s capital gains page
+
+State taxes.  State income tax rates and brackets  and standard deductions are read from a YAML configuration file on the server.  This file might lack data for some states.  If it lacks data for the user’s state of residence, the system allows the user to upload a YAML file in the same format containing that information.  If the user opts not to do this, the system displays a warning message that the financial projections will ignore state income tax.
+The system assumes that all tax brackets for future years are adjusted for inflation, i.e., the boundaries increase at the same rate as inflation. Standard deductions are also adjusted for inflation.
+Withdrawals from retirement accounts (pre-tax or after-tax) taken before age 59 ½ incur a 10% early withdrawal tax.  There are some exceptions to this rule; for simplicity, the system ignores these exceptions.
+Notes. (1) The system computes federal income tax, capital gains tax, early withdrawal tax, and state income tax.  The system ignores all other taxes.  (2) The system supports only two tax filing statuses: single (if the scenario is for an individual), and married filing jointly (if the scenario is for a married couple).  (3) The system assumes users take the standard deduction (they do not itemize deductions) and that all income above the standard deduction is taxable at the federal and state level, aside from the special treatment of social security benefits.  (4) The system assumes that the user satisfies the conditions to use the standard deductions in Table 10-1 cited above.  (5) The system ignores state income tax on social security benefits, if any.  This is reasonable because most states do not tax social security benefits, the details are complicated for some states that do, and state income tax rates are generally small compared to federal income tax rates.  If the user receives social security benefits and lives in a state that taxes them, the system displays a warning that this tax is ignored.  (6) The system assumes all capital gains are long-term.  (7) The system assumes that states tax capital gains the same way as other income.  This is reasonable because most states tax them the same way.  (8) The system assumes that state income tax can be computed in the same manner as federal income tax, using tax rates and brackets, and ignores any deviations from this.  For example, for NY, it should use the tax rates and brackets in the “New York State tax rate schedule” in the Instructions for Form IT-201i and ignore the deviations described in the worksheets below that.  (9) For testing and demonstration, it’s sufficient for the YAML configuration file to include state income tax rates and brackets for NY, NJ, and CT.  (10) The system assumes that 85% of social security benefits are subject to federal income tax.  (11) When part of an investment is sold, use the average cost basis method to compute the capital gains.
+
+2 Scenarios
+A scenario is a collection of information defining a user’s financial plan.  It can be for an individual or a married couple.  It includes: 
+
+(1) decisions about asset allocation, retirement age, etc., 
+(2) financial goals, and 
+(3) assumptions about expenses, income, major life events, life span, performance of financial markets, etc.  
+
+It encompasses the information needed to run a set of simulations.  It also includes all related settings provided by the user, such as a set of charts used to visualize the results, and sharing information.
+2.1 Financial goal
+A financial goal is a non-negative number specifying the desired minimum total value of the user’s investments.  If a financial goal of 0 is achieved, it means the user is always able to meet their expenses.  A positive value for the financial goal represents a safety margin during the user’s lifetime and an estate to bequeath afterward.
+Notes.  Expressing the goal in this way is a simplification, because it ignores loans (e.g., mortgages) and real property (e.g., houses).
+2.2 Investments
+An investment type (also called “asset type”) is defined by 
+name
+description
+expected annual return (change in underlying value), expressed as 
+(1) a fixed amount or percentage, 
+(2) an amount or percentage sampled from a specified normal distribution, or 
+(3) a percentage sampled from a Markov processes with geometric Brownian motion (GBM).  Note that this change is a capital gain or loss.
+  When expressed as a percentage, the percentage is relative to the investment’s value at the beginning of the year.
+expense ratio, a fixed percentage of the value of the investment subtracted annually by the investment provider.   The average value of the investment---specifically, the average of its value at the beginning and end of its year---is used to calculate the expenses.
+expected annual income from dividends or interest, expressed in the same possible ways as the expected annual change in value.
+taxability: tax-exempt (such as municipal bonds) or taxable.
+An investment is defined by 
+investment type
+value (in dollars)
+tax status of the account it is held in.  This can be non-retirement, pre-tax retirement, or after-tax retirement (Incomewize calls these taxable, tax-deferred, and tax-free accounts, respectively).
+Notes. 
+(1) Dividends and interest are subject to income tax. 
+ (2) Tax-exempt investment types should not be held in retirement accounts, because they would not provide any additional tax benefit in that context.
+ (3) The probability distributions should be sampled from in each year of a simulation, not just once at the beginning of each simulation.
+
+There is a pre-defined investment named “cash” that is held in a non-retirement account.
+Event series
+An event series represents a sequence of annual events.  It is defined by
+name
+description (optional)
+start year, expressed as 
+(1) a fixed value, 
+(2) a value selected from a specified uniform or normal distribution, or 
+(3) the same year that a specified event series starts, or 
+(4) the year after a specified event series ends.
+duration, in years, expressed as
+ a fixed value or 
+a value selected from a specified uniform or normal distribution
+type: income, expense, invest, or rebalance
+
+
+
+If type is income or expense, also specify
+initial amount
+expected annual change in amount, expressed as 
+(1) a fixed amount or percentage, or 
+(2) an amount or percentage sampled from a specified uniform or normal distribution.
+Inflation adjustment, a Boolean flag indicating whether the amount increases at the rate of inflation, in addition to the explicitly specified change.
+If the scenario is for a married couple, also specify the percentages associated with the user and the spouse.
+If type is income, also specify whether the income is social security (this information is needed to compute federal income tax on social security).
+If type is expense, also specify whether the expense is discretionary.  If the expense is discretionary, it is incurred in a given year only if that does not lead to a violation of the financial goal in that year. 
+If type is invest (representing an investment strategy), also specify ? 没有起始年份么？
+an asset allocation among a set of selected investments  not in pre-tax accounts.  The asset allocation can be expressed as
+ (1) a fixed set of percentages for the selected investments, or 
+(2) a linear glide path, expressed as initial and final sets of percentages.
+  The percentages must sum to 100.  With a glide path, the actual percentages used vary linearly between the specified endpoints over the time between the start and end years.
+maximum cash, the maximum amount to hold, at year’s end, in the pre-defined cash investment.  Cash above this amount is called excess cash and is automatically invested in the selected investments. ?这个分配是随时的？还是年底才分配？
+If type is rebalance (representing calendar-based rebalancing), also specify an asset allocation among a set of selected investments with the same account tax status.  The asset allocation can be expressed in the same ways as for invest events.
+Notes. 
+(1) There are no explicit buy events or sell events.  Investments are bought when excess income is available, and investments are sold only for a specific purpose, such as paying expenses or rebalancing.  
+(2) Rebalancing may generate capital gains or losses.  
+(3) All income from dividends and interest generated by an investment are automatically reinvested in that investment.  
+(4) Discretionary expenses can be partially incurred, if incurring the entire expense would lead to a violation of the financial goal in the current year.  
+(5) A scenario may not contain overlapping invest event series.  
+(6) A scenario may not contain overlapping rebalance event series for investments with the same account tax status; in other words, for each account tax status, at most one asset allocation for rebalancing can be in effect at a time. 
+(7) Users are responsible for estimating their social security income and including it as an event series.  
+Examples. 
+(1) Buying a house can be represented with two event series: 
+(a) a downpayment expense series with duration 1 year and a fixed or variable start year (depending on the user’s plans), and 
+(b) a mortgage expense series starting in the same year as the downpayment expense series and with duration 30 years, both with amounts sampled from normal distributions based on the median house price in the user’s area.  
+(2) Having a child can be modeled with two event series: 
+(a) a child-raising expense series, with a start year distributed uniformly in the years when the user is ages 25 and 35, a fixed amount with inflation adjustment, and duration 18 years, and 
+(b) a college expense series with a start year of “after child-raising expense series”, a fixed amount with inflation adjustment, and duration 4 years.
+2.4 Spending strategy
+A spending strategy is an ordering on discretionary expenses.  Discretionary expenses are paid one at a time, in the specified order,  as  the financial goal is not violated.
+2.5 Expense withdrawal strategy
+An expense withdrawal strategy is an ordering on a set of investments that specifies the order in which investments are sold to generate cash, if the cash account does not contain sufficient funds to pay expenses and taxes.  Investments are sold strictly in that order.   In other words, part (possibly all) of an investment is sold only when all investments earlier in the ordering have balance zero.   The expense withdrawal strategy can include investments in accounts with any tax status.
+2.6 Inflation assumption
+An inflation assumption is defined by (1) a fixed percentage, or (2) a percentage sampled from a specified uniform or normal distribution.
+2.7 Roth conversion optimizer
+A Roth conversion is an in-kind transfer of assets from pre-tax retirement accounts to after-tax retirement accounts.  Strategically timed Roth conversions can minimize a user’s total (lifetime) income tax; e.g., see discussions at Investopedia and smartasset.  The Roth conversion optimizer helps the user determine whether Roth conversions will benefit them.
+If the user enables the optimizer for a scenario, the user also specifies a start year and an end year.  For each year in that range, the optimizer generates a withdrawal whose amount increases the user’s income to the upper limit of their current income tax bracket.
+A Roth conversion strategy is an ordering on investments in pre-tax retirement accounts.  When a withdrawal is triggered by the optimizer, investments are transferred in-kind, in that order, from pre-tax retirement accounts to after-tax retirement accounts.  Part (or all) of an investment is transferred only when all investments earlier in the ordering have balance zero.  Note that IRS regulations do not limit the amount of Roth conversions.
+2.8 RMDs
+The system computes required minimum distributions (RMDs) and performs them by transferring assets in-kind from investments in pre-tax retirement accounts to investments in non-retirement accounts.  Note that “distribution” here is synonymous with “withdrawal”.  RMDs are specified by IRS Publication 590-B Distributions from Individual Retirement Arrangements (IRAs).  See, e.g., smartasset’s RMD page for an easier-to-read introduction to RMDs , and the IRS’s RMD FAQ.
+The system does not initially know any RMD tables.  If the RMD table for the current year is not in the database, the system scrapes Table III (Uniform Life Table) from IRS Publication 590-B and stores it in the database.  Since most people satisfy the conditions for using Table III, for simplicity, the system assumes the user satisfies those conditions. When computing RMDs for future years, use the current year's RMD table.
+An RMD strategy is an ordering on investments in pre-tax retirement accounts.  When a withdrawal is triggered by a RMD, investments are transferred in-kind, in that order, from pre-tax retirement accounts to non-retirement accounts.   Part (or all) of an investment is transferred only when all investments earlier in the ordering have balance zero. 
+Note. For simplicity, the system does not support directly investing an RMD in an after-tax retirement account, i.e., using it for a Roth conversion.  If the user wants to perform Roth conversions, they should enable the Roth conversion optimizer.  The simulator processes Roth conversions before RMDs; this voluntary distribution from pre-tax retirement accounts potentially preempts the need for a RMD. 
+2.9 Scenarios
+A scenario is defined by:
+name
+whether the scenario is for an individual or married couple
+birth year of the user and the spouse if any
+life expectancy of the user and the spouse if any, expressed as a fixed age or an age sampled from a normal distribution (although the actual distribution is asymmetric)
+set of  investment types, and a set of investments, with their current values
+set of event series（2.3）
+inflation assumption
+Initial limit on annual contributions to after-tax retirement accounts.  The limits is imposed by the IRS.  it is inflation-adjusted, i.e., assumed to increase annually at the rate of inflation.
+spending strategy, expense withdrawal strategy, RMD strategy, and Roth conversion strategy
+Roth conversion optimizer settings
+sharing settings (see Section 7.1)
+financial goal
+user’s state of residence
+Note. For simplicity, assume the IRS annual contribution limits for retirement accounts adjust smoothly with inflation, even though they actually adjust in $500 increments.(2) For simplicity, assume that investments have no capital gains at the start of the simulation.
+
+3 Simulation
+A simulation of a scenario starts in the current year and ends when the user, and their spouse if any, reach their life expectancy (“die”).  For each year, the algorithm performs the following steps:
+Run income events, adding the income to the cash investment.
+Perform the RMD for the previous year, if any.
+Update the values of investments, including annual return, subtraction of expenses, and reinvestment of dividends and interest.
+Run the Roth conversion optimizer, if it is enabled.
+Pay non-discretionary expenses and the previous year’s taxes, i.e., subtract them from the cash investment.  Perform additional withdrawals if needed to pay them.
+Pay discretionary expenses if that does not lead to a violation of the financial goal. Perform additional withdrawals if needed to pay them.
+Run the invest event scheduled for the current year, if any, by using excess cash to buy investments included in the specified asset allocation, apportioning the excess cash according to that asset allocation, while taking inflation-adjusted annual limits on retirement account contributions into account.  
+Run rebalance events scheduled for the current year, by selling and buying the investments included in the specified asset allocation to achieve the specified ratios between their values.
+Note.  
+(1) For married couples, the system assumes that all investments are jointly owned, and the beneficiary is the surviving spouse.   When the user or the spouse reaches their life expectancy (“dies”), the percentages of income and expense transactions associated with the deceased spouse are omitted from transaction amounts for future years, and the survivor’s tax filing status changes from married filing jointly to single. 
+(2) For simplicity, the system assumes that no tax needs to be paid in the starting year of the simulation.
+(3) For simplicity, all simulations start in the current actual year.
+
+
+4 Charts
+After defining a scenario, the user specifies how many simulations to perform and runs them.
+The user then selects a set of charts to be generated to visualize the results; furthermore, for all charts displaying dollar values, the user can select whether results are displayed in today's dollars or future dollars.  The set may include multiple charts of the same kind, e.g., multiple shaded line charts.  For all charts, hovering over an appropriate visual element---point, shaded region, bar, etc., depending on the chart type---raises a pop-up displaying associated numerical values.  Charts that show values of investments over time (e.g., charts 4.2.1 and 5.1.2) should show the values of the investments at the end of each year.
+4.1 Line chart of probability of success over time
+This line chart shows the probability of success over time.  For a given year, this is the percentage of simulations in which the financial goal is satisfied in that year and all preceding years.  To determine whether the financial goal is satisfied in a given year, it is sufficient to check the total value of investments at the end of the year.  Note that a success probability less than 100% might be OK.
+4.2 Shaded line chart of probability ranges for a selected quantity over time
+This type of line chart includes a line for the median value of a selected quantity over time (i.e., year by year), with shaded regions depicting probability ranges---specifically 10%-90%, 20%-80%, 30%-70%, and 40%-60%---for the value of that quantity.  The selected quantity may be
+total investments (the chart should also include a horizontal line representing the financial goal)
+total income
+total expenses, including taxes
+early withdrawal tax
+percentage of total discretionary expenses incurred (the percentage is based on the amounts, not the number, of the discretionary expenses in that year), or
+Here is an example from the Pralana retirement calculator showing total savings (total investments), except without a line representing the financial goal, and with more complicated labels (instead of just years) on the horizontal axis. 
+.
+4.3 Stacked bar chart of median or average values of a selected quantity over time
+A stacked bar chart with a bar for each year, and with each bar segmented to show
+a breakdown of total investments by investment.  (If possible, visually indicate the tax status of the account containing the investment, and use adjacent segments for investments with the same tax status.)
+a breakdown of income by event series, or
+a breakdown of expenses by event series, plus a segment for taxes
+The user selects whether to use median or average values.  For example, if the user selects average values for the investments chart, the height of each segment of the bar for year Y is the average value (across the set of simulations) in year Y of one of the investments. To avoid clutter, the user can specify an aggregation threshold.  Categories whose values are below that threshold in every year of every simulation are aggregated and displayed as a single “Other” category.  Hovering over a bar raises a pop-up displaying the height of the bar and the height of each segment.
+5 One-dimensional scenario exploration
+A scenario parameter is (a) the Boolean flag for enabling the Roth optimizer, or (b) one of the following scenario settings: 
+start year or duration of an event series
+initial amount of an income or expense event series, or
+the percentage associated with the first investment in an asset allocation in an invest event series whose asset allocation is among exactly two selected investments. The percentage associated with the second investment is automatically chosen so that the two percentages sum to 100.
+For example, a user can explore different retirement ages making the duration of the “salary” event series a scenario parameter.
+The user can specify one scenario parameter and, if it is numeric, a set of values for it, defined by a lower bound, an upper bound, and a step size.  The system performs a set of simulations for each value of the parameter.  The system re-seeds the pseudo-random number generator (PRNG) to ensure that it starts from the same seed for each set of simulations.  After the simulations, the user can view the following charts.  The user can also view (in the ways described in Section 4) the results for a selected parameter value 
+5.1 Multi-line chart of the value of a selected quantity over time
+The chart contains a line for each value of the parameter.  The selected quantity may be 
+probability of success
+median total investments
+5.2 Line chart of a selected quantity as a function of parameter value
+This type of chart is applicable if the scenario parameter is numeric.  The selected quantity may be 
+final value of probability of success
+final value of median total investments
+  6 Two-dimensional scenario exploration 
+This is similar to one-dimensional exploration, except that the user specifies two numeric scenario parameters, and the system performs a set of simulations for each combination of their values.  The following charts are available, in addition to viewing (in the ways described in Section 4) the results for a selected combination of parameter values.
+6.1 Surface plot of a selected quantity as a function of parameter values
+The available quantities are the same as for the line charts in Section 5.2.
+6.2 Contour plot of a selected quantity as a function of parameter values
+The available quantities are the same as for the line charts in Section 5.2.
+7 Other requirements
+7.1 Authentication, user profiles, and sharing.  The system can be used anonymously (i.e., without login), or as an authenticated user by logging in with a Google account.   An authenticated user can save scenarios on the server and revisit them later.  YAML files with state tax rates and brackets uploaded by a user are also saved in the user’s profile.  An authenticated user can give other authenticated users, such as a spouse or financial advisor, read-only or read-write access to specific scenarios.
+ (This is implicit in the general requirement that the system work correctly.)7.2 Import and export.  Users can export (download) the current scenario as a YAML file and can import (upload) these files.
+7.3 Parallelism.  The system runs multiple simulations in parallel to reduce end-to-end analysis time.  Note that creating processes is relatively expensive, so parallelism should be implemented using (or re-using) multiple threads in a single process (for example, using worker threads in Node.js) or by re-using processes in a pool of worker processes.
+7.4 Usability.  The system provides an easy-to-use, user-friendly web interface consistent with established UI design principles. The system handles invalid inputs gracefully and provides informative error messages.  The system displays help text to guide users.  All assumptions, limitations, and simplifications used in the calculations (including those mentioned in this document) are documented in explanatory text.
+7.5 Logs.  To facilitate debugging (and grading), the system logs detailed information about the first simulation in each set of simulations executed.  Specifically, in a log folder on the server, it creates two files. One is named user_datetime.csv, where user is the name of the user who ran the simulations and datetime is the current datetime.  It contains a title row and a row for each year in the simulation.  It contains a column for the year and a column for each investment showing the value of that investment at the beginning of the year.  The second file is named user_datetime.log, in any easily human-readable format.  It contains an entry for every financial transaction.  A financial event is described by the year, transaction type (income, Roth conversion, RMD, expense, tax, invest, or rebalance), amount(s), and other transaction details (e.g., the name of the income event series, the investment moved in a Roth conversion, the type of tax paid, or the investments sold and purchased in a rebalance).
+7.6 Deployment.  The system is usable by end users running only a web browser on their computer.  Deployment on a server eliminates the need for users to install software and supports scenario sharing.
+Advice
+If you decide to open-source your system after the end of the semester, add a disclaimer that anyone who makes decisions based on the output of your system does so at their own risk.

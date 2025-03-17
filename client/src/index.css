@@ -1,0 +1,105 @@
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* 防止外部滚动 */
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* 防止外部滚动 */
+}
+
+/* 确保不会有不必要的外部滚动条 */
+body::-webkit-scrollbar {
+  display: none;
+}
+
+/* 处理侧边栏悬停效果和布局 */
+.sidebar {
+  width: 70px;
+  transition: width 0.3s ease;
+}
+
+.sidebar.expanded {
+  width: 250px;
+}
+
+.sidebar.expanded ~ main {
+  margin-left: 250px;
+}
+
+/* 确保主内容可滚动 */
+main {
+  width: calc(100% - 70px);
+  transition: width 0.3s ease, margin-left 0.3s ease;
+}
+
+.sidebar.expanded ~ main {
+  width: calc(100% - 250px);
+}
+
+/* 修复滚动问题 */
+html, body, #root {
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+main {
+  overflow-y: auto;
+  height: 100vh;
+  position: relative;
+}
+
+/* 添加这些规则来修复滚动问题 */
+
+/* 确保内容区域有足够的空间 */
+.main-content {
+  padding-bottom: 50px;
+  box-sizing: border-box;
+}
+
+/* 修复滚动问题 */
+html, body, #root {
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  max-width: 100vw;
+}
+
+/* 修复Safari滚动问题 */
+.main-content {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 防止内容区域被底部遮挡 */
+.chakra-container {
+  min-height: calc(100vh - 90px);
+  max-width: 100% !important;
+  width: 100% !important;
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* 确保滚动条在最右侧 */
+html, body, #root {
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  max-width: 100vw;
+}
+
+/* 防止任何元素导致水平滚动 */
+* {
+  max-width: 100%;
+} 
