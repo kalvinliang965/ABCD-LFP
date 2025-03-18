@@ -33,8 +33,18 @@ import {
   Divider,
   Alert,
   AlertIcon,
+  RadioGroup,
+  Radio,
+  Stack,
+  Flex,
 } from "@chakra-ui/react";
 import { ReturnType } from "../../types/investment";
+
+// Define the input modes
+export enum ValueInputMode {
+  PERCENTAGE = "percentage",
+  FIXED_AMOUNT = "fixed_amount",
+}
 
 // Define the investment type interface
 export interface InvestmentType {
@@ -43,10 +53,12 @@ export interface InvestmentType {
   returnType: ReturnType | string;
   returnRate: number; // For fixed return or mean of normal distribution
   returnRateStdDev?: number; // For normal distribution
+  returnInputMode: ValueInputMode; // Whether the return is a percentage or fixed amount
   expenseRatio: number;
   dividendType: ReturnType | string;
   dividendRate: number; // For fixed dividend or mean of normal distribution
   dividendRateStdDev?: number; // For normal distribution
+  dividendInputMode: ValueInputMode; // Whether the dividend is a percentage or fixed amount
   taxability: "taxable" | "tax-exempt";
 }
 
@@ -88,9 +100,11 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
     description: "",
     returnType: ReturnType.FIXED,
     returnRate: 0,
+    returnInputMode: ValueInputMode.PERCENTAGE,
     expenseRatio: 0,
     dividendType: ReturnType.FIXED,
     dividendRate: 0,
+    dividendInputMode: ValueInputMode.PERCENTAGE,
     taxability: "taxable",
   });
 
@@ -107,6 +121,11 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
   // Handle number input changes
   const handleNumberInputChange = (id: string, value: string) => {
     setInvestmentType({ ...investmentType, [id]: parseFloat(value) });
+  };
+
+  // Handle radio input changes
+  const handleRadioInputChange = (id: string, value: string) => {
+    setInvestmentType({ ...investmentType, [id]: value });
   };
 
   // Handle return type change
@@ -168,6 +187,50 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
         return true; // All fields have default values
       default:
         return true;
+    }
+  };
+
+  // Get return rate label
+  const getReturnRateLabel = () => {
+    if (investmentType.returnInputMode === ValueInputMode.FIXED_AMOUNT) {
+      return investmentType.returnType === ReturnType.FIXED
+        ? "Fixed Amount ($)"
+        : "Mean Amount ($)";
+    } else {
+      return investmentType.returnType === ReturnType.FIXED
+        ? "(%) Fixed"
+        : "Mean (%)";
+    }
+  };
+
+  // Get dividend rate label
+  const getDividendRateLabel = () => {
+    if (investmentType.dividendInputMode === ValueInputMode.FIXED_AMOUNT) {
+      return investmentType.dividendType === ReturnType.FIXED
+        ? "Fixed Amount ($)"
+        : "Mean Amount ($)";
+    } else {
+      return investmentType.dividendType === ReturnType.FIXED
+        ? "(%) Fixed"
+        : "Mean (%)";
+    }
+  };
+
+  // Get return rate description
+  const getReturnRateDescription = () => {
+    if (investmentType.returnInputMode === ValueInputMode.FIXED_AMOUNT) {
+      return "Absolute dollar amount added to the investment value annually";
+    } else {
+      return "Percentage relative to the investment's value at the beginning of the year";
+    }
+  };
+
+  // Get dividend rate description
+  const getDividendRateDescription = () => {
+    if (investmentType.dividendInputMode === ValueInputMode.FIXED_AMOUNT) {
+      return "Absolute dollar amount of income received annually";
+    } else {
+      return "Annual income from dividends or interest as a percentage of investment value";
     }
   };
 
@@ -245,6 +308,28 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
               </Alert>
 
               <FormControl mb={4}>
+                <FormLabel>Return Value Type</FormLabel>
+                <RadioGroup
+                  value={investmentType.returnInputMode}
+                  onChange={(value) =>
+                    handleRadioInputChange("returnInputMode", value)
+                  }
+                >
+                  <Stack direction="row">
+                    <Radio value={ValueInputMode.PERCENTAGE}>Percentage</Radio>
+                    <Radio value={ValueInputMode.FIXED_AMOUNT}>
+                      Fixed Amount ($)
+                    </Radio>
+                  </Stack>
+                </RadioGroup>
+                <Text fontSize="xs" color="gray.500" mt={1}>
+                  {investmentType.returnInputMode === ValueInputMode.PERCENTAGE
+                    ? "Return calculated as a percentage of investment value"
+                    : "Return calculated as an absolute dollar amount"}
+                </Text>
+              </FormControl>
+
+              <FormControl mb={4}>
                 <FormLabel>Return Type</FormLabel>
                 <Select
                   id="returnType"
@@ -263,15 +348,24 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
 
               <FormControl mb={4}>
                 <FormLabel>
-                  Expected Annual Return{" "}
-                  {investmentType.returnType === ReturnType.FIXED
-                    ? "(%) Fixed"
-                    : "Mean (%)"}
+                  Expected Annual Return {getReturnRateLabel()}
                 </FormLabel>
                 <NumberInput
-                  min={-100}
-                  max={100}
-                  step={0.1}
+                  min={
+                    investmentType.returnInputMode === ValueInputMode.PERCENTAGE
+                      ? -100
+                      : 0
+                  }
+                  max={
+                    investmentType.returnInputMode === ValueInputMode.PERCENTAGE
+                      ? 100
+                      : 1000000
+                  }
+                  step={
+                    investmentType.returnInputMode === ValueInputMode.PERCENTAGE
+                      ? 0.1
+                      : 100
+                  }
                   value={investmentType.returnRate}
                   onChange={(value) =>
                     handleNumberInputChange("returnRate", value)
@@ -284,18 +378,32 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
                   </NumberInputStepper>
                 </NumberInput>
                 <Text fontSize="xs" color="gray.500" mt={1}>
-                  Percentage relative to the investment's value at the beginning
-                  of the year
+                  {getReturnRateDescription()}
                 </Text>
               </FormControl>
 
               {investmentType.returnType === ReturnType.NORMAL && (
                 <FormControl mb={4}>
-                  <FormLabel>Annual Return Standard Deviation (%)</FormLabel>
+                  <FormLabel>
+                    {investmentType.returnInputMode ===
+                    ValueInputMode.FIXED_AMOUNT
+                      ? "Annual Return Standard Deviation ($)"
+                      : "Annual Return Standard Deviation (%)"}
+                  </FormLabel>
                   <NumberInput
                     min={0}
-                    max={50}
-                    step={0.1}
+                    max={
+                      investmentType.returnInputMode ===
+                      ValueInputMode.FIXED_AMOUNT
+                        ? 10000
+                        : 50
+                    }
+                    step={
+                      investmentType.returnInputMode ===
+                      ValueInputMode.FIXED_AMOUNT
+                        ? 100
+                        : 0.1
+                    }
                     value={investmentType.returnRateStdDev || 0}
                     onChange={(value) =>
                       handleNumberInputChange("returnRateStdDev", value)
@@ -347,6 +455,29 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
               </Alert>
 
               <FormControl mb={4}>
+                <FormLabel>Dividend Value Type</FormLabel>
+                <RadioGroup
+                  value={investmentType.dividendInputMode}
+                  onChange={(value) =>
+                    handleRadioInputChange("dividendInputMode", value)
+                  }
+                >
+                  <Stack direction="row">
+                    <Radio value={ValueInputMode.PERCENTAGE}>Percentage</Radio>
+                    <Radio value={ValueInputMode.FIXED_AMOUNT}>
+                      Fixed Amount ($)
+                    </Radio>
+                  </Stack>
+                </RadioGroup>
+                <Text fontSize="xs" color="gray.500" mt={1}>
+                  {investmentType.dividendInputMode ===
+                  ValueInputMode.PERCENTAGE
+                    ? "Income calculated as a percentage of investment value"
+                    : "Income calculated as an absolute dollar amount"}
+                </Text>
+              </FormControl>
+
+              <FormControl mb={4}>
                 <FormLabel>Dividend Type</FormLabel>
                 <Select
                   id="dividendType"
@@ -365,15 +496,22 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
 
               <FormControl mb={4}>
                 <FormLabel>
-                  Expected Annual Income{" "}
-                  {investmentType.dividendType === ReturnType.FIXED
-                    ? "(%) Fixed"
-                    : "Mean (%)"}
+                  Expected Annual Income {getDividendRateLabel()}
                 </FormLabel>
                 <NumberInput
                   min={0}
-                  max={50}
-                  step={0.1}
+                  max={
+                    investmentType.dividendInputMode ===
+                    ValueInputMode.PERCENTAGE
+                      ? 50
+                      : 100000
+                  }
+                  step={
+                    investmentType.dividendInputMode ===
+                    ValueInputMode.PERCENTAGE
+                      ? 0.1
+                      : 100
+                  }
                   value={investmentType.dividendRate}
                   onChange={(value) =>
                     handleNumberInputChange("dividendRate", value)
@@ -386,18 +524,32 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
                   </NumberInputStepper>
                 </NumberInput>
                 <Text fontSize="xs" color="gray.500" mt={1}>
-                  Annual income from dividends or interest as a percentage of
-                  investment value
+                  {getDividendRateDescription()}
                 </Text>
               </FormControl>
 
               {investmentType.dividendType === ReturnType.NORMAL && (
                 <FormControl mb={4}>
-                  <FormLabel>Annual Income Standard Deviation (%)</FormLabel>
+                  <FormLabel>
+                    {investmentType.dividendInputMode ===
+                    ValueInputMode.FIXED_AMOUNT
+                      ? "Annual Income Standard Deviation ($)"
+                      : "Annual Income Standard Deviation (%)"}
+                  </FormLabel>
                   <NumberInput
                     min={0}
-                    max={20}
-                    step={0.1}
+                    max={
+                      investmentType.dividendInputMode ===
+                      ValueInputMode.FIXED_AMOUNT
+                        ? 5000
+                        : 20
+                    }
+                    step={
+                      investmentType.dividendInputMode ===
+                      ValueInputMode.FIXED_AMOUNT
+                        ? 100
+                        : 0.1
+                    }
                     value={investmentType.dividendRateStdDev || 0}
                     onChange={(value) =>
                       handleNumberInputChange("dividendRateStdDev", value)
@@ -486,6 +638,14 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
                   Return Details
                 </Text>
                 <Grid templateColumns="1fr 2fr" gap={2} mb={2}>
+                  <Text fontWeight="semibold">Return Calculation:</Text>
+                  <Text>
+                    {investmentType.returnInputMode ===
+                    ValueInputMode.PERCENTAGE
+                      ? "Percentage of Value"
+                      : "Fixed Dollar Amount"}
+                  </Text>
+
                   <Text fontWeight="semibold">Return Type:</Text>
                   <Text>
                     {investmentType.returnType === ReturnType.FIXED
@@ -493,13 +653,35 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
                       : "Normal Distribution"}
                   </Text>
 
-                  <Text fontWeight="semibold">Return Rate:</Text>
-                  <Text>{investmentType.returnRate}%</Text>
+                  <Text fontWeight="semibold">
+                    {investmentType.returnInputMode ===
+                    ValueInputMode.PERCENTAGE
+                      ? "Return Rate:"
+                      : "Return Amount:"}
+                  </Text>
+                  <Text>
+                    {investmentType.returnRate}
+                    {investmentType.returnInputMode ===
+                    ValueInputMode.PERCENTAGE
+                      ? "%"
+                      : " $"}
+                  </Text>
 
                   {investmentType.returnType === ReturnType.NORMAL && (
                     <>
-                      <Text fontWeight="semibold">Return Std Dev:</Text>
-                      <Text>{investmentType.returnRateStdDev}%</Text>
+                      <Text fontWeight="semibold">
+                        {investmentType.returnInputMode ===
+                        ValueInputMode.PERCENTAGE
+                          ? "Return Std Dev:"
+                          : "Return Std Dev:"}
+                      </Text>
+                      <Text>
+                        {investmentType.returnRateStdDev}
+                        {investmentType.returnInputMode ===
+                        ValueInputMode.PERCENTAGE
+                          ? "%"
+                          : " $"}
+                      </Text>
                     </>
                   )}
 
@@ -519,6 +701,14 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
                   Income & Tax
                 </Text>
                 <Grid templateColumns="1fr 2fr" gap={2}>
+                  <Text fontWeight="semibold">Income Calculation:</Text>
+                  <Text>
+                    {investmentType.dividendInputMode ===
+                    ValueInputMode.PERCENTAGE
+                      ? "Percentage of Value"
+                      : "Fixed Dollar Amount"}
+                  </Text>
+
                   <Text fontWeight="semibold">Dividend Type:</Text>
                   <Text>
                     {investmentType.dividendType === ReturnType.FIXED
@@ -526,13 +716,35 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
                       : "Normal Distribution"}
                   </Text>
 
-                  <Text fontWeight="semibold">Dividend Rate:</Text>
-                  <Text>{investmentType.dividendRate}%</Text>
+                  <Text fontWeight="semibold">
+                    {investmentType.dividendInputMode ===
+                    ValueInputMode.PERCENTAGE
+                      ? "Dividend Rate:"
+                      : "Dividend Amount:"}
+                  </Text>
+                  <Text>
+                    {investmentType.dividendRate}
+                    {investmentType.dividendInputMode ===
+                    ValueInputMode.PERCENTAGE
+                      ? "%"
+                      : " $"}
+                  </Text>
 
                   {investmentType.dividendType === ReturnType.NORMAL && (
                     <>
-                      <Text fontWeight="semibold">Dividend Std Dev:</Text>
-                      <Text>{investmentType.dividendRateStdDev}%</Text>
+                      <Text fontWeight="semibold">
+                        {investmentType.dividendInputMode ===
+                        ValueInputMode.PERCENTAGE
+                          ? "Dividend Std Dev:"
+                          : "Dividend Std Dev:"}
+                      </Text>
+                      <Text>
+                        {investmentType.dividendRateStdDev}
+                        {investmentType.dividendInputMode ===
+                        ValueInputMode.PERCENTAGE
+                          ? "%"
+                          : " $"}
+                      </Text>
                     </>
                   )}
 

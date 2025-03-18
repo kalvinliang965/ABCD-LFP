@@ -138,7 +138,6 @@ const InvestmentDashboard: React.FC = () => {
   // State for filtering and sorting
   const [searchTerm, setSearchTerm] = useState("");
   const [taxability, setTaxability] = useState("all");
-  const [accountType, setAccountType] = useState("all");
   const [sortBy, setSortBy] = useState("date");
 
   // State for investment type modal

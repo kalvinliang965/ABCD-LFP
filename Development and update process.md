@@ -88,6 +88,12 @@ The "Add New Investment" window has been completely redesigned to align with our
    - Standard deviation inputs only appear when a normal distribution is selected
    - Tax-exempt investments show additional guidance about not using them in retirement accounts
 
+6. **Flexible Value Input Options:**
+   - Return rates can now be specified as either percentages or fixed dollar amounts
+   - Annual income can be specified as either percentages or fixed dollar amounts
+   - Input ranges, steps, and labels dynamically adjust based on the selected input method
+   - The review screen clearly indicates whether values are percentages or fixed amounts
+
 The redesigned Add Investment window creates a more guided, educational experience that helps users create properly configured investment types with all required attributes.
 
 ## Interactions
