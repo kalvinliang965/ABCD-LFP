@@ -3,6 +3,9 @@ import { Box, Container, useBreakpointValue } from "@chakra-ui/react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 
+// this component is used to wrap the page content
+// which is like the shell for the whole page
+// so the page would always have a sidebar and a header
 interface LayoutProps {
   children: React.ReactNode;
   title?: string;
@@ -18,8 +21,8 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
   });
 
   // Constants for sidebar and header dimensions
-  const SIDEBAR_WIDTH = "70px";
-  const HEADER_HEIGHT = "70px";
+  const SIDEBAR_WIDTH = "20px";
+  const HEADER_HEIGHT = "0px";
 
   return (
     <Box position="relative" minHeight="100vh" width="100%" overflow="hidden">
@@ -54,10 +57,10 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
       >
         <Container
           maxWidth={contentMaxWidth}
-          px={{ base: "4", md: "6", lg: "8" }}
-          py={{ base: "4", lg: "6" }}
+          px={{ base: "4", md: "6", lg: "8" }} // padding for the container
+          py={{ base: "4", lg: "6" }} // padding for the container
           height="auto"
-          centerContent={false}
+          centerContent={false} // center the content but here is false, so we could manually set the center
         >
           {children}
         </Container>

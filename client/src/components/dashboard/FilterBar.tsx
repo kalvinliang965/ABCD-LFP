@@ -15,23 +15,23 @@ import { FaSearch, FaFilter, FaSort } from "react-icons/fa";
 interface FilterBarProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  status: string;
-  setStatus: (status: string) => void;
+  taxability: string;
+  setTaxability: (status: string) => void;
+  accountType: string;
+  setAccountType: (type: string) => void;
   sortBy: string;
   setSortBy: (sortBy: string) => void;
-  sortOrder: string;
-  setSortOrder: (sortOrder: string) => void;
 }
 
 const FilterBar: React.FC<FilterBarProps> = ({
   searchTerm,
   setSearchTerm,
-  status,
-  setStatus,
+  taxability,
+  setTaxability,
+  accountType,
+  setAccountType,
   sortBy,
   setSortBy,
-  sortOrder,
-  setSortOrder,
 }) => {
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
@@ -72,17 +72,29 @@ const FilterBar: React.FC<FilterBarProps> = ({
           <Flex alignItems="center" width={{ base: "100%", md: "auto" }}>
             <Icon as={FaFilter} color="gray.400" mr={2} />
             <Select
-              placeholder="Status"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
+              value={taxability}
+              onChange={(e) => setTaxability(e.target.value)}
               size="md"
-              width={{ base: "full", md: "150px" }}
+              width={{ base: "full", md: "160px" }}
             >
-              <option value="all">All Status</option>
-              <option value="in-progress">In Progress</option>
-              <option value="completed">Completed</option>
-              <option value="pending">Pending</option>
-              <option value="rejected">Rejected</option>
+              <option value="all">All Taxability</option>
+              <option value="taxable">Taxable</option>
+              <option value="tax-exempt">Tax-Exempt</option>
+            </Select>
+          </Flex>
+
+          <Flex alignItems="center" width={{ base: "100%", md: "auto" }}>
+            <Icon as={FaFilter} color="gray.400" mr={2} />
+            <Select
+              value={accountType}
+              onChange={(e) => setAccountType(e.target.value)}
+              size="md"
+              width={{ base: "full", md: "180px" }}
+            >
+              <option value="all">All Account Types</option>
+              <option value="non-retirement">Non-Retirement</option>
+              <option value="pre-tax-retirement">Pre-Tax Retirement</option>
+              <option value="after-tax-retirement">After-Tax Retirement</option>
             </Select>
           </Flex>
 
@@ -96,20 +108,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
             >
               <option value="date">Date</option>
               <option value="name">Name</option>
-              <option value="value">Value</option>
-              <option value="return">Return</option>
+              <option value="returnType">Return Type</option>
+              <option value="return">Return Rate</option>
             </Select>
           </Flex>
-
-          <Select
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}
-            size="md"
-            width={{ base: "full", md: "120px" }}
-          >
-            <option value="desc">Descending</option>
-            <option value="asc">Ascending</option>
-          </Select>
         </HStack>
       </Flex>
     </Box>
