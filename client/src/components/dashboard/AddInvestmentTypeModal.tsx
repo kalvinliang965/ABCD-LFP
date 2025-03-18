@@ -35,23 +35,29 @@ import {
   Text,
   Icon,
 } from "@chakra-ui/react";
+
+// FA6 icons
 import {
   FaDollarSign,
   FaChartPie,
   FaWallet,
   FaLandmark,
   FaMoneyBillTrendUp,
+  FaCircleDollarToSlot,
+  FaBuildingColumns,
+  FaArrowTrendUp,
+  FaChartColumn,
 } from "react-icons/fa6";
-import { FaCircleDollarToSlot as FaCircleDollar } from "react-icons/fa6";
-import { FaBuildingColumns } from "react-icons/fa6";
-import {
-  FaChartLine as FaLineChart,
-  FaChartLine as FaTrendingUp,
-  FaChartBar as FaCandlestick,
-} from "react-icons/fa";
-import { FaArrowTrendUp } from "react-icons/fa6";
-import { FaChartColumn as FaBarChart } from "react-icons/fa6";
-import { FaRegBuilding } from "react-icons/fa";
+
+// FA icons
+import { FaChartLine, FaChartBar, FaRegBuilding } from "react-icons/fa";
+
+// Aliases for clarity
+const FaCircleDollar = FaCircleDollarToSlot;
+const FaBarChart = FaChartColumn;
+const FaLineChart = FaChartLine;
+const FaTrendingUp = FaChartLine;
+const FaCandlestick = FaChartBar;
 
 // Define the investment type interface
 export interface InvestmentType {

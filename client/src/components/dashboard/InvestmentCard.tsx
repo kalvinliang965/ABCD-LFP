@@ -47,6 +47,7 @@ interface Investment {
 
 interface InvestmentCardProps {
   investment: Investment;
+  onClick?: () => void;
 }
 
 // Get appropriate icon based on investment name
@@ -81,7 +82,10 @@ const getInvestmentIcon = (name: string) => {
   return FaChartLine; // Default icon
 };
 
-const InvestmentCard: React.FC<InvestmentCardProps> = ({ investment }) => {
+const InvestmentCard: React.FC<InvestmentCardProps> = ({
+  investment,
+  onClick,
+}) => {
   const cardBg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.600");
   const textColor = useColorModeValue("gray.600", "gray.300");
@@ -112,6 +116,7 @@ const InvestmentCard: React.FC<InvestmentCardProps> = ({ investment }) => {
       minHeight="220px"
       display="flex"
       flexDirection="column"
+      onClick={onClick}
     >
       {/* Card content area */}
       <Box p={4} flex="1" display="flex" flexDirection="column">

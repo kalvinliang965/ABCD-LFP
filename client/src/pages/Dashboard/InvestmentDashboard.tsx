@@ -24,96 +24,91 @@ import AddInvestmentTypeModal, {
 } from "../../components/dashboard/AddInvestmentTypeModal";
 
 // Sample investment data
-const investmentData = [
+interface ExpectedAnnualReturn {
+  type: "fixed" | "normalDistribution";
+  unit: "percentage" | "amount";
+  value?: number;
+  mean?: number;
+  stdDev?: number;
+}
+
+interface InvestmentDataItem {
+  name: string;
+  description: string;
+  expectedAnnualReturn: ExpectedAnnualReturn;
+  expenseRatio: number;
+  expectedAnnualIncome: ExpectedAnnualReturn;
+  taxability: string;
+}
+
+const investmentData: InvestmentDataItem[] = [
   {
-    id: 1,
-    name: "Real Estate Trust",
-    icon: <FaBuilding />,
-    date: "2023-12-20",
-    value: "$50,000",
-    returnRate: 6.8,
-    description: "REIT investment focused on commercial properties",
-    expenseRatio: 0.75,
-    returnType: "normal" as const,
-    dividendType: "fixed" as const,
-    dividendRate: 2.3,
-    taxability: "taxable" as const,
-    accountType: "non-retirement" as const,
-  },
-  {
-    id: 2,
-    name: "Gold ETF",
-    icon: <FaCoins />,
-    date: "2023-11-25",
-    value: "$10,000",
-    returnRate: 3.1,
-    description: "Exchange-traded fund tracking gold prices",
-    expenseRatio: 0.4,
-    returnType: "normal" as const,
-    dividendType: "fixed" as const,
-    dividendRate: 0.5,
-    taxability: "taxable" as const,
-    accountType: "pre-tax-retirement" as const,
-  },
-  {
-    id: 3,
-    name: "Stock Portfolio",
-    icon: <FaChartLine />,
-    date: "2023-11-10",
-    value: "$25,000",
-    returnRate: 8.5,
-    description: "Diversified stock portfolio with focus on tech sector",
-    expenseRatio: 0.3,
-    returnType: "normal" as const,
-    dividendType: "normal" as const,
-    dividendRate: 1.8,
-    taxability: "taxable" as const,
-    accountType: "after-tax-retirement" as const,
-  },
-  {
-    id: 4,
-    name: "Bond Fund",
-    icon: <FaMoneyBillWave />,
-    date: "2023-10-15",
-    value: "$15,000",
-    returnRate: 4.2,
-    description: "Investment grade corporate bonds",
-    expenseRatio: 0.2,
-    returnType: "fixed" as const,
-    dividendType: "fixed" as const,
-    dividendRate: 4.0,
-    taxability: "tax-exempt" as const,
-    accountType: "non-retirement" as const,
-  },
-  {
-    id: 5,
-    name: "Cryptocurrency",
-    icon: <FaBitcoin />,
-    date: "2023-09-05",
-    value: "$5,000",
-    returnRate: -12.5,
-    description: "Bitcoin and Ethereum investment",
-    expenseRatio: 1.0,
-    returnType: "normal" as const,
-    dividendType: "fixed" as const,
-    dividendRate: 0,
-    taxability: "taxable" as const,
-    accountType: "non-retirement" as const,
-  },
-  {
-    id: 6,
     name: "Cash",
-    icon: <FaMoneyBillWave />,
-    date: "2023-08-01",
-    value: "$10,000",
-    returnRate: 0.1,
-    description: "Cash holdings",
-    expenseRatio: 0,
-    returnType: "fixed" as const,
-    dividendType: "fixed" as const,
-    dividendRate: 0,
-    taxability: "taxable" as const,
-    accountType: "non-retirement" as const,
+    description: "Low-risk holding with minimal returns and high liquidity.",
+    expectedAnnualReturn: {
+      type: "fixed",
+      unit: "percentage",
+      value: 0.01,
+    },
+    expenseRatio: 0.0,
+    expectedAnnualIncome: {
+      type: "fixed",
+      unit: "amount",
+      value: 0,
+    },
+    taxability: "taxable",
+  },
+  {
+    name: "US Municipal Bonds",
+    description:
+      "Tax-exempt bonds issued by local governments with relatively low risk.",
+    expectedAnnualReturn: {
+      type: "fixed",
+      unit: "percentage",
+      value: 0.02,
+    },
+    expenseRatio: 0.005,
+    expectedAnnualIncome: {
+      type: "fixed",
+      unit: "percentage",
+      value: 0.03,
+    },
+    taxability: "tax-exempt",
+  },
+  {
+    name: "Global Equity Fund",
+    description:
+      "Diversified international stock fund with moderate-to-high volatility.",
+    expectedAnnualReturn: {
+      type: "normalDistribution",
+      unit: "percentage",
+      mean: 0.08,
+      stdDev: 0.12,
+    },
+    expenseRatio: 0.008,
+    expectedAnnualIncome: {
+      type: "normalDistribution",
+      unit: "percentage",
+      mean: 0.02,
+      stdDev: 0.01,
+    },
+    taxability: "taxable",
+  },
+  {
+    name: "REIT - Commercial Properties",
+    description: "Invests in commercial real estate with moderate stability.",
+    expectedAnnualReturn: {
+      type: "fixed",
+      unit: "amount",
+      value: 3000,
+    },
+    expenseRatio: 0.01,
+    expectedAnnualIncome: {
+      type: "fixed",
+      unit: "amount",
+      value: 1500,
+    },
+    taxability: "taxable",
   },
 ];
 
@@ -124,14 +119,20 @@ interface Investment {
   icon: React.ReactElement;
   date: string;
   value: string;
-  returnRate: number;
   description: string;
   expenseRatio: number;
-  returnType: "fixed" | "normal";
-  dividendType: "fixed" | "normal";
-  dividendRate: number;
   taxability: "taxable" | "tax-exempt";
   accountType: "non-retirement" | "pre-tax-retirement" | "after-tax-retirement";
+
+  // Return information
+  returnRate?: number;
+  returnType: "fixed" | "normal";
+  returnRateStdDev?: number;
+
+  // Dividend/income information
+  dividendRate?: number;
+  dividendType: "fixed" | "normal";
+  dividendRateStdDev?: number;
 }
 
 const InvestmentDashboard: React.FC = () => {
@@ -148,8 +149,114 @@ const InvestmentDashboard: React.FC = () => {
     onClose: onInvestmentTypeModalClose,
   } = useDisclosure();
 
+  // Map the raw investment data to match our Investment interface
+  const mapInvestmentData = () => {
+    const getIconComponent = (name: string) => {
+      if (name.toLowerCase().includes("bond")) {
+        return <Icon as={FaBuilding} />;
+      } else if (
+        name.toLowerCase().includes("equity") ||
+        name.toLowerCase().includes("fund")
+      ) {
+        return <Icon as={FaChartLine} />;
+      } else if (
+        name.toLowerCase().includes("reit") ||
+        name.toLowerCase().includes("real estate")
+      ) {
+        return <Icon as={FaBuilding} />;
+      } else if (name.toLowerCase().includes("cash")) {
+        return <Icon as={FaMoneyBillWave} />;
+      } else if (name.toLowerCase().includes("crypto")) {
+        return <Icon as={FaBitcoin} />;
+      }
+      return <Icon as={FaChartPie} />;
+    };
+
+    return investmentData.map((item, index) => {
+      const returnType =
+        item.expectedAnnualReturn.type === "normalDistribution"
+          ? "normal"
+          : "fixed";
+      const dividendType =
+        item.expectedAnnualIncome.type === "normalDistribution"
+          ? "normal"
+          : "fixed";
+
+      // Convert return and dividend values based on their types
+      let returnRate: number | undefined;
+      let returnRateStdDev: number | undefined;
+      let dividendRate: number | undefined;
+      let dividendRateStdDev: number | undefined;
+
+      if (returnType === "fixed") {
+        if (item.expectedAnnualReturn.value !== undefined) {
+          returnRate =
+            item.expectedAnnualReturn.unit === "percentage"
+              ? item.expectedAnnualReturn.value * 100 // Convert from decimal to percentage
+              : item.expectedAnnualReturn.value;
+        }
+      } else {
+        if (
+          item.expectedAnnualReturn.mean !== undefined &&
+          item.expectedAnnualReturn.stdDev !== undefined
+        ) {
+          returnRate = item.expectedAnnualReturn.mean * 100; // Convert from decimal to percentage
+          returnRateStdDev = item.expectedAnnualReturn.stdDev * 100; // Convert from decimal to percentage
+        }
+      }
+
+      if (dividendType === "fixed") {
+        if (item.expectedAnnualIncome.value !== undefined) {
+          dividendRate =
+            item.expectedAnnualIncome.unit === "percentage"
+              ? item.expectedAnnualIncome.value * 100 // Convert from decimal to percentage
+              : item.expectedAnnualIncome.value;
+        }
+      } else {
+        if (
+          item.expectedAnnualIncome.mean !== undefined &&
+          item.expectedAnnualIncome.stdDev !== undefined
+        ) {
+          dividendRate = item.expectedAnnualIncome.mean * 100; // Convert from decimal to percentage
+          dividendRateStdDev = item.expectedAnnualIncome.stdDev * 100; // Convert from decimal to percentage
+        }
+      }
+
+      // Determine the display value
+      let displayValue = "$10,000"; // Default value
+      if (
+        item.expectedAnnualReturn.unit === "amount" &&
+        item.expectedAnnualReturn.value !== undefined
+      ) {
+        displayValue = `$${item.expectedAnnualReturn.value.toLocaleString()}`;
+      }
+
+      const investment: Investment = {
+        id: index + 1,
+        name: item.name,
+        description: item.description,
+        icon: getIconComponent(item.name),
+        date: new Date().toISOString().split("T")[0],
+        value: displayValue,
+        expenseRatio: item.expenseRatio * 100, // Convert from decimal to percentage
+        returnType: returnType as "fixed" | "normal",
+        returnRate,
+        returnRateStdDev,
+        dividendType: dividendType as "fixed" | "normal",
+        dividendRate,
+        dividendRateStdDev,
+        taxability: item.taxability as "taxable" | "tax-exempt",
+        accountType: "non-retirement" as "non-retirement", // Explicitly type this
+      };
+
+      return investment;
+    });
+  };
+
   // State for investments data
-  const [investments, setInvestments] = useState<Investment[]>(investmentData);
+  const [investments, setInvestments] = useState<Investment[]>(
+    mapInvestmentData()
+  );
 
   // Handler for saving a new investment type
   const handleSaveInvestmentType = (investmentType: InvestmentType) => {
@@ -166,12 +273,14 @@ const InvestmentDashboard: React.FC = () => {
       icon: getIconComponent(investmentType.icon),
       date: new Date().toISOString().split("T")[0],
       value: "$0", // Default value
-      returnRate: investmentType.returnRate,
       description: investmentType.description,
       expenseRatio: investmentType.expenseRatio,
       returnType: investmentType.returnType,
+      returnRate: investmentType.returnRate,
+      returnRateStdDev: investmentType.returnRateStdDev,
       dividendType: investmentType.dividendType,
       dividendRate: investmentType.dividendRate,
+      dividendRateStdDev: investmentType.dividendRateStdDev,
       taxability: investmentType.taxability,
       accountType: "non-retirement", // Default account type
     };
@@ -208,7 +317,7 @@ const InvestmentDashboard: React.FC = () => {
           comparison = a.returnType.localeCompare(b.returnType);
           break;
         case "return":
-          comparison = a.returnRate - b.returnRate;
+          comparison = (a.returnRate || 0) - (b.returnRate || 0);
           break;
         case "date":
         default:
@@ -226,16 +335,27 @@ const InvestmentDashboard: React.FC = () => {
       sum + parseFloat(investment.value.replace(/[^\d.-]/g, "")),
     0
   );
+
+  // Calculate average return rate, handling both fixed and normal distribution
   const totalInvestmentReturn =
-    investments.reduce((sum, investment) => sum + investment.returnRate, 0) /
-    investments.length;
+    investments.reduce((sum, investment) => {
+      if (investment.returnType === "fixed") {
+        return sum + (investment.returnRate || 0);
+      } else {
+        // For normal distribution, we use the mean
+        return sum + (investment.returnRate || 0);
+      }
+    }, 0) / investments.length;
 
   // Calculate asset allocation by type
   const assetAllocation = investments.reduce((result, investment) => {
     const value = parseFloat(investment.value.replace(/[^\d.-]/g, ""));
     let type = "Other";
 
-    if (investment.name.toLowerCase().includes("real estate")) {
+    if (
+      investment.name.toLowerCase().includes("real estate") ||
+      investment.name.toLowerCase().includes("reit")
+    ) {
       type = "Real Estate";
     } else if (
       investment.name.toLowerCase().includes("stock") ||
