@@ -5,17 +5,7 @@ import {
   Box,
   useDisclosure,
   Text,
-  SimpleGrid,
-  Card,
-  CardHeader,
-  CardBody,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
-  Button,
   Icon,
-  HStack,
   useColorModeValue,
 } from "@chakra-ui/react";
 import {
@@ -24,9 +14,7 @@ import {
   FaChartLine,
   FaMoneyBillWave,
   FaBitcoin,
-  FaPlus,
   FaChartPie,
-  FaFileAlt,
 } from "react-icons/fa";
 import Layout from "../../components/Layout";
 import FilterBar from "../../components/dashboard/FilterBar";
@@ -324,8 +312,6 @@ const InvestmentDashboard: React.FC = () => {
           setSearchTerm={setSearchTerm}
           taxability={taxability}
           setTaxability={setTaxability}
-          accountType={accountType}
-          setAccountType={setAccountType}
           sortBy={sortBy}
           setSortBy={setSortBy}
         />

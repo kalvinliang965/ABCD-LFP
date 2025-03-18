@@ -17,8 +17,6 @@ interface FilterBarProps {
   setSearchTerm: (term: string) => void;
   taxability: string;
   setTaxability: (status: string) => void;
-  accountType: string;
-  setAccountType: (type: string) => void;
   sortBy: string;
   setSortBy: (sortBy: string) => void;
 }
@@ -28,8 +26,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
   setSearchTerm,
   taxability,
   setTaxability,
-  accountType,
-  setAccountType,
   sortBy,
   setSortBy,
 }) => {
@@ -80,21 +76,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
               <option value="all">All Taxability</option>
               <option value="taxable">Taxable</option>
               <option value="tax-exempt">Tax-Exempt</option>
-            </Select>
-          </Flex>
-
-          <Flex alignItems="center" width={{ base: "100%", md: "auto" }}>
-            <Icon as={FaFilter} color="gray.400" mr={2} />
-            <Select
-              value={accountType}
-              onChange={(e) => setAccountType(e.target.value)}
-              size="md"
-              width={{ base: "full", md: "180px" }}
-            >
-              <option value="all">All Account Types</option>
-              <option value="non-retirement">Non-Retirement</option>
-              <option value="pre-tax-retirement">Pre-Tax Retirement</option>
-              <option value="after-tax-retirement">After-Tax Retirement</option>
             </Select>
           </Flex>
 

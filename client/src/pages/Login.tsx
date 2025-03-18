@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./Login.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { FaGoogle } from "react-icons/fa"; // 导入Google图标
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -94,6 +95,15 @@ const Login: React.FC = () => {
     }
   };
 
+  // handle google sign in //todo: need to implement google sign in
+  const handleGoogleSignIn = () => {
+    // here should be OAuth login API
+    // for example: window.location.href = 'http://localhost:3000/api/auth/google';
+    console.log("use google login");
+    // simulate successful login, should be implemented through OAuth process
+    setTimeout(() => navigate("/dashboard"), 1000);
+  };
+
   return (
     <div className="shell">
       <div className="container a-container" id="a-container">
@@ -104,12 +114,8 @@ const Login: React.FC = () => {
           autoComplete="off"
         >
           <h2 className="form_title title">Sign In</h2>
-          <div className="form_icons">
-            <i className="iconfont icon-QQ"></i>
-            <i className="iconfont icon-weixin"></i>
-            <i className="iconfont icon-bilibili-line"></i>
-          </div>
-          <span className="form_span">select the way to sign in</span>
+
+          <span className="form_span">Use your email account</span>
 
           <div className="form_input-group">
             <input
@@ -139,6 +145,18 @@ const Login: React.FC = () => {
             <label className="form_input-label">Password</label>
           </div>
 
+          {/* google login button */}
+          <div className="google-sign-in">
+            <button
+              type="button"
+              className="google-button"
+              onClick={handleGoogleSignIn}
+            >
+              <FaGoogle className="google-icon" />
+              <span>Sign in with Google</span>
+            </button>
+          </div>
+
           <button type="submit" className="form_button button">
             SIGN IN
           </button>
@@ -148,12 +166,9 @@ const Login: React.FC = () => {
       <div className="container b-container" id="b-container">
         <form className="form" id="b-form" autoComplete="off">
           <h2 className="form_title title">Create Account</h2>
-          <div className="form_icons">
-            <i className="iconfont icon-QQ"></i>
-            <i className="iconfont icon-weixin"></i>
-            <i className="iconfont icon-bilibili-line"></i>
-          </div>
-          <span className="form_span">select the way to register</span>
+
+          <span className="form_span">Use email for registration</span>
+
           <div className="form_input-group">
             <input
               type="text"
@@ -189,16 +204,29 @@ const Login: React.FC = () => {
             />
             <label className="form_input-label">Password</label>
           </div>
+
+          {/* google sign up button */}
+          <div className="google-sign-in">
+            <button
+              type="button"
+              className="google-button"
+              onClick={handleGoogleSignIn}
+            >
+              <FaGoogle className="google-icon" />
+              <span>Sign up with Google</span>
+            </button>
+          </div>
+
           <button className="form_button button submit">SIGN UP</button>
         </form>
       </div>
 
       <div className="switch" id="switch-cnt">
-        {/* 这里是整个滑动的组件*/}
+        {/* this is the whole sliding component */}
         <div className="switch_circle"></div>
         <div className="switch_circle switch_circle-t"></div>
         <div className="switch_container" id="switch-c1">
-          {/* 这里是welcome滑动的组件*/}
+          {/* this is the welcome sliding component */}
           <h2 className="switch_title title">Welcome Back!</h2>
           <p className="switch_description description">
             Enter your personal details and start journey with us
@@ -206,7 +234,7 @@ const Login: React.FC = () => {
           <button className="switch_button button switch-btn">SIGN UP</button>
         </div>
         <div className="switch_container is-hidden" id="switch-c2">
-          {/*这里是注册滑动的组件*/}
+          {/* this is the register sliding component */}
           <h2 className="switch_title title">Hello Friend!</h2>
           <p className="switch_description description">
             Already have an account? Sign in with your personal info
