@@ -9,8 +9,6 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
-  Text,
-  Box,
   Heading,
   Container,
   useBreakpointValue,
