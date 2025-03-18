@@ -1,34 +1,56 @@
-// src/types/investment.ts
+/**
+ * Investment-related type definitions
+ */
 
+// Define return types
+export enum ReturnType {
+  FIXED = "fixed",
+  NORMAL = "normal",
+}
+
+// Define account types
+export type AccountType =
+  | "non-retirement"
+  | "pre-tax-retirement"
+  | "after-tax-retirement";
+
+// Define investment interface
 export interface Investment {
-    _id?: string;  // Mongo ObjectId (optional)
-    name: string;
-    description?: string;
-    icon?: string; //for store the icon URL //todo: add the icon to the database
+  id: string | number;
+  name: string;
+  description: string;
+  date?: string;
+  lastUpdated?: string;
+  value?: string | number;
+  returnRate?: number;
+  returnType: ReturnType | string;
+  returnValue?: number | string;
+  expenseRatio?: number;
+  dividendType?: ReturnType | string;
+  dividendValue?: number | string;
+  dividendRate?: number;
+  taxability: "taxable" | "tax-exempt";
+  accountType?: AccountType;
+  returnRateStdDev?: number;
+  dividendRateStdDev?: number;
+  username?: string;
+}
 
-    // 年化资本增值
-    expectedAnnualReturn: {
-      mode: 'fixed' | 'normal' | 'gbm';
-      value: number;    // if mode=fixed, it means fixed return rate (0.08=8%)
-      stdDev?: number;  // if mode=normal/gbm, used for volatility
-      drift?: number;   // if need GBM drift rate
-    };
-  
-    // expense ratio
-    expenseRatio: number;  // 0.01 => 1%
-  
-    // dividend yield
-    dividendYield: {
-      mode: 'fixed' | 'normal' | 'gbm';
-      value: number;
-      stdDev?: number;
-      drift?: number;
-    };
-  
-    // taxability
-    isTaxExempt: boolean;  // true => tax-exempt; false => taxable
-  
-    // last updated time
-    lastUpdated?: string | Date; // Date type or ISO string
-  }
-  
+// Props for the investment card component
+export interface InvestmentCardProps {
+  investment: Investment;
+  onClick?: () => void;
+}
+
+// Props for the investment detail modal
+export interface InvestmentDetailModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  investment: Investment | null;
+}
+
+// Props for the investment list component
+export interface InvestmentListProps {
+  investments: Investment[];
+  onOpenInvestmentModal: () => void;
+}

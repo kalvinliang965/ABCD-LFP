@@ -26,50 +26,26 @@ import {
   StepIcon,
   StepNumber,
   StepTitle,
-  StepDescription,
   StepSeparator,
   useSteps,
   Grid,
-  SimpleGrid,
-  Flex,
   Text,
-  Icon,
+  Divider,
+  Alert,
+  AlertIcon,
 } from "@chakra-ui/react";
-
-// FA6 icons
-import {
-  FaDollarSign,
-  FaChartPie,
-  FaWallet,
-  FaLandmark,
-  FaMoneyBillTrendUp,
-  FaCircleDollarToSlot,
-  FaBuildingColumns,
-  FaArrowTrendUp,
-  FaChartColumn,
-} from "react-icons/fa6";
-
-// FA icons
-import { FaChartLine, FaChartBar, FaRegBuilding } from "react-icons/fa";
-
-// Aliases for clarity
-const FaCircleDollar = FaCircleDollarToSlot;
-const FaBarChart = FaChartColumn;
-const FaLineChart = FaChartLine;
-const FaTrendingUp = FaChartLine;
-const FaCandlestick = FaChartBar;
+import { ReturnType } from "../../types/investment";
 
 // Define the investment type interface
 export interface InvestmentType {
   name: string;
   description: string;
-  icon: string;
-  returnType: "fixed" | "normal"; // Removed GBM per requirements
-  returnRate: number; // For fixed return
+  returnType: ReturnType | string;
+  returnRate: number; // For fixed return or mean of normal distribution
   returnRateStdDev?: number; // For normal distribution
   expenseRatio: number;
-  dividendType: "fixed" | "normal";
-  dividendRate: number; // For fixed dividend
+  dividendType: ReturnType | string;
+  dividendRate: number; // For fixed dividend or mean of normal distribution
   dividendRateStdDev?: number; // For normal distribution
   taxability: "taxable" | "tax-exempt";
 }
@@ -80,30 +56,6 @@ interface AddInvestmentTypeModalProps {
   onClose: () => void;
   onSave: (investmentType: InvestmentType) => void;
 }
-
-// Define available icons with their components
-const iconOptions = [
-  { name: "TrendingUp", component: FaTrendingUp, label: "Trending Up" },
-  { name: "DollarSign", component: FaDollarSign, label: "Dollar Sign" },
-  { name: "PieChart", component: FaChartPie, label: "Pie Chart" },
-  { name: "Wallet", component: FaWallet, label: "Wallet" },
-  { name: "BarChart", component: FaBarChart, label: "Bar Chart" },
-  { name: "LineChart", component: FaLineChart, label: "Line Chart" },
-  { name: "Building", component: FaRegBuilding, label: "Building" },
-  { name: "Landmark", component: FaLandmark, label: "Landmark" },
-  {
-    name: "CircleDollarSign",
-    component: FaCircleDollar,
-    label: "Circle Dollar Sign",
-  },
-  {
-    name: "CandlestickChart",
-    component: FaCandlestick,
-    label: "Candlestick Chart",
-  },
-  { name: "Bank", component: FaBuildingColumns, label: "Bank Building" },
-  { name: "MoneyTrend", component: FaMoneyBillTrendUp, label: "Money Trend" },
-];
 
 // Create the component
 const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
@@ -118,6 +70,10 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
       title: "Return Details",
       description: "Expected returns and expense ratio",
     },
+    {
+      title: "Income & Tax",
+      description: "Dividend income and taxability",
+    },
     { title: "Review", description: "Review and save" },
   ];
 
@@ -130,11 +86,10 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
   const [investmentType, setInvestmentType] = useState<InvestmentType>({
     name: "",
     description: "",
-    icon: "TrendingUp", // Default icon
-    returnType: "fixed",
+    returnType: ReturnType.FIXED,
     returnRate: 0,
     expenseRatio: 0,
-    dividendType: "fixed",
+    dividendType: ReturnType.FIXED,
     dividendRate: 0,
     taxability: "taxable",
   });
@@ -154,20 +109,17 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
     setInvestmentType({ ...investmentType, [id]: parseFloat(value) });
   };
 
-  // Handle icon selection
-  const handleIconSelect = (iconName: string) => {
-    setInvestmentType({ ...investmentType, icon: iconName });
-  };
-
   // Handle return type change
   const handleReturnTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value as "fixed" | "normal";
+    const value = e.target.value as ReturnType;
     setInvestmentType({
       ...investmentType,
       returnType: value,
       // Reset the standard deviation when switching to fixed
       returnRateStdDev:
-        value === "fixed" ? undefined : investmentType.returnRateStdDev || 0,
+        value === ReturnType.FIXED
+          ? undefined
+          : investmentType.returnRateStdDev || 0,
     });
   };
 
@@ -175,13 +127,15 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
   const handleDividendTypeChange = (
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
-    const value = e.target.value as "fixed" | "normal";
+    const value = e.target.value as ReturnType;
     setInvestmentType({
       ...investmentType,
       dividendType: value,
       // Reset the standard deviation when switching to fixed
       dividendRateStdDev:
-        value === "fixed" ? undefined : investmentType.dividendRateStdDev || 0,
+        value === ReturnType.FIXED
+          ? undefined
+          : investmentType.dividendRateStdDev || 0,
     });
   };
 
@@ -202,6 +156,23 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
     onSave(investmentType);
     onClose();
   };
+
+  // Validate form before proceeding to next step
+  const validateCurrentStep = (): boolean => {
+    switch (activeStep) {
+      case 0: // Basic Info
+        return !!investmentType.name && !!investmentType.description;
+      case 1: // Return Details
+        return true; // All fields have default values
+      case 2: // Income & Tax
+        return true; // All fields have default values
+      default:
+        return true;
+    }
+  };
+
+  // Check if current step is valid
+  const isCurrentStepValid = validateCurrentStep();
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
@@ -228,14 +199,16 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
                 </Step>
               ))}
             </Stepper>
-            <Text textAlign="right" fontSize="sm" color="gray.500" mt={2}>
-              Step {activeStep + 1} of {steps.length}
-            </Text>
           </Box>
 
-          {/* Step 1: Basic Information */}
+          {/* Step 1: Basic Info */}
           {activeStep === 0 && (
             <Box>
+              <Alert status="info" mb={4} borderRadius="md">
+                <AlertIcon />
+                Enter basic information about the investment type.
+              </Alert>
+
               <FormControl mb={4} isRequired>
                 <FormLabel>Investment Name</FormLabel>
                 <Input
@@ -246,42 +219,19 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
                 />
               </FormControl>
 
-              <FormControl mb={4}>
+              <FormControl mb={4} isRequired>
                 <FormLabel>Description</FormLabel>
                 <Textarea
                   id="description"
                   placeholder="Enter investment description"
                   value={investmentType.description}
                   onChange={handleInputChange}
+                  rows={4}
                 />
-              </FormControl>
-
-              <FormControl mb={4}>
-                <FormLabel>Icon</FormLabel>
-                <SimpleGrid columns={6} spacing={3}>
-                  {iconOptions.map((icon) => (
-                    <Box
-                      key={icon.name}
-                      p={2}
-                      borderWidth={1}
-                      borderRadius="md"
-                      borderColor={
-                        investmentType.icon === icon.name
-                          ? "blue.500"
-                          : "gray.200"
-                      }
-                      bg={
-                        investmentType.icon === icon.name ? "blue.50" : "white"
-                      }
-                      cursor="pointer"
-                      onClick={() => handleIconSelect(icon.name)}
-                      textAlign="center"
-                    >
-                      <Icon as={icon.component} boxSize={6} mb={1} />
-                      <Text fontSize="xs">{icon.label}</Text>
-                    </Box>
-                  ))}
-                </SimpleGrid>
+                <Text fontSize="xs" color="gray.500" mt={1}>
+                  Describe the investment type, its characteristics, and any
+                  relevant information.
+                </Text>
               </FormControl>
             </Box>
           )}
@@ -289,6 +239,11 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
           {/* Step 2: Return Details */}
           {activeStep === 1 && (
             <Box>
+              <Alert status="info" mb={4} borderRadius="md">
+                <AlertIcon />
+                Define how the investment's value changes annually.
+              </Alert>
+
               <FormControl mb={4}>
                 <FormLabel>Return Type</FormLabel>
                 <Select
@@ -296,20 +251,20 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
                   value={investmentType.returnType}
                   onChange={handleReturnTypeChange}
                 >
-                  <option value="fixed">Fixed Value</option>
-                  <option value="normal">Normal Distribution</option>
+                  <option value={ReturnType.FIXED}>Fixed Value</option>
+                  <option value={ReturnType.NORMAL}>Normal Distribution</option>
                 </Select>
                 <Text fontSize="xs" color="gray.500" mt={1}>
-                  {investmentType.returnType === "fixed"
-                    ? "Constant return rate"
-                    : "Bell curve distribution"}
+                  {investmentType.returnType === ReturnType.FIXED
+                    ? "Constant return rate each year"
+                    : "Return varies following a normal (bell curve) distribution"}
                 </Text>
               </FormControl>
 
               <FormControl mb={4}>
                 <FormLabel>
                   Expected Annual Return{" "}
-                  {investmentType.returnType === "fixed"
+                  {investmentType.returnType === ReturnType.FIXED
                     ? "(%) Fixed"
                     : "Mean (%)"}
                 </FormLabel>
@@ -328,9 +283,13 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
                     <NumberDecrementStepper />
                   </NumberInputStepper>
                 </NumberInput>
+                <Text fontSize="xs" color="gray.500" mt={1}>
+                  Percentage relative to the investment's value at the beginning
+                  of the year
+                </Text>
               </FormControl>
 
-              {investmentType.returnType === "normal" && (
+              {investmentType.returnType === ReturnType.NORMAL && (
                 <FormControl mb={4}>
                   <FormLabel>Annual Return Standard Deviation (%)</FormLabel>
                   <NumberInput
@@ -348,6 +307,9 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
                       <NumberDecrementStepper />
                     </NumberInputStepper>
                   </NumberInput>
+                  <Text fontSize="xs" color="gray.500" mt={1}>
+                    Determines how much the annual return varies from the mean
+                  </Text>
                 </FormControl>
               )}
 
@@ -369,9 +331,20 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
                   </NumberInputStepper>
                 </NumberInput>
                 <Text fontSize="xs" color="gray.500" mt={1}>
-                  Annual percentage subtracted from investment value
+                  Annual percentage subtracted by the investment provider.
+                  Calculated from the average of the beginning and ending value.
                 </Text>
               </FormControl>
+            </Box>
+          )}
+
+          {/* Step 3: Income & Tax */}
+          {activeStep === 2 && (
+            <Box>
+              <Alert status="info" mb={4} borderRadius="md">
+                <AlertIcon />
+                Define dividend income and tax status.
+              </Alert>
 
               <FormControl mb={4}>
                 <FormLabel>Dividend Type</FormLabel>
@@ -380,15 +353,20 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
                   value={investmentType.dividendType}
                   onChange={handleDividendTypeChange}
                 >
-                  <option value="fixed">Fixed Value</option>
-                  <option value="normal">Normal Distribution</option>
+                  <option value={ReturnType.FIXED}>Fixed Value</option>
+                  <option value={ReturnType.NORMAL}>Normal Distribution</option>
                 </Select>
+                <Text fontSize="xs" color="gray.500" mt={1}>
+                  {investmentType.dividendType === ReturnType.FIXED
+                    ? "Constant dividend/interest payment each year"
+                    : "Dividend/interest varies following a normal distribution"}
+                </Text>
               </FormControl>
 
               <FormControl mb={4}>
                 <FormLabel>
-                  Expected Annual Dividend{" "}
-                  {investmentType.dividendType === "fixed"
+                  Expected Annual Income{" "}
+                  {investmentType.dividendType === ReturnType.FIXED
                     ? "(%) Fixed"
                     : "Mean (%)"}
                 </FormLabel>
@@ -407,11 +385,15 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
                     <NumberDecrementStepper />
                   </NumberInputStepper>
                 </NumberInput>
+                <Text fontSize="xs" color="gray.500" mt={1}>
+                  Annual income from dividends or interest as a percentage of
+                  investment value
+                </Text>
               </FormControl>
 
-              {investmentType.dividendType === "normal" && (
+              {investmentType.dividendType === ReturnType.NORMAL && (
                 <FormControl mb={4}>
-                  <FormLabel>Annual Dividend Standard Deviation (%)</FormLabel>
+                  <FormLabel>Annual Income Standard Deviation (%)</FormLabel>
                   <NumberInput
                     min={0}
                     max={20}
@@ -427,8 +409,13 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
                       <NumberDecrementStepper />
                     </NumberInputStepper>
                   </NumberInput>
+                  <Text fontSize="xs" color="gray.500" mt={1}>
+                    Determines how much the annual income varies from the mean
+                  </Text>
                 </FormControl>
               )}
+
+              <Divider my={4} />
 
               <FormControl mb={4}>
                 <FormLabel>Taxability</FormLabel>
@@ -437,72 +424,126 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
                   value={investmentType.taxability}
                   onChange={handleInputChange}
                 >
+                  <option value="taxable">Taxable</option>
                   <option value="tax-exempt">
                     Tax-Exempt (e.g., Municipal Bonds)
                   </option>
-                  <option value="taxable">Taxable</option>
                 </Select>
+                <Text fontSize="xs" color="gray.500" mt={1}>
+                  {investmentType.taxability === "taxable"
+                    ? "Gains and income are subject to taxation"
+                    : "Gains and income may be exempt from certain taxes (e.g., municipal bonds)"}
+                </Text>
+
+                {investmentType.taxability === "tax-exempt" && (
+                  <Alert status="warning" mt={2} size="sm" borderRadius="md">
+                    <AlertIcon />
+                    <Text fontSize="sm">
+                      Tax-exempt investments should not be held in retirement
+                      accounts, as they would not provide additional tax
+                      benefits.
+                    </Text>
+                  </Alert>
+                )}
               </FormControl>
             </Box>
           )}
 
-          {/* Step 3: Review */}
-          {activeStep === 2 && (
+          {/* Step 4: Review */}
+          {activeStep === 3 && (
             <Box>
-              <Text fontWeight="bold" mb={2}>
+              <Text fontWeight="bold" mb={4} fontSize="lg">
                 Review Investment Type Details
               </Text>
-              <Grid templateColumns="1fr 2fr" gap={2} mb={4}>
-                <Text fontWeight="semibold">Name:</Text>
-                <Text>{investmentType.name}</Text>
 
-                <Text fontWeight="semibold">Description:</Text>
-                <Text>{investmentType.description}</Text>
-
-                <Text fontWeight="semibold">Return Type:</Text>
-                <Text>
-                  {investmentType.returnType === "fixed"
-                    ? "Fixed Value"
-                    : "Normal Distribution"}
+              <Box
+                mb={4}
+                p={4}
+                borderWidth={1}
+                borderRadius="md"
+                borderColor="gray.200"
+              >
+                <Text fontWeight="bold" mb={2} fontSize="md">
+                  Basic Information
                 </Text>
+                <Grid templateColumns="1fr 2fr" gap={2} mb={4}>
+                  <Text fontWeight="semibold">Name:</Text>
+                  <Text>{investmentType.name}</Text>
 
-                <Text fontWeight="semibold">Return Rate:</Text>
-                <Text>{investmentType.returnRate}%</Text>
+                  <Text fontWeight="semibold">Description:</Text>
+                  <Text noOfLines={2}>{investmentType.description}</Text>
+                </Grid>
+              </Box>
 
-                {investmentType.returnType === "normal" && (
-                  <>
-                    <Text fontWeight="semibold">Return Std Dev:</Text>
-                    <Text>{investmentType.returnRateStdDev}%</Text>
-                  </>
-                )}
-
-                <Text fontWeight="semibold">Expense Ratio:</Text>
-                <Text>{investmentType.expenseRatio}%</Text>
-
-                <Text fontWeight="semibold">Dividend Type:</Text>
-                <Text>
-                  {investmentType.dividendType === "fixed"
-                    ? "Fixed Value"
-                    : "Normal Distribution"}
+              <Box
+                mb={4}
+                p={4}
+                borderWidth={1}
+                borderRadius="md"
+                borderColor="gray.200"
+              >
+                <Text fontWeight="bold" mb={2} fontSize="md">
+                  Return Details
                 </Text>
+                <Grid templateColumns="1fr 2fr" gap={2} mb={2}>
+                  <Text fontWeight="semibold">Return Type:</Text>
+                  <Text>
+                    {investmentType.returnType === ReturnType.FIXED
+                      ? "Fixed Value"
+                      : "Normal Distribution"}
+                  </Text>
 
-                <Text fontWeight="semibold">Dividend Rate:</Text>
-                <Text>{investmentType.dividendRate}%</Text>
+                  <Text fontWeight="semibold">Return Rate:</Text>
+                  <Text>{investmentType.returnRate}%</Text>
 
-                {investmentType.dividendType === "normal" && (
-                  <>
-                    <Text fontWeight="semibold">Dividend Std Dev:</Text>
-                    <Text>{investmentType.dividendRateStdDev}%</Text>
-                  </>
-                )}
+                  {investmentType.returnType === ReturnType.NORMAL && (
+                    <>
+                      <Text fontWeight="semibold">Return Std Dev:</Text>
+                      <Text>{investmentType.returnRateStdDev}%</Text>
+                    </>
+                  )}
 
-                <Text fontWeight="semibold">Taxability:</Text>
-                <Text>
-                  {investmentType.taxability === "taxable"
-                    ? "Taxable"
-                    : "Tax-Exempt"}
+                  <Text fontWeight="semibold">Expense Ratio:</Text>
+                  <Text>{investmentType.expenseRatio}%</Text>
+                </Grid>
+              </Box>
+
+              <Box
+                mb={4}
+                p={4}
+                borderWidth={1}
+                borderRadius="md"
+                borderColor="gray.200"
+              >
+                <Text fontWeight="bold" mb={2} fontSize="md">
+                  Income & Tax
                 </Text>
-              </Grid>
+                <Grid templateColumns="1fr 2fr" gap={2}>
+                  <Text fontWeight="semibold">Dividend Type:</Text>
+                  <Text>
+                    {investmentType.dividendType === ReturnType.FIXED
+                      ? "Fixed Value"
+                      : "Normal Distribution"}
+                  </Text>
+
+                  <Text fontWeight="semibold">Dividend Rate:</Text>
+                  <Text>{investmentType.dividendRate}%</Text>
+
+                  {investmentType.dividendType === ReturnType.NORMAL && (
+                    <>
+                      <Text fontWeight="semibold">Dividend Std Dev:</Text>
+                      <Text>{investmentType.dividendRateStdDev}%</Text>
+                    </>
+                  )}
+
+                  <Text fontWeight="semibold">Taxability:</Text>
+                  <Text>
+                    {investmentType.taxability === "taxable"
+                      ? "Taxable"
+                      : "Tax-Exempt"}
+                  </Text>
+                </Grid>
+              </Box>
             </Box>
           )}
         </ModalBody>
@@ -517,12 +558,16 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
             </Button>
           )}
           {activeStep < steps.length - 1 ? (
-            <Button colorScheme="blue" onClick={handleNext}>
+            <Button
+              colorScheme="blue"
+              onClick={handleNext}
+              isDisabled={!isCurrentStepValid}
+            >
               Next
             </Button>
           ) : (
             <Button colorScheme="blue" onClick={handleSave}>
-              Save
+              Save Investment Type
             </Button>
           )}
         </ModalFooter>

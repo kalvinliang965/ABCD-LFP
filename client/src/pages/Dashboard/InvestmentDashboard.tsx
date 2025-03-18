@@ -122,7 +122,6 @@ interface Investment {
   description: string;
   expenseRatio: number;
   taxability: "taxable" | "tax-exempt";
-  accountType: "non-retirement" | "pre-tax-retirement" | "after-tax-retirement";
 
   // Return information
   returnRate?: number;
@@ -246,7 +245,6 @@ const InvestmentDashboard: React.FC = () => {
         dividendRate,
         dividendRateStdDev,
         taxability: item.taxability as "taxable" | "tax-exempt",
-        accountType: "non-retirement" as "non-retirement", // Explicitly type this
       };
 
       return investment;
@@ -275,14 +273,13 @@ const InvestmentDashboard: React.FC = () => {
       value: "$0", // Default value
       description: investmentType.description,
       expenseRatio: investmentType.expenseRatio,
-      returnType: investmentType.returnType,
+      returnType: investmentType.returnType as "fixed" | "normal",
       returnRate: investmentType.returnRate,
       returnRateStdDev: investmentType.returnRateStdDev,
-      dividendType: investmentType.dividendType,
+      dividendType: investmentType.dividendType as "fixed" | "normal",
       dividendRate: investmentType.dividendRate,
       dividendRateStdDev: investmentType.dividendRateStdDev,
       taxability: investmentType.taxability,
-      accountType: "non-retirement", // Default account type
     };
 
     setInvestments([...investments, newInvestment]);
@@ -301,10 +298,7 @@ const InvestmentDashboard: React.FC = () => {
       const matchesTaxability =
         taxability === "all" || investment.taxability === taxability;
 
-      const matchesAccountType =
-        accountType === "all" || investment.accountType === accountType;
-
-      return matchesSearch && matchesTaxability && matchesAccountType;
+      return matchesSearch && matchesTaxability;
     })
     .sort((a, b) => {
       let comparison = 0;
