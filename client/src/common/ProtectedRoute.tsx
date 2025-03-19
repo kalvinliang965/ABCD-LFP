@@ -1,5 +1,5 @@
-import { Navigate } from 'react-router-dom';
-import { ReactNode } from 'react';
+import { Navigate } from "react-router-dom";
+import { ReactNode } from "react";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -7,8 +7,8 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   // Authentication logic
-  const isAuthenticated = localStorage.getItem('token') !== null;
-  
+  const isAuthenticated = localStorage.getItem("token") !== null;
+
   // Temporary set to true for development testing
   const isAuthenticatedForDev = true;
 
@@ -19,4 +19,4 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   return <>{children}</>;
 };
 
-export default ProtectedRoute; 
+export default ProtectedRoute;

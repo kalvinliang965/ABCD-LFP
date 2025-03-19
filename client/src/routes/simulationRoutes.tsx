@@ -1,7 +1,7 @@
 import React from "react";
 import { Route } from "react-router-dom";
-import ProtectedRoute from "../components/ProtectedRoute";
-import Layout from "../components/Layout";
+import { ProtectedRoute } from "../common";
+import { Layout } from "../layouts";
 
 // Placeholder components
 const RunSimulation = () => (

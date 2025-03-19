@@ -1,15 +1,31 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import { Card, Icon, Text, useColorModeValue, Flex } from "@chakra-ui/react";
 import { FaPlus } from "react-icons/fa";
 
-interface AddInvestmentCardProps {
+export interface AddContentCardProps {
+  text?: string;
   onClick: () => void;
+  icon?: React.ElementType;
+  minHeight?: string;
+  iconSize?: number;
+  iconColor?: string;
+  textColor?: string;
 }
 
-const AddInvestmentCard: React.FC<AddInvestmentCardProps> = ({ onClick }) => {
+const AddContentCard: React.FC<AddContentCardProps> = ({
+  text = "Add New Item",
+  onClick,
+  icon = FaPlus,
+  minHeight = "220px",
+  iconSize = 10,
+  iconColor,
+  textColor,
+}) => {
   const cardBg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.600");
   const hoverBg = useColorModeValue("gray.50", "gray.700");
+  const defaultIconColor = useColorModeValue("gray.400", "gray.500");
+  const defaultTextColor = useColorModeValue("gray.500", "gray.400");
 
   return (
     <Card
@@ -24,7 +40,7 @@ const AddInvestmentCard: React.FC<AddInvestmentCardProps> = ({ onClick }) => {
       _hover={{ bg: hoverBg, transform: "translateY(-5px)", boxShadow: "lg" }}
       cursor="pointer"
       height="100%"
-      minHeight="220px"
+      minHeight={minHeight}
       display="flex"
       flexDirection="column"
       onClick={onClick}
@@ -37,13 +53,22 @@ const AddInvestmentCard: React.FC<AddInvestmentCardProps> = ({ onClick }) => {
         width="100%"
         p={4}
       >
-        <Icon as={FaPlus} boxSize={10} color="gray.400" />
-        <Text color="gray.500" fontWeight="medium" mt={3}>
-          Add New Investment
+        <Icon
+          as={icon}
+          boxSize={iconSize}
+          color={iconColor || defaultIconColor}
+        />
+        <Text
+          color={textColor || defaultTextColor}
+          fontWeight="medium"
+          mt={3}
+          textAlign="center"
+        >
+          {text}
         </Text>
       </Flex>
     </Card>
   );
 };
 
-export default AddInvestmentCard;
+export default AddContentCard;

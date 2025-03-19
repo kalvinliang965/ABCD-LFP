@@ -1,7 +1,7 @@
 import React from "react";
 import { Route, Navigate } from "react-router-dom";
-import ProtectedRoute from "../components/ProtectedRoute";
-import Layout from "../components/Layout";
+import { ProtectedRoute } from "../common";
+import { Layout } from "../layouts";
 
 // 账户相关组件
 const Settings = () => (
