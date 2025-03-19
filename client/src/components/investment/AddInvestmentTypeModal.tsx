@@ -161,12 +161,12 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
   // Navigation functions
   const handleNext = () => {
     if (validateCurrentStep()) {
-      setActiveStep((step: number) => Math.min(step + 1, steps.length - 1));
+      setActiveStep(Math.min(activeStep + 1, steps.length - 1));
     }
   };
 
   const handleBack = () => {
-    setActiveStep((step: number) => Math.max(step - 1, 0));
+    setActiveStep(Math.max(activeStep - 1, 0));
   };
 
   const handleSave = () => {
