@@ -35,7 +35,7 @@ const Header: React.FC<HeaderProps> = ({
     <Flex
       as="header"
       width={{ base: "100%", md: "calc(100% - 70px)" }}
-      height="60px"
+      height="70px"
       align="center"
       justify="space-between"
       bg={bgColor}
