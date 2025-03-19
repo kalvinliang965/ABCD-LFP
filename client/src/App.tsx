@@ -2,9 +2,8 @@ import React from "react";
 import { BrowserRouter as Router } from "react-router-dom";
 import { ChakraProvider, extendTheme, ColorModeScript } from "@chakra-ui/react";
 
-// 导入路由
+// Import routes
 import AppRoutes from "./routes";
-import Layout from "./components/Layout";
 
 // Custom theme with color mode config
 const theme = extendTheme({
