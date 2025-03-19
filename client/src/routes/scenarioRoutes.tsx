@@ -4,41 +4,17 @@ import { ProtectedRoute } from "../common";
 import { Layout } from "../layouts";
 
 // Placeholder components
-const ScenariosList = () => (
-  <Layout title="My Scenarios">
-    <div>My Scenarios</div>
-  </Layout>
-);
+const ScenariosList = () => <div>My Scenarios</div>;
 
-const ScenariosImportExport = () => (
-  <Layout title="Import/Export Scenarios">
-    <div>Import/Export Scenarios</div>
-  </Layout>
-);
+const ScenariosImportExport = () => <div>Import/Export Scenarios</div>;
 
-const ScenariosShared = () => (
-  <Layout title="Shared Scenarios">
-    <div>Shared Scenarios</div>
-  </Layout>
-);
+const ScenariosShared = () => <div>Shared Scenarios</div>;
 
-const BasicInfo = () => (
-  <Layout title="Basic Info">
-    <div>Basic Info</div>
-  </Layout>
-);
+const BasicInfo = () => <div>Basic Info</div>;
 
-const EventSeries = () => (
-  <Layout title="Event Series">
-    <div>Event Series</div>
-  </Layout>
-);
+const EventSeries = () => <div>Event Series</div>;
 
-const Strategies = () => (
-  <Layout title="Strategies">
-    <div>Strategies</div>
-  </Layout>
-);
+const Strategies = () => <div>Strategies</div>;
 
 const ScenarioRoutes = [
   // Scenarios Routes
@@ -47,7 +23,9 @@ const ScenarioRoutes = [
     path="/scenarios"
     element={
       <ProtectedRoute>
-        <ScenariosList />
+        <Layout title="My Scenarios">
+          <ScenariosList />
+        </Layout>
       </ProtectedRoute>
     }
   />,
@@ -56,7 +34,9 @@ const ScenarioRoutes = [
     path="/scenarios/import-export"
     element={
       <ProtectedRoute>
-        <ScenariosImportExport />
+        <Layout title="Import/Export Scenarios">
+          <ScenariosImportExport />
+        </Layout>
       </ProtectedRoute>
     }
   />,
@@ -65,7 +45,9 @@ const ScenarioRoutes = [
     path="/scenarios/shared"
     element={
       <ProtectedRoute>
-        <ScenariosShared />
+        <Layout title="Shared Scenarios">
+          <ScenariosShared />
+        </Layout>
       </ProtectedRoute>
     }
   />,
@@ -76,7 +58,9 @@ const ScenarioRoutes = [
     path="/builder/basic-info"
     element={
       <ProtectedRoute>
-        <BasicInfo />
+        <Layout title="Basic Info">
+          <BasicInfo />
+        </Layout>
       </ProtectedRoute>
     }
   />,
@@ -90,7 +74,9 @@ const ScenarioRoutes = [
     path="/builder/events"
     element={
       <ProtectedRoute>
-        <EventSeries />
+        <Layout title="Event Series">
+          <EventSeries />
+        </Layout>
       </ProtectedRoute>
     }
   />,
@@ -99,7 +85,9 @@ const ScenarioRoutes = [
     path="/builder/strategies"
     element={
       <ProtectedRoute>
-        <Strategies />
+        <Layout title="Strategies">
+          <Strategies />
+        </Layout>
       </ProtectedRoute>
     }
   />,

@@ -17,42 +17,42 @@ import { FaSun, FaMoon, FaUser } from "react-icons/fa";
 
 interface HeaderProps {
   title?: string;
+  contentMaxWidth?: string;
+  paddingX?: string;
 }
 
 const Header: React.FC<HeaderProps> = ({
   title = "Lifetime Financial Planner",
+  contentMaxWidth,
+  paddingX,
 }) => {
   const { colorMode, toggleColorMode } = useColorMode();
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
 
-  // Constants for sidebar dimensions
-  const SIDEBAR_WIDTH = "70px";
-  const HEADER_HEIGHT = "70px";
-
-  // Use responsive values for padding and max width
-  const contentMaxWidth = useBreakpointValue({
+  // Use responsive values for padding and max width if not provided as props
+  const defaultContentMaxWidth = useBreakpointValue({
     base: "100%",
     lg: "1200px",
     xl: "1500px",
     "2xl": "1800px", // For very large screens (like 4K)
   });
 
-  const paddingX = useBreakpointValue({
+  const defaultPaddingX = useBreakpointValue({
     base: "4",
     md: "6",
     lg: "8",
   });
 
+  // Use props if provided, otherwise use default values
+  const maxWidth = contentMaxWidth || defaultContentMaxWidth;
+  const pX = paddingX || defaultPaddingX;
+
   return (
     <Flex
       as="header"
-      position="fixed"
-      top="0"
-      left="0"
       width="100%"
-      height={HEADER_HEIGHT}
-      paddingLeft={SIDEBAR_WIDTH}
+      height="70px"
       align="center"
       justify="center"
       bg={bgColor}
@@ -62,8 +62,8 @@ const Header: React.FC<HeaderProps> = ({
       boxShadow="sm"
     >
       <Container
-        maxWidth={contentMaxWidth}
-        px={paddingX}
+        maxWidth={maxWidth}
+        px={pX}
         height="100%"
         centerContent={false}
       >

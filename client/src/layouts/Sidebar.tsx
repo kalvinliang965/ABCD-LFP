@@ -123,12 +123,13 @@ const Sidebar: React.FC = () => {
       color="white"
       h="100vh"
       w={sidebarOpen ? "250px" : "70px"}
-      position="fixed"
-      left="0"
+      position="sticky"
       top="0"
+      left="0"
       zIndex="10"
       transition="all 0.3s ease"
       overflowY="auto"
+      flexShrink={0}
       css={{
         "&::-webkit-scrollbar": {
           width: "6px",
