@@ -26,11 +26,22 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
     lg: "8",
   });
 
+  // Sidebar width values for proper margin
+  const sidebarWidth = useBreakpointValue({
+    base: "0", // On mobile, the sidebar is hidden or in a different position
+    md: "70px", // Default closed sidebar width
+  });
+
   return (
     <Box display="flex" minHeight="100vh" width="100%" overflow="hidden">
       <Sidebar />
 
-      <Box flex="1" display="flex" flexDirection="column">
+      <Box
+        flex="1"
+        display="flex"
+        flexDirection="column"
+        marginLeft={sidebarWidth} // Add margin to account for fixed sidebar
+      >
         <Header
           title={title}
           contentMaxWidth={contentMaxWidth}

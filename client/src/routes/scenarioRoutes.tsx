@@ -2,10 +2,9 @@ import React from "react";
 import { Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "../common";
 import { Layout } from "../layouts";
+import MyScenariosPage from "../pages/scenarios/MyScenariosPage";
 
 // Placeholder components
-const ScenariosList = () => <div>My Scenarios</div>;
-
 const ScenariosImportExport = () => <div>Import/Export Scenarios</div>;
 
 const ScenariosShared = () => <div>Shared Scenarios</div>;
@@ -24,7 +23,7 @@ const ScenarioRoutes = [
     element={
       <ProtectedRoute>
         <Layout title="My Scenarios">
-          <ScenariosList />
+          <MyScenariosPage />
         </Layout>
       </ProtectedRoute>
     }
