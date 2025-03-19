@@ -7,14 +7,13 @@ import {
   Text,
   useColorModeValue,
 } from "@chakra-ui/react";
-import Layout from "../../components/Layout";
-import FilterBar from "../../components/dashboard/FilterBar";
-import InvestmentList from "../../components/dashboard/InvestmentList";
+import Layout from "../../layouts/Layout";
+import { InvestmentFilterBar } from "../../components/investment";
+import InvestmentList from "../../components/investment/InvestmentList";
 import AddInvestmentTypeModal, {
   InvestmentType,
   ValueInputMode,
-} from "../../components/dashboard/AddInvestmentTypeModal";
-import { ReturnType } from "../../types/investment";
+} from "../../components/investment/AddInvestmentTypeModal";
 
 // Sample investment data
 interface ExpectedAnnualReturn {
@@ -372,7 +371,7 @@ const InvestmentDashboard: React.FC = () => {
           </Box>
         </Flex>
 
-        <FilterBar
+        <InvestmentFilterBar
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           taxability={taxability}
