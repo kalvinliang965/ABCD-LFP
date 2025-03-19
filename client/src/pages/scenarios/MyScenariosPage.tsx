@@ -5,29 +5,18 @@ import {
   SimpleGrid,
   Text,
   Flex,
-  Alert,
-  AlertIcon,
-  VStack,
-  HStack,
   Button,
   Icon,
-  Tooltip,
   Badge,
   useColorModeValue,
-  Divider,
 } from "@chakra-ui/react";
 import {
-  FaCog,
   FaInfoCircle,
   FaPlus,
   FaPlayCircle,
-  FaChartLine,
   FaRegLightbulb,
 } from "react-icons/fa";
-import {
-  ScenarioActionCard,
-  ScenarioDetailCard,
-} from "../../components/scenarios";
+import { ScenarioDetailCard } from "../../components/scenarios";
 import { SAMPLE_SCENARIOS } from "../../types/scenario";
 import { Link as RouterLink } from "react-router-dom";
 
@@ -39,7 +28,6 @@ const MyScenariosPage: React.FC = () => {
   const bgColor = useColorModeValue("white", "gray.800");
   const cardBgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-  const hoverBgColor = useColorModeValue("gray.50", "gray.700");
 
   return (
     <Box py={4} px={4} w="100%" position="relative">
@@ -65,21 +53,6 @@ const MyScenariosPage: React.FC = () => {
               Plan and simulate your financial future
             </Text>
           </Box>
-          <HStack spacing={3}>
-            <Tooltip label="Configure global simulation parameters">
-              <Button
-                as={RouterLink}
-                to="/scenarios/settings"
-                size="sm"
-                leftIcon={<FaCog />}
-                colorScheme="blue"
-                variant="outline"
-                _hover={{ bg: hoverBgColor }}
-                boxShadow="sm"
-              >
-                Global Settings
-              </Button>
-            </Tooltip>
             <Button
               as={RouterLink}
               to="/scenarios/new"
@@ -92,7 +65,6 @@ const MyScenariosPage: React.FC = () => {
             >
               New Scenario
             </Button>
-          </HStack>
         </Flex>
 
         {/* Info box with improved styling */}
@@ -133,7 +105,7 @@ const MyScenariosPage: React.FC = () => {
       >
         Quick Actions
       </Heading>
-      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={5} mb={8}>
+      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5} mb={8}>
         <Box
           bg={cardBgColor}
           p={5}
@@ -198,40 +170,6 @@ const MyScenariosPage: React.FC = () => {
             </Heading>
             <Text color={infoColor}>
               Test and validate your financial strategies
-            </Text>
-          </Flex>
-        </Box>
-
-        <Box
-          bg={cardBgColor}
-          p={5}
-          borderRadius="lg"
-          boxShadow="md"
-          borderTop="4px solid"
-          borderTopColor="teal.500"
-          _hover={{ transform: "translateY(-5px)", boxShadow: "lg" }}
-          transition="all 0.3s"
-          cursor="pointer"
-          onClick={() => (window.location.href = "/scenarios/settings")}
-        >
-          <Flex direction="column" align="center" textAlign="center">
-            <Flex
-              w="60px"
-              h="60px"
-              bg="teal.50"
-              color="teal.500"
-              borderRadius="full"
-              justify="center"
-              align="center"
-              mb={3}
-            >
-              <Icon as={FaChartLine} boxSize={6} />
-            </Flex>
-            <Heading as="h3" size="md" mb={2} color="teal.500">
-              Configure Settings
-            </Heading>
-            <Text color={infoColor}>
-              Set global parameters for your simulations
             </Text>
           </Flex>
         </Box>
