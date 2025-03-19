@@ -6,6 +6,14 @@ import {
   useDisclosure,
   Text,
   useColorModeValue,
+  VStack,
+  HStack,
+  Container,
+  Badge,
+  Divider,
+  Icon,
+  Tooltip,
+  Button,
 } from "@chakra-ui/react";
 import { InvestmentFilterBar } from "../../components/investment";
 import InvestmentList from "../../components/investment/InvestmentList";
@@ -13,6 +21,7 @@ import AddInvestmentTypeModal, {
   InvestmentType,
   ValueInputMode,
 } from "../../components/investment/AddInvestmentTypeModal";
+import { FaChartLine, FaInfoCircle, FaLightbulb, FaPlus } from "react-icons/fa";
 
 // Sample investment data
 interface ExpectedAnnualReturn {
@@ -297,81 +306,53 @@ const InvestmentDashboard: React.FC = () => {
       return -comparison;
     });
 
-  // Calculate summary values
-  const totalValue = investments.reduce(
-    (sum, investment) =>
-      sum + parseFloat(investment.value.replace(/[^\d.-]/g, "")),
-    0
-  );
-
-  // Calculate average return rate, handling both fixed and normal distribution
-  const totalInvestmentReturn =
-    investments.reduce((sum, investment) => {
-      if (investment.returnType === "fixed") {
-        return sum + (investment.returnRate || 0);
-      } else {
-        // For normal distribution, we use the mean
-        return sum + (investment.returnRate || 0);
-      }
-    }, 0) / investments.length;
-
-  // Calculate asset allocation by type
-  const assetAllocation = investments.reduce((result, investment) => {
-    const value = parseFloat(investment.value.replace(/[^\d.-]/g, ""));
-    let type = "Other";
-
-    if (
-      investment.name.toLowerCase().includes("real estate") ||
-      investment.name.toLowerCase().includes("reit")
-    ) {
-      type = "Real Estate";
-    } else if (
-      investment.name.toLowerCase().includes("stock") ||
-      investment.name.toLowerCase().includes("equity")
-    ) {
-      type = "Stocks";
-    } else if (investment.name.toLowerCase().includes("bond")) {
-      type = "Bonds";
-    } else if (
-      investment.name.toLowerCase().includes("gold") ||
-      investment.name.toLowerCase().includes("silver")
-    ) {
-      type = "Precious Metals";
-    } else if (investment.name.toLowerCase().includes("crypto")) {
-      type = "Cryptocurrency";
-    } else if (investment.name.toLowerCase() === "cash") {
-      type = "Cash";
-    }
-
-    result[type] = (result[type] || 0) + value;
-    return result;
-  }, {} as Record<string, number>);
-
-  const bgColor = useColorModeValue("white", "gray.800");
+  // Colors for light/dark mode
+  const bgMain = useColorModeValue("gray.50", "gray.900");
+  const bgCard = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
+  const headingColor = useColorModeValue("blue.600", "blue.300");
+  const textColor = useColorModeValue("gray.600", "gray.400");
+  const accentColor = useColorModeValue("blue.500", "blue.300");
+  const tipBg = useColorModeValue("blue.50", "blue.900");
+  const totalInvestments = filteredInvestments.length;
 
   return (
     <Box width="100%">
+      {/* Filter Section */}
       <Box mb={6}>
-        <Heading size="lg" mb={1}>
-          Investment Dashboard
-        </Heading>
-        <Text color="gray.500">Manage and track your investment portfolio</Text>
+        <InvestmentFilterBar
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          taxability={taxability}
+          setTaxability={setTaxability}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+        />
       </Box>
 
-      <InvestmentFilterBar
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        taxability={taxability}
-        setTaxability={setTaxability}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-      />
-
-      <InvestmentList
-        investments={filteredInvestments as any}
-        onOpenInvestmentModal={onInvestmentTypeModalOpen}
-      />
+      {/* Investments Section */}
+      <Box mb={10}>
+        <HStack justify="space-between" mb={4}>
+          <Heading as="h2" size="md" color={headingColor}>
+            Your Investment Portfolio
+          </Heading>
+          <Badge
+            colorScheme="blue"
+            fontSize="md"
+            borderRadius="full"
+            px={3}
+            py={1}
+          >
+            {totalInvestments}{" "}
+            {totalInvestments === 1 ? "Investment" : "Investments"}
+          </Badge>
+        </HStack>
+        <Divider mb={4} />
+        <InvestmentList
+          investments={filteredInvestments as any}
+          onOpenInvestmentModal={onInvestmentTypeModalOpen}
+        />
+      </Box>
 
       {/* Investment Type Modal */}
       <AddInvestmentTypeModal
