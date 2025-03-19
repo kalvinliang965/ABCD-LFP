@@ -1,5 +1,10 @@
 import React, { useState } from "react";
-import { Box, SimpleGrid, useDisclosure } from "@chakra-ui/react";
+import {
+  Box,
+  SimpleGrid,
+  useDisclosure,
+  useBreakpointValue,
+} from "@chakra-ui/react";
 import InvestmentCard from "./InvestmentCard";
 import AddInvestmentCard from "./AddInvestmentCard";
 import InvestmentDetailModal from "./InvestmentDetailModal";
@@ -17,6 +22,21 @@ const InvestmentList: React.FC<InvestmentListProps> = ({
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
+  const columns = useBreakpointValue({
+    base: 1,
+    sm: 2,
+    md: 2,
+    lg: 3,
+    xl: 4,
+    "2xl": 5,
+  });
+
+  const spacing = useBreakpointValue({
+    base: 4,
+    md: 5,
+    lg: 6,
+  });
+
   const handleInvestmentClick = (investment: Investment) => {
     setSelectedInvestment(investment);
     onOpen();
@@ -30,8 +50,8 @@ const InvestmentList: React.FC<InvestmentListProps> = ({
   return (
     <Box mb={10} width="100%">
       <SimpleGrid
-        columns={{ base: 1, sm: 2, md: 2, lg: 3, xl: 4, "2xl": 5 }}
-        spacing={{ base: 4, md: 5, lg: 6 }}
+        columns={columns}
+        spacing={spacing}
         width="100%"
         autoRows="1fr"
       >

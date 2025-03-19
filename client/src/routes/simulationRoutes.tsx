@@ -4,29 +4,13 @@ import { ProtectedRoute } from "../common";
 import { Layout } from "../layouts";
 
 // Placeholder components
-const RunSimulation = () => (
-  <Layout title="Run Simulation">
-    <div>Run Simulation</div>
-  </Layout>
-);
+const RunSimulation = () => <div>Run Simulation</div>;
 
-const SimulationResults = () => (
-  <Layout title="Simulation Results">
-    <div>Simulation Results</div>
-  </Layout>
-);
+const SimulationResults = () => <div>Simulation Results</div>;
 
-const OneDimensionExploration = () => (
-  <Layout title="1D Exploration">
-    <div>One Dimension Exploration</div>
-  </Layout>
-);
+const OneDimensionExploration = () => <div>One Dimension Exploration</div>;
 
-const TwoDimensionExploration = () => (
-  <Layout title="2D Exploration">
-    <div>Two Dimension Exploration</div>
-  </Layout>
-);
+const TwoDimensionExploration = () => <div>Two Dimension Exploration</div>;
 
 const SimulationRoutes = [
   // Simulation Routes
@@ -35,7 +19,9 @@ const SimulationRoutes = [
     path="/simulation/run"
     element={
       <ProtectedRoute>
-        <RunSimulation />
+        <Layout title="Run Simulation">
+          <RunSimulation />
+        </Layout>
       </ProtectedRoute>
     }
   />,
@@ -44,7 +30,9 @@ const SimulationRoutes = [
     path="/simulation/results"
     element={
       <ProtectedRoute>
-        <SimulationResults />
+        <Layout title="Simulation Results">
+          <SimulationResults />
+        </Layout>
       </ProtectedRoute>
     }
   />,
@@ -55,7 +43,9 @@ const SimulationRoutes = [
     path="/exploration/one-dimension"
     element={
       <ProtectedRoute>
-        <OneDimensionExploration />
+        <Layout title="1D Exploration">
+          <OneDimensionExploration />
+        </Layout>
       </ProtectedRoute>
     }
   />,
@@ -64,7 +54,9 @@ const SimulationRoutes = [
     path="/exploration/two-dimension"
     element={
       <ProtectedRoute>
-        <TwoDimensionExploration />
+        <Layout title="2D Exploration">
+          <TwoDimensionExploration />
+        </Layout>
       </ProtectedRoute>
     }
   />,

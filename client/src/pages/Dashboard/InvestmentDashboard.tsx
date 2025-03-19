@@ -7,7 +7,6 @@ import {
   Text,
   useColorModeValue,
 } from "@chakra-ui/react";
-import Layout from "../../layouts/Layout";
 import { InvestmentFilterBar } from "../../components/investment";
 import InvestmentList from "../../components/investment/InvestmentList";
 import AddInvestmentTypeModal, {
@@ -352,47 +351,35 @@ const InvestmentDashboard: React.FC = () => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
 
   return (
-    <Layout title="Investment Dashboard">
-      <Flex direction="column" width="100%" mb={8}>
-        <Flex
-          justifyContent="space-between"
-          alignItems="center"
-          mb={6}
-          flexDirection={{ base: "column", md: "row" }}
-          gap={{ base: 4, md: 0 }}
-        >
-          <Box>
-            <Heading size="lg" mb={1}>
-              Investment Dashboard
-            </Heading>
-            <Text color="gray.500">
-              Manage and track your investment portfolio
-            </Text>
-          </Box>
-        </Flex>
+    <Box width="100%">
+      <Box mb={6}>
+        <Heading size="lg" mb={1}>
+          Investment Dashboard
+        </Heading>
+        <Text color="gray.500">Manage and track your investment portfolio</Text>
+      </Box>
 
-        <InvestmentFilterBar
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          taxability={taxability}
-          setTaxability={setTaxability}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-        />
+      <InvestmentFilterBar
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        taxability={taxability}
+        setTaxability={setTaxability}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+      />
 
-        <InvestmentList
-          investments={filteredInvestments as any}
-          onOpenInvestmentModal={onInvestmentTypeModalOpen}
-        />
+      <InvestmentList
+        investments={filteredInvestments as any}
+        onOpenInvestmentModal={onInvestmentTypeModalOpen}
+      />
 
-        {/* Investment Type Modal */}
-        <AddInvestmentTypeModal
-          isOpen={isInvestmentTypeModalOpen}
-          onClose={onInvestmentTypeModalClose}
-          onSave={handleSaveInvestmentType}
-        />
-      </Flex>
-    </Layout>
+      {/* Investment Type Modal */}
+      <AddInvestmentTypeModal
+        isOpen={isInvestmentTypeModalOpen}
+        onClose={onInvestmentTypeModalClose}
+        onSave={handleSaveInvestmentType}
+      />
+    </Box>
   );
 };
 
