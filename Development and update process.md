@@ -96,6 +96,28 @@ The "Add New Investment" window has been completely redesigned to align with our
 
 The redesigned Add Investment window creates a more guided, educational experience that helps users create properly configured investment types with all required attributes.
 
+## Investment Dashboard Update
+
+The Investment Dashboard and related components have been updated to properly handle and display both percentage-based and fixed amount investments:
+
+1. **Investment Detail Modal Enhancement:**
+   - The detail modal now intelligently displays either percentage or dollar values based on the investment's configuration
+   - Labels automatically adjust to show "Return Rate" vs "Return Amount" depending on the input mode
+   - Descriptions are contextually relevant to the selected input type
+   - Standard deviation information is formatted appropriately (% or $) based on the input mode
+
+2. **Dashboard Integration:**
+   - The main dashboard now properly handles investments with different input modes
+   - Sample investment data includes examples of both percentage and fixed amount returns
+   - Investment cards maintain a consistent appearance regardless of the underlying value representation
+
+3. **Type Definition Updates:**
+   - Created ValueInputMode enum to standardize handling of percentage vs. fixed amount inputs
+   - Updated Investment interface to include returnInputMode and dividendInputMode properties
+   - Ensured consistent type usage across all components
+
+These updates ensure that users can meaningfully compare investments regardless of how their returns are calculated, while maintaining a clean, consistent interface.
+
 ## Interactions
 
 - Users can view basic information about investment types on the cards in the main dashboard

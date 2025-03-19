@@ -5,23 +5,16 @@ import {
   Box,
   useDisclosure,
   Text,
-  Icon,
   useColorModeValue,
 } from "@chakra-ui/react";
-import {
-  FaBuilding,
-  FaCoins,
-  FaChartLine,
-  FaMoneyBillWave,
-  FaBitcoin,
-  FaChartPie,
-} from "react-icons/fa";
 import Layout from "../../components/Layout";
 import FilterBar from "../../components/dashboard/FilterBar";
 import InvestmentList from "../../components/dashboard/InvestmentList";
 import AddInvestmentTypeModal, {
   InvestmentType,
+  ValueInputMode,
 } from "../../components/dashboard/AddInvestmentTypeModal";
+import { ReturnType } from "../../types/investment";
 
 // Sample investment data
 interface ExpectedAnnualReturn {
@@ -116,7 +109,6 @@ const investmentData: InvestmentDataItem[] = [
 interface Investment {
   id: number | string;
   name: string;
-  icon: React.ReactElement;
   date: string;
   value: string;
   description: string;
@@ -127,11 +119,13 @@ interface Investment {
   returnRate?: number;
   returnType: "fixed" | "normal";
   returnRateStdDev?: number;
+  returnInputMode: "percentage" | "fixed_amount";
 
   // Dividend/income information
   dividendRate?: number;
   dividendType: "fixed" | "normal";
   dividendRateStdDev?: number;
+  dividendInputMode: "percentage" | "fixed_amount";
 }
 
 const InvestmentDashboard: React.FC = () => {
@@ -149,27 +143,6 @@ const InvestmentDashboard: React.FC = () => {
 
   // Map the raw investment data to match our Investment interface
   const mapInvestmentData = () => {
-    const getIconComponent = (name: string) => {
-      if (name.toLowerCase().includes("bond")) {
-        return <Icon as={FaBuilding} />;
-      } else if (
-        name.toLowerCase().includes("equity") ||
-        name.toLowerCase().includes("fund")
-      ) {
-        return <Icon as={FaChartLine} />;
-      } else if (
-        name.toLowerCase().includes("reit") ||
-        name.toLowerCase().includes("real estate")
-      ) {
-        return <Icon as={FaBuilding} />;
-      } else if (name.toLowerCase().includes("cash")) {
-        return <Icon as={FaMoneyBillWave} />;
-      } else if (name.toLowerCase().includes("crypto")) {
-        return <Icon as={FaBitcoin} />;
-      }
-      return <Icon as={FaChartPie} />;
-    };
-
     return investmentData.map((item, index) => {
       const returnType =
         item.expectedAnnualReturn.type === "normalDistribution"
@@ -233,16 +206,23 @@ const InvestmentDashboard: React.FC = () => {
         id: index + 1,
         name: item.name,
         description: item.description,
-        icon: getIconComponent(item.name),
         date: new Date().toISOString().split("T")[0],
         value: displayValue,
         expenseRatio: item.expenseRatio * 100, // Convert from decimal to percentage
         returnType: returnType as "fixed" | "normal",
         returnRate,
         returnRateStdDev,
+        returnInputMode:
+          item.expectedAnnualReturn.unit === "percentage"
+            ? "percentage"
+            : "fixed_amount",
         dividendType: dividendType as "fixed" | "normal",
         dividendRate,
         dividendRateStdDev,
+        dividendInputMode:
+          item.expectedAnnualIncome.unit === "percentage"
+            ? "percentage"
+            : "fixed_amount",
         taxability: item.taxability as "taxable" | "tax-exempt",
       };
 
@@ -259,15 +239,10 @@ const InvestmentDashboard: React.FC = () => {
   const handleSaveInvestmentType = (investmentType: InvestmentType) => {
     // Here you would typically save the investment type to a database
     // For now, we'll just create a new investment using this type
-    const getIconComponent = (iconName: string) => {
-      const iconOption = iconOptions.find((icon) => icon.name === iconName);
-      return iconOption ? <Icon as={iconOption.component} /> : <FaBuilding />;
-    };
 
     const newInvestment: Investment = {
       id: Date.now(),
       name: investmentType.name,
-      icon: getIconComponent(investmentType.icon),
       date: new Date().toISOString().split("T")[0],
       value: "$0", // Default value
       description: investmentType.description,
@@ -275,9 +250,11 @@ const InvestmentDashboard: React.FC = () => {
       returnType: investmentType.returnType as "fixed" | "normal",
       returnRate: investmentType.returnRate,
       returnRateStdDev: investmentType.returnRateStdDev,
+      returnInputMode: investmentType.returnInputMode,
       dividendType: investmentType.dividendType as "fixed" | "normal",
       dividendRate: investmentType.dividendRate,
       dividendRateStdDev: investmentType.dividendRateStdDev,
+      dividendInputMode: investmentType.dividendInputMode,
       taxability: investmentType.taxability,
     };
 
@@ -374,31 +351,6 @@ const InvestmentDashboard: React.FC = () => {
 
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-
-  // Define iconOptions for displaying icons
-  const iconOptions = [
-    { name: "TrendingUp", component: FaChartLine, label: "Trending Up" },
-    { name: "DollarSign", component: FaMoneyBillWave, label: "Dollar Sign" },
-    { name: "PieChart", component: FaChartPie, label: "Pie Chart" },
-    { name: "Building", component: FaBuilding, label: "Building" },
-    { name: "BarChart", component: FaChartLine, label: "Bar Chart" },
-    { name: "LineChart", component: FaChartLine, label: "Line Chart" },
-    { name: "Landmark", component: FaBuilding, label: "Landmark" },
-    {
-      name: "CircleDollarSign",
-      component: FaMoneyBillWave,
-      label: "Circle Dollar Sign",
-    },
-    {
-      name: "CandlestickChart",
-      component: FaChartLine,
-      label: "Candlestick Chart",
-    },
-    { name: "Bank", component: FaBuilding, label: "Bank Building" },
-    { name: "MoneyTrend", component: FaMoneyBillWave, label: "Money Trend" },
-    { name: "Coins", component: FaCoins, label: "Coins" },
-    { name: "Bitcoin", component: FaBitcoin, label: "Bitcoin" },
-  ];
 
   return (
     <Layout title="Investment Dashboard">

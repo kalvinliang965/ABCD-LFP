@@ -23,6 +23,7 @@ import {
 } from "@chakra-ui/react";
 import {
   ReturnType,
+  ValueInputMode,
   type InvestmentDetailModalProps,
 } from "../../types/investment";
 
@@ -67,21 +68,31 @@ const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
   const renderReturnInfo = () => {
     let returnText;
     let returnDescription;
+    const isFixedAmount =
+      investment.returnInputMode === ValueInputMode.FIXED_AMOUNT;
 
     switch (investment.returnType) {
       case ReturnType.FIXED:
-        returnText = "Fixed Return Rate";
-        returnDescription =
-          "A fixed return investment provides a consistent, predetermined return.";
+        returnText = isFixedAmount
+          ? "Fixed Return Amount"
+          : "Fixed Return Rate";
+        returnDescription = isFixedAmount
+          ? "A fixed amount added to the investment value annually."
+          : "A fixed percentage return on the investment value annually.";
         break;
       case ReturnType.NORMAL:
-        returnText = "Average Return Rate (Normal Distribution)";
-        returnDescription =
-          "Normal distribution returns vary with an average (mean) and standard deviation.";
+        returnText = isFixedAmount
+          ? "Average Return Amount (Normal Distribution)"
+          : "Average Return Rate (Normal Distribution)";
+        returnDescription = isFixedAmount
+          ? "Return amount varies with an average (mean) and standard deviation."
+          : "Return rate varies with an average (mean) and standard deviation.";
         break;
       default:
-        returnText = "Return Rate";
-        returnDescription = "Expected annual return on this investment.";
+        returnText = isFixedAmount ? "Return Amount" : "Return Rate";
+        returnDescription = isFixedAmount
+          ? "Expected annual dollar return on this investment."
+          : "Expected annual percentage return on this investment.";
     }
 
     return (
@@ -89,14 +100,23 @@ const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
         <Stat p={3} bg={statBgColor} borderRadius="md">
           <StatLabel color={labelColor}>{returnText}</StatLabel>
           <StatNumber fontSize="xl">
-            {formatPercent(investment.returnRate)}
+            {isFixedAmount
+              ? formatCurrency(investment.returnRate)
+              : formatPercent(investment.returnRate)}
           </StatNumber>
           <StatHelpText>
             {investment.returnType === ReturnType.NORMAL &&
               investment.returnRateStdDev && (
-                <Tooltip label="Standard deviation represents the volatility of returns">
+                <Tooltip
+                  label={`Standard deviation represents the volatility of ${
+                    isFixedAmount ? "dollar returns" : "percentage returns"
+                  }`}
+                >
                   <Flex alignItems="center">
-                    Std Dev: {formatPercent(investment.returnRateStdDev)}
+                    Std Dev:{" "}
+                    {isFixedAmount
+                      ? formatCurrency(investment.returnRateStdDev)
+                      : formatPercent(investment.returnRateStdDev)}
                   </Flex>
                 </Tooltip>
               )}
@@ -127,22 +147,31 @@ const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
 
     let dividendText;
     let dividendDescription;
+    const isFixedAmount =
+      investment.dividendInputMode === ValueInputMode.FIXED_AMOUNT;
 
     switch (investment.dividendType) {
       case ReturnType.FIXED:
-        dividendText = "Fixed Dividend Rate";
-        dividendDescription =
-          "Fixed dividends provide consistent, predetermined income payments.";
+        dividendText = isFixedAmount
+          ? "Fixed Income Amount"
+          : "Fixed Dividend Rate";
+        dividendDescription = isFixedAmount
+          ? "Fixed income provides consistent, predetermined dollar amounts."
+          : "Fixed dividends provide consistent, predetermined percentage payments.";
         break;
       case ReturnType.NORMAL:
-        dividendText = "Average Dividend Rate (Normal Distribution)";
-        dividendDescription =
-          "Variable dividends fluctuate based on a normal distribution.";
+        dividendText = isFixedAmount
+          ? "Average Income Amount (Normal Distribution)"
+          : "Average Dividend Rate (Normal Distribution)";
+        dividendDescription = isFixedAmount
+          ? "Variable income fluctuates based on a normal distribution."
+          : "Variable dividends fluctuate based on a normal distribution.";
         break;
       default:
-        dividendText = "Dividend Rate";
-        dividendDescription =
-          "Expected annual income from dividends or interest.";
+        dividendText = isFixedAmount ? "Income Amount" : "Dividend Rate";
+        dividendDescription = isFixedAmount
+          ? "Expected annual income amount from dividends or interest."
+          : "Expected annual percentage income from dividends or interest.";
     }
 
     return (
@@ -150,14 +179,23 @@ const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
         <Stat p={3} bg={statBgColor} borderRadius="md">
           <StatLabel color={labelColor}>{dividendText}</StatLabel>
           <StatNumber fontSize="xl">
-            {formatPercent(investment.dividendRate)}
+            {isFixedAmount
+              ? formatCurrency(investment.dividendRate)
+              : formatPercent(investment.dividendRate)}
           </StatNumber>
           <StatHelpText>
             {investment.dividendType === ReturnType.NORMAL &&
               investment.dividendRateStdDev && (
-                <Tooltip label="Standard deviation represents the volatility of dividend payments">
+                <Tooltip
+                  label={`Standard deviation represents the volatility of ${
+                    isFixedAmount ? "income amounts" : "dividend payments"
+                  }`}
+                >
                   <Flex alignItems="center">
-                    Std Dev: {formatPercent(investment.dividendRateStdDev)}
+                    Std Dev:{" "}
+                    {isFixedAmount
+                      ? formatCurrency(investment.dividendRateStdDev)
+                      : formatPercent(investment.dividendRateStdDev)}
                   </Flex>
                 </Tooltip>
               )}
@@ -248,27 +286,36 @@ const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
               <Text fontWeight="medium" mb={2}>
                 Tax Status
               </Text>
-              <Text>
-                {investment.taxability === "taxable"
-                  ? "This investment is taxable. Gains and income are subject to taxation."
-                  : "This investment is tax-exempt. Gains and income may be exempt from certain taxes."}
+              <Text fontSize="lg" mb={4}>
+                {investment.taxability === "taxable" ? "Taxable" : "Tax-Exempt"}
               </Text>
-              {investment.taxability === "tax-exempt" && (
-                <Text fontSize="sm" color={labelColor} mt={2}>
-                  Note: Tax-exempt investments should not be held in retirement
-                  accounts, as they would not provide any additional tax benefit
-                  in that context.
-                </Text>
-              )}
+
+              <Text fontSize="sm" color={textColor}>
+                {investment.taxability === "taxable" ? (
+                  <>
+                    This investment's returns and income may be subject to
+                    taxation based on your tax bracket. Gains are generally
+                    taxed when realized (sold), while dividends and interest are
+                    typically taxed in the year received.
+                  </>
+                ) : (
+                  <>
+                    This investment provides tax advantages as defined by tax
+                    regulations. Depending on the specific type, it may be
+                    exempt from federal, state, or local taxes. Examples include
+                    municipal bonds, which are typically exempt from federal
+                    taxes.
+                  </>
+                )}
+              </Text>
             </Box>
           </Box>
         </ModalBody>
 
-        <ModalFooter borderTopWidth="1px" borderColor={borderColor}>
-          <Button variant="outline" mr={3} onClick={onClose}>
+        <ModalFooter>
+          <Button colorScheme="blue" mr={3} onClick={onClose}>
             Close
           </Button>
-          <Button colorScheme="blue">Edit Investment</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

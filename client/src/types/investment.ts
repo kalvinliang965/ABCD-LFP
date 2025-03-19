@@ -8,6 +8,12 @@ export enum ReturnType {
   NORMAL = "normal",
 }
 
+// Define input modes
+export enum ValueInputMode {
+  PERCENTAGE = "percentage",
+  FIXED_AMOUNT = "fixed_amount",
+}
+
 // Define account types
 export type AccountType =
   | "non-retirement"
@@ -25,10 +31,12 @@ export interface Investment {
   returnRate?: number;
   returnType: ReturnType | string;
   returnValue?: number | string;
+  returnInputMode?: ValueInputMode | string;
   expenseRatio?: number;
   dividendType?: ReturnType | string;
   dividendValue?: number | string;
   dividendRate?: number;
+  dividendInputMode?: ValueInputMode | string;
   taxability: "taxable" | "tax-exempt";
   accountType?: AccountType;
   returnRateStdDev?: number;
