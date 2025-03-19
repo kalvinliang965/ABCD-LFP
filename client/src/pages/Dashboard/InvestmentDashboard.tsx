@@ -297,67 +297,11 @@ const InvestmentDashboard: React.FC = () => {
       return -comparison;
     });
 
-  // Calculate summary values
-  const totalValue = investments.reduce(
-    (sum, investment) =>
-      sum + parseFloat(investment.value.replace(/[^\d.-]/g, "")),
-    0
-  );
 
-  // Calculate average return rate, handling both fixed and normal distribution
-  const totalInvestmentReturn =
-    investments.reduce((sum, investment) => {
-      if (investment.returnType === "fixed") {
-        return sum + (investment.returnRate || 0);
-      } else {
-        // For normal distribution, we use the mean
-        return sum + (investment.returnRate || 0);
-      }
-    }, 0) / investments.length;
 
-  // Calculate asset allocation by type
-  const assetAllocation = investments.reduce((result, investment) => {
-    const value = parseFloat(investment.value.replace(/[^\d.-]/g, ""));
-    let type = "Other";
-
-    if (
-      investment.name.toLowerCase().includes("real estate") ||
-      investment.name.toLowerCase().includes("reit")
-    ) {
-      type = "Real Estate";
-    } else if (
-      investment.name.toLowerCase().includes("stock") ||
-      investment.name.toLowerCase().includes("equity")
-    ) {
-      type = "Stocks";
-    } else if (investment.name.toLowerCase().includes("bond")) {
-      type = "Bonds";
-    } else if (
-      investment.name.toLowerCase().includes("gold") ||
-      investment.name.toLowerCase().includes("silver")
-    ) {
-      type = "Precious Metals";
-    } else if (investment.name.toLowerCase().includes("crypto")) {
-      type = "Cryptocurrency";
-    } else if (investment.name.toLowerCase() === "cash") {
-      type = "Cash";
-    }
-
-    result[type] = (result[type] || 0) + value;
-    return result;
-  }, {} as Record<string, number>);
-
-  const bgColor = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
 
   return (
     <Box width="100%">
-      <Box mb={6}>
-        <Heading size="lg" mb={1}>
-          Investment Dashboard
-        </Heading>
-        <Text color="gray.500">Manage and track your investment portfolio</Text>
-      </Box>
 
       <InvestmentFilterBar
         searchTerm={searchTerm}
