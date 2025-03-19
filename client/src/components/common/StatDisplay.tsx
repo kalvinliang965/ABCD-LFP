@@ -9,6 +9,9 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 
+//this is a component that displays a statistic for example in the investment dashboard
+//it displays a label, a value, a help text and a description
+
 export interface StatDisplayProps {
   label: string;
   value: string | number;
