@@ -6,6 +6,14 @@ import {
   useDisclosure,
   Text,
   useColorModeValue,
+  VStack,
+  HStack,
+  Container,
+  Badge,
+  Divider,
+  Icon,
+  Tooltip,
+  Button,
 } from "@chakra-ui/react";
 import { InvestmentFilterBar } from "../../components/investment";
 import InvestmentList from "../../components/investment/InvestmentList";
@@ -13,6 +21,7 @@ import AddInvestmentTypeModal, {
   InvestmentType,
   ValueInputMode,
 } from "../../components/investment/AddInvestmentTypeModal";
+import { FaChartLine, FaInfoCircle, FaLightbulb, FaPlus } from "react-icons/fa";
 
 // Sample investment data
 interface ExpectedAnnualReturn {
@@ -297,25 +306,53 @@ const InvestmentDashboard: React.FC = () => {
       return -comparison;
     });
 
-
-
+  // Colors for light/dark mode
+  const bgMain = useColorModeValue("gray.50", "gray.900");
+  const bgCard = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const headingColor = useColorModeValue("blue.600", "blue.300");
+  const textColor = useColorModeValue("gray.600", "gray.400");
+  const accentColor = useColorModeValue("blue.500", "blue.300");
+  const tipBg = useColorModeValue("blue.50", "blue.900");
+  const totalInvestments = filteredInvestments.length;
 
   return (
     <Box width="100%">
+      {/* Filter Section */}
+      <Box mb={6}>
+        <InvestmentFilterBar
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          taxability={taxability}
+          setTaxability={setTaxability}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+        />
+      </Box>
 
-      <InvestmentFilterBar
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        taxability={taxability}
-        setTaxability={setTaxability}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-      />
-
-      <InvestmentList
-        investments={filteredInvestments as any}
-        onOpenInvestmentModal={onInvestmentTypeModalOpen}
-      />
+      {/* Investments Section */}
+      <Box mb={10}>
+        <HStack justify="space-between" mb={4}>
+          <Heading as="h2" size="md" color={headingColor}>
+            Your Investment Portfolio
+          </Heading>
+          <Badge
+            colorScheme="blue"
+            fontSize="md"
+            borderRadius="full"
+            px={3}
+            py={1}
+          >
+            {totalInvestments}{" "}
+            {totalInvestments === 1 ? "Investment" : "Investments"}
+          </Badge>
+        </HStack>
+        <Divider mb={4} />
+        <InvestmentList
+          investments={filteredInvestments as any}
+          onOpenInvestmentModal={onInvestmentTypeModalOpen}
+        />
+      </Box>
 
       {/* Investment Type Modal */}
       <AddInvestmentTypeModal
