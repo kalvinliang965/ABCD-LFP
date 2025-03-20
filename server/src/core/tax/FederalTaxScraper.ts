@@ -4,6 +4,7 @@ import { load } from "cheerio";
 import { TaxBrackets, TaxBracketsObject } from "./TaxBrackets";
 import { TaxFilingStatus } from "../Enums";
 import { StandardDeductionObject, StandardDuction } from "./StandardDeduction";
+import { Console } from "console";
 
 const SINGLE_STATUS: number = 0;
 const MARRIED_STATUS: number = 1;
@@ -23,9 +24,9 @@ function parse_table_rows(taxBrackets: TaxBracketsObject, status: TaxFilingStatu
         const rate_text = $(cells[0]).text().trim();
         const min_text = $(cells[1]).text().trim();
         const max_text = $(cells[2]).text().trim();
-        const min = cleanCurrency(min_text);
-        const max = max_text.toLowerCase() === "over" ? Infinity: cleanCurrency(max_text);
-        const rate = cleanPercentage(rate_text);
+        const min = extractNumbers(min_text, 1)[0];
+        const max = max_text.toLowerCase() === "over" ? Infinity: extractNumbers(max_text, 1)[0];
+        const rate = extractNumbers(rate_text, 1)[0] / 100;
         taxBrackets.add_rate(min, max, rate, status);
     });
 }
@@ -98,7 +99,7 @@ async function parse_standard_deduction() {
                 return;
             }
             const text = paragraph.text();
-            const cost = cleanCurrency(text);
+            const cost = extractNumbers(text, 1)[0];
             if (idx == SINGLE_STATUS) {
                 std_deductions.add_deduction(cost, TaxFilingStatus.SINGLE);
             } else if (idx == MARRIED_STATUS) {
@@ -116,26 +117,103 @@ async function parse_standard_deduction() {
     }
 }
 
-async function parse_capital_gains() {
+async function parse_capital_gains(): Promise<TaxBracketsObject> {
     try {
         const { data: html } = await axios.get(CAPITAL_GAINS_URL);
+        const $ = load(html);
+
+        const h2 = $("h2:contains(Capital gains tax rates)");
+        const paragraph = h2.nextAll('p').filter((_, el) => 
+             $(el).text().toLowerCase().includes("a capital gains rate of")
+        );
+
+        // console.log(paragraph.html());
+        if (!paragraph || paragraph.length != 3) {
+             throw new Error(`Expected 3 paragraph contain the text: "a capital gains rate of "`);
+        }
+        const taxBrackets = TaxBrackets();
+        paragraph.each((idx,el) => {
+            const p = $(el);
+            // first p
+            if (idx == 0) {
+                const ul = p.next("ul").first();
+                const first_rate_text  = p.find("b:last").first().text();
+                const rate = extractNumbers(first_rate_text, 1)[0] / 100;
+                if (!ul) {
+                    throw new Error("Invalid structure");
+                }
+                const li = ul.find("li");
+                if (!li || li.length != 3) {
+                    throw new Error("Invalid structure.");
+                }
+                li.each((idx, el) => {
+                    const list_item = $(el);
+                    const upperbound = extractNumbers(list_item.text(), 1)[0];
+                    if (idx == 0) {
+                        taxBrackets.add_rate(0, upperbound, rate, TaxFilingStatus.SINGLE);
+                    } else if (idx == 1) {
+                        taxBrackets.add_rate(0, upperbound, rate, TaxFilingStatus.MARRIED);
+                    }
+                });
+            }
+            // second p
+            else if (idx == 1) {
+                const rate = extractNumbers(p.text(), 1)[0] / 100;
+                const ul = p.next("ul").first();
+                if (!ul) {
+                    throw new Error("Invalid structure.");
+                }
+                const li = ul.find("li");
+                if (!li || li.length != 4) {
+                throw new Error("Invalid structure.");
+                }
+                li.each((idx, el) => {
+                const list_item = $(el);
+                const [lowerbound, upperbound] = extractNumbers(list_item.text(), 2);
+                    if (idx == 0) {
+                        taxBrackets.add_rate(lowerbound + 1, upperbound, rate, TaxFilingStatus.SINGLE);
+                    } else if (idx == 2) {
+                        taxBrackets.add_rate(lowerbound + 1, upperbound, rate, TaxFilingStatus.MARRIED);
+                    }
+                });
+            }
+            // third p
+            else if (idx == 2) {
+                const [upper_rate, lower_rate] = extractNumbers(p.text(), 2).map((x) => x/100);
+                if (upper_rate < lower_rate) {
+                    throw new Error(`Sentence read is invalid: ${p.text()}`);
+                }
+                taxBrackets.add_highest_rate(upper_rate);
+            }
+        });
+
+        return taxBrackets;
     } catch (error) {
         console.error("Error fetching the cpaital gains", error);
         throw new Error("Capital gains data unavailable.");
     }
 }
 
-const cleanCurrency = (text: string): number => 
-    parseFloat(text.replace(/[^0-9.]/g, ''));
+const extractNumbers = (sentence: string, num: number): number[] => {
+    const matches = sentence.match(/-?\d{1,3}(?:,\d{3})*(?:\.\d+)?/g) || [];
+    const res = matches.map(m => Number(m.replace(/,/g, ''))).filter(num => !isNaN(num)); 
+    if (res.length != num) {
+        console.error(res)
+        console.error(sentence);
+        throw new Error(`Number of of integer in this sentence should be equal to "${num}"`);
+    }
+    return res;
+} 
+    
 
-const cleanPercentage = (text: string): number =>
-    parseFloat(text.replace('%', '')) / 100;
 
 async function main() {
     // const taxBracket = await parse_federal_tax_brackets();
     // console.log(taxBracket.to_string());
-    const deduction = await parse_standard_deduction();
-    console.log(deduction.to_string());
+    // const deduction = await parse_standard_deduction();
+    // console.log(deduction.to_string());
+    const capital_gains_brakcet = await parse_capital_gains();
+    console.log(capital_gains_brakcet.to_string());
 } 
 
 main();
