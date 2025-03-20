@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router } from "react-router-dom";
 import { ChakraProvider, extendTheme, ColorModeScript } from "@chakra-ui/react";
+import { EventSeriesProvider } from "./contexts/EventSeriesContext";
 
 // Import routes
 import AppRoutes from "./routes";
@@ -61,7 +62,9 @@ function App() {
     <ChakraProvider theme={theme}>
       <ColorModeScript initialColorMode={theme.config.initialColorMode} />
       <Router>
-        <AppRoutes />
+        <EventSeriesProvider>
+          <AppRoutes />
+        </EventSeriesProvider>
       </Router>
     </ChakraProvider>
   );
