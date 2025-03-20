@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Heading,
   Flex,
@@ -14,6 +14,7 @@ import {
   Icon,
   Tooltip,
   Button,
+  useToast,
 } from "@chakra-ui/react";
 import { InvestmentFilterBar } from "../../components/investment";
 import InvestmentList from "../../components/investment/InvestmentList";
@@ -22,8 +23,10 @@ import AddInvestmentTypeModal, {
   ValueInputMode,
 } from "../../components/investment/AddInvestmentTypeModal";
 import { FaChartLine, FaInfoCircle, FaLightbulb, FaPlus } from "react-icons/fa";
+import { investmentApi } from "../../services/api";
+import { Investment } from "../../types/investment";
 
-// Sample investment data
+// Sample investment data kept as fallback
 interface ExpectedAnnualReturn {
   type: "fixed" | "normalDistribution";
   unit: "percentage" | "amount";
@@ -41,7 +44,7 @@ interface InvestmentDataItem {
   taxability: string;
 }
 
-const investmentData: InvestmentDataItem[] = [
+const sampleInvestmentData: InvestmentDataItem[] = [
   {
     name: "Cash",
     description: "Low-risk holding with minimal returns and high liquidity.",
@@ -112,34 +115,14 @@ const investmentData: InvestmentDataItem[] = [
   },
 ];
 
-// Define investment type interface
-interface Investment {
-  id: number | string;
-  name: string;
-  date: string;
-  value: string;
-  description: string;
-  expenseRatio: number;
-  taxability: "taxable" | "tax-exempt";
-
-  // Return information
-  returnRate?: number;
-  returnType: "fixed" | "normal";
-  returnRateStdDev?: number;
-  returnInputMode: "percentage" | "fixed_amount";
-
-  // Dividend/income information
-  dividendRate?: number;
-  dividendType: "fixed" | "normal";
-  dividendRateStdDev?: number;
-  dividendInputMode: "percentage" | "fixed_amount";
-}
-
 const InvestmentDashboard: React.FC = () => {
+  const toast = useToast();
+
   // State for filtering and sorting
   const [searchTerm, setSearchTerm] = useState("");
   const [taxability, setTaxability] = useState("all");
   const [sortBy, setSortBy] = useState("date");
+  const [isLoading, setIsLoading] = useState(true);
 
   // State for investment type modal
   const {
@@ -148,9 +131,39 @@ const InvestmentDashboard: React.FC = () => {
     onClose: onInvestmentTypeModalClose,
   } = useDisclosure();
 
-  // Map the raw investment data to match our Investment interface
+  // State for investments data
+  const [investments, setInvestments] = useState<Investment[]>([]);
+
+  // Fetch investments from API on component mount
+  useEffect(() => {
+    const fetchInvestments = async () => {
+      setIsLoading(true);
+      try {
+        const data = await investmentApi.getAll();
+        setInvestments(data);
+      } catch (error) {
+        console.error("Error fetching investments:", error);
+        toast({
+          title: "Error fetching investments",
+          description:
+            "Could not load investments from the server. Using sample data instead.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+        // Map sample data as fallback
+        setInvestments(mapInvestmentData());
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInvestments();
+  }, [toast]);
+
+  // Map the raw investment data to match our Investment interface (fallback)
   const mapInvestmentData = () => {
-    return investmentData.map((item, index) => {
+    return sampleInvestmentData.map((item, index) => {
       const returnType =
         item.expectedAnnualReturn.type === "normalDistribution"
           ? "normal"
@@ -237,74 +250,69 @@ const InvestmentDashboard: React.FC = () => {
     });
   };
 
-  // State for investments data
-  const [investments, setInvestments] = useState<Investment[]>(
-    mapInvestmentData()
-  );
-
   // Handler for saving a new investment type
-  const handleSaveInvestmentType = (investmentType: InvestmentType) => {
-    // Here you would typically save the investment type to a database
-    // For now, we'll just create a new investment using this type
+  const handleSaveInvestmentType = async (investmentType: InvestmentType) => {
+    try {
+      // Save to API
+      const savedInvestment = await investmentApi.create(investmentType);
 
-    const newInvestment: Investment = {
-      id: Date.now(),
-      name: investmentType.name,
-      date: new Date().toISOString().split("T")[0],
-      value: "$0", // Default value
-      description: investmentType.description,
-      expenseRatio: investmentType.expenseRatio,
-      returnType: investmentType.returnType as "fixed" | "normal",
-      returnRate: investmentType.returnRate,
-      returnRateStdDev: investmentType.returnRateStdDev,
-      returnInputMode: investmentType.returnInputMode,
-      dividendType: investmentType.dividendType as "fixed" | "normal",
-      dividendRate: investmentType.dividendRate,
-      dividendRateStdDev: investmentType.dividendRateStdDev,
-      dividendInputMode: investmentType.dividendInputMode,
-      taxability: investmentType.taxability,
-    };
+      // Update local state with newly created investment
+      setInvestments([...investments, savedInvestment]);
 
-    setInvestments([...investments, newInvestment]);
+      toast({
+        title: "Investment type created",
+        description: `${investmentType.name} has been saved successfully.`,
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error saving investment type:", error);
+      toast({
+        title: "Error saving investment type",
+        description: "Could not save the investment type to the server.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   };
 
   // Filter and sort investments
   const filteredInvestments = investments
     .filter((investment) => {
+      // Filter by search term
       const matchesSearch =
+        searchTerm === "" ||
         investment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (investment.description &&
           investment.description
             .toLowerCase()
             .includes(searchTerm.toLowerCase()));
 
+      // Filter by taxability
       const matchesTaxability =
         taxability === "all" || investment.taxability === taxability;
 
       return matchesSearch && matchesTaxability;
     })
     .sort((a, b) => {
-      let comparison = 0;
-
-      switch (sortBy) {
-        case "name":
-          comparison = a.name.localeCompare(b.name);
-          break;
-        case "returnType":
-          comparison = a.returnType.localeCompare(b.returnType);
-          break;
-        case "return":
-          comparison = (a.returnRate || 0) - (b.returnRate || 0);
-          break;
-        case "date":
-        default:
-          comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
-          break;
+      // Sort by selected sort option
+      if (sortBy === "name") {
+        return a.name.localeCompare(b.name);
+      } else if (sortBy === "date") {
+        // Sort by date, most recent first
+        return (
+          new Date(b.date || "").getTime() - new Date(a.date || "").getTime()
+        );
+      } else if (sortBy === "returnRate") {
+        return (b.returnRate || 0) - (a.returnRate || 0);
       }
-
-      // Always sort in descending order (newest first)
-      return -comparison;
+      return 0;
     });
+
+  // Calculate total number of investments for display
+  const totalInvestments = filteredInvestments.length;
 
   // Colors for light/dark mode
   const bgMain = useColorModeValue("gray.50", "gray.900");
@@ -314,7 +322,6 @@ const InvestmentDashboard: React.FC = () => {
   const textColor = useColorModeValue("gray.600", "gray.400");
   const accentColor = useColorModeValue("blue.500", "blue.300");
   const tipBg = useColorModeValue("blue.50", "blue.900");
-  const totalInvestments = filteredInvestments.length;
 
   return (
     <Box width="100%">

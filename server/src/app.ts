@@ -2,6 +2,13 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import cors from "cors";
+import connectDB from "./db/connect";
+import investmentTypeRouter from "./routes/InvestmentType.routes";
+
+// Connect to MongoDB
+connectDB()
+  .then(() => console.log("MongoDB connected successfully"))
+  .catch((err) => console.error("MongoDB connection error:", err));
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -11,9 +18,13 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors()); // 允许跨域请求
 
+// Routes
 app.get("/", (req, res) => {
   res.send("Hello World");
 });
+
+// Investment Type routes
+app.use("/api/investments", investmentTypeRouter);
 
 // 登录路由
 app.post("/api/login", (req, res) => {
