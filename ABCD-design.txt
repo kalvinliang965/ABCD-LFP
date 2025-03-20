@@ -1,0 +1,1428 @@
+﻿Lifetime Financial Planner (LFP)
+Design
+
+
+CSE 416 - 04: Software Engineering, Spring 2025 
+Instructor: Scott D. Stoller
+Team Name: ABCD
+Members: 
+* Haifeng Wu
+* Chen Zhu
+* Kalvin Liang Wu
+* Ekaterina Tkachenko
+
+
+__________________________________________________________
+Table of Contents
+1. Overview        2
+2. Requirements        2
+3. System Architecture        2
+4. Class Model        2
+5. UI Design        2
+5.1 Wireframes Figma        2
+5.2 UI Design Rationale        3
+6. Algorithms        4
+7. Concept Model        16
+8. Dynamic Model        18
+* Activity Diagram        18
+* Sequence Diagrams        19
+9. Persistence        20
+10. Concurrency        26
+11. Technologies        26
+Implementation Schedule        27
+
+
+
+
+
+
+
+
+
+
+
+
+1. Overview
+N/A
+
+
+2. Requirements
+N/A
+
+
+3. System Architecture
+(See attached File: ABCD-System-Architecture.pdf)
+
+
+4. Class Model
+  
+
+(See attached File: ABCD-Class-Model[.svg/drawio])
+
+5. UI Design
+5.1 Wireframes Figma 
+
+
+https://www.figma.com/design/zn9gcxVKVnqqHBARmDSSj3/Ekaterina-Tkachenko's-team-library?node-id=0-1&m=dev&t=YBCUZN15gZRmc4Fe-1
+
+
+5.2 UI Design Rationale
+
+Our UI design prioritizes usability, ensuring users can efficiently navigate and interact with the system. We incorporate key UI design principles such as consistency, feedback, visibility, and flexibility to optimize the user experience.
+The login page is simple and intuitive, offering multiple authentication options. Users can log in using a username and password, with securely stored data. They can also opt for Google Login for a seamless and fast authentication experience. Additionally, we provide a Sand Box mode, allowing users to bypass login and use predefined models for simulation, lowering access barriers. This design ensures that users can quickly enter the system based on their needs without being hindered by a complex login process.
+The next page that is displayed to the user is the homepage. The page is equipped with a navigation bar that is accessible throughout the whole website to ensure consistency.
+Settings and profile tabs have a dropdown menu to avoid overcrowded headers. While going from one page to another, the current page’s name is highlighted on the navbar to provide a smooth navigation experience. If the user already has an account, his metrics are displayed on the dashboard below. The homepage’s dashboard is designed to provide users with an at-a-glance view of their financial planning progress while maintaining a clean and intuitive layout. The primary focus is on visual clarity which allows users to quickly find out their financial status without being overwhelmed by excessive details. In case the user desires to dig deeper into his financial situation and visualize his future finances, he is invited to do so at the bottom of the page with the button “View More”. He then is transferred to the chart and visualization tab.
+The Scenario Form is a core module where users input financial data and explore various financial plans. Once users enter their income and expenses, the system automatically calculates their Net Assets and employs color coding, icons, and highlights to differentiate data types for better readability. Financial plans are displayed below the main summary, and any modifications are updated in real time to ensure accuracy. Additionally, we offer an Add New Plan feature, allowing users to create customized financial arrangements based on their needs. After completing standard questions, the system runs a Monte Carlo simulation to generate visual graphs, helping users understand financial trends under different scenarios. Users can also adjust income and future expenditures for more precise financial planning.
+After adding the scenario and plan, the user can visualize his results with different charts such as line charts, bar charts, 1D, and 2D chart simulations. The results of the charts are saved and displayed to the user when he visits Charts & Visualization page. However, if the user desires to re-run the charts or create new ones, he is able to do so on the page.
+In our design, we chose to use modals only when the information is unsaved and the user tries to leave. This ensures a seamless user experience, allowing users to interact with all financial data, scenario settings, and simulations in a continuous, fully visible interface without interruptions or requiring additional clicks to access critical information.
+In summary, our UI design prioritizes usability by applying classic UI design principles and incorporating interactive and dynamic elements. Information is presented visually through color coding, icons, and highlights which ensures that users can efficiently interact with the system and make informed financial decisions quickly. These design choices enhance usability and improve the overall user experience, making financial planning accessible and intuitive for all users.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SimulationState
+* start_year: int
+* inflation_assumption: StochasticChange 
+* inflation_factor: float
+* current_year: int
+* user_age: int
+* spouse_age:int
+* user_alive: bool
+* spouse_alive: bool
+* user_life_expectancy: int
+* spouse_life_expectancy: int
+* pre_tax_investments: Map<Key, Investment>
+* after_tax_investments: Map<Key, Investment>
+* non_retirment_investments: Map<Key, Investment> 
+* cash: float
+* ordinary_income: float
+* capital_gains_income: float
+* social_security_income: float[a]
+* roth_optimizer_enabled:bool
+* roth_conversion_strategy: RothConversionStrategy
+* rmd_triggered: bool
+* tax_context: TaxContext
+* sharing_settings: SharingSettings 
+* after_tax_acc_limit: float
+* pre_tax_acc_limit: float
+* after_tax_contribution: float
+* pre_tax_acc_contribution： float[b]
+
+
+6. Algorithms
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function run(num: int, scenario: Scenario):
+        
+        simulation_results_lock= INIT_LOCK()
+simulation_results: List<SimulationResult> = []
+        
+        # fork ‘num’ worker and run the simulation concurrently. Each will have a simulation state
+For i in 1..num:
+        process_id= fork()
+
+
+        If process_id== 0 then
+         # the initialize certain data structure to hold the scenario data
+simulation_state = SimulationState(scenario)
+# create the “cash” investment based on what user enter and add it to 
+# simulation state        
+simulation_result = SimulationResult()
+state_tax_service = StateTaxService()
+federal_tax_service = FederalTaxService()
+# loop until both user and their spouse pass away
+                while should_contniue(simulation_state)
+                        # simulate year and modify the simulation_result based 
+# on the resulting data
+                        simulate_year(simulation_state, state_tax_service, federal_tax_service, simulation_result, scenario) 
+                        # increment current year, updating filing status, 
+# increasing the inflation_factor of simulation_state 
+# based on inflation_assumption        
+                        advance_year(simulation_state, scenario) 
+LOCK(simulation_reuslts_lock)                
+                        simulation_results.append(simulation_result)
+                UNLOCK(simulation_reuslts_lock)
+exit(0) # Child exits
+        else if process_id > 0 then
+                print("Parent waiting for child ” + i + “ to finish") 
+        else
+        print(“fork failed)
+        panic()
+# Parent waits for the child process to terminate 
+wait_all() 
+print("Child processes reaped, parent continues execution")
+        return simulations_results
+
+
+
+
+function simulate_year((simulation_state, state_tax_service, federal_tax_service, simulation_result, scenario):
+        # reset field such as capital gain, taxable income, capital loss to zero
+# based on inflation_factor setup the current bracket
+#         e.g. loop thru the apply (1 + inflation_factor)
+        setup(simulation_state,  state_tax_service, federal_tax_service)
+
+
+process_income(simulation_state)        
+process_rmds(simulation_state)
+        update_investment(simulation_state)
+        If simulation_state.roth_optimizer_enabled:
+                process_roth_conversion(simulation_state,  state_tax_service, federal_tax_service)
+        pay_mandatory_expenses(simulation_state)
+        pay_discretionary_expenses(simulation_state)
+        invest_excess_cash(simulation_state)
+        rebalance_investements(simulation_state)
+        # calculate the tax user will receive and find the net growth
+        process_tax(simulation_state, simulation_state,  state_tax_service, federal_tax_service)
+        # include filter/calculate data that will be used to generate charts
+        update_simulation_result(simulation_state, simulation_result)
+
+
+
+
+function  process_income (simulation_state, scenario):
+        #set a variable to represent the total income
+        total_income_for_year = 0
+        
+        current_year = simulation_state.current_year
+        
+        #Iterate each event in the event series
+        for event in scenario.event_series:
+                # this function only care about the income type
+                if (event.start_year <= current_year)
+                        if event.type == IncomeType && is_active_event:
+                        # Calculate the number of years since the event started
+                                        years_total = current_year - event.start_year
+
+
+                # Start with the initial amount
+                        income_amount = event.IncomeEventSeries.initial_amount
+
+
+                # Apply inflation adjustment if enabled
+                       if event.Inflation_adjustment:
+                                  income_amount *= (1 + scenario.inflation_rate) ^ years_total
+
+
+                                # determine whether the income type is taxable or not
+                                if event. type == WAGES
+                                        # if the income is taxable, update the simulation 
+                                        simulation.state.taxable_income += income_amount                                        else if event. type == SOCIAL_SECURITY:
+                                        continue
+                                #add the income amount for each events
+                                income_amount = event.IncomeEventSeries.initial_amount
+                                
+        # if scenario involves a spouse, reduce the income portion if one of the spouse is decreased
+                                If scenario.is_married:
+                                        user_alive = simulation_state.user_alive
+                                        spouse_alive = simulation_state.spouse_alive
+                                        
+                        # The event might have the user/spouse for splitting the income
+                                        portion = compute_spouse_income (income_amount, event.user_percentage, event.spouse-percentage, user_alive, spouse_alive)
+
+
+                                #single scenario
+                                else: 
+                                        portion = income_amount
+                                
+                                #accumulate the income
+                                total_income_for_year += portion
+                                Return total_income_for_year
+
+
+
+
+# This is a function to compute how the spouse split the income (used in function process_income)
+function compute_spouse_income_share(amount, userPct, spousePct, userAlive, spouseAlive):
+if not userAlive and not spouseAlive:
+return 0
+else if userAlive and spouseAlive:
+
+
+return amount  # full
+else if userAlive and not spouseAlive:
+return amount * userPct
+else:
+return amount * spousePct
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function process_rmds(simulation_state, scenario):
+# Process RMDs for both user and spouse if they are alive and over RMD age
+for person in ["user", "spouse"]:
+person_age = simulation_state.user_age 
+person_alive = simulation_state.user_alive && simulation_state.spouse_alive
+person_life_expectancy = simulation_state.user_life_expectancy
+
+
+         # Check if the person is alive and old enough for RMD
+                if (not person_alive) or (person_age < scenario.rmd_start_age):
+                # No RMD needed for this person
+                    continue  
+                # Retrieve pre-tax investments from Scenario
+                total_pre_tax_balance = get_total_pre_tax_balance(scenario.investments, person)
+
+
+                if total_pre_tax_balance <= 0:
+# No RMD needed if there are no pre-tax funds
+
+
+                    continue  
+                # Retrieve distribution period from RMDTable using user age
+                distribution_period = scenario.rmd_table.get_distribution_period(person_age)
+
+
+                # Calculate Required Minimum Distribution (RMD)
+                required_rmd = total_pre_tax_balance / distribution_period
+
+
+                # Check if Roth conversions already covered part of the RMD
+                already_withdrawn = simulation_state.roth_conversion_strategy.get_withdrawn_amount(simulation_state.current_year)
+
+
+        # Calculate shortfall if Roth conversion didn’t fully cover RMD
+                if already_withdrawn < required_rmd:
+                    shortfall = required_rmd - already_withdrawn
+                    withdraw_rmd_from_pre_tax(scenario.investments, simulation_state, shortfall, person)
+
+
+                    # Mark that RMD was triggered this year
+                    simulation_state.rmd_triggered = True
+        else:
+            simulation_state.rmd_triggered = False
+
+
+        # Update tax context with the RMD
+        simulation_state.tax_context.update_taxable_income(required_rmd)
+
+
+
+
+
+
+#This is a helper function used in process_rmds
+function withdraw_rmd_from_pre_tax(investments, simulation_state, shortfall, person):
+            remaining = shortfall
+            # Iterate over pre-tax investments 
+            for investment in investments:
+                # Skip non-pre-tax investments
+                        if investment.account_type != "PRE_TAX_Retirement":
+                            continue  
+# Shortfall covered
+                        if remaining <= 0:
+                            break  
+                        # Determine how much can be withdrawn from this investment
+                        withdraw_amount = min(investment.current_value, remaining)
+
+
+                        # Update investment balance
+                        investment.current_value -= withdraw_amount
+
+
+                        # Add withdrawn amount to cash
+                        simulation_state.cash += withdraw_amount
+
+
+                        # Update taxable income (RMDs are taxable)
+                        simulation_state.taxable_income += withdraw_amount
+
+
+                        # Update remaining shortfall
+                        remaining -= withdraw_amount
+
+
+
+
+function invest_excess_cash(simulation_state, scenario):
+        invest_event = get_curr_invest_event(scenario, simulation_state.current_year)
+        if not invest_event:
+                return
+excess_cash = simulation_state.cash.balance - invest_event.max_cash
+if excess_cash <= 0:
+return
+#allocate excess cash according to asset allocation
+for investment, percentage in invest_event.asset_allocation.items():
+                amount_to_invest = excess_cash * percentage
+                #check the retirement account limits
+if investment.account_tax_status == “pre-tax” || investment.account_tax_status == “after-tax”:
+                        #get the contribution limit for the curr year based on acc type
+contribution_limit = get_retirement_contribution_limit(investment.account_tax.status, simulation_state.current_year)
+if amount_to_invest > contribution_limit:
+amount_to_invest = contribution_limit 
+#update investment value and cash balance
+investment.value += amount_to_invest
+simulation_state.cash.balance -=amount_to_invest
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function rebalance_investements(simulation_state, scenario):
+        #get the curr rebalance event for the year
+        rebalance_event = get_curr_rebalance_event(scenario, simulation_state.current_year)
+        if not rebalance_event:
+                return
+        #calculate the total of investments to be rebalanced
+        total_value = 0
+        for investment in rebalance_event.asset_allocation.keys():
+                total_value += investment.value
+        #implements Option 1: Fixed Set of Percentages as allocation type
+        for investment, target_percentage in rebalance_event.asset_allocation.items():
+                target_value = total_value * target_percentage
+                current_value = investment.value
+                if current_value < target_value:
+                        #buy more
+                        amount_toBuy = target_value - current_value
+                        simulation_state.cash.balance -= amount_toBuy
+                        investment.value += amount_toBuy 
+                elif current_value > target_value:
+                        #sell
+                        amount_toSell = current_value - target_value
+                        simulation_state.cash.balance += amount_toSell
+                        investment.value -= amount_toSell
+                        #calculate capital loss and gains
+                        unrealized_gains = current_value - investment.cost_basis
+                        sell_proportion =amount_toSell / current_value
+                        capital_gain_loss = unrealized_gains * sell_proportion
+                        simulation_state.capital_gains += capital_gain_loss 
+                        investment.cost_basis -=  investment.cost_basis + sell_proportion
+                        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# move money from “pre-tax” retirement account to “after-tax” retirement account
+function process_roth_conversion(simulation_state,  state_tax_service, federal_tax_service):
+# not within valid date
+        
+If not (simulation_state.roth_optimizer_enabled):
+        return
+
+
+strategy = simulation_state.roth_conversion_strategy
+If not (strategy.start_year <= simulation_state.current_year <= strategy.end_year)) :
+                return
+        
+        taxable_income = simulation_state.ordinary_income
+        filing_status =simulation_state.tax_filing_status
+        federal_bracket = federal_tax_service.find_tax_bracket(taxable_income, filing_status)
+        state_bracket = state_tax_service.find_tax_bracket(taxable_income, filing_status)
+        upper = min(
+federal_bracket.upper, 
+state_bracket.upper, 
+)
+ 
+        # compute amount to transfer
+        transfer_amt = min(
+upper - taxable_income, 
+simulation_state.after_tax_acc_limit[c] - simulation_state.after_tax_contribution[d]
+)
+        If transfer_amt > 0:
+                # this function decide from which investment we are transferring from 
+                roth_transfer_investment(
+strategy=strategy,
+amount=transfer_amt,
+source=simulation_state.pre_tax_investments,
+target=simulation_state.non_tax_investments
+)
+                simulation_state.ordinary_income += transfer_amount
+                simulation_state.after_tax_contribution += transfer_amount
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function roth_transfer_investment(strategy, amount, source, target):
+        # list of investment_label
+investment_labels = strategy.conversion_priority
+transferred = 0
+While transferred < amount:
+        # Everything from pre_tax_investments are transferred
+If not investment_labels:
+                return
+        # select the available label with highest priority 
+label = select(investment_labels)
+
+
+from_investment =source[label]
+# instantiate the after tax account if not exist already
+If label not in target:
+        # create the corresponding after tax investment
+        target[label] = Investment()
+to_investment = target[label] 
+# if we have nothing in the investment, nothing is transfer
+transfer_amt =  min(from_investment.cost_basis, amount)
+from_investment.cost_basis -= transfer_amt
+to_investment.cost_basis += transfer_amt
+transferred += transfer_amt
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function update_investment(simulation_state):
+        for investment in simulation_state.investments:
+                
+                investment_type =  investment.investment_type
+
+
+# the sample() function dynamically calculate annual return based
+# on annual return type using user’s provided parameter.
+time = simulation_state.current_year - simulation_state.start_year
+ # only GBM is time dependent
+                return_rate = investment_type.annual_return.sample(time)
+                
+                gains = 0
+                If investment_type.annual_return.change_type == ChangeType.PERCENTAGE:
+                        gains = investment.value * (1 + return_rate)
+                else:
+                        # FIXED_AMOUNT
+                        gains = investment.value + return_rate
+                
+# remove annual fee (e.g. some stocks have some annual management fee)
+avg_value = (gains) // 2
+expense = avg_value * investment_type.expense_ratio
+dividend = investment.value* investment_type.dividend_yield.sample(time)
+
+
+If not investment.is_retirement and not investment.investment_type.tax_exempt:
+                        simulation_state.capital_gains += gains
+                         simulation_state.ordinary_income += dividend
+                investment.value += gains
+
+
+                # reinvest the dividend/interest back to this investment
+                investment.cost_basis += dividend 
+
+
+
+
+
+
+
+
+                
+function pay_mandatory_expenses():
+
+
+ Purpose:
+   1. Collect all mandatory (non-discretionary) expenses for the current year.
+   2. Attempt to pay them from the cash account first.
+   3. If the cash balance is insufficient, withdraw additional funds according
+      to the “Expense Withdrawal Strategy” (selling assets from certain accounts).
+   4. Update the SimulationResult for reporting purposes.
+
+
+ Parameters:
+   sim: Simulation
+       - sim.current_year: the current simulation year
+       - sim.scenario: Scenario (contains event_series, inflation assumptions, etc.)
+       - sim.cash: an Investment representing the user’s cash account
+       - sim.tax_calculator: TaxCalculator (may be used when withdrawing funds)
+       - sim.tax_context: TaxContext (tax brackets, early-withdrawal flags, etc.)
+       - sim.results: SimulationResult (to store annual details or summaries)
+
+
+ Returns:
+   None (this function updates sim.cash and sim.results in place)
+
+
+
+
+function pay_mandatory_expenses(sim: Simulation):
+    current_year = sim.current_year
+    scenario = sim.scenario
+
+
+    mandatory_expense_total = 0
+    mandatory_expenses_breakdown = Map<string, float>()
+
+
+    # 1. Collect all mandatory expenses for the current year
+    for event in scenario.event_series:
+        if event.type == EventType.EXPENSE
+           and event.is_discretionary == false
+           and is_event_active_for_year(event, current_year):
+            
+            # Calculate the expense amount for the current year
+            expense_amount = calculate_annual_expense_amount(event, sim)
+            
+            mandatory_expense_total += expense_amount
+            mandatory_expenses_breakdown[event.name] = expense_amount
+
+
+    # If there are no mandatory expenses, exit early
+    if mandatory_expense_total <= 0:
+        return
+
+
+    # 2. Check if the cash balance can cover the total
+    if sim.cash.current_value >= mandatory_expense_total:
+        sim.cash.current_value -= mandatory_expense_total
+    else:
+        shortfall = mandatory_expense_total - sim.cash.current_value
+        sim.cash.current_value = 0
+
+
+        # Withdraw additional funds based on the “Expense Withdrawal Strategy”
+        withdraw_for_expenses(sim, shortfall, /*isDiscretionary*/ false)
+        # The withdraw_for_expenses function typically handles selling assets,
+        # computing taxes/penalties, etc.
+
+
+    # 3. Record the mandatory expense payment in the simulation results
+yearly_details = sim.results.get_yearly_details_for(current_year) yearly_details.mandatory_expenses_paid = mandatory_expense_total yearly_details.mandatory_expenses_breakdown = mandatory_expenses_breakdown
+
+
+
+
+
+
+
+
+function pay_discretionary_expenses():
+ Purpose:
+   1. Collect all discretionary expenses for the current year.
+   2. For each expense, decide whether the full amount can be paid 
+      without violating the financial goal.
+   3. If it can be fully paid, do so; otherwise, consider paying a partial amount 
+      or skip it (depending on your system’s design).
+   4. If the cash balance is insufficient, withdraw additional funds 
+      according to the “Expense Withdrawal Strategy.”
+   5. Record the outcome in the simulation results.
+
+
+ Parameters:
+   sim: Simulation
+       - sim.current_year: the current simulation year
+       - sim.scenario: includes event_series, financial_goal, etc.
+       - sim.cash: the user's cash account (an Investment object)
+       - sim.results: used to record annual expense details
+
+
+ Returns:
+   None (modifies sim.cash and sim.results in place)
+
+
+
+
+function pay_discretionary_expenses(sim: Simulation):
+    current_year = sim.current_year
+    scenario = sim.scenario
+    financial_goal = scenario.financial_goal
+
+
+    total_discretionary_paid = 0
+    discretionary_expenses_breakdown = Map<string, float>()
+
+
+    # 1. Gather all discretionary expense events active this year
+    discretionary_events = []
+    for event in scenario.event_series:
+        if event.type == EventType.EXPENSE 
+           and event.is_discretionary == true
+           and is_event_active_for_year(event, current_year):
+            discretionary_events.append(event)
+
+
+    # Optional: sort these events by priority or user-defined ordering
+    # sort_events_by_priority(discretionary_events)
+
+
+    # 2. Process each discretionary event
+    for event in discretionary_events:
+        full_amount = calculate_annual_expense_amount(event, sim)
+        
+        # Check if paying this full amount violates the financial goal
+        can_pay_full = check_financial_goal(sim, full_amount)  
+
+
+        amount_to_pay = 0
+        if can_pay_full:
+            amount_to_pay = full_amount
+        else:
+            # Optionally pay only the portion that meets the goal
+            partial_amount = calculate_partial_amount_that_keeps_goal(sim, full_amount)
+            if partial_amount > 0:
+                amount_to_pay = partial_amount
+            else:
+                amount_to_pay = 0  # might skip entirely if partial is zero
+
+
+        # If there's nothing to pay, move on
+        if amount_to_pay <= 0:
+            continue
+
+
+        # 3. Check cash account; if insufficient, withdraw additional funds
+        if sim.cash.current_value >= amount_to_pay:
+            sim.cash.current_value -= amount_to_pay
+        else:
+            shortfall = amount_to_pay - sim.cash.current_value
+            sim.cash.current_value = 0
+            withdraw_for_expenses(sim, shortfall, /*isDiscretionary*/ true)
+
+
+        # 4. Update totals and record the breakdown
+        total_discretionary_paid += amount_to_pay
+        discretionary_expenses_breakdown[event.name] = amount_to_pay
+   # 5. Record in simulation results
+    yearly_details = sim.results.get_yearly_details_for(current_year)
+    yearly_details.discretionary_expenses_paid = total_discretionary_paid
+    yearly_details.discretionary_expenses_breakdown = discretionary_expenses_breakdown
+
+
+7. Concept Model
+
+
+Concept: StochasticChange
+Purpose: generic change of either a fixed amount, or percentage representing some rate sampled from distribution when entering investment data.
+State:
+change_type: one ChangeType
+distribution: one DistributionType
+params: set float
+Action:
+sample(time: int): one float
+Operation principle:
+The sample function returns a single float value that represents the change in a value. Depending on the specified change_type, it may indicate either a proportional change (e.g., v * (1 + r)^t) or a fixed amount change (e.g., v + fixed_amt). Lastly, by incorporating a time parameter, the concept can be extended to models like Geometric Brownian Motion (GBM), where the stochastic change isn’t static but evolves over time.
+Pseudocode:
+function sample(time: int):
+If distribution == DistributionType.FIXED:
+                return params.get(“value”)
+        elif distribution == DistributinoType.NORMAL:
+                mean = params.get(“mean”, 0.0)
+                std = params.get(“std”, 0.0)
+                # return random value from the normal distribution
+                return select(normal(mean, std))
+        elif distribution == DistributinoType.UNIFORM:
+                low = params.get(“low”, 0.0)
+                high = params.get(“high”, 0.0)
+                Return select(uniform(low, high))
+        elif distribution == DistributionType.GEOMETRIC_BROWNIAN:
+        mean = params.get(“mean”, 0.0)
+        std = params.get(“std”, 0.0)
+        s_0 = param.get(“initial-val”, 0.0)
+        z = select(normal(mean, std))
+        return s_0 + exp ((mean - 0.5 * std^2)  * time + std * sqrt(time) * z)
+        else:
+                panic(“Invalid distribution type”)
+
+
+
+
+Concept: Roth Conversion Optimization
+Purpose: Help users plan their retirement asset conversion in order to minimize a user’s total (lifetime) income tax; transfer money from pre tax(Traditional Roth IRA) -> after tax(Roth IRA)
+State:
+start_year: one int
+end_year: one int
+conversion_prority: set key
+pre_tax_investments: key -> investments
+after_tax_investments: key -> investments
+roth_optimizer_enabled: bool
+Action:
+process_roth_conversion(simulation_state)
+        If roth_optimizer is enabled, some/all amount of money will be transferred from the pre_tax investments to after_tax_investment.
+roth_transfer_investment(strategy, amount, source, target)
+        Select the pre_tax_investment based on the label with the highest priority from `conversion_prority`. Then, select the corresponding investment from `after_tax_investments`, using the same label, and transfer the `amount` of money.
+Operation Principle:
+When the user enables Roth conversion optimization, the simulation will repeatedly call `process_roth_conversion` to transfer money from the pre-tax account to the after-tax account. Before the transfer, taxes are paid upfront. Later, if the user withdraws money from the after-tax account under certain conditions, no tax is owed. This strategy is beneficial if the user expects to face a higher tax rate in the future.
+Pseudocode:
+Refer to the algorithm sections. 
+8. Dynamic Model
+
+
+1. Activity Diagram
+  
+
+
+
+
+
+
+
+2. Sequence Diagrams
+* RMD Performing Diagram
+  
+
+
+
+* Roth Conversion Optimizer
+  
+
+9. Persistence
+We will be using MongoDB as our database. Since MongoDB is a document-oriented database, the following code indicates the primary and secondary indices in the format of our database. 
+
+
+User schema:
+        Usage: storing user information
+{
+  _id: ObjectId,  
+  googleId: String,  //optional, only used when user login using google.
+  email: String,     
+  name: String,     
+  createdAt: Date,
+  admin:boolean,
+}
+	        Email should be unique, we could use email to check and avoid repeating registration.
+
+
+Scenarios:
+
+{
+  _id: ObjectId,
+  userId: ObjectId,      // indicate which user this Scenarios belongs to
+  name: String,            
+  isMarried: Boolean,
+  birthYearUser: Number,
+  birthYearSpouse: Number,
+  lifeExpectancyUser: {
+    mode: "fixed" | "normal",
+    value: Number,
+    stdDev: Number
+  },
+  lifeExpectancySpouse: {
+    mode: "fixed" | "normal",
+    value: Number,
+    stdDev: Number
+  },
+ //inflation assumption
+  inflationAssumption: {
+    mode: "fixed" | "normal" | "uniform",
+    value: Number,
+    min: Number,
+    max: Number,
+    stdDev: Number
+  },
+//Scenario Current portfolio holdings
+  investments: [
+    {
+      investmentTypeId: ObjectId,  //indicate which investement_type._id this scenario is link to
+      name: String,             
+      value: Number,             
+      taxStatus: "non-retirement" | "pre-tax" | "after-tax"
+    }
+……. //indicate for multiple investment type 
+  ],
+// the different event user have and under this scenario
+  eventSeries: [
+    {
+
+
+      name: String,
+      description: String,
+      startYear: {
+        mode: "fixed" | "uniform" | "normal" | "linkedStart" | "linkedEnd",
+        value: Number,
+        referenceEventSeriesId: ObjectId,
+        offset: Number
+      },
+
+
+      duration: {
+        mode: "fixed" | "uniform" | "normal",
+        value: Number
+      },
+
+
+      type: "income" | "expense" | "invest" | "rebalance",
+      initialAmount: Number,
+      annualChange: {
+        mode: "fixed" | "normal" | "uniform",
+        value: Number,
+      },
+
+
+      inflationAdjust: Boolean,
+      userPercentage: Number,
+      spousePercentage: Number,
+      isSocialSecurity: Boolean,
+      isWages: Boolean,
+      isDiscretionary: Boolean,
+
+
+      // if invites or rebalance
+      assetAllocation: {
+        mode: "fixed" | "glidePath",
+        allocations: [
+          {
+            investmentTypeId: ObjectId,
+            percentage: Number
+          }
+        ],
+        finalAllocations: [ /* when mode=glidePath */ ]
+      },
+      maxCash: Number
+    }
+ {....} // a new eventSerie
+  ],
+
+
+  spendingStrategy: {
+    order: [ ObjectId, ObjectId, ... ] // each object is a event order id(e.g. Pay rent)
+  },
+  expenseWithdrawalStrategy: {
+    order: [
+      {
+        investmentTypeId: ObjectId,
+        taxStatus: "non-retirement" | "pre-tax" | "after-tax"
+      }
+    ]
+  },
+  rmdStrategy: {
+    order: [ ObjectId, ObjectId, ... ]
+  },
+  rothConversionStrategy: {
+    order: [ ObjectId, ObjectId, ... ]
+  },
+
+
+  // Roth Conversion Optimizer 
+  rothConversionOptimizer: {
+    enabled: Boolean,
+    startYear: Number,
+    endYear: Number
+  },
+
+
+  // initial contribution 
+  contributionLimits: {
+    preTax: Number,
+    afterTax: Number
+  },
+
+
+  // share setting
+  sharing: [
+    {
+      userId: ObjectId,   // for user who will have access      
+      access: "read" | "write"  
+    }
+  ],
+
+
+  createdAt: Date,
+  updatedAt: Date
+}
+	
+
+Investment_types:Metadata for the various investment types (Asset Types) supported by the storage system can be referenced by specific investments in multiple scenarios.
+
+
+{
+  _id: ObjectId,
+  name: String,                 
+  description: String,
+  expectedAnnualReturn: {
+    mode: "fixed" | "normal" | "gbm",
+    value: Number,
+    stdDev: Number,       
+  },
+  expenseRatio: Number,         
+  expectedAnnualIncome: {
+    mode: "fixed" | "normal" | "gbm",
+    value: Number,
+    stdDev: Number
+    // ...
+  },
+  taxExempt: Boolean,           
+  createdBy: ObjectId,          //if user create this then write down the ID
+  createdAt: Date
+}
+	
+
+Federal_taxes:Store federal tax rates, tax brackets, standard deduction, capital gains tax, percentage of social security benefits taxable, etc. for each year.
+{
+  _id: ObjectId,
+  year: Number,  
+  incomeTaxBrackets: [
+    {
+      filingStatus: "single" | "married",
+      brackets: [
+        { min: 0, max: 9950, rate: 0.1 },
+        { min: 9951, max: 40525, rate: 0.12 },
+        // ...
+      ]
+    }
+  ],
+  standardDeductions: [
+    {
+      filingStatus: "single",
+      amount: Number
+    },
+    {
+      filingStatus: "married",
+      amount: Number
+    }
+  ],
+  capitalGainsRates: [
+   ],
+  socialSecurityTaxable: [
+    {
+      filingStatus: "single" | "married",
+      brackets: [
+        { minIncome: 0, maxIncome: 25000, taxedPercent: 0 },
+        { minIncome: 25001, maxIncome: 34000, taxedPercent: 50 },
+        // ...
+      ]
+    }
+  ],
+  createdAt: Date
+}
+	
+
+State_taxes:Stores income tax rates and tax brackets for each state for each year
+{
+  _id: ObjectId,
+  state: String,   
+  year: Number,
+  incomeTaxBrackets: [
+    {
+      filingStatus: "single" | "married",
+      brackets: [
+        { min: 0, max: 8500, rate: 0.04 },
+        // ...
+      ]
+    }
+  ],
+  createdAt: Date
+}
+
+
+
+
+
+
+	
+
+Rmd_tables:Store RMD reference tables such as IRS Publication 590-B Table III.
+{
+  _id: ObjectId,
+  tableName: String,
+  distributionData: [
+    { age: 72, distributionFactor: 27.4 },
+    { age: 73, distributionFactor: 26.5 },
+    // ...
+  ],
+  createdAt: Date
+}
+
+
+	Simulation_logs:Record detailed transaction information for the "first bar" or part of the simulation when running the simulation to assist with debugging and auditing
+
+{
+  _id: ObjectId,
+  scenarioId: ObjectId,        // match with scenario ID
+  userId: ObjectId,            // match with the user who create it
+  simulationStartTime: Date,   // starting Dates
+  year: Number,                
+  transactionType: "income" | "Roth conversion" | "RMD" | "expense" | "tax" | "invest" | "rebalance",
+  amount: Number,
+  details: {
+  }
+}
+	
+
+
+
+Queries: we will use MongoDB, so basically we will use db.collection.find(...)
+        E.g. db.scenarios.find({ userId: someUserId }); //for finding all scenarios that belong to that user
+
+
+10. Concurrency
+
+
+If multiple users can access the same financial plan concurrently, the system implements a last-modified timestamp check to prevent data conflicts. 
+* When a user retrieves the financial plan: If another user modifies the plan and clicks "Save Changes", the system will check the latest modified timestamp. 
+* If the timestamp is later than the current time and the user is modifying the data, the system will notify them that another user has updated the plan. The latest modified timestamp will be refreshed, and the user will be given the option to overwrite the changes or abort the modification. 
+* If the timestamp is later than the current time and the user is only reading the plan, the system will automatically fetch the newest data and send it to the front end. 
+* Otherwise, if no updates have been made by another user, the retrieved data is considered the latest and safe to use. 
+
+
+Moreover, each user’s simulation runs in an isolated context, referred to as simulation_state. This prevents race conditions or deadlocks, as no two processes modify the same simulation state simultaneously. The only shared resource is the simulation_result list, which is used to generate the final chart or summary. To maintain consistency, we protect writes to this shared list using a lock or synchronization mechanism, ensuring correctness when multiple simulations complete at the same time.
+
+
+
+
+
+
+11. Technologies
+
+
+* Communication: We will be using discord
+* Languages, Frameworks, and IDE: VsCode, Node.js, React, MongoDB, Typescript
+* Source-code repository: https://github.com/kalvinliang965/ABCD-LFP.git
+* Linter / Code style checker: ESLint
+* AI Coding Assistant: Chatgpt 
+* Back-end test automation: supertest
+* Code coverage: Jest
+* Performance profiler: Performance Profiling JavaScript
+* Database: Mongodb
+* Deployment platform: Laptop
+* Project management: Jira
+
+
+
+
+
+
+Implementation Schedule
+
+
+Phase 1: hw6-code1 (Mar 24) 
+IGS Points Target: 29 points
+Cumulative Total: 29 points
+Chen Zhu: 8pts
+Haifeng Wu: 7pts
+Kalvin Liang Wu: 7pts
+Ekaterina Tkachenko: 7pts
+
+
+
+
+1. Taxes (4 points on IGS)
+Assigned to: 
+* Chen Zhu
+Task: 
+* Scrape and store the required information
+Deadline:
+* Mar 10
+        
+
+
+2. Scenarios (17 points on IGS):
+Task: 
+* Implement the ability to enter, view, edit, export, and persist scenarios.
+Assigned to Chen Zhu:
+1. Financial goals (1 point) - Mar 12
+2. Investment types (3 points) - Mar 12
+
+
+Assigned to Ekaterina Tkachenko:
+3. Investments (1 point) - Mar 13
+4. Event series (6 points) - Mar 17
+   * Attributes common to all event types
+   * Income events
+   * Expense events
+   * Invest events
+   * Rebalance events
+
+
+Assigned to Haifeng Wu:
+5. Spending strategy (1 point) - Mar 18
+6. Expense withdrawal strategy (1 point) - Mar 18
+7. Inflation assumption (1 point) - Mar 20
+8. Roth conversion optimizer settings (1 point) - Mar 20
+9. RMDs settings (1 point) - Mar 20
+10. Scenarios (1 point) - Mar 20
+3. Simulations (8 points on IGS):
+Task:
+* Implement Core Simulation Logic
+
+
+Assigned to Haifeng Wu:
+* Run income transactions (1 point) -  Mar 18
+
+
+Assigned to Kalvin Liang Wu:
+* Update values of investments (2 points) - Mar 18
+* Run Roth conversion optimizer (2 points) - Mar 22
+* Compute and perform RMDs (3 points) - Mar 22
+
+
+4. Automated Testing (6% on HW6):
+Assigned to all 4 team members.
+Task:
+* Implement automated back-end and front-end tests covering 30% of the code
+        Sub-tasks with Deadline:
+* Back-End Tests: Write tests for core simulation logic - Mar 23
+* Front-End Tests: Write tests for scenario management - Mar 22
+
+
+
+Phase 2: hw7-code2 (Apr 14) 
+IGS Points Target: 30 points
+Cumulative Total: 59 points
+Chen Zhu: 8pts
+Haifeng Wu: 7pts
+Kalvin Liang Wu: 8pts
+Ekaterina Tkachenko: 7pts
+
+
+1. Simulations Continued (13 points on IGS)
+Task:
+* Implement Remaining Simulation Logic
+Assigned to Chen Zhu:
+* Pay discretionary expenses (2 points) -  Apr 5
+Assigned to Kalvin Liang Wu:
+* Pay non-discretionary expenses (2 points) -  Apr 5
+* Compute and pay taxes (4 points) - Apr 6
+Assigned to Haifeng Wu:
+* Run invest event (2 points) - Apr 9
+* Run rebalance events (2 points) - Apr 9
+* Handle death of the user or spouse (1 point) - Apr 9
+
+
+2. Charts (9 points on IGS):
+Task: 
+* Implement functionality of charts
+Assigned to Ekaterina Tkachenko:
+* Line chart of the probability of success over time (1 point) - Apr 5
+* Shaded line chart of probability ranges over time (4 points) - Apr 7
+Assigned to Chen Zhu:
+* Stacked bar chart of median or average values over time - (3 points) - Apr 10
+* Ability to show results in future dollars (1 point) - Apr 10
+
+   3. One-dimensional Scenario Exploration (8 points on IGS):
+Task:
+   * Implement one-dimensional scenario exploration
+Assigned to Kalvin Liang Wu:
+   * Scenario parameters (2 points) - Apr 11
+Assigned to Ekaterina Tkachenko:
+   * One-dimensional exploration algorithm (1 point) - Apr 11
+   * View results for a selected parameter value (1 point) - Apr 11
+Assigned to Haifeng Wu:
+   * Multi-line chart of the value of a selected quantity over time (2 points) - Apr 12
+        Assigned to Chen Zhu:
+   * Line chart of selected quantity as a function of parameter value (2 points) - Apr 12
+
+
+   4. Automated Testing (6% on HW7):
+Assigned to all 4 team members.
+Task:
+   * Implement automated back-end and front-end tests covering 70% of the code
+        Deadline:
+   * Apr 13
+
+
+Phase 3: hw9-code2 (May 5) 
+IGS Points Target: 25 points
+Cumulative Total: 84 points
+Chen Zhu: 6pts
+Haifeng Wu: 6pts
+Kalvin Liang Wu: 6pts
+Ekaterina Tkachenko: 7pts
+
+
+   1. Two-dimensional Scenario Exploration (6 points on IGS):
+Task:
+   * Implement two-dimensional scenario exploration
+Assigned to Ekaterina Tkachenko:
+   * Two-dimensional scenario exploration (1 point) - Apr 18
+Assigned to Chen Zhu:
+   * View results for a selected combination of parameter values (1 point) - Apr 18
+   * Surface plot of a quantity as a function of parameter values (2 points) - Apr 20
+   * Contour plot of a quantity as a function of parameter values (2 points) - Apr 20
+
+
+   2. Other Requirements (12 points on IGS):
+Task: 
+   * Implement additional requirements for the system
+Assigned to Kalvin Liang Wu:
+   * Authentication, user profiles, sharing (6 points) - Apr 22
+        Assigned to Haifeng Wu:
+   * Import and export (3 points) - Apr 22
+   * Parallelism (3 points) - Apr 26
+   3. UX Usability and Logs (7 points on IGS):
+Task: 
+   * Implement usability and logging
+Assigned to Ekaterina Tkachenko:
+   * Usability (5 points) - Apr 30
+   * Documentation of assumptions, limitations, and simplifications (1 point) - Apr 30
+Assigned to Chen Zhu:
+   * Logs (1 points) - Apr 30
+
+      4. Automated Testing
+Task:
+      * Complete automated back-end and front-end tests covering 100% of the code
+        Deadline:
+      * May 4
+
+
+
+
+
+
+
+
+
+
+[a]Three type of taxable income.
+[b]seems like there a limit in adding money to after tax account
+[c]seems like there a limit in adding money to after tax account
+[d]seems like there a limit in adding money to after tax account
