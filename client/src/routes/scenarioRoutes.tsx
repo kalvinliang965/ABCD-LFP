@@ -74,7 +74,9 @@ const ScenarioRoutes = [
     path="/scenarios/new"
     element={
       <ProtectedRoute>
-        <NewScenarioPage />
+        <Layout title="New Scenario">
+          <NewScenarioPage />
+        </Layout>
       </ProtectedRoute>
     }
   />,
