@@ -1,26 +1,31 @@
 // src/db/repositories/TaxBracketRepository.ts
 import { TaxFilingStatus } from "../../core/Enums";
-import { TaxBrackets, TaxBracketSet, TaxBracketsObject } from "../../core/tax/TaxBrackets";
+import { TaxBrackets, TaxBracket, TaxBracketsObject } from "../../core/tax/TaxBrackets";
+import TaxBracketModel from "../models/tax_bracket";
 
-interface TaxBracketRepository {
-    save_brackets(status: TaxFilingStatus, brackets: TaxBracketSet): Promise<void>;
-    load_brackets(status: TaxFilingStatus): Promise<TaxBracketsObject>;
+const save_bracket = async (
+    min: number, 
+    max: number, 
+    rate: number, 
+    bracket_types: string, 
+    taxpayer_types: string
+): Promise<void> => {
+    try {
+        const newBracket = new TaxBracketModel({min, max, rate, bracket_types, taxpayer_types});
+        await newBracket.save();
+        console.log(`Data add succesfully: ${taxpayer_types} AND ${bracket_types}: [${min}, ${max}] = ${rate}`);
+    } catch (error) {
+        throw new Error(`Internel Service error ${(error as Error).message}`);
+    }
 }
 
-export function MongoTaxBracketRepository(): TaxBracketRepository {
+const load_bracketAll = async (status: TaxFilingStatus): Promise<TaxBracketsObject> => {
+    // TODO
+    const taxBrackets = TaxBrackets();
+    return taxBrackets;
+}
 
-    const save_brackets = async (status: TaxFilingStatus, brackets: TaxBracketSet): Promise<void> => {
-        // TODO
-    }
-    const load_brackets = async (status: TaxFilingStatus): Promise<TaxBracketsObject> => {
-        // TODO
-        const taxBrackets = TaxBrackets();
-        return taxBrackets;
-    }
-
-
-    return {
-        save_brackets,
-        load_brackets,
-    }
+export {
+    save_bracket,
+    load_bracketAll,
 }

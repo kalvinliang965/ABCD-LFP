@@ -5,16 +5,17 @@ import { TaxBrackets, TaxBracketsObject } from "../../core/tax/TaxBrackets";
 import { TaxFilingStatus } from "../../core/Enums";
 import { StandardDeductionObject, StandardDeductions } from "../../core/tax/StandardDeduction";
 import { tax_config } from "../../config/tax";
+import { save_bracket } from "../../db/repositories/TaxBracketRepository";
 
 const SINGLE_TABLE: number = 0;
 const MARRIED_TABLE: number = 1;
 
 // Function to parse table rows and extract tax bracket data
-function parse_table_rows(taxBrackets: TaxBracketsObject, status: TaxFilingStatus, table: string): void {
+async function parse_table_rows(taxBrackets: TaxBracketsObject, status: TaxFilingStatus, table: string): Promise<void> {
     const $ = load("<table>" + table + "</table");
     // remove header row
     const rows = $("tr").slice(1);
-    rows.each((idx, row) => {
+    rows.each(async (idx, row) => {
         const cells = $(row).find('td');
         if (cells.length < 3) return;
         const rate_text = $(cells[0]).text().trim();
@@ -24,11 +25,12 @@ function parse_table_rows(taxBrackets: TaxBracketsObject, status: TaxFilingStatu
         const max = max_text.toLowerCase() === "and up" ? Infinity: extractNumbers(max_text, 1)[0];
         const rate = extractNumbers(rate_text, 1)[0] / 100;
         taxBrackets.add_rate(min, max, rate, status);
+        await save_bracket(min, max, rate, "TAXABLE_INCOME", status);
     });
 }
 
 // Function to parse federal tax tables
-function parse_federal_tax_tables(tables: Array<string>) {
+async function parse_federal_tax_tables(tables: Array<string>) {
     if (!tables || tables.length < 4) {
         throw new Error("Not enough table found");
     }
@@ -37,12 +39,12 @@ function parse_federal_tax_tables(tables: Array<string>) {
     if (!single_table) {
         throw new Error("Missing single taxpayer table");
     }
-    parse_table_rows(taxBrackets, TaxFilingStatus.SINGLE, single_table);
+    await parse_table_rows(taxBrackets, TaxFilingStatus.SINGLE, single_table);
     const married_table = tables[MARRIED_TABLE];
     if (!married_table) {
         throw new Error("Misssing married table");
     }
-    parse_table_rows(taxBrackets, TaxFilingStatus.MARRIED, married_table);
+    await parse_table_rows(taxBrackets, TaxFilingStatus.MARRIED, married_table);
     return taxBrackets;
 }
 
@@ -64,7 +66,7 @@ async function parse_taxable_income(): Promise<TaxBracketsObject> {
         if (federal_tax_tables.length < 4) {
             throw new Error("Not enough table found");
         }
-        return parse_federal_tax_tables(federal_tax_tables);
+        return await parse_federal_tax_tables(federal_tax_tables);
     } catch (error) {
         console.error("Error fetching the federal tax brackets:", error);
         throw new Error("Federal tax data unavailable");
@@ -128,7 +130,7 @@ async function parse_capital_gains(): Promise<TaxBracketsObject> {
              throw new Error(`Expected 3 paragraph contain the text: "a capital gains rate of "`);
         }
         const taxBrackets = TaxBrackets();
-        paragraph.each((idx,el) => {
+        paragraph.each(async (idx,el) => {
             const p = $(el);
             // first p
             if (idx == 0) {
@@ -142,13 +144,15 @@ async function parse_capital_gains(): Promise<TaxBracketsObject> {
                 if (!li || li.length != 3) {
                     throw new Error("Invalid structure.");
                 }
-                li.each((idx, el) => {
+                li.each(async (idx, el) => {
                     const list_item = $(el);
                     const upperbound = extractNumbers(list_item.text(), 1)[0];
                     if (idx == 0) {
                         taxBrackets.add_rate(0, upperbound, rate, TaxFilingStatus.SINGLE);
+                        await save_bracket(0, upperbound, rate, "CAPITAL_GAINS", TaxFilingStatus.SINGLE);
                     } else if (idx == 1) {
                         taxBrackets.add_rate(0, upperbound, rate, TaxFilingStatus.MARRIED);
+                        await save_bracket(0, upperbound, rate, "CAPITAL_GAINS", TaxFilingStatus.MARRIED);
                     }
                 });
             }
@@ -163,13 +167,15 @@ async function parse_capital_gains(): Promise<TaxBracketsObject> {
                 if (!li || li.length != 4) {
                 throw new Error("Invalid structure.");
                 }
-                li.each((idx, el) => {
+                li.each(async (idx, el) => {
                 const list_item = $(el);
                 const [lowerbound, upperbound] = extractNumbers(list_item.text(), 2);
                     if (idx == 0) {
                         taxBrackets.add_rate(lowerbound + 1, upperbound, rate, TaxFilingStatus.SINGLE);
+                        await save_bracket(lowerbound, upperbound, rate, "CAPITAL_GAINS", TaxFilingStatus.SINGLE);
                     } else if (idx == 2) {
                         taxBrackets.add_rate(lowerbound + 1, upperbound, rate, TaxFilingStatus.MARRIED);
+                        await save_bracket(lowerbound, upperbound, rate, "CAPITAL_GAINS", TaxFilingStatus.MARRIED);
                     }
                 });
             }
@@ -206,14 +212,3 @@ export {
     parse_taxable_income,
     parse_standard_deductions,
 }
-
-// async function main() {
-//    const taxBracket = await parse_federal_tax_brackets();
-//    console.log(taxBracket.to_string());
-//    const deduction = await parse_standard_deduction();
-//    console.log(deduction.to_string());
-//    const capital_gains_brakcet = await parse_capital_gains();
-//    console.log(capital_gains_brakcet.to_string());
-//} 
- 
-// main();

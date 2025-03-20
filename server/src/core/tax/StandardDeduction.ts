@@ -27,7 +27,7 @@ export function StandardDeductions(): StandardDeductionObject {
     }
     
     const to_string = (): string => {
-        let res = `SID DEDUCTION: ${deductions.get(TaxFilingStatus.SINGLE)}\nMARRIED DEDUCTION: ${deductions.get(TaxFilingStatus.MARRIED)}`;
+        let res = `SINGLE DEDUCTION: ${deductions.get(TaxFilingStatus.SINGLE)}\nMARRIED DEDUCTION: ${deductions.get(TaxFilingStatus.MARRIED)}\n`;
         return res;
     }
 
