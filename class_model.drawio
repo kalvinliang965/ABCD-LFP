@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="_h6ZiUxZa-2Kxd4IdwST" name="Page-1">
-        <mxGraphModel dx="1967" dy="730" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="1806" dy="589" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -12,56 +12,6 @@
                 </mxCell>
                 <mxCell id="4" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;MARRIED_COUPLE&lt;/font&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="2" vertex="1">
                     <mxGeometry y="80" width="240" height="30" as="geometry"/>
-                </mxCell>
-                <mxCell id="128" value="Use" style="edgeStyle=none;jumpSize=13;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;dashed=1;strokeWidth=3;fontSize=15;startArrow=classic;startFill=1;endArrow=none;endFill=0;startSize=20;endSize=20;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;entryX=-0.007;entryY=0.965;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="9" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="1115.52" y="965.0900000000001" as="targetPoint"/>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="9" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;TaxContext&lt;/font&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="810" y="1084" width="340" height="392" as="geometry"/>
-                </mxCell>
-                <mxCell id="10" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;+ age: int {readOnly}&lt;/font&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="9" vertex="1">
-                    <mxGeometry y="26" width="340" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="11" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;+ filing_status: TaxFilingStatus {readOnly}&lt;/font&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="9" vertex="1">
-                    <mxGeometry y="52" width="340" height="28" as="geometry"/>
-                </mxCell>
-                <mxCell id="12" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;+ state: string {readOnly}&lt;br&gt;&lt;br&gt;&lt;/font&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="9" vertex="1">
-                    <mxGeometry y="80" width="340" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="135" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;+ Is_early_withdrawal:bool&lt;br&gt;&lt;/font&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="9" vertex="1">
-                    <mxGeometry y="106" width="340" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="145" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;+ inflation_rate: float&lt;br&gt;&lt;/font&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="9" vertex="1">
-                    <mxGeometry y="132" width="340" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="230" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;+ user_birth_year:int&amp;nbsp;&lt;br&gt;&lt;/font&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="9" vertex="1">
-                    <mxGeometry y="158" width="340" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="233" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;+ spouse_birth_year: int&lt;br&gt;&lt;/font&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="9" vertex="1">
-                    <mxGeometry y="184" width="340" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="231" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;+ user_life_expectancy: int&lt;br&gt;&lt;/font&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="9" vertex="1">
-                    <mxGeometry y="210" width="340" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="232" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;+ spouse_life_expectancy: int&lt;br&gt;&lt;/font&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="9" vertex="1">
-                    <mxGeometry y="236" width="340" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="291" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;+ current_year&lt;/font&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="9" vertex="1">
-                    <mxGeometry y="262" width="340" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="292" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;+ taxable_income: float&lt;/font&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="9" vertex="1">
-                    <mxGeometry y="288" width="340" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="293" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;+ tax_brackets: TaxBrackets&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="9" vertex="1">
-                    <mxGeometry y="314" width="340" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="294" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;+ prev_tax_investments: Set&amp;lt;Investment&amp;gt;&lt;/font&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="9" vertex="1">
-                    <mxGeometry y="340" width="340" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="432" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;+ capital_gains: float&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="9" vertex="1">
-                    <mxGeometry y="366" width="340" height="26" as="geometry"/>
                 </mxCell>
                 <mxCell id="40" value="ExemptionWithdrawalTax" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontSize=20;" parent="1" vertex="1">
                     <mxGeometry x="250" y="877" width="360" height="148" as="geometry"/>
@@ -82,22 +32,25 @@
                     <mxGeometry y="118" width="360" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="45" value="TaxBrackets" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontSize=20;" parent="1" vertex="1">
-                    <mxGeometry x="1060" y="220" width="360" height="164" as="geometry"/>
+                    <mxGeometry x="1040" y="110" width="480" height="190" as="geometry"/>
                 </mxCell>
-                <mxCell id="46" value="- bracket: Dict&lt;(float, float) -&gt; float&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="45" vertex="1">
-                    <mxGeometry y="40" width="360" height="26" as="geometry"/>
+                <mxCell id="46" value="- single_bracket: Dict&lt;(float, float) -&gt; float&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="45" vertex="1">
+                    <mxGeometry y="40" width="480" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="614" value="- couple_bracket: Dict&lt;(float, float) -&gt; float&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="45" vertex="1">
+                    <mxGeometry y="66" width="480" height="26" as="geometry"/>
                 </mxCell>
                 <mxCell id="48" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="45" vertex="1">
-                    <mxGeometry y="66" width="360" height="8" as="geometry"/>
+                    <mxGeometry y="92" width="480" height="8" as="geometry"/>
                 </mxCell>
-                <mxCell id="50" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;+ add_rate(min: float, max: float, rate: float)&lt;/font&gt;" style="text;strokeColor=none;align=left;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="45" vertex="1">
-                    <mxGeometry y="74" width="360" height="30" as="geometry"/>
+                <mxCell id="50" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;+ add_rate(min: float, max: float, rate: float,&amp;nbsp;&lt;span style=&quot;color: rgb(63, 63, 63);&quot;&gt;status: TaxFilingStatus&lt;/span&gt;)&lt;/font&gt;" style="text;strokeColor=none;align=left;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="45" vertex="1">
+                    <mxGeometry y="100" width="480" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="49" value="+ adjust_for_inflation(context: TaxContext): float" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="45" vertex="1">
-                    <mxGeometry y="104" width="360" height="30" as="geometry"/>
+                <mxCell id="49" value="+ adjust_for_inflation(rate: float)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="45" vertex="1">
+                    <mxGeometry y="130" width="480" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="51" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;+ calculate_tax(taxable_income: float): float&lt;/font&gt;" style="text;strokeColor=none;align=left;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="45" vertex="1">
-                    <mxGeometry y="134" width="360" height="30" as="geometry"/>
+                <mxCell id="615" value="+ find_rate(taxable_income: float):float" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="45" vertex="1">
+                    <mxGeometry y="160" width="480" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="62" value="FederalTaxScraper" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontSize=20;" parent="1" vertex="1">
                     <mxGeometry x="2000" y="717" width="400" height="160" as="geometry"/>
@@ -119,15 +72,13 @@
                 </mxCell>
                 <mxCell id="123" style="edgeStyle=none;jumpSize=13;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;dashed=1;strokeWidth=3;fontSize=15;startArrow=none;startFill=0;endArrow=diamondThin;endFill=0;endSize=20;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;startSize=20;" parent="1" source="70" target="50" edge="1">
                     <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="1490" y="320"/>
-                        </Array>
+                        <Array as="points"/>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="70" value="FederalTaxData" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontSize=20;" parent="1" vertex="1">
-                    <mxGeometry x="1450" y="410" width="350" height="130" as="geometry"/>
+                    <mxGeometry x="1440" y="320" width="350" height="104" as="geometry"/>
                 </mxCell>
-                <mxCell id="71" value="+ income_tax_brackets: TaxBrackets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="70" vertex="1">
+                <mxCell id="71" value="+ ordinary_income_tax_brackets: TaxBrackets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="70" vertex="1">
                     <mxGeometry y="26" width="350" height="26" as="geometry"/>
                 </mxCell>
                 <mxCell id="72" value="+ capital_gains_tax_brackets: TaxBrackets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="70" vertex="1">
@@ -136,18 +87,13 @@
                 <mxCell id="73" value="+ standard_deductions: Map&lt;string, float&gt;&#xa;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="70" vertex="1">
                     <mxGeometry y="78" width="350" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="74" value="+ social_security_taxable_percentage: float" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="70" vertex="1">
-                    <mxGeometry y="104" width="350" height="26" as="geometry"/>
-                </mxCell>
                 <mxCell id="124" style="edgeStyle=none;jumpSize=13;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;strokeWidth=3;fontSize=15;startArrow=none;startFill=0;endArrow=diamondThin;endFill=0;endSize=20;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;startSize=20;" parent="1" source="75" target="50" edge="1">
                     <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="1010" y="310"/>
-                        </Array>
+                        <Array as="points"/>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="75" value="StateTaxData" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontSize=20;" parent="1" vertex="1">
-                    <mxGeometry x="850" y="436" width="290" height="78" as="geometry"/>
+                    <mxGeometry x="810" y="332" width="290" height="78" as="geometry"/>
                 </mxCell>
                 <mxCell id="76" value="+ tax_brackets: TaxBrackets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="75" vertex="1">
                     <mxGeometry y="26" width="290" height="26" as="geometry"/>
@@ -156,23 +102,30 @@
                     <mxGeometry y="52" width="290" height="26" as="geometry"/>
                 </mxCell>
                 <mxCell id="80" value="FederalTaxService" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontSize=20;" parent="1" vertex="1">
-                    <mxGeometry x="1380" y="710" width="570" height="136" as="geometry"/>
+                    <mxGeometry x="1320" y="590" width="600" height="192" as="geometry"/>
                 </mxCell>
                 <mxCell id="81" value="- tax_data: FederalTaxData" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="80" vertex="1">
-                    <mxGeometry y="40" width="570" height="26" as="geometry"/>
+                    <mxGeometry y="40" width="600" height="26" as="geometry"/>
                 </mxCell>
                 <mxCell id="82" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="80" vertex="1">
-                    <mxGeometry y="66" width="570" height="14" as="geometry"/>
+                    <mxGeometry y="66" width="600" height="14" as="geometry"/>
                 </mxCell>
-                <mxCell id="83" value="+ compute_income_tax(taxable_income, context:TaxContext): float" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="80" vertex="1">
-                    <mxGeometry y="80" width="570" height="26" as="geometry"/>
+                <mxCell id="83" value="+ calculate_ordinary_income_tax(taxable_income, filing_status: TaxFilingStatus): float" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="80" vertex="1">
+                    <mxGeometry y="80" width="600" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="439" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;+ calculate_capital_gains_tax(capital_gains, context:TaxContext):float&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="80" vertex="1">
-                    <mxGeometry y="106" width="570" height="30" as="geometry"/>
+                <mxCell id="632" value="+ calculate_social_security_tax(taxable_income, filing_status: TaxFilingStatus): float" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="80" vertex="1">
+                    <mxGeometry y="106" width="600" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="107" value="" style="edgeStyle=none;html=1;strokeWidth=3;fontSize=15;endArrow=diamondThin;endFill=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;jumpSize=13;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;entryX=0.548;entryY=1.051;entryDx=0;entryDy=0;entryPerimeter=0;endSize=20;" parent="1" source="80" target="74" edge="1">
+                <mxCell id="439" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;+ calculate_capital_gains_tax(taxable_income, filing_status: TaxFilingStatus):float&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="80" vertex="1">
+                    <mxGeometry y="132" width="600" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="628" value="+ find_tax_bracket(taxable_income: float, filing_status: TaxFilingStatus): [float, float]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="80" vertex="1">
+                    <mxGeometry y="162" width="600" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="107" value="" style="edgeStyle=none;html=1;strokeWidth=3;fontSize=15;endArrow=diamondThin;endFill=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;jumpSize=13;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;entryX=0.527;entryY=1.005;entryDx=0;entryDy=0;entryPerimeter=0;endSize=20;" parent="1" source="80" target="73" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points"/>
+                        <mxPoint x="1641.7999999999997" y="541.326" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="108" style="edgeStyle=none;html=1;strokeWidth=3;fontSize=15;endArrow=diamondThin;endFill=0;endSize=20;entryX=0.495;entryY=0.93;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="92" target="79" edge="1">
@@ -181,36 +134,41 @@
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="92" value="StateTaxService" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontSize=20;" parent="1" vertex="1">
-                    <mxGeometry x="680" y="710" width="640" height="130" as="geometry"/>
+                    <mxGeometry x="450" y="606" width="750" height="160" as="geometry"/>
                 </mxCell>
                 <mxCell id="93" value="- tax_data: StateTaxData" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=17;" parent="92" vertex="1">
-                    <mxGeometry y="40" width="640" height="26" as="geometry"/>
+                    <mxGeometry y="40" width="750" height="26" as="geometry"/>
                 </mxCell>
                 <mxCell id="94" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="92" vertex="1">
-                    <mxGeometry y="66" width="640" height="8" as="geometry"/>
+                    <mxGeometry y="66" width="750" height="8" as="geometry"/>
                 </mxCell>
-                <mxCell id="95" value="+ compute_income_tax(income: float, context: TaxContext): float" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=17;" parent="92" vertex="1">
-                    <mxGeometry y="74" width="640" height="26" as="geometry"/>
+                <mxCell id="630" value="+ calculate_ordinary_income_tax(taxable_income, state: State, filing_status: TaxFilingStatus): float" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="92" vertex="1">
+                    <mxGeometry y="74" width="750" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="69" value="+ load_from_yaml(file_path: String): StateTaxData" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="92" vertex="1">
-                    <mxGeometry y="100" width="640" height="30" as="geometry"/>
+                <mxCell id="617" value="+ load_from_yaml(file_path: String): StateTaxData" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="92" vertex="1">
+                    <mxGeometry y="100" width="750" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="69" value="+ find_tax_bracket(taxable_income: float, filing_status: TaxFilingStatus): [float, float]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="92" vertex="1">
+                    <mxGeometry y="130" width="750" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="132" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&amp;lt;&amp;lt;enumeration&amp;gt;&amp;gt;&lt;br&gt;&lt;b&gt;State&lt;/b&gt;&lt;/p&gt;&lt;hr&gt;&lt;p style=&quot;margin:0px;margin-left:8px;text-align:left;&quot;&gt;NY&lt;br&gt;NJ&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:8px;text-align:left;&quot;&gt;CT&lt;/p&gt;" style="shape=rect;html=1;overflow=fill;whiteSpace=wrap;strokeWidth=2;fontSize=15;" parent="1" vertex="1">
                     <mxGeometry x="2130" y="130" width="200" height="130" as="geometry"/>
                 </mxCell>
-                <mxCell id="136" style="edgeStyle=none;jumpSize=13;html=1;exitX=1.003;exitY=-0.093;exitDx=0;exitDy=0;entryX=0;entryY=0;entryDx=0;entryDy=0;strokeWidth=3;fontSize=15;startArrow=classic;startFill=1;endArrow=none;endFill=0;startSize=20;endSize=20;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;dashed=1;dashPattern=8 8;exitPerimeter=0;" parent="1" source="43" target="9" edge="1">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="430" style="edgeStyle=none;html=1;entryX=0.632;entryY=1.004;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=3;" parent="1" source="159" target="522" edge="1">
+                <mxCell id="430" style="edgeStyle=none;html=1;entryX=0.314;entryY=1.189;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=3;" parent="1" source="159" target="628" edge="1">
                     <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="1432" y="989" as="targetPoint"/>
+                        <mxPoint x="1440.4000000000005" y="966.1039999999998" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="571" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=none;endFill=0;strokeWidth=3;endSize=20;startArrow=diamond;startFill=1;startSize=20;" parent="1" source="159" target="557" edge="1">
+                <mxCell id="571" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=none;endFill=0;strokeWidth=3;endSize=20;startArrow=diamond;startFill=1;startSize=20;" parent="1" source="159" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="1770" y="1387" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="616" style="edgeStyle=none;html=1;" parent="1" source="159" target="69" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="159" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;Simulation&lt;/font&gt;" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="1010" y="1600" width="680" height="438" as="geometry"/>
+                    <mxGeometry x="890" y="1040" width="680" height="438" as="geometry"/>
                 </mxCell>
                 <mxCell id="165" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- scenario: Scenario&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="159" vertex="1">
                     <mxGeometry y="40" width="680" height="26" as="geometry"/>
@@ -227,16 +185,16 @@
                 <mxCell id="169" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- process_income(simulation_state: SimulationState)&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="159" vertex="1">
                     <mxGeometry y="126" width="680" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="170" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- process_roth_conversions(simulation_state: SimulationState)&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="159" vertex="1">
+                <mxCell id="174" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- pay_mandatory_expenses(simulaiton_state: SimulationState)&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="159" vertex="1">
                     <mxGeometry y="152" width="680" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="172" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- process_rmds(simulation_state: SimulationState)&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="159" vertex="1">
+                <mxCell id="170" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- process_roth_conversions(simulation_state: SimulationState)&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="159" vertex="1">
                     <mxGeometry y="178" width="680" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="173" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- update_investments(simulation_state: SimulationState)&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="159" vertex="1">
+                <mxCell id="172" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- process_rmds(simulation_state: SimulationState)&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="159" vertex="1">
                     <mxGeometry y="204" width="680" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="174" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- pay_mandatory_expenses(simulaiton_state: SimulationState)&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="159" vertex="1">
+                <mxCell id="173" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- update_investments(simulation_state: SimulationState)&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="159" vertex="1">
                     <mxGeometry y="230" width="680" height="26" as="geometry"/>
                 </mxCell>
                 <mxCell id="175" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- process_discretionary_expenses(simulation_state: SimulationState)&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="159" vertex="1">
@@ -248,7 +206,7 @@
                 <mxCell id="177" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- rebalance_investments(simulation_state: SimulationState)&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="159" vertex="1">
                     <mxGeometry y="308" width="680" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="573" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- reset(simulation_state: SimulationState)&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="159" vertex="1">
+                <mxCell id="573" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- setup(simulation_state: SimulationState)&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="159" vertex="1">
                     <mxGeometry y="334" width="680" height="26" as="geometry"/>
                 </mxCell>
                 <mxCell id="574" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- process_tax(simulation_state: SimulationState)&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="159" vertex="1">
@@ -280,55 +238,52 @@
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="215" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;Scenario&lt;/font&gt;" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=50;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;strokeWidth=2;" parent="1" vertex="1">
-                    <mxGeometry x="2220" y="1536" width="520" height="448" as="geometry"/>
-                </mxCell>
-                <mxCell id="189" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- filling_status: TaxFillingStatus&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
-                    <mxGeometry y="50" width="520" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="192" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- user_life_expectancy: int&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
-                    <mxGeometry y="76" width="520" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="208" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- event_series: Set&amp;lt;EventSeries&amp;gt;&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
-                    <mxGeometry y="102" width="520" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="213" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- user_residencee_state: string&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
-                    <mxGeometry y="128" width="520" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="191" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- spouse_birth_year: int&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
-                    <mxGeometry y="154" width="520" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="212" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- financial_goal: float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
-                    <mxGeometry y="180" width="520" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="206" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- spouse_life_expectancy: int&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
-                    <mxGeometry y="206" width="520" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="211" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- sharing_settings: TODO&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
-                    <mxGeometry y="232" width="520" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="193" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- distribution: DistributionType&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
-                    <mxGeometry y="258" width="520" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="209" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- inflation_assumption: float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
-                    <mxGeometry y="284" width="520" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="210" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- roth_optiminzer_settings: RothConversionSettings | None&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
-                    <mxGeometry y="310" width="520" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="207" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- investments: Set&amp;lt;Invesment&amp;gt;&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
-                    <mxGeometry y="336" width="520" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="190" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- user_birth_year: int&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
-                    <mxGeometry y="362" width="520" height="26" as="geometry"/>
+                    <mxGeometry x="2110" y="1736" width="520" height="440" as="geometry"/>
                 </mxCell>
                 <mxCell id="188" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- name: string&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
+                    <mxGeometry y="50" width="520" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="189" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- filling_status: TaxFillingStatus&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
+                    <mxGeometry y="76" width="520" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="190" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- user_birth_year: int&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
+                    <mxGeometry y="102" width="520" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="191" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- spouse_birth_year: int&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
+                    <mxGeometry y="128" width="520" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="192" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- user_life_expectancy: int&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
+                    <mxGeometry y="154" width="520" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="206" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- spouse_life_expectancy: int&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
+                    <mxGeometry y="180" width="520" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="207" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- investments: Set&amp;lt;Invesment&amp;gt;&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
+                    <mxGeometry y="206" width="520" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="208" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- event_series: Set&amp;lt;EventSeries&amp;gt;&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
+                    <mxGeometry y="232" width="520" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="209" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- inflation_assumption: float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
+                    <mxGeometry y="258" width="520" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="610" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- after_tax_acc_limit: float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
+                    <mxGeometry y="284" width="520" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="193" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- pre_tax_acc_limit: float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
+                    <mxGeometry y="310" width="520" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="210" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- roth_optiminzer_strategy: RothConversionStrategy&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
+                    <mxGeometry y="336" width="520" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="211" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- sharing_settings: ShareSetting&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;font-size: 15px;&quot;&gt;&lt;br&gt;&lt;/span&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
+                    <mxGeometry y="362" width="520" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="212" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- financial_goal: float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
                     <mxGeometry y="388" width="520" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="217" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="215" vertex="1">
-                    <mxGeometry y="414" width="520" height="8" as="geometry"/>
-                </mxCell>
-                <mxCell id="229" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;+ create_tax_context(): TaxContext&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;font-size: 15px;&quot;&gt;&lt;br&gt;&lt;/span&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
-                    <mxGeometry y="422" width="520" height="26" as="geometry"/>
+                <mxCell id="213" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- user_residence_state: State&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="215" vertex="1">
+                    <mxGeometry y="414" width="520" height="26" as="geometry"/>
                 </mxCell>
                 <mxCell id="257" value="RMDTable" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontSize=20;" parent="1" vertex="1">
                     <mxGeometry x="2270" y="900" width="500" height="96" as="geometry"/>
@@ -355,7 +310,7 @@
                     <mxGeometry y="88" width="480" height="26" as="geometry"/>
                 </mxCell>
                 <mxCell id="295" value="RebalanceEventSeries" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontSize=20;" parent="1" vertex="1">
-                    <mxGeometry x="3500" y="1320" width="480" height="90" as="geometry"/>
+                    <mxGeometry x="3460" y="1430" width="480" height="90" as="geometry"/>
                 </mxCell>
                 <mxCell id="296" value="- asset_allocation: AssetAllocation" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="295" vertex="1">
                     <mxGeometry y="36" width="480" height="26" as="geometry"/>
@@ -364,7 +319,7 @@
                     <mxGeometry y="62" width="480" height="28" as="geometry"/>
                 </mxCell>
                 <mxCell id="303" value="InvestmentEventSeries" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontSize=20;" parent="1" vertex="1">
-                    <mxGeometry x="2950" y="1308" width="480" height="114" as="geometry"/>
+                    <mxGeometry x="2910" y="1418" width="480" height="114" as="geometry"/>
                 </mxCell>
                 <mxCell id="304" value="- asset_allocation: AssetAllocation" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="303" vertex="1">
                     <mxGeometry y="36" width="480" height="26" as="geometry"/>
@@ -417,7 +372,7 @@
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="321" value="IncomeEventSeries" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontSize=20;" parent="1" vertex="1">
-                    <mxGeometry x="2820" y="1830" width="480" height="166" as="geometry"/>
+                    <mxGeometry x="2890" y="1770" width="480" height="166" as="geometry"/>
                 </mxCell>
                 <mxCell id="322" value="- initial_amount: float" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="321" vertex="1">
                     <mxGeometry y="36" width="480" height="26" as="geometry"/>
@@ -438,7 +393,7 @@
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="334" value="ExpenseEventSeries" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontSize=20;" parent="1" vertex="1">
-                    <mxGeometry x="3710" y="1800" width="480" height="166" as="geometry"/>
+                    <mxGeometry x="3430" y="1770" width="480" height="166" as="geometry"/>
                 </mxCell>
                 <mxCell id="335" value="- initial_amount: float" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="334" vertex="1">
                     <mxGeometry y="36" width="480" height="26" as="geometry"/>
@@ -511,7 +466,7 @@
                     <mxGeometry y="170" width="240" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="369" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;Investment&lt;/font&gt;" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="2850" y="710" width="260" height="204" as="geometry"/>
+                    <mxGeometry x="2850" y="710" width="260" height="170" as="geometry"/>
                 </mxCell>
                 <mxCell id="370" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- name: string&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="369" vertex="1">
                     <mxGeometry y="40" width="260" height="26" as="geometry"/>
@@ -528,20 +483,20 @@
                 <mxCell id="376" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- cost_basis: float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="369" vertex="1">
                     <mxGeometry y="144" width="260" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="371" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="369" vertex="1">
-                    <mxGeometry y="170" width="260" height="8" as="geometry"/>
-                </mxCell>
-                <mxCell id="372" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- calculate_fees(): float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="369" vertex="1">
-                    <mxGeometry y="178" width="260" height="26" as="geometry"/>
-                </mxCell>
                 <mxCell id="380" style="edgeStyle=none;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;startArrow=classic;startFill=1;endArrow=none;endFill=0;dashed=1;strokeWidth=3;" parent="1" source="342" target="193" edge="1">
-                    <mxGeometry relative="1" as="geometry"/>
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="2810" y="1800"/>
+                        </Array>
+                    </mxGeometry>
                 </mxCell>
-                <mxCell id="384" style="edgeStyle=none;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.149;entryY=1.124;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;strokeWidth=3;" parent="1" source="192" target="372" edge="1">
-                    <mxGeometry relative="1" as="geometry"/>
+                <mxCell id="384" style="edgeStyle=none;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.307;entryY=1.082;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;strokeWidth=3;" parent="1" source="192" target="376" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="2888.74" y="917.2239999999999" as="targetPoint"/>
+                    </mxGeometry>
                 </mxCell>
                 <mxCell id="385" value="InvestmentType" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontSize=20;" parent="1" vertex="1">
-                    <mxGeometry x="2320" y="449" width="490" height="202" as="geometry"/>
+                    <mxGeometry x="2720" y="390" width="490" height="202" as="geometry"/>
                 </mxCell>
                 <mxCell id="386" value="- name: string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="385" vertex="1">
                     <mxGeometry y="36" width="490" height="26" as="geometry"/>
@@ -555,22 +510,24 @@
                 <mxCell id="389" value="- expense_ratio: float" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="385" vertex="1">
                     <mxGeometry y="118" width="490" height="28" as="geometry"/>
                 </mxCell>
-                <mxCell id="394" value="- dividend_yield: float" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="385" vertex="1">
+                <mxCell id="394" value="- dividend_yield: StochasticChange" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="385" vertex="1">
                     <mxGeometry y="146" width="490" height="28" as="geometry"/>
                 </mxCell>
-                <mxCell id="390" value="- is_tax_exempt: bool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="385" vertex="1">
+                <mxCell id="607" value="- is_tax_exempt: bool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="385" vertex="1">
                     <mxGeometry y="174" width="490" height="28" as="geometry"/>
                 </mxCell>
-                <mxCell id="395" style="edgeStyle=none;html=1;entryX=1.005;entryY=0.767;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=20;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" source="369" target="388" edge="1">
-                    <mxGeometry relative="1" as="geometry"/>
+                <mxCell id="395" style="edgeStyle=none;html=1;entryX=0.517;entryY=0.925;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=20;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" source="369" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="2973.33" y="617.9000000000001" as="targetPoint"/>
+                    </mxGeometry>
                 </mxCell>
                 <mxCell id="411" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;&amp;lt;&amp;lt;enumeration&amp;gt;&amp;gt;&lt;br&gt;ChangeType&lt;/font&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=50;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="3030" y="210" width="240" height="110" as="geometry"/>
+                    <mxGeometry x="3050" y="130" width="240" height="110" as="geometry"/>
                 </mxCell>
                 <mxCell id="412" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;FIXED_AMOUNT&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="411" vertex="1">
                     <mxGeometry y="50" width="240" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="415" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;PERCENTAGE&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="411" vertex="1">
+                <mxCell id="669" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;PERCENTAGE&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="411" vertex="1">
                     <mxGeometry y="80" width="240" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="417" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;&amp;lt;&amp;lt;enumeration&amp;gt;&amp;gt;&lt;br&gt;DistributionType&lt;/font&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=50;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
@@ -601,13 +558,9 @@
                     <mxGeometry y="110" width="240" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="431" style="edgeStyle=none;html=1;entryX=-0.005;entryY=0.037;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="159" target="215" edge="1">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="448" style="edgeStyle=none;html=1;entryX=0.995;entryY=-0.111;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="215" target="230" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1700" y="1590"/>
-                            <mxPoint x="1490" y="1500"/>
+                            <mxPoint x="1850" y="1810"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -639,7 +592,7 @@
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="462" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;CurrencyConverter&lt;/font&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="540" y="2303" width="570" height="52" as="geometry"/>
+                    <mxGeometry x="230" y="2288" width="570" height="52" as="geometry"/>
                 </mxCell>
                 <mxCell id="467" style="edgeStyle=none;html=1;" parent="462" source="463" edge="1">
                     <mxGeometry relative="1" as="geometry">
@@ -684,7 +637,7 @@
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="481" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;ChartParameterRange&lt;/font&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=0;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="1730" y="2060" width="330" height="120" as="geometry"/>
+                    <mxGeometry x="1390" y="1700" width="330" height="120" as="geometry"/>
                 </mxCell>
                 <mxCell id="482" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;+ param_type: ChartParameterType&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="481" vertex="1">
                     <mxGeometry width="330" height="30" as="geometry"/>
@@ -699,7 +652,7 @@
                     <mxGeometry y="90" width="330" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="487" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;ExplorationEngine&lt;/font&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="1360" y="2290" width="670" height="78" as="geometry"/>
+                    <mxGeometry x="1350" y="1950" width="670" height="78" as="geometry"/>
                 </mxCell>
                 <mxCell id="489" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;+ run_1d_sweep(base_scenario: Scenario, param: ChartParameterRange): ExporationResult&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="487" vertex="1">
                     <mxGeometry y="26" width="670" height="26" as="geometry"/>
@@ -708,7 +661,7 @@
                     <mxGeometry y="52" width="670" height="26" as="geometry"/>
                 </mxCell>
                 <mxCell id="491" value="&lt;span style=&quot;font-size: 20px;&quot;&gt;&lt;font style=&quot;color: light-dark(rgb(192, 192, 192), rgb(255, 255, 255));&quot;&gt;ExplorationResult&lt;/font&gt;&lt;/span&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="1200" y="2800" width="540" height="78" as="geometry"/>
+                    <mxGeometry x="850" y="2122" width="540" height="78" as="geometry"/>
                 </mxCell>
                 <mxCell id="492" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;+ heatmap_data: Map&amp;lt;Tuple&amp;lt;float. float&amp;gt;, SimulationResult&amp;gt;&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="491" vertex="1">
                     <mxGeometry y="26" width="540" height="26" as="geometry"/>
@@ -719,8 +672,10 @@
                 <mxCell id="496" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;dashed=1;strokeWidth=3;" parent="1" source="490" target="491" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="498" style="edgeStyle=none;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.007;entryY=1.009;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=3;" parent="1" source="489" target="229" edge="1">
-                    <mxGeometry relative="1" as="geometry"/>
+                <mxCell id="498" style="edgeStyle=none;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=3;" parent="1" source="489" target="206" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="2223.64" y="2010.234" as="targetPoint"/>
+                    </mxGeometry>
                 </mxCell>
                 <mxCell id="499" value="ChartCache" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontSize=20;" parent="1" vertex="1">
                     <mxGeometry x="360" y="1264" width="360" height="104" as="geometry"/>
@@ -738,7 +693,7 @@
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="506" value="&lt;span style=&quot;font-size: 20px;&quot;&gt;&lt;font style=&quot;color: light-dark(rgb(192, 192, 192), rgb(255, 255, 255));&quot;&gt;CrossAnalysis&lt;/font&gt;&lt;/span&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="1020" y="2520" width="540" height="78" as="geometry"/>
+                    <mxGeometry x="830" y="1822" width="540" height="78" as="geometry"/>
                 </mxCell>
                 <mxCell id="507" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;+ get_sensitivity_matrix(): List&amp;lt;List&amp;lt;float&amp;gt;&amp;gt;&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="506" vertex="1">
                     <mxGeometry y="26" width="540" height="26" as="geometry"/>
@@ -764,82 +719,88 @@
                 <mxCell id="515" style="edgeStyle=none;html=1;entryX=0.567;entryY=1.021;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamond;endFill=1;strokeWidth=3;endSize=20;" parent="1" source="510" target="183" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="519" value="TaxCalculator" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontSize=20;" parent="1" vertex="1">
-                    <mxGeometry x="840" y="900" width="950" height="66" as="geometry"/>
-                </mxCell>
-                <mxCell id="522" value="+ calculate_total_tax(taxable_income: float, capital_gains: float, early_withdrawal_amount: float, tax_context: TaxContext)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=17;" parent="519" vertex="1">
-                    <mxGeometry y="40" width="950" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="526" style="edgeStyle=none;html=1;entryX=0.854;entryY=-0.008;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;strokeWidth=3;" parent="1" target="519" edge="1">
+                <mxCell id="534" style="edgeStyle=none;html=1;entryX=1.005;entryY=0.956;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;strokeWidth=3;" parent="1" source="62" target="73" edge="1">
                     <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="1667" y="850" as="sourcePoint"/>
+                        <mxPoint x="1799.65" y="537.374" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="534" style="edgeStyle=none;html=1;entryX=0.999;entryY=0.899;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;strokeWidth=3;" parent="1" source="62" target="74" edge="1">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="535" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;dashed=1;strokeWidth=3;" parent="1" source="69" target="519" edge="1">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
                 <mxCell id="536" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;SimulationState&lt;/font&gt;" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="1770" y="996" width="430" height="534" as="geometry"/>
+                    <mxGeometry x="1770" y="996" width="430" height="690" as="geometry"/>
                 </mxCell>
-                <mxCell id="537" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- start_year: int&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                <mxCell id="670" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- start_year: int&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
                     <mxGeometry y="40" width="430" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="538" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- inflation_assumption: float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                <mxCell id="537" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- user_residence_state&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
                     <mxGeometry y="66" width="430" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="539" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- current_year: int&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                <mxCell id="608" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- inflation_assumption: StochasticChange&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
                     <mxGeometry y="92" width="430" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="540" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- user_age: int&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                <mxCell id="538" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- inflation_factor: float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
                     <mxGeometry y="118" width="430" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="541" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- spouse_age: int&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                <mxCell id="539" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- current_year: int&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
                     <mxGeometry y="144" width="430" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="564" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- user_alive: bool&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                <mxCell id="540" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- user_age: int&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
                     <mxGeometry y="170" width="430" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="563" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- spouse_alive: bool&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                <mxCell id="541" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- spouse_age: int&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
                     <mxGeometry y="196" width="430" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="562" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- user_life_expectancy: int&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                <mxCell id="564" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- user_alive: bool&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
                     <mxGeometry y="222" width="430" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="561" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- spouse_life_expectancy: int&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                <mxCell id="563" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- spouse_alive: bool&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
                     <mxGeometry y="248" width="430" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="560" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- pre_tax_investments: Map&amp;lt;Key, investment&amp;gt;&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                <mxCell id="562" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- user_life_expectancy: int&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
                     <mxGeometry y="274" width="430" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="559" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- after_tax_investments: Map&amp;lt;Key, investment&amp;gt;&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                <mxCell id="561" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- spouse_life_expectancy: int&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
                     <mxGeometry y="300" width="430" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="558" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- taxable_income: float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                <mxCell id="560" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- pre_tax_investments: Map&amp;lt;Key, investment&amp;gt;&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
                     <mxGeometry y="326" width="430" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="557" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- total_income: float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                <mxCell id="559" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- after_tax_investments: Map&amp;lt;Key, investment&amp;gt;&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
                     <mxGeometry y="352" width="430" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="565" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- capital_gains: float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                <mxCell id="605" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- non_retirement_investments: Map&amp;lt;Key, investment&amp;gt;&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
                     <mxGeometry y="378" width="430" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="566" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- capital_losses: float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                <mxCell id="558" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- ordinary_income: float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
                     <mxGeometry y="404" width="430" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="567" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- roth_optimizer_enabled: bool&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                <mxCell id="609" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- capital_gains_income: float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
                     <mxGeometry y="430" width="430" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="569" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- roth_conversion_strategy: RothConversionStrategy&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                <mxCell id="565" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- social_security_income: float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
                     <mxGeometry y="456" width="430" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="570" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- rmd_riggered: bool&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                <mxCell id="567" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- roth_optimizer_enabled: bool&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
                     <mxGeometry y="482" width="430" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="542" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- tax_context: Context&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                <mxCell id="569" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- roth_conversion_strategy: RothConversionStrategy&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
                     <mxGeometry y="508" width="430" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="570" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- rmd_triggered: bool&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                    <mxGeometry y="534" width="430" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="633" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- sharing_settings: SharingSettings&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                    <mxGeometry y="560" width="430" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="542" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- after_tax_acc_limit: float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                    <mxGeometry y="586" width="430" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="635" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- pre_tax_acc_limit: float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                    <mxGeometry y="612" width="430" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="662" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- after_tax_contribution: float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                    <mxGeometry y="638" width="430" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="663" value="&lt;span style=&quot;font-size: 15px;&quot;&gt;- pre_tax_contribution: float&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="536" vertex="1">
+                    <mxGeometry y="664" width="430" height="26" as="geometry"/>
                 </mxCell>
                 <mxCell id="583" style="edgeStyle=none;html=1;entryX=0;entryY=0;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="558" target="274" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
@@ -847,26 +808,29 @@
                 <mxCell id="584" style="edgeStyle=none;html=1;entryX=-0.008;entryY=0.056;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="536" target="258" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="593" value="StochasticChange" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontSize=20;" vertex="1" parent="1">
+                <mxCell id="593" value="StochasticChange" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontSize=20;" parent="1" vertex="1">
                     <mxGeometry x="1860" y="320" width="400" height="164" as="geometry"/>
                 </mxCell>
-                <mxCell id="594" value="- change_type: ChangeType" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" vertex="1" parent="593">
+                <mxCell id="594" value="- change_type: ChangeType" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="593" vertex="1">
                     <mxGeometry y="30" width="400" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="595" value="- distribution_type: DistributionType" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" vertex="1" parent="593">
+                <mxCell id="595" value="- distribution_type: DistributionType" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="593" vertex="1">
                     <mxGeometry y="56" width="400" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="602" value="- params: Map&lt;String, float&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" vertex="1" parent="593">
+                <mxCell id="602" value="- params: Map&lt;String, float&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="593" vertex="1">
                     <mxGeometry y="82" width="400" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="596" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="593">
+                <mxCell id="596" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="593" vertex="1">
                     <mxGeometry y="108" width="400" height="8" as="geometry"/>
                 </mxCell>
-                <mxCell id="598" value="+ sample(time: int): float" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" vertex="1" parent="593">
+                <mxCell id="598" value="+ sample(time: int): float" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=15;" parent="593" vertex="1">
                     <mxGeometry y="116" width="400" height="48" as="geometry"/>
                 </mxCell>
-                <mxCell id="604" style="edgeStyle=none;html=1;entryX=1.004;entryY=1.048;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="388" target="598">
+                <mxCell id="604" style="edgeStyle=none;html=1;entryX=1.004;entryY=1.048;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="388" target="598" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="624" value="&lt;span style=&quot;font-family: monospace; font-size: 0px; text-align: start;&quot;&gt;%3CmxGraphModel%3E%3Croot%3E%3CmxCell%20id%3D%220%22%2F%3E%3CmxCell%20id%3D%221%22%20parent%3D%220%22%2F%3E%3CmxCell%20id%3D%222%22%20value%3D%22%2B%20find_tax_bracket(taxable_income%3A%20float%2C%20filing_status%3A%20TaxFilingStatus)%3A%20float%22%20style%3D%22text%3BstrokeColor%3Dnone%3BfillColor%3Dnone%3Balign%3Dleft%3BverticalAlign%3Dtop%3BspacingLeft%3D4%3BspacingRight%3D4%3Boverflow%3Dhidden%3Brotatable%3D0%3Bpoints%3D%5B%5B0%2C0.5%5D%2C%5B1%2C0.5%5D%5D%3BportConstraint%3Deastwest%3BfontSize%3D15%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%3CmxGeometry%20x%3D%22635%22%20y%3D%22700%22%20width%3D%22640%22%20height%3D%2230%22%20as%3D%22geometry%22%2F%3E%3C%2FmxCell%3E%3C%2Froot%3E%3C%2FmxGraphModel%3Efasfs&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="1700" y="848" width="20" height="30" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
