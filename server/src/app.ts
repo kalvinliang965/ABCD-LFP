@@ -2,6 +2,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import cors from "cors";
+import "./config/environment"; // load environment vairable
 
 const app = express();
 const port = process.env.PORT || 3000;

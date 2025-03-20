@@ -1,4 +1,4 @@
-import { TaxFilingStatus } from "../Enums"
+import { TaxFilingStatus } from "../../core/Enums"
 
 export interface StandardDeductionObject {
     add_deduction(amt: number, status: TaxFilingStatus): void,
