@@ -4,7 +4,9 @@ import { database_config } from "../config/database";
 
 export const connect_database = async(): Promise<Connection> => {
     try {
-        await mongoose.connect(database_config.MONGO_URL);
+        await mongoose.connect(database_config.MONGO_URL, {
+            dbName: database_config.DB_NAME,
+        });
         console.log("Connected to database");
         const mongodb = mongoose.connection;
         if (!mongodb) {
