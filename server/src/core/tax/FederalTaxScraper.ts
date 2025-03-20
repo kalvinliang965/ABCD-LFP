@@ -6,8 +6,8 @@ import { TaxFilingStatus } from "../Enums";
 import { StandardDeductionObject, StandardDuction } from "./StandardDeduction";
 import { Console } from "console";
 
-const SINGLE_STATUS: number = 0;
-const MARRIED_STATUS: number = 1;
+const SINGLE_TABLE: number = 0;
+const MARRIED_TABLE: number = 1;
 
 const FEDERAL_TAX_URL: string = "https://www.irs.gov/filing/federal-income-tax-rates-and-brackets";
 const STD_DEDUCTION_URL: string = "https://www.irs.gov/publications/p17";
@@ -25,7 +25,7 @@ function parse_table_rows(taxBrackets: TaxBracketsObject, status: TaxFilingStatu
         const min_text = $(cells[1]).text().trim();
         const max_text = $(cells[2]).text().trim();
         const min = extractNumbers(min_text, 1)[0];
-        const max = max_text.toLowerCase() === "over" ? Infinity: extractNumbers(max_text, 1)[0];
+        const max = max_text.toLowerCase() === "and up" ? Infinity: extractNumbers(max_text, 1)[0];
         const rate = extractNumbers(rate_text, 1)[0] / 100;
         taxBrackets.add_rate(min, max, rate, status);
     });
@@ -37,12 +37,12 @@ function parse_federal_tax_tables(tables: Array<string>) {
         throw new Error("Not enough table found");
     }
     const taxBrackets = TaxBrackets();    
-    const single_table = tables[SINGLE_STATUS];
+    const single_table = tables[SINGLE_TABLE];
     if (!single_table) {
         throw new Error("Missing single taxpayer table");
     }
     parse_table_rows(taxBrackets, TaxFilingStatus.SINGLE, single_table);
-    const married_table = tables[MARRIED_STATUS];
+    const married_table = tables[MARRIED_TABLE];
     if (!married_table) {
         throw new Error("Misssing married table");
     }
@@ -100,9 +100,9 @@ async function parse_standard_deduction() {
             }
             const text = paragraph.text();
             const cost = extractNumbers(text, 1)[0];
-            if (idx == SINGLE_STATUS) {
+            if (idx == 0) {
                 std_deductions.add_deduction(cost, TaxFilingStatus.SINGLE);
-            } else if (idx == MARRIED_STATUS) {
+            } else if (idx == 1) {
                 std_deductions.add_deduction(cost, TaxFilingStatus.MARRIED);
             }
         });
@@ -208,10 +208,10 @@ const extractNumbers = (sentence: string, num: number): number[] => {
 
 
 async function main() {
-    // const taxBracket = await parse_federal_tax_brackets();
-    // console.log(taxBracket.to_string());
-    // const deduction = await parse_standard_deduction();
-    // console.log(deduction.to_string());
+    const taxBracket = await parse_federal_tax_brackets();
+    console.log(taxBracket.to_string());
+    const deduction = await parse_standard_deduction();
+    console.log(deduction.to_string());
     const capital_gains_brakcet = await parse_capital_gains();
     console.log(capital_gains_brakcet.to_string());
 } 
