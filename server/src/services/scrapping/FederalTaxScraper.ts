@@ -1,17 +1,13 @@
 import axios from "axios";
 import "cheerio";
 import { load } from "cheerio";
-import { TaxBrackets, TaxBracketsObject } from "./TaxBrackets";
-import { TaxFilingStatus } from "../Enums";
+import { TaxBrackets, TaxBracketsObject } from "../../core/tax/TaxBrackets";
+import { TaxFilingStatus } from "../../core/Enums";
 import { StandardDeductionObject, StandardDuction } from "./StandardDeduction";
-import { Console } from "console";
+import { tax_config } from "../../config/tax";
 
 const SINGLE_TABLE: number = 0;
 const MARRIED_TABLE: number = 1;
-
-const FEDERAL_TAX_URL: string = "https://www.irs.gov/filing/federal-income-tax-rates-and-brackets";
-const STD_DEDUCTION_URL: string = "https://www.irs.gov/publications/p17";
-const CAPITAL_GAINS_URL: string = "https://www.irs.gov/taxtopics/tc409";
 
 // Function to parse table rows and extract tax bracket data
 function parse_table_rows(taxBrackets: TaxBracketsObject, status: TaxFilingStatus, table: string): void {
@@ -53,7 +49,7 @@ function parse_federal_tax_tables(tables: Array<string>) {
 // Function to fetch and parse the federal tax brackets
 async function parse_federal_tax_brackets(): Promise<TaxBracketsObject> {
     try {
-        const  { data: html } = await axios.get(FEDERAL_TAX_URL);
+        const  { data: html } = await axios.get(tax_config.FEDERAL_TAX_URL);
         const $ = load(html);
         const federal_tax_tables: string[] = new Array();
         $('table').each((_, dom_element) => {
@@ -77,7 +73,7 @@ async function parse_federal_tax_brackets(): Promise<TaxBracketsObject> {
 
 async function parse_standard_deduction() {
     try {
-        const { data: html } = await axios.get(STD_DEDUCTION_URL);
+        const { data: html } = await axios.get(tax_config.STD_DEDUCTION_URL);
         const $ = load(html);
 
         const target_text = "Standard deduction amount increased";
@@ -119,7 +115,7 @@ async function parse_standard_deduction() {
 
 async function parse_capital_gains(): Promise<TaxBracketsObject> {
     try {
-        const { data: html } = await axios.get(CAPITAL_GAINS_URL);
+        const { data: html } = await axios.get(tax_config.CAPITAL_GAINS_URL);
         const $ = load(html);
 
         const h2 = $("h2:contains(Capital gains tax rates)");
