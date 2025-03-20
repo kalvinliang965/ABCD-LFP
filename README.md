@@ -6,6 +6,8 @@
 
 ## Server side
 
+- `config` contains important constant
+
 - `src` folder contain all the source materials for building the project
 
 - `src/core` contain all business logic and domain model directly related to the simulation
@@ -15,7 +17,7 @@
 
 - `src/db` contains database connectivity, model definition and manipulation
     - `models` contains the database layer model (schemas)
-    - `connections` initialize mongodb conneciton
+    - `init` initialize mongodb conneciton
 
 - `src/services` externel service call (e.g. web scraping)
     - `scraping` contain the web scraping logic for federal tax
@@ -25,5 +27,3 @@
     - `logging.ts`
     - `math/` contain math model for sampling data
     - `date.ts` format date
-
-- `config` contains important constant
