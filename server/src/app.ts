@@ -1,16 +1,13 @@
 import express from "express";
-import cookieParser from "cookie-parser";
-import bodyParser from "body-parser";
-import cors from "cors";
 import "./config/environment"; // load environment vairable
+import { registerGlobalMiddleWare, sessionStore } from "./middleware";
+import { connect_database, disconnect_database } from "./db/connections";
+import { api_config } from "./config/api";
 
+const port = api_config.PORT;
 const app = express();
-const port = process.env.PORT || 3000;
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(cors()); // 允许跨域请求
+registerGlobalMiddleWare(app);
 
 app.get("/", (req, res) => {
   res.send("Hello World");
@@ -30,8 +27,39 @@ app.post("/api/login", (req, res) => {
   });
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
 
-export default app;
+async function terminate() {
+
+    try {
+        console.log("Terminating server...");
+
+        // sessionStore
+        if (sessionStore) {
+            console.log("Closing session store...");
+            sessionStore.close();
+        }
+        
+        await disconnect_database();
+        console.log("Server terminated successfully");
+        // exit process if not in test environment
+        if (process.env.NODE_ENV !== "test") {
+            process.exit(0); // exit gracefully
+        }
+
+        await new Promise((resolve) => server.close(resolve));
+    } catch (error) {
+        console.log("Error during termiantion: ", error);
+        process.exit(1); // exit with error
+    }
+}
+
+const mongodb = connect_database();
+process.on("SIGINT", terminate);
+process.on("SIGTERM", terminate);
+
+
+export {app, sessionStore, mongodb};
+
