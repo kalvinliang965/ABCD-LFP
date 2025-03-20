@@ -3,7 +3,7 @@ import "cheerio";
 import { load } from "cheerio";
 import { TaxBrackets, TaxBracketsObject } from "../../core/tax/TaxBrackets";
 import { TaxFilingStatus } from "../../core/Enums";
-import { StandardDeductionObject, StandardDuction } from "./StandardDeduction";
+import { StandardDeductionObject, StandardDeductions } from "../../core/tax/StandardDeduction";
 import { tax_config } from "../../config/tax";
 
 const SINGLE_TABLE: number = 0;
@@ -47,7 +47,7 @@ function parse_federal_tax_tables(tables: Array<string>) {
 }
 
 // Function to fetch and parse the federal tax brackets
-async function parse_federal_tax_brackets(): Promise<TaxBracketsObject> {
+async function parse_taxable_income(): Promise<TaxBracketsObject> {
     try {
         const  { data: html } = await axios.get(tax_config.FEDERAL_TAX_URL);
         const $ = load(html);
@@ -71,7 +71,7 @@ async function parse_federal_tax_brackets(): Promise<TaxBracketsObject> {
     }
 }
 
-async function parse_standard_deduction() {
+async function parse_standard_deductions() {
     try {
         const { data: html } = await axios.get(tax_config.STD_DEDUCTION_URL);
         const $ = load(html);
@@ -85,7 +85,7 @@ async function parse_standard_deduction() {
         if (!itemizedList) {
             throw new Error("Itemized list not found");
         }
-        const std_deductions: StandardDeductionObject = StandardDuction();
+        const std_deductions: StandardDeductionObject = StandardDeductions();
         itemizedList.find("li").each((idx, item) => {
             const list_item = $(item);
             const paragraph = list_item.find("p");
@@ -201,15 +201,19 @@ const extractNumbers = (sentence: string, num: number): number[] => {
     return res;
 } 
     
+export {
+    parse_capital_gains,
+    parse_taxable_income,
+    parse_standard_deductions,
+}
 
-
-async function main() {
-    const taxBracket = await parse_federal_tax_brackets();
-    console.log(taxBracket.to_string());
-    const deduction = await parse_standard_deduction();
-    console.log(deduction.to_string());
-    const capital_gains_brakcet = await parse_capital_gains();
-    console.log(capital_gains_brakcet.to_string());
-} 
-
-main();
+// async function main() {
+//    const taxBracket = await parse_federal_tax_brackets();
+//    console.log(taxBracket.to_string());
+//    const deduction = await parse_standard_deduction();
+//    console.log(deduction.to_string());
+//    const capital_gains_brakcet = await parse_capital_gains();
+//    console.log(capital_gains_brakcet.to_string());
+//} 
+ 
+// main();

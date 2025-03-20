@@ -1,4 +1,4 @@
-import { TaxFilingStatus } from "../../core/Enums"
+import { TaxFilingStatus } from "../Enums"
 
 export interface StandardDeductionObject {
     add_deduction(amt: number, status: TaxFilingStatus): void,
@@ -7,7 +7,7 @@ export interface StandardDeductionObject {
     size(): number,
 }
 
-export function StandardDuction(): StandardDeductionObject {
+export function StandardDeductions(): StandardDeductionObject {
     
     const deductions: Map<TaxFilingStatus, number> = new Map();
 
