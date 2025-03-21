@@ -1,5 +1,4 @@
 import express from "express";
-import cors from "cors";
 import "./config/environment"; // load environment vairable
 import { registerGlobalMiddleWare, sessionStore } from "./middleware";
 import { connect_database, disconnect_database } from "./db/connections";
@@ -12,11 +11,6 @@ import userRoutes from "./routes/userRoutes";
 const port = api_config.PORT;
 const app = express();
 
-//Add CORS configuration before other middleware
-app.use(cors({
-  origin: "http://localhost:5173", // frontend URL
-  credentials: true
-}));
 
 registerGlobalMiddleWare(app);
 
