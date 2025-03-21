@@ -5,6 +5,8 @@ import { connect_database, disconnect_database } from "./db/connections";
 import { api_config } from "./config/api";
 import eventSeriesRoutes from "./routes/eventSeriesRoutes";
 import investmentRoutes from "./routes/investmentRoutes";
+import { scrapping_demo } from "./demo";
+
 //import passport from "passport";
 import userRoutes from "./routes/userRoutes";
 //import "./auth/passport"; // Import passport configuration
@@ -104,17 +106,16 @@ async function terminate() {
     }
 }
 
-// Connect to database and handle shutdown
-connect_database().catch(error => {
-    console.error("Failed to connect to database:", error);
-    process.exit(1);
-});
+
 
 process.on("SIGINT", terminate);
 process.on("SIGTERM", terminate);
 
-// async function main() {
-//   await scrapping_demo();
-// }
+// Connect to database and handle shutdown
+connect_database().catch(error => {
+  console.error("Failed to connect to database:", error);
+  process.exit(1);
+});
+  
+// await scrapping_demo();
 
-// main();

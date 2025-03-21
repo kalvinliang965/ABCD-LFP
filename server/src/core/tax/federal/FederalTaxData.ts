@@ -1,5 +1,5 @@
 
-import { TaxBrackets, TaxBracketsObject } from "../TaxBrackets";
+import { TaxBracketsObject } from "../TaxBrackets";
 import { StandardDeductions, StandardDeductionObject } from "../StandardDeduction";
 import { parse_standard_deductions, parse_capital_gains, parse_taxable_income } from "../../../services/scrapping/FederalTaxScraper";
 import { check_capital_gains, check_taxable_income, load_brackets } from "../../../db/repositories/TaxBracketRepository";
@@ -80,7 +80,7 @@ async function FederalTaxData() {
             print_standard_deductions_info,
         };
     } catch (error) {
-        console.error("Error in initializing federal tax data");
+        console.error(`Error in initializing federal tax data: ${error}`);
         process.exit(1);
     }
 }
