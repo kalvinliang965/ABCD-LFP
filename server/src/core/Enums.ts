@@ -1,7 +1,7 @@
 
 export const enum TaxFilingStatus {
     SINGLE = "SINGLE",
-    MARRIED = "MARRIED_JOINTLY",
+    MARRIED = "MARRIED",
 }
 
 export const enum IncomeType {

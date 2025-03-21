@@ -13,7 +13,7 @@ export interface TaxBracketsObject {
     find_rate: (income: number, status: TaxFilingStatus) => number;
     adjust_for_inflation: (rate: number) => void;
     to_string: () => string;
-    add_highest_rate: (highest_rate: number) => void;
+    find_highest_brackets: () => Array<{taxpayer_type: TaxFilingStatus, taxbracket: TaxBracket}>;
 };
 
 export function TaxBrackets(): TaxBracketsObject {
@@ -95,23 +95,21 @@ export function TaxBrackets(): TaxBracketsObject {
         return res;
     }
 
-    const add_highest_rate = (highest_rate:number): void => {
-        for (const bracketSet of brackets.values()) {
+    const find_highest_brackets = (): Array<{taxpayer_type: TaxFilingStatus, taxbracket: TaxBracket}> => {
+        const res = [];
+        for (const [taxpayer_type, bracketSet] of brackets.entries()) {
             const N = bracketSet.length
             const last_bracket = bracketSet[N - 1];
-            if (last_bracket.rate >= highest_rate) {
-                throw new Error(`rate passed is not the highest ${last_bracket.rate} >= ${highest_rate}`);
-            }
-            const taxBracket: TaxBracket = {min: last_bracket.max + 1, max: Infinity, rate: highest_rate };
-            bracketSet.push(taxBracket);
+            res.push({taxpayer_type, taxbracket: last_bracket});
         }
+        return res
     }
     return {
         add_rate,
         find_rate,
         adjust_for_inflation,
         to_string,
-        add_highest_rate,
+        find_highest_brackets,
     } as const;
 };
 

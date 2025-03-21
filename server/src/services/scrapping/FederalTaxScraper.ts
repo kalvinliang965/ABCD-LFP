@@ -6,6 +6,7 @@ import { IncomeType, TaxFilingStatus } from "../../core/Enums";
 import { StandardDeductionObject, StandardDeductions } from "../../core/tax/StandardDeduction";
 import { tax_config } from "../../config/tax";
 import { save_bracket } from "../../db/repositories/TaxBracketRepository";
+import e from "express";
 
 const SINGLE_TABLE: number = 0;
 const MARRIED_TABLE: number = 1;
@@ -185,7 +186,17 @@ async function parse_capital_gains(): Promise<TaxBracketsObject> {
                 if (upper_rate < lower_rate) {
                     throw new Error(`Sentence read is invalid: ${p.text()}`);
                 }
-                taxBrackets.add_highest_rate(upper_rate);
+                const bracket_tuple_list = taxBrackets.find_highest_brackets();
+                bracket_tuple_list.forEach(async (tuple) => {
+                    const {taxpayer_type, taxbracket} = tuple;
+                    const { max, rate} = taxbracket;
+                    if (rate >= upper_rate) {
+                        console.error(`Invalid highest rate: ${upper_rate} <= ${rate}`);
+                        throw new Error("Invalid highest rate scrapped");
+                    }
+                    taxBrackets.add_rate(max + 1, Infinity, upper_rate, taxpayer_type);
+                    await save_bracket(max + 1, Infinity, upper_rate, IncomeType.CAPITAL_GAINS, taxpayer_type);
+                })
             }
         });
 

@@ -3,17 +3,17 @@ import { TaxBrackets, TaxBracketsObject } from "../TaxBrackets";
 import { StandardDeductions, StandardDeductionObject } from "../StandardDeduction";
 import { parse_standard_deductions, parse_capital_gains, parse_taxable_income } from "../../../services/scrapping/FederalTaxScraper";
 import { check_capital_gains, check_taxable_income, load_brackets } from "../../../db/repositories/TaxBracketRepository";
-import { check_standard_deduction } from "../../../db/repositories/StandardDeductionRepository";
+import { load_standard_deduction } from "../../../db/repositories/StandardDeductionRepository";
 import { IncomeType } from "../../Enums";
 
 
 async function initialize_taxable_income_bracket(): Promise<TaxBracketsObject> {
     try {
         if (await check_taxable_income()) {
-            console.log("TEST1");
             const taxBracket = await load_brackets(IncomeType.TAXABLE_INCOME);
             return taxBracket;       
         }
+        console.log("taxable income brackets is not in database");
         const taxBracket = await parse_taxable_income();
         return taxBracket
     } catch (error) {
@@ -26,10 +26,10 @@ async function initialize_capital_gains_bracket(): Promise<TaxBracketsObject> {
 
     try {
         if (await check_capital_gains()) {
-            console.log("TEST2");
             const taxBracket = await load_brackets(IncomeType.CAPITAL_GAINS);
             return taxBracket;
         }
+        console.log("capital gains bracket is not in database");
         const taxBracket = await parse_capital_gains();
         return taxBracket;
     } catch (error) {
@@ -39,10 +39,16 @@ async function initialize_capital_gains_bracket(): Promise<TaxBracketsObject> {
 
 async function initialize_standard_deductions_info(): Promise<StandardDeductionObject> {
     try {
-        if (check_standard_deduction()) {
-            console.log("TODO");
-            process.exit(1);
+        const standard_deduction_list = await load_standard_deduction();
+        if (standard_deduction_list.length > 0) {
+            const deductions = StandardDeductions();
+            standard_deduction_list.forEach((deduction) => {
+                const { amount, taxpayer_type }  = deduction;
+                deductions.add_deduction(amount, taxpayer_type);
+            });
+            return deductions;
         }
+        console.log("standard deduction is not in database");
         const deductions = await parse_standard_deductions();
         return deductions;
     } catch (error) {

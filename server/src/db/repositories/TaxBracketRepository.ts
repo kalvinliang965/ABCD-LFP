@@ -40,6 +40,7 @@ const load_brackets = async (income_type: IncomeType): Promise<TaxBracketsObject
             const { min, max, rate } = bracket;
             taxBrackets.add_rate(min, max, rate, TaxFilingStatus.MARRIED);
         });
+        console.log(`${income_type} brackets sucessfully loaded`);
         return taxBrackets;
     } catch (error) {
         throw new Error(`Internel Service Error: ${error}`)
