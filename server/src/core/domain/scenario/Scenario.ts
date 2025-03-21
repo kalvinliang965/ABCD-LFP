@@ -160,17 +160,49 @@ function Scenario(params: {
     taxStatus: string; // "non-retirement", "pre-tax", "after-tax"
     id: string;
   }>;
-  eventSeries: Set<{
-    name: string;
-    start: Map<string, any>;
-    type: number;
-    initialAmount: number;
-    changeAmtOrPct: string;
-    changeDistribution: Map<string, any>;
-    inflationAdjusted: boolean;
-    userFraction: number;
-    socialSecurity: boolean;
-  }>;
+  eventSeries: Set<
+    | {
+        name: string;
+        start: Map<string, any>;
+        duration: Map<string, any>;
+        type: string;
+        initialAmount: number;
+        changeAmtOrPct: string;
+        changeDistribution: Map<string, any>;
+        inflationAdjusted: boolean;
+        userFraction: number;
+        socialSecurity: boolean;
+      }
+    | {
+        name: string;
+        start: Map<string, any>;
+        duration: Map<string, any>;
+        type: string;
+        initialAmount: number;
+        changeAmtOrPct: string;
+        changeDistribution: Map<string, any>;
+        inflationAdjusted: boolean;
+        userFraction: number;
+        discretionary: boolean;
+      }
+    | {
+        name: string;
+        start: Map<string, any>;
+        duration: Map<string, any>;
+        type: string;
+        assetAllocation: Map<string, number>;
+        glidePath: true;
+        assetAllocation2: Map<string, number>;
+        maxCash: number;
+      }
+    | {
+        name: string;
+        start: Map<string, any>;
+        duration: Map<string, any>;
+        type: string;
+        assetAllocation: Map<string, number>;
+      }
+  >;
   inflationAssumption: Map<string, number>;
   afterTaxContributionLimit: number;
   spendingStrategy: Array<string>;
