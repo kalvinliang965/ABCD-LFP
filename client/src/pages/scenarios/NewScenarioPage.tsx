@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
-import { Box, Heading, Text, SimpleGrid, Button, Flex, Icon, HStack, Tooltip, VStack } from '@chakra-ui/react';
+import { Box, Heading, Text, SimpleGrid, Button, Flex, Icon, HStack, Tooltip, VStack, IconButton } from '@chakra-ui/react';
 import { Building2, Wallet, TrendingUp, BarChart } from 'lucide-react';
+import { DeleteIcon } from '@chakra-ui/icons';
 import { EventSeriesForm } from '../../components/event_series/EventSeriesForm';
-import { EventSeriesType } from '../../types/eventSeries';
+import { EventSeriesType, EventSeries } from '../../types/eventSeries';
 import { useEventSeries } from '../../contexts/EventSeriesContext';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-interface AddedEvent {
-  type: EventSeriesType;
-  name: string;
-  amount: string;
-  startYear: string;
-  duration: string;
-}
+// Omit the id from EventSeries and add it as optional
+type AddedEvent = Omit<EventSeries, 'id'> & {
+  id?: string;
+  _id?: string;
+};
 
 const eventTypeOptions = [
   {
@@ -54,9 +54,34 @@ export function NewScenarioPage() {
   const navigate = useNavigate();
   const [addedEvents, setAddedEvents] = useState<AddedEvent[]>([]);
 
-  const handleEventAdded = (event: AddedEvent) => {
-    setAddedEvents([...addedEvents, event]);
-    setSelectedType(null);
+  const handleEventAdded = async (event: AddedEvent) => {
+    try {
+      if (!event || !event._id) {
+        throw new Error('Invalid event data');
+      }
+
+      // Update the local state with the event from the server
+      setAddedEvents(prev => [event, ...prev]);
+      setSelectedType(null);
+    } catch (error) {
+      console.error('Error handling event:', error);
+    }
+  };
+
+  const handleDeleteEvent = async (id: string) => {
+    try {
+      await axios.delete(`http://localhost:3000/api/eventSeries/${id}`, {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      // Update the local state to remove the deleted event
+      setAddedEvents(prev => prev.filter(event => (event.id || event._id) !== id));
+    } catch (error) {
+      console.error('Failed to delete event:', error);
+    }
   };
 
   const handleSaveAndContinue = () => {
@@ -95,9 +120,9 @@ export function NewScenarioPage() {
                 <VStack spacing={4} mb={8} align="stretch">
                   <Heading size="md" color="gray.700">Added Events</Heading>
                   <Box bg="gray.50" p={4} borderRadius="md">
-                    {addedEvents.map((event, index) => (
+                    {addedEvents.map((event) => (
                       <Flex
-                        key={index}
+                        key={event.id || event._id}
                         p={4}
                         bg="white"
                         borderRadius="md"
@@ -109,19 +134,29 @@ export function NewScenarioPage() {
                         <Box>
                           <Text fontWeight="medium">{event.name}</Text>
                           <Text fontSize="sm" color="gray.600">
-                            ${event.amount} • Starting {event.startYear} • {event.duration} years
+                            ${event.initialAmount} • Starting {event.startYear.type === 'fixed' ? event.startYear.value : 'Variable'} • {event.duration.type === 'fixed' ? event.duration.value : 'Variable'} years
                           </Text>
                         </Box>
-                        <Text
-                          px={2}
-                          py={1}
-                          borderRadius="md"
-                          fontSize="sm"
-                          bg={event.type === 'income' ? 'green.100' : event.type === 'expense' ? 'red.100' : 'blue.100'}
-                          color={event.type === 'income' ? 'green.700' : event.type === 'expense' ? 'red.700' : 'blue.700'}
-                        >
-                          {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
-                        </Text>
+                        <HStack>
+                          <Text
+                            px={2}
+                            py={1}
+                            borderRadius="md"
+                            fontSize="sm"
+                            bg={event.type === 'income' ? 'green.100' : event.type === 'expense' ? 'red.100' : 'blue.100'}
+                            color={event.type === 'income' ? 'green.700' : event.type === 'expense' ? 'red.700' : 'blue.700'}
+                          >
+                            {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
+                          </Text>
+                          <IconButton
+                            aria-label="Delete event"
+                            icon={<DeleteIcon />}
+                            size="sm"
+                            variant="ghost"
+                            colorScheme="red"
+                            onClick={() => handleDeleteEvent(event.id || event._id || '')}
+                          />
+                        </HStack>
                       </Flex>
                     ))}
                   </Box>
@@ -165,7 +200,6 @@ export function NewScenarioPage() {
             </Box>
           </Box>
         </Box>
-
       </Box>
     );
   }

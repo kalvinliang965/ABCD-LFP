@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   Flex,
   IconButton,
@@ -21,7 +22,9 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({
   title = "Lifetime Financial Planner",
 }) => {
+  // Get color mode and toggle function from Chakra UI
   const { colorMode, toggleColorMode } = useColorMode();
+  // Get colors based on current color mode
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
 
@@ -49,11 +52,13 @@ const Header: React.FC<HeaderProps> = ({
       marginLeft={marginLeft}
       px={4}
     >
+      {/* Page title */}
       <Heading as="h1" size="md" fontWeight="semibold">
         {title}
       </Heading>
 
       <Flex align="center">
+        {/* Color mode toggle button */}
         <IconButton
           aria-label={`Switch to ${
             colorMode === "light" ? "dark" : "light"
@@ -66,14 +71,14 @@ const Header: React.FC<HeaderProps> = ({
           mr={4}
         />
 
+        {/* User menu */}
         <Menu>
-          <MenuButton>
-            <Avatar size="sm" icon={<FaUser />} />
-          </MenuButton>
+          <MenuButton as={Avatar} size="sm" icon={<FaUser />} />
           <MenuList>
-            <MenuItem>Profile</MenuItem>
-            <MenuItem>Account Settings</MenuItem>
-            <MenuItem color="red.500">Logout</MenuItem>
+            {/* Link to user profile page */}
+            <MenuItem as={Link} to="/profile">Profile</MenuItem>
+            {/* Logout option */}
+            <MenuItem>Logout</MenuItem>
           </MenuList>
         </Menu>
       </Flex>

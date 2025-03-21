@@ -20,7 +20,7 @@ app.use(cors()); // 允许跨域请求
 
 // Routes
 app.get("/", (req, res) => {
-  res.send("Hello World");
+  res.json({ status: "ok", message: "Server is running" });
 });
 
 // Investment Type routes
@@ -45,3 +45,5 @@ app.listen(port, () => {
 });
 
 export default app;
+
+
