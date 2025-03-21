@@ -7,46 +7,64 @@ import {
 import ValueGenerator from "../../../utils/math/ValueGenerator";
 
 /**
- * Represents a distribution with a specific type and associated values
- */
-export interface Distribution {
-  type: DistributionType;
-  value?: number;
-  mean?: number;
-  stdev?: number;
-  lower?: number;
-  upper?: number;
-}
-
-/**
  * Represents an investment type in the retirement planning system
  */
 export class InvestmentType {
   name: string;
   description?: string;
   returnAmtOrPct: ChangeType;
-  returnDistribution: Distribution;
+  returnDistributionType: DistributionType;
+  returnValue?: number;
+  returnMean?: number;
+  returnStdev?: number;
+  returnLower?: number;
+  returnUpper?: number;
   expenseRatio: number;
   incomeAmtOrPct: ChangeType;
-  incomeDistribution: Distribution;
+  incomeDistributionType: DistributionType;
+  incomeValue?: number;
+  incomeMean?: number;
+  incomeStdev?: number;
+  incomeLower?: number;
+  incomeUpper?: number;
   taxability: Taxability;
 
   constructor(
     name: string,
     returnAmtOrPct: ChangeType,
-    returnDistribution: Distribution,
+    returnDistributionType: DistributionType,
     expenseRatio: number,
     incomeAmtOrPct: ChangeType,
-    incomeDistribution: Distribution,
+    incomeDistributionType: DistributionType,
     taxability: Taxability,
-    description?: string
+    description?: string,
+    returnValue?: number,
+    returnMean?: number,
+    returnStdev?: number,
+    returnLower?: number,
+    returnUpper?: number,
+    incomeValue?: number,
+    incomeMean?: number,
+    incomeStdev?: number,
+    incomeLower?: number,
+    incomeUpper?: number
   ) {
     this.name = name;
     this.description = description;
     this.returnAmtOrPct = returnAmtOrPct;
-    this.returnDistribution = returnDistribution;
+    this.returnDistributionType = returnDistributionType;
+    this.returnValue = returnValue;
+    this.returnMean = returnMean;
+    this.returnStdev = returnStdev;
+    this.returnLower = returnLower;
+    this.returnUpper = returnUpper;
     this.incomeAmtOrPct = incomeAmtOrPct;
-    this.incomeDistribution = incomeDistribution;
+    this.incomeDistributionType = incomeDistributionType;
+    this.incomeValue = incomeValue;
+    this.incomeMean = incomeMean;
+    this.incomeStdev = incomeStdev;
+    this.incomeLower = incomeLower;
+    this.incomeUpper = incomeUpper;
 
     // Validate expense ratio is non-negative
     if (expenseRatio < 0) {
@@ -58,29 +76,29 @@ export class InvestmentType {
   }
 
   /**
-   * Generates the expected annual return based on the returnDistribution
-   * @param baseAmount - The base amount for calculating return (used when returnAmtOrPct is 'percent')
+   * Generates the expected annual return based on distribution parameters
+   * @param baseAmount - The base amount for calculating return (used when returnAmtOrPct is PERCENTAGE)
    * @returns The generated annual return value
    */
   generateExpectedAnnualReturn(baseAmount?: number): number {
     const params = new Map<StatisticType, number>();
 
-    switch (this.returnDistribution.type) {
+    switch (this.returnDistributionType) {
       case DistributionType.FIXED:
-        params.set(StatisticType.VALUE, this.returnDistribution.value || 0);
+        params.set(StatisticType.VALUE, this.returnValue || 0);
         break;
       case DistributionType.NORMAL:
-        params.set(StatisticType.MEAN, this.returnDistribution.mean || 0);
-        params.set(StatisticType.STDDEV, this.returnDistribution.stdev || 0);
+        params.set(StatisticType.MEAN, this.returnMean || 0);
+        params.set(StatisticType.STDDEV, this.returnStdev || 0);
         break;
       case DistributionType.UNIFORM:
-        params.set(StatisticType.LOWER, this.returnDistribution.lower || 0);
-        params.set(StatisticType.UPPER, this.returnDistribution.upper || 0);
+        params.set(StatisticType.LOWER, this.returnLower || 0);
+        params.set(StatisticType.UPPER, this.returnUpper || 0);
         break;
     }
 
     const returnValue = ValueGenerator(
-      this.returnDistribution.type,
+      this.returnDistributionType,
       params
     ).sample();
 
@@ -96,29 +114,29 @@ export class InvestmentType {
   }
 
   /**
-   * Generates the expected annual income based on the incomeDistribution
-   * @param baseAmount - The base amount for calculating income (used when incomeAmtOrPct is 'percent')
+   * Generates the expected annual income based on distribution parameters
+   * @param baseAmount - The base amount for calculating income (used when incomeAmtOrPct is PERCENTAGE)
    * @returns The generated annual income value
    */
   generateExpectedAnnualIncome(baseAmount?: number): number {
     const params = new Map<StatisticType, number>();
 
-    switch (this.incomeDistribution.type) {
+    switch (this.incomeDistributionType) {
       case DistributionType.FIXED:
-        params.set(StatisticType.VALUE, this.incomeDistribution.value || 0);
+        params.set(StatisticType.VALUE, this.incomeValue || 0);
         break;
       case DistributionType.NORMAL:
-        params.set(StatisticType.MEAN, this.incomeDistribution.mean || 0);
-        params.set(StatisticType.STDDEV, this.incomeDistribution.stdev || 0);
+        params.set(StatisticType.MEAN, this.incomeMean || 0);
+        params.set(StatisticType.STDDEV, this.incomeStdev || 0);
         break;
       case DistributionType.UNIFORM:
-        params.set(StatisticType.LOWER, this.incomeDistribution.lower || 0);
-        params.set(StatisticType.UPPER, this.incomeDistribution.upper || 0);
+        params.set(StatisticType.LOWER, this.incomeLower || 0);
+        params.set(StatisticType.UPPER, this.incomeUpper || 0);
         break;
     }
 
     const incomeValue = ValueGenerator(
-      this.incomeDistribution.type,
+      this.incomeDistributionType,
       params
     ).sample();
 
@@ -137,36 +155,6 @@ export class InvestmentType {
    * Creates an InvestmentType instance from raw data
    */
   static fromData(data: any): InvestmentType {
-    // Convert distribution from Map to our Distribution interface
-    const convertDistribution = (distData: Map<string, any>): Distribution => {
-      const result: Distribution = {
-        type:
-          distData.get("type") === "fixed"
-            ? DistributionType.FIXED
-            : distData.get("type") === "normal"
-            ? DistributionType.NORMAL
-            : DistributionType.UNIFORM,
-      };
-
-      if (distData.get("value") !== undefined) {
-        result.value = distData.get("value");
-      }
-      if (distData.get("mean") !== undefined) {
-        result.mean = distData.get("mean");
-      }
-      if (distData.get("stdev") !== undefined) {
-        result.stdev = distData.get("stdev");
-      }
-      if (distData.get("lower") !== undefined) {
-        result.lower = distData.get("lower");
-      }
-      if (distData.get("upper") !== undefined) {
-        result.upper = distData.get("upper");
-      }
-
-      return result;
-    };
-
     // Convert string amtOrPct to enum
     const convertAmtOrPct = (value: string): ChangeType => {
       return value === "amount" ? ChangeType.FIXED : ChangeType.PERCENTAGE;
@@ -177,15 +165,40 @@ export class InvestmentType {
       ? Taxability.TAXABLE
       : Taxability.TAX_EXEMPT;
 
+    // Determine distribution type and parameters
+    const returnDistType =
+      data.returnDistribution.get("type") === "fixed"
+        ? DistributionType.FIXED
+        : data.returnDistribution.get("type") === "normal"
+        ? DistributionType.NORMAL
+        : DistributionType.UNIFORM;
+
+    const incomeDistType =
+      data.incomeDistribution.get("type") === "fixed"
+        ? DistributionType.FIXED
+        : data.incomeDistribution.get("type") === "normal"
+        ? DistributionType.NORMAL
+        : DistributionType.UNIFORM;
+
     return new InvestmentType(
       data.name,
       convertAmtOrPct(data.returnAmtOrPct),
-      convertDistribution(data.returnDistribution),
+      returnDistType,
       data.expenseRatio,
       convertAmtOrPct(data.incomeAmtOrPct),
-      convertDistribution(data.incomeDistribution),
+      incomeDistType,
       taxabilityEnum,
-      data.description
+      data.description,
+      data.returnDistribution.get("value"),
+      data.returnDistribution.get("mean"),
+      data.returnDistribution.get("stdev"),
+      data.returnDistribution.get("lower"),
+      data.returnDistribution.get("upper"),
+      data.incomeDistribution.get("value"),
+      data.incomeDistribution.get("mean"),
+      data.incomeDistribution.get("stdev"),
+      data.incomeDistribution.get("lower"),
+      data.incomeDistribution.get("upper")
     );
   }
 }
