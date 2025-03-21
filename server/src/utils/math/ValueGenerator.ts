@@ -3,10 +3,14 @@ import { DistributionType, StatisticType } from "../../core/Enums";
 import { rnorm } from "probability-distributions";
 
 function ValueGenerator(distribution_type: DistributionType, params: Map<StatisticType, number> ) {
-    const sample = () => {
+    const sample = (): number => {
         switch (distribution_type) {
             case DistributionType.FIXED: 
-                return params.get(StatisticType.VALUE);
+                const value = params.get(StatisticType.VALUE);
+                if (!value) {
+                    throw new Error("selecting value for fixed type with out `value`");
+                }
+                return value;
             case DistributionType.NORMAL:
                 const mean = params.get(StatisticType.MEAN);
                 if (!mean) {
@@ -16,7 +20,7 @@ function ValueGenerator(distribution_type: DistributionType, params: Map<Statist
                 if (!standard_deviation) {
                     throw new Error("selecting value from normal distribution without 'standard deviation'");
                 }
-                return rnorm(1, mean, standard_deviation);
+                return rnorm(1, mean, standard_deviation)[0];
             case DistributionType.UNIFORM:
                 const lowerbound = params.get(StatisticType.LOWER);
                 if (!lowerbound) {

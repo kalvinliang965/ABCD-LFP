@@ -34,4 +34,8 @@ export const enum StatisticType {
     UPPER = "UPPER",
 }
 
-
+export const enum StateType {
+    NY = "NY",
+    NJ = "NJ",
+    CT = "CT",
+}
