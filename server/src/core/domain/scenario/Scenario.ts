@@ -145,7 +145,7 @@ function Scenario(params: {
   martialStatus: string;
   birthYears: Array<number>;
   lifeExpectancy: Array<Map<string, any>>;
-  investmentts: Set<{
+  investments: Set<{
     investmentType: {
       name: string;
       description: string;
