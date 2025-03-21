@@ -28,10 +28,10 @@ export enum Taxability {
 
 export const enum StatisticType {
     MEAN = "MEAN",
-    STANDARD_DEVIATION = "STANDARD_DEVIATION",
+    STDDEV = "STDDEV",
     VALUE = "VALUE",
-    LOWERBOUND = "LOWERBOUND",
-    UPPERBOUND = "UPPERBOUND",
+    LOWER = "LOWER",
+    UPPER = "UPPER",
 }
 
 

@@ -12,17 +12,17 @@ function ValueGenerator(distribution_type: DistributionType, params: Map<Statist
                 if (!mean) {
                     throw new Error("selecting value from normal distribution without `mean`");
                 }
-                const standard_deviation = params.get(StatisticType.STANDARD_DEVIATION);
+                const standard_deviation = params.get(StatisticType.STDDEV);
                 if (!standard_deviation) {
                     throw new Error("selecting value from normal distribution without 'standard deviation'");
                 }
                 return rnorm(1, mean, standard_deviation);
             case DistributionType.UNIFORM:
-                const lowerbound = params.get(StatisticType.LOWERBOUND);
+                const lowerbound = params.get(StatisticType.LOWER);
                 if (!lowerbound) {
                     throw new Error("selecting value from uniform distribution without lowerbound");
                 }
-                const upperbound = params.get(StatisticType.UPPERBOUND);       
+                const upperbound = params.get(StatisticType.UPPER);       
                 if (!upperbound) {
                     throw new Error("selecting value from uniform distribution without upperbound");
                 }
