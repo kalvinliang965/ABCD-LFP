@@ -12,6 +12,7 @@ export const enum IncomeType {
 export enum DistributionType {
     NORMAL = "NORMAL",
     UNIFORM = "UNIFORM",
+    FIXED = "FIXED",
 }
 
 export enum ChangeType {
@@ -22,6 +23,15 @@ export enum ChangeType {
 export enum Taxability {
     TAXABLE = "TAXABLE",
     TAX_EXEMPT = "TAX_EXEMPT",
+}
+
+
+export const enum StatisticType {
+    MEAN = "MEAN",
+    STANDARD_DEVIATION = "STANDARD_DEVIATION",
+    VALUE = "VALUE",
+    LOWERBOUND = "LOWERBOUND",
+    UPPERBOUND = "UPPERBOUND",
 }
 
 
