@@ -1,43 +1,23 @@
 import express from "express";
-import cookieParser from "cookie-parser";
-import bodyParser from "body-parser";
-import cors from "cors";
-import mongoose from "mongoose";
+import "./config/environment"; // load environment vairable
+import { registerGlobalMiddleWare, sessionStore } from "./middleware";
+import { connect_database, disconnect_database } from "./db/connections";
+import { api_config } from "./config/api";
+import { scrapping_demo } from "./demo";
 import passport from "passport";
-import session from "express-session";
 import userRoutes from "./routes/userRoutes";
 import "./auth/passport"; // Import passport configuration
 
+const port = api_config.PORT;
 const app = express();
-const port = process.env.PORT || 3000;
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI!, { useNewUrlParser: true, useUnifiedTopology: true });
+registerGlobalMiddleWare(app);
 
-// Middleware
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:3000",
-  credentials: true
-}));
-
-// Session configuration
-app.use(session({
-  secret: process.env.SESSION_SECRET || "your-secret-key",
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }
-}));
-
-// Initialize Passport
+// Initialize Passport (add this after registerGlobalMiddleWare)
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Routes
+// Add user routes
 app.use(userRoutes);
 
 // Google OAuth routes
@@ -55,18 +35,70 @@ app.get("/auth/google/callback",
 
 // Logout route
 app.get("/api/logout", (req, res) => {
-  req.logout();
-  res.redirect("/");
+  req.logout((err) => {
+    if (err) {
+      console.error("Error during logout:", err);
+      return res.status(500).json({ error: "Logout failed" });
+    }
+    res.redirect("/");
+  });
 });
 
-// Home route
 app.get("/", (req, res) => {
   res.send("Hello World");
 });
 
-// Start server
-app.listen(port, () => {
+// 登录路由
+app.post("/api/login", (req, res) => {
+  const { username, password } = req.body;
+  console.log("收到登录请求:", { username, password }); // 添加日志
+
+  // 这里暂时跳过验证逻辑
+  // 直接返回成功响应
+  res.json({
+    success: true,
+    message: "登录成功",
+    redirectUrl: "/dashboard", // 前端将使用这个URL进行重定向
+  });
+});
+
+const server = app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
 
-export default app;
+async function terminate() {
+
+    try {
+        console.log("Terminating server...");
+
+        // sessionStore
+        if (sessionStore) {
+            console.log("Closing session store...");
+            sessionStore.close();
+        }
+        
+        await disconnect_database();
+        console.log("Server terminated successfully");
+        // exit process if not in test environment
+        if (process.env.NODE_ENV !== "test") {
+            process.exit(0); // exit gracefully
+        }
+
+        await new Promise((resolve) => server.close(resolve));
+    } catch (error) {
+        console.log("Error during termiantion: ", error);
+        process.exit(1); // exit with error
+    }
+}
+
+const mongodb = connect_database();
+process.on("SIGINT", terminate);
+process.on("SIGTERM", terminate);
+
+
+
+async function main() {
+  await scrapping_demo();
+}
+
+main();
