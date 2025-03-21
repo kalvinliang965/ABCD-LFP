@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import InvestmentType, {
   IInvestmentType,
-} from "../models/InvestmentType.model";
+} from "../db/models/InvestmentType.model";
 
 const router = express.Router();
 

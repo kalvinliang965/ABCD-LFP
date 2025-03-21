@@ -1,5 +1,5 @@
 import express from "express";
-import User from "../models/User";
+import User from "../db/models/User";
 
 const router = express.Router();
 
@@ -22,7 +22,9 @@ router.post("/api/user/update", async (req, res) => {
     );
     res.status(200).json(user);
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error updating profile." });
+    res
+      .status(500)
+      .json({ success: false, message: "Error updating profile." });
   }
 });
 
@@ -32,7 +34,9 @@ router.post("/api/scenarios", async (req, res) => {
   try {
     const user = await User.findOne({ googleId: userId });
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found." });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found." });
     }
     user.scenarios.push(scenario);
     await user.save();
@@ -46,13 +50,20 @@ router.post("/api/scenarios", async (req, res) => {
 router.get("/api/scenarios", async (req, res) => {
   const { userId } = req.query;
   try {
-    const user = await User.findOne({ googleId: userId }).populate('scenarios.sharedWith', 'name email');
+    const user = await User.findOne({ googleId: userId }).populate(
+      "scenarios.sharedWith",
+      "name email"
+    );
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found." });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found." });
     }
     res.status(200).json(user.scenarios);
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error retrieving scenarios." });
+    res
+      .status(500)
+      .json({ success: false, message: "Error retrieving scenarios." });
   }
 });
 
@@ -63,33 +74,41 @@ router.post("/api/scenarios/share", async (req, res) => {
     // Find the user who wants to share
     const user = await User.findOne({ googleId: userId });
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found." });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found." });
     }
 
     // Find the scenario
     const scenario = user.scenarios.id(scenarioId);
     if (!scenario) {
-      return res.status(404).json({ success: false, message: "Scenario not found." });
+      return res
+        .status(404)
+        .json({ success: false, message: "Scenario not found." });
     }
 
     // Find the user to share with
     const shareWithUser = await User.findOne({ email: shareWithEmail });
     if (!shareWithUser) {
-      return res.status(404).json({ success: false, message: "User to share with not found." });
+      return res
+        .status(404)
+        .json({ success: false, message: "User to share with not found." });
     }
 
     // Add the user to the shared list if not already there
     if (!scenario.sharedWith.includes(shareWithUser._id)) {
       scenario.sharedWith.push(shareWithUser._id);
     }
-    
+
     // Set permissions
     scenario.permissions = permission;
-    
+
     await user.save();
     res.status(200).json({ success: true, message: "Scenario shared." });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error sharing scenario." });
+    res
+      .status(500)
+      .json({ success: false, message: "Error sharing scenario." });
   }
 });
 
@@ -99,20 +118,24 @@ router.post("/api/yaml", async (req, res) => {
   try {
     const user = await User.findOne({ googleId: userId });
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found." });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found." });
     }
     user.yamlFiles.push({ filename, content });
     await user.save();
-    
+
     // Return the updated YAML files list with IDs
     const updatedUser = await User.findOne({ googleId: userId });
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       message: "YAML file uploaded.",
-      yamlFiles: updatedUser?.yamlFiles 
+      yamlFiles: updatedUser?.yamlFiles,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error uploading YAML file." });
+    res
+      .status(500)
+      .json({ success: false, message: "Error uploading YAML file." });
   }
 });
 
@@ -120,16 +143,20 @@ router.post("/api/yaml", async (req, res) => {
 router.delete("/api/yaml/:id", async (req, res) => {
   const { userId } = req.body;
   const fileId = req.params.id;
-  
+
   try {
     const user = await User.findOne({ googleId: userId });
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found." });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found." });
     }
-    
+
     // Find the index of the YAML file
-    const yamlFileIndex = user.yamlFiles.findIndex(file => file._id.toString() === fileId);
-    
+    const yamlFileIndex = user.yamlFiles.findIndex(
+      (file) => file._id.toString() === fileId
+    );
+
     if (yamlFileIndex !== -1) {
       // Remove the file using pull method
       user.yamlFiles.pull({ _id: fileId });
@@ -139,8 +166,10 @@ router.delete("/api/yaml/:id", async (req, res) => {
       res.status(404).json({ success: false, message: "YAML file not found." });
     }
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error deleting YAML file." });
+    res
+      .status(500)
+      .json({ success: false, message: "Error deleting YAML file." });
   }
 });
 
-export default router; 
+export default router;

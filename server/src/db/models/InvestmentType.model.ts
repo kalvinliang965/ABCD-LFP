@@ -1,8 +1,9 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { Taxability, DistributionType } from "../../core/Enums";
 
 // Interface for distribution modes
 interface IDistribution {
-  mode: "fixed" | "normalDistribution";
+  mode: DistributionType.NORMAL | DistributionType.UNIFORM;
   value?: number; // For fixed mode
   mean?: number; // For normalDistribution mode
   stdDev?: number; // For normalDistribution mode
@@ -16,7 +17,7 @@ export interface IInvestmentType extends Document {
   expectedAnnualReturn: IDistribution;
   expenseRatio: number;
   expectedAnnualIncome: IDistribution;
-  taxability: "tax-exempt" | "taxable";
+  taxability: Taxability.TAXABLE | Taxability.TAX_EXEMPT;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,25 +27,25 @@ const DistributionSchema = new Schema<IDistribution>(
   {
     mode: {
       type: String,
-      enum: ["fixed", "normalDistribution"],
+      enum: [DistributionType.UNIFORM, DistributionType.NORMAL],
       required: true,
     },
     value: {
       type: Number,
       required: function (this: IDistribution) {
-        return this.mode === "fixed";
+        return this.mode === DistributionType.UNIFORM;
       },
     },
     mean: {
       type: Number,
       required: function (this: IDistribution) {
-        return this.mode === "normalDistribution";
+        return this.mode === DistributionType.NORMAL;
       },
     },
     stdDev: {
       type: Number,
       required: function (this: IDistribution) {
-        return this.mode === "normalDistribution";
+        return this.mode === DistributionType.NORMAL;
       },
     },
     isPercentage: {
@@ -84,7 +85,7 @@ const InvestmentTypeSchema = new Schema<IInvestmentType>(
     },
     taxability: {
       type: String,
-      enum: ["tax-exempt", "taxable"],
+      enum: [Taxability.TAX_EXEMPT, Taxability.TAXABLE],
       required: true,
     },
   },

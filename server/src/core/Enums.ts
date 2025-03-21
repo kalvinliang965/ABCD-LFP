@@ -12,10 +12,16 @@ export const enum IncomeType {
 export enum DistributionType {
     NORMAL = "NORMAL",
     UNIFORM = "UNIFORM",
-    GBM = "GEOMETRIC_BROWNIAN",
 }
 
 export enum ChangeType {
     FIXED = "FIXED_AMOUNT",
     PERCENTAGE = "PERCENTAGE",
 }
+
+export enum Taxability {
+    TAXABLE = "TAXABLE",
+    TAX_EXEMPT = "TAX_EXEMPT",
+}
+
+
