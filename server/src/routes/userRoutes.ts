@@ -127,11 +127,17 @@ router.delete("/api/yaml/:id", async (req, res) => {
       return res.status(404).json({ success: false, message: "User not found." });
     }
     
-    // Remove the YAML file
-    user.yamlFiles.id(fileId).remove();
-    await user.save();
+    // Find the index of the YAML file
+    const yamlFileIndex = user.yamlFiles.findIndex(file => file._id.toString() === fileId);
     
-    res.status(200).json({ success: true, message: "YAML file deleted." });
+    if (yamlFileIndex !== -1) {
+      // Remove the file using pull method
+      user.yamlFiles.pull({ _id: fileId });
+      await user.save();
+      res.status(200).json({ success: true, message: "YAML file deleted." });
+    } else {
+      res.status(404).json({ success: false, message: "YAML file not found." });
+    }
   } catch (error) {
     res.status(500).json({ success: false, message: "Error deleting YAML file." });
   }
