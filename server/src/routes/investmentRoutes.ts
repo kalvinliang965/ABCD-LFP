@@ -1,5 +1,5 @@
 import express from 'express';
-import { Investment } from '../models/investments';
+import { Investment } from '../db/models/investments';
 
 const router = express.Router();
 

@@ -18,8 +18,8 @@ const app = express();
 registerGlobalMiddleWare(app);
 
 // Register routes
-app.use('/api/eventSeries', eventSeriesRoutes);
-app.use('/api/investments', investmentRoutes);
+app.use("/api/eventSeries", eventSeriesRoutes);
+app.use("/api/investments", investmentRoutes);
 // app.use('/api/users', userRoutes);
 
 // Initialize Passport (add this after registerGlobalMiddleWare)
@@ -30,11 +30,11 @@ app.use('/api/investments', investmentRoutes);
 // app.use(userRoutes);
 
 // Google OAuth routes
-// app.get("/auth/google", 
+// app.get("/auth/google",
 //   passport.authenticate("google", { scope: ["profile", "email"] })
 // );
 
-// app.get("/auth/google/callback", 
+// app.get("/auth/google/callback",
 //   passport.authenticate("google", { failureRedirect: "/login" }),
 //   (req, res) => {
 //     // Successful authentication, redirect to dashboard
@@ -83,39 +83,36 @@ const server = app.listen(port, () => {
 
 // Graceful shutdown
 async function terminate() {
-    try {
-        console.log("Terminating server...");
+  try {
+    console.log("Terminating server...");
 
-        // // sessionStore
-        // if (sessionStore) {
-        //     console.log("Closing session store...");
-        //     sessionStore.close();
-        // }
-        
-        await disconnect_database();
-        console.log("Server terminated successfully");
-        // exit process if not in test environment
-        if (process.env.NODE_ENV !== "test") {
-            process.exit(0); // exit gracefully
-        }
+    // // sessionStore
+    // if (sessionStore) {
+    //     console.log("Closing session store...");
+    //     sessionStore.close();
+    // }
 
-        await new Promise((resolve) => server.close(resolve));
-    } catch (error) {
-        console.log("Error during termiantion: ", error);
-        process.exit(1); // exit with error
+    await disconnect_database();
+    console.log("Server terminated successfully");
+    // exit process if not in test environment
+    if (process.env.NODE_ENV !== "test") {
+      process.exit(0); // exit gracefully
     }
+
+    await new Promise((resolve) => server.close(resolve));
+  } catch (error) {
+    console.log("Error during termiantion: ", error);
+    process.exit(1); // exit with error
+  }
 }
-
-
 
 process.on("SIGINT", terminate);
 process.on("SIGTERM", terminate);
 
 // Connect to database and handle shutdown
-connect_database().catch(error => {
+connect_database().catch((error) => {
   console.error("Failed to connect to database:", error);
   process.exit(1);
 });
-  
-// await scrapping_demo();
 
+scrapping_demo();

@@ -1,5 +1,5 @@
 import express from 'express';
-import { EventSeries } from '../models/eventSeries';
+import { EventSeries } from '../db/models/eventSeries';
 
 const router = express.Router();
 
