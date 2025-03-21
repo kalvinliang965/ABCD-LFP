@@ -1,8 +1,9 @@
 import mongoose, { Schema, Document} from "mongoose";
+import { TaxFilingStatus } from "../../core/Enums";
 
-interface IStandardDeduction extends Document {
+export interface IStandardDeduction extends Document {
     amount: number;
-    taxpayer_types: "SINGLE" | "MARRIED";
+    taxpayer_type: TaxFilingStatus.SINGLE | TaxFilingStatus.MARRIED;
 }
 
 const StandardDeductionSchema = new Schema<IStandardDeduction>({
@@ -10,10 +11,10 @@ const StandardDeductionSchema = new Schema<IStandardDeduction>({
         type: Number,
         required: true,
     },
-    taxpayer_types: {
+    taxpayer_type: {
         type: String,
         required: true,
-        enum: ["SINGLE", "MARRIED"],
+        enum: [TaxFilingStatus.SINGLE, TaxFilingStatus.MARRIED],
     }
 });
 

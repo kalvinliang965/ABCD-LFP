@@ -7,6 +7,7 @@ import { scrapping_demo } from "./demo";
 import passport from "passport";
 import userRoutes from "./routes/userRoutes";
 import "./auth/passport"; // Import passport configuration
+import { scrapping_demo } from "./demo";
 
 const port = api_config.PORT;
 const app = express();
@@ -100,5 +101,6 @@ process.on("SIGTERM", terminate);
 async function main() {
   await scrapping_demo();
 }
+main();
 
 main();
