@@ -44,6 +44,7 @@ function Scenario(params: {
     financialGoal: number,
     residenceState: string, 
 }) {
+    
     return params;
 }
 
