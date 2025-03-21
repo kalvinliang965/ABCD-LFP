@@ -2,7 +2,10 @@
 import { DistributionType, StatisticType } from "../../core/Enums";
 import { rnorm } from "probability-distributions";
 
-function ValueGenerator(distribution_type: DistributionType, params: Map<StatisticType, number> ) {
+export interface RandomGenerator {
+    sample: () => number;
+}
+function ValueGenerator(distribution_type: DistributionType, params: Map<StatisticType, number> ): RandomGenerator {
     const sample = (): number => {
         switch (distribution_type) {
             case DistributionType.FIXED: 
