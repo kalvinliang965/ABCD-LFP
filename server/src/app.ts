@@ -3,7 +3,8 @@ import "./config/environment"; // load environment vairable
 import { registerGlobalMiddleWare, sessionStore } from "./middleware";
 import { connect_database, disconnect_database } from "./db/connections";
 import { api_config } from "./config/api";
-import { scrapping_demo } from "./demo";
+import eventSeriesRoutes from "./routes/eventSeriesRoutes";
+import investmentRoutes from "./routes/investmentRoutes";
 //import passport from "passport";
 import userRoutes from "./routes/userRoutes";
 //import "./auth/passport"; // Import passport configuration
@@ -11,15 +12,20 @@ import userRoutes from "./routes/userRoutes";
 const port = api_config.PORT;
 const app = express();
 
-
+// Register middleware
 registerGlobalMiddleWare(app);
+
+// Register routes
+app.use('/api/eventSeries', eventSeriesRoutes);
+app.use('/api/investments', investmentRoutes);
+// app.use('/api/users', userRoutes);
 
 // Initialize Passport (add this after registerGlobalMiddleWare)
 // app.use(passport.initialize());
 // app.use(passport.session());
 
 // Add user routes
-app.use(userRoutes);
+// app.use(userRoutes);
 
 // Google OAuth routes
 // app.get("/auth/google", 
@@ -49,8 +55,9 @@ app.use(userRoutes);
 //   }
 // });
 
+// Basic health check route
 app.get("/", (req, res) => {
-  res.send("Hello World");
+  res.json({ status: "ok", message: "Server is running" });
 });
 
 // 登录路由
@@ -67,19 +74,21 @@ app.post("/api/login", (req, res) => {
   });
 });
 
+// Start server
 const server = app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
 
+// Graceful shutdown
 async function terminate() {
     try {
         console.log("Terminating server...");
 
-        // sessionStore
-        if (sessionStore) {
-            console.log("Closing session store...");
-            sessionStore.close();
-        }
+        // // sessionStore
+        // if (sessionStore) {
+        //     console.log("Closing session store...");
+        //     sessionStore.close();
+        // }
         
         await disconnect_database();
         console.log("Server terminated successfully");
@@ -95,12 +104,17 @@ async function terminate() {
     }
 }
 
-const mongodb = connect_database();
+// Connect to database and handle shutdown
+connect_database().catch(error => {
+    console.error("Failed to connect to database:", error);
+    process.exit(1);
+});
+
 process.on("SIGINT", terminate);
 process.on("SIGTERM", terminate);
 
-async function main() {
-  await scrapping_demo();
-}
+// async function main() {
+//   await scrapping_demo();
+// }
 
-main();
+// main();

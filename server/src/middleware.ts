@@ -20,10 +20,10 @@ function registerGlobalMiddleWare(app: Express) {
     app.use(bodyParser.urlencoded({ extended: false }));
     app.use(cookieParser());
     app.use(cors({
-        origin: api_config.API_URL,
+        origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
         credentials: true,
-        methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization']
     }));
     app.use(express.json());
     app.use(express.urlencoded({extended: false}));
@@ -31,7 +31,7 @@ function registerGlobalMiddleWare(app: Express) {
         secret: "do work!!",
         cookie: { 
             httpOnly: true, 
-            maxAge: 60 * minute, // an hour
+            maxAge: 60 * minute,
             sameSite: "lax" 
         },
         resave: false,
@@ -40,6 +40,5 @@ function registerGlobalMiddleWare(app: Express) {
     }));
     console.log("Finish registering global middleware");
 }
-
 
 export { sessionStore, registerGlobalMiddleWare }
