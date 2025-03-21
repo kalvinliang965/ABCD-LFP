@@ -4,6 +4,7 @@ import DashboardRoutes from "./dashboardRoutes";
 import ScenarioRoutes from "./scenarioRoutes";
 import SimulationRoutes from "./simulationRoutes";
 import AccountRoutes from "./accountRoutes";
+import UserProfile from "../components/user/UserProfile";
 
 // Pages
 import Login from "../pages/Login";
@@ -11,21 +12,24 @@ import Login from "../pages/Login";
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* basic routes - login page usually does not need a standard layout */}
+      {/* Basic routes - login page usually does not need a standard layout */}
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
 
-      {/* dashboard routes */}
+      {/* Dashboard routes - for main dashboard and related pages */}
       {DashboardRoutes}
 
-      {/* scenario routes */}
+      {/* Scenario routes - for managing financial scenarios */}
       {ScenarioRoutes}
 
-      {/* simulation routes */}
+      {/* Simulation routes - for running financial simulations */}
       {SimulationRoutes}
 
-      {/* account routes */}
+      {/* Account routes - for account settings and logout */}
       {AccountRoutes}
+
+      {/* User profile route - for viewing and editing user profile */}
+      <Route path="/profile" element={<UserProfile />} />
     </Routes>
   );
 };

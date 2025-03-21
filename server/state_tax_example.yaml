@@ -1,0 +1,56 @@
+
+
+state: NY
+
+standard_deduction:
+ - amount: 16000 
+   taxpayer_type: MARRIED
+
+ - amount: 8000
+   taxpayer_type: SINGLE
+
+tax_bracket:
+ - min: 0
+   max: 8500
+   rate: 0.04
+   taxpayer_type: SINGLE
+
+ - min: 8501
+   max: 11700
+   rate: 0.045
+   taxpayer_type: SINGLE
+  
+ - min: 11701
+   max: 13900
+   rate: 0.0525
+   taxpayer_type: SINGLE
+
+ - min: 13901
+   max: 21400
+   rate: 0.059
+   taxpayer_type: SINGLE
+
+ - min: 21401
+   max: 80650
+   rate: 0.0621
+   taxpayer_type: SINGLE
+
+ - min: 0
+   max: 17150
+   rate: 0.04
+   taxpayer_type: MARRIED
+
+ - min: 23601
+   max: 27900
+   rate: 0.0525
+   taxpayer_type: MARRIED
+
+ - min: 27901
+   max: 43000
+   rate: 0.059
+   taxpayer_type: MARRIED
+
+ - min: 43001
+   max: 161550
+   rate: 0.0621
+   taxpayer_type: MARRIED

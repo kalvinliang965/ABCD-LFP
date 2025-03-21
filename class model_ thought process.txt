@@ -1,0 +1,440 @@
+﻿My thought process in constructing the class model
+
+
+First I will start by creating the concepts diagram like statements. 
+
+
+section one note Taxes:
+
+
+Federal taxes: we need to write a component that will extract data from some linked pages if tax information for the current year is not in the database.
+
+
+For the federal taxes, there are four types of data we need to extract from the webpage.
+        (1) Federal income tax rate and brackets
+        (2) standard deduction for most people
+        (3) capital gain tax rate and thresholds        
+        (4) income brackets + corresponding taxable percentages of social security benefits from the linked pages.
+
+
+State taxes: similar to federal taxes, we also need a component that will scrape data for the state taxes, but from a YAML file. If the YAML configuration file is not provided, a warning is displayed. 
+
+
+Concept: TaxFilingStatus
+purpose: tax filing status could impact multiple components. Despite our current system only having two types: single and married couple, we could make this as a type for now to make it more scalable. 
+State: single / married_couple
+
+
+Concept(shallow module): TaxContext
+Purpose: store necessary user tax information
+State:
+age.
+TaxFillingStatus
+State
+Is_early_withdrawal
+Inflation_rate
+user_is_alive
+spouse_is_alive 
+base_tax_brackets
+
+
+
+
+Concept(Shallow module): ExemptionWithdrawalTax 
+Purpose: withdraw from retirement account before a certain age are taxes. However, there are some exceptions. We will need this component to do the logic to return the tax rate on given conditions.
+State: 
+rate: user ->  one item                // 10%
+action:
+get_tax_rate(context: TaxContext) -> one rate                // return the rate above if flag is true 
+
+
+concept: TaxBrackets
+purpose: we need a data structure to represent the idea of brackets in tax. someone whom's income falls in range [min_income, max_income] receives the 'rate' amount of federal rate.
+state:
+base_intervals: [float, float] -> float  // original bracket
+current_intervals: [float, float] -> float // adjust for inflation
+action:
+add_rate(min: float, max: float, rate: float) -> ()
+calculate_tax(taxable_income: float): one float
+// increase/decrease min_income/max_income based on the inflation rate
+adjust_for_inflation(inflation_rate: float) // base_intervals * (1 + Inflation) ^ years                
+
+
+concept: FederalTaxScraper
+purpose: 
+* If federal tax information for the current year is not in the database, we need to scrap it from the linked webpage.  
+State: 
+cache: int -> one bool // check if federal tax info on given year  is already in our database
+Action:
+scrape_federal_tax() -> FederalTaxData
+Exception: ScrappingFailedException
+
+
+Concept: FederalTaxData
+purpose: organize federal tax related info for easy retrieval and initializing
+state:
+income_tax_brackets: () -> TaxBrackets  // depend on income
+gains_tax_brackets: () -> TaxBrackets  // depend single or married and income
+standard_deductions: () -> one float       // depend on if you are single or married   
+social_security_taxable_percentage: () -> float // todo, webpage is not working
+
+
+Concept: StateTaxData
+Purpose: organize state tax data
+States:
+tax_backet: TaxBrackets
+state_name: () -> string
+action:
+load_from_yaml(file_path: String) -> StateTaxData
+        If state tax information is not provided by user in yaml format, warning is displayed Exception: MissingFileException
+
+
+Concept: FederalTaxService
+Purpose: Contains function to manipulate federal tax data
+States:
+Tax_data: FederalTaxData
+Action:
+compute_income_tax(income: float, context: TaxContext) -> float
+
+
+Concept: StateTaxService
+Purpose: Contain functions to manipulate state tax data
+States:
+Tax_data: StateTaxData
+Action:
+compute_income_tax(income: float,context:TaxContext) -> float
+
+
+Concept: TaxCalculator
+Purpose: Unify the endpoint. It will be as an interface for federal tax service and state tax service
+Action:
+compute_income_tax(income: float, context: TaxContext) -> float
+
+
+Based on the data I can start to construct the class model. First of all, I will aggregate federal tax data and corresponding functions to another component called federal tax service. Similarly, I will also have a state tax service. This will make it more efficient to implement it in typescript.
+
+
+
+
+Section two:
+
+
+I will use another format because the concept diagram like format is hard to write
+
+
+
+
+2.2
+* Enum: ChangeType
+   * FIXED_AMOUNT = “fixed_amount”
+   * PERCENTAGE = “percentage”
+
+
+* Enum: DistributionType
+   * NORMAL = “normal”
+   * GEOMETRIC_BROWNIAN = “geometric brownian”
+   * UNIFORM = “uniform”
+   * FIXED = “fixed”
+
+
+* Enum: AccountType:
+   * PRE_TAX_RETIRMENT = “pre-tax retirement”
+      *  tax_deferred (e.g. Traditional IRA)
+   * AFTER_TAX_RETIRMENT=”after-tax retirement” 
+      * tax_free (e.g Roth IRA)
+   * NON_RETIREMENT = “non-retirement”
+      * Taxable (e.g. non retirement account)
+
+
+* Classes: StochasticChange
+* purpose: generic change of either a fixed amount or percentage representing some rate sampled from distribution when entering investment data. 
+* change_type: ChangeType
+* distribution: DistributionType
+* params: Map[str, float] //e.g. Map “standard deviation” to some float, map “mean” to some float.
+* sample(time: int): float
+// GBM is time dependent 
+   * This function will use the distribution sampler below
+
+
+* class: InvestmentType
+* name: string
+* description: string
+* annual_return: StochasticChange  
+* expense_ratio: float // percentage. Used to calculate the value of investment subtracted annually, or simply annual fee.
+   * E.g. investment start 10,000 and end 12,000
+   * Avg value is (10, 000 + 12,000) // 2 = 11, 000
+   * Annual fee is (avg value) * (expense ratio) 
+* dividend_yield: StochasticChange  // your expected annual income from this asset. Some stock like coca-cola give some dividend per year
+* is_tax_exempt: bool         // tax-exempt or taxable
+
+
+
+
+* Class Investment
+   * investment_type: InvestmentType
+   * account_type: AccountType
+   * start_value: float
+   * current_value: float
+   * calculate_fees(): float // use asset.expense_ratio, current_value and start_value
+
+
+* Note: There is a pre-deifned investment named “cash” held in a non-retirement account
+2.3
+* Enum: EventType
+   * INCOME
+   * EXPENSE
+   * INVEST
+   * REBALANCE
+   * TRANSFER // transfer between accounts
+
+
+* Class: EventSeries
+   * name: str
+   * description: str | None
+   * start_year: float // look back to doc
+   * Duration: float 
+   * type: EventType
+   * invariant(): bool
+   * is_discretionary: bool[a]
+
+
+* Enum: IncomeType
+   * SOCIAL_SECURITY = “social security”
+   * WAGES = “wages”
+
+
+* Class: IncomeEventSeries extends EventSeries
+   * initial_amount: float
+   * annual_change: StochasticChange
+   * Inflation_adjustment: bool // true if amount auto increases with respect to inflation in addition to in addition to the explicitly specified change.
+   * ower_percentage: float // 100% if user don't have spouse
+   * income_type: IncomeType
+      * Users provide the social security income. We do not reduce it?
+
+
+* Class: ExpenseEventSeries extends EventSeries
+   * initial_amount: float        
+   * annual_change: StochasticChange
+   * Inflation_adjustment: bool // true if amount auto increases with respect to inflation in addition to in addition to the explicitly specified change.        
+   * is_discretionary: bool // true if it incurred in given year only if that does not lead to violation of financial goal in that year
+
+
+* Class: GlidePath:
+   *  startYear: int
+   * endYear: int
+   * startPercentages: List<float>
+   * endPercentages: List<float>
+
+
+* Class: AssetAllocation:
+   * allocationType: string // “fixed” | “glidepath”        
+   * fixedAllocation: Map<string, float> // map investment name to percentage
+   * glidePath: GlidePath 
+
+
+* Class: InvestmentEventSeries extends EventSeries
+   * asset_allocation: AssetAllocation
+   * maximum_cash: float
+   * excess: float        
+      * If excess > 0 -> auto invest to to another selected investments
+   * Note: investment are sold for special purpose including rebalancing 
+
+
+* Class: RebalanceEventSeries extend EventSeries
+   * asset_allocation: AssetAllocation
+   * account_type: AccountType // can only select investment with same account tax status
+   * Note: may generate capital gain or lose
+
+
+* Class: DiscretionaryExpenses
+   * name: string // beneficial for logging
+   * amount: float
+   * priority: int
+
+
+* Class(add on to section one): TaxContext:
+   * current_year: int
+   * taxable_income: float
+   * tax_brackets: TaxBrackets
+   * prev_tax_invesments: List<Investment> 
+
+
+* class: RothConversionStrategy
+   * start_year: int
+   * end_year: int
+   * get_withdrawn_amount(current_year)
+   * conversion_priority: List<label> 
+      * label can be used in scenario object to map to actual investment
+         * label could be the investment name, but i'm not sure investment name is unique
+
+
+   * Note:
+      * /// help user determined if conversion is beneficials
+      * // want to minimize life time income tax
+      * // prev tax(Traditional Roth IRA) -> after tax(Roth IRA)
+      * // account holder pay tax on money they convert, but future withdrawal from roth account is tax free
+      * // if invest believe they will be in higher tax bracket in future, they will save money by paying taxes now rather than later
+
+
+
+
+
+
+
+
+
+
+* Class(add on to section one): FederealScaper
+* scrape_rmd_table() -> RMDTable
+
+
+* Class: RMDTable
+   * Uniform_lifetime_table: Map<int, float> // age to distribution period
+
+
+* Class(add-one): TaxContext:
+   * user_birth_year: int
+   * spouse_birth_year: int | None
+   * User_life_expectancy: int
+   * Spouse_life_expectancy: int | None
+
+
+* Class: Scenarios
+   * name: string
+   * filling_status: TaxFillingStatus
+   * user_birth_year: int
+   * spouse_birth_year:int
+   * user_life_expectancy: int
+   * spouse_life_expectancy: int | None
+   * investments: set<Investment>
+   * event_series: Set<EventSeries>        
+   * inflation_assumption: float
+   * distribution: DistributionType
+   * roth_conversion_strategy: RothConversionStrategy | None
+   * Sharing_settings: //TODO
+   * Financial_goal: int //
+      *  min total value of user investments
+         *  if it reach 0, user alway able to meet their expenses
+         * > 0, safety margin 
+         * Ignore loan(e.g. mortgages) and real property 
+   * user_residence_state: State
+   * create_tax_context(): TaxContext
+   * get_distribution_period(age)
+
+
+* Class: SimulationLogger
+   * log_yearly_result(msg: string)
+   * export_csv
+
+
+* Class: Simulation
+   * cash: Investment // user debit card account, we retrieve from scenario.investments
+   * tax_caculator: TaxCalculator()
+   * current_year: int
+   * scenario: Scenario
+   * active_events: List<EventSeries>
+   * tax_context: TaxContext
+
+
+* run(num_simulations: int): SimulationResult
+                // im using global variable, value inside “scenario” that is why i dont have some parameter for these. They also update the global variable
+* _simulate_year(): YearResult
+* _process_income_events()
+* _process_roth_conversions() 
+* _process_RMD() if withdrawal generated by optimizer isi less than RMD
+* _update_invesments()
+* _deduct_expense_ratios()
+* _process_mandatory_expenses() // non_discretionary includes tax
+* _process_discretionary_expense() if no violation
+* _process_investment_event()
+* _process_rebalancing()
+
+
+* Class: SimulationResult
+   * Yearly_details: List<YearlyDetails>: 
+   * Sucess_probability
+   * Financal_goal
+* Class: YearlyDetails
+   * Investments: Map<String, float>
+   * Income_breakdown: Map<String, float>
+   * Expense_breackdown: Map<String, float> 
+
+
+Later section: 
+
+
+* Class: ChartConfig
+   * chart_type: ChartType
+   * display_currency: CurrencyType
+   * selected_metric: MetricType
+   * aggregation_threshold: float // default is 5%
+
+
+* Class: ResultAggregator:
+   * get_percentiles(year: int, metric: MetricType): PercentieRanges
+   * get_breakdown(year: int, category: Category): Map<String, float>
+
+
+* Class: CurrencyConverter:
+   * convert(value: float, base_year, target_year, inflation_rates: List<float>)
+
+
+* Class: ChartGenerator:
+   * generate(config: ChartConfig, aggregator: ResultAggregator): ChartData
+   * generate_contour_plot(analysis: CrossAnalysis): ContourData
+   * _generate_stacked_bar(config: ChartConfig, aggregator: ResultAggregator): StackedBarData
+
+
+* Class: ChartData
+   * Fill in later…
+
+
+* Class: StackBarData
+   * Fill in later
+
+
+* Enum: ChartParameterType
+   * ROTH_ENABLED
+   * EVENT_START_YEAR
+   * ASSET_PERCENTAGE
+
+
+* Class: ChartParamterRange:
+   * Param_type: ChartParameterType
+   * Min_val: float
+   * Max_val: float
+   * Step: float
+   * Values: List
+
+
+* Class: ExplorationEngine
+   * run_1d_sweep(base_scenario: Scenario， param: ChartParameterRange): ExplorationResult
+   * _modify_scenario(scenario: Scenario, param: ChartParameter, value: Any)
+
+
+* Class ExplorationResult
+   * Heatmap_data: Map<Tuple[float, foat], SimulationResult>
+   * Cross_analysis: CrossAnalysis
+
+
+* Class CrossAnalysis
+   * get_sensitivity_matrix(): List<List<int>>
+   * find_optimal_params(): Map<string, Any>
+
+
+* Class: ChartCache:
+   * _cache: LRUCache(size: int)
+   * get_key(config: ChartConfig): str
+
+
+Flow:
+
+
+Simulation class, within the run function, generates the  TaxContext class, which includes critical information about the user, is generated by the Simulation class then it is passed to TaxCalculator to calculate the total tax (federal tax and state tax).
+
+
+In addition, the run function inside the simulation class processes the event series provided by the user and generates a SimulationResult, which can be used by the chargenerator. 
+
+
+
+[a]added a parameter for further use
