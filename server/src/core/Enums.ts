@@ -39,3 +39,5 @@ export const enum StateType {
     NJ = "NJ",
     CT = "CT",
 }
+
+    
