@@ -17,7 +17,8 @@
 
 - `src/db` contains database connectivity, model definition and manipulation
     - `models` contains the database layer model (schemas)
-    - `init` initialize mongodb conneciton
+    - `connections` connect/disconnect mongodb
+    - `respositories` contains module that responsible for interacting with data store
 
 - `src/services` externel service call (e.g. web scraping)
     - `scraping` contain the web scraping logic for federal tax
