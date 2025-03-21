@@ -3,11 +3,17 @@ import "./config/environment"; // load environment vairable
 import { registerGlobalMiddleWare, sessionStore } from "./middleware";
 import { connect_database, disconnect_database } from "./db/connections";
 import { api_config } from "./config/api";
+import eventSeriesRoutes from "./routes/eventSeriesRoutes";
+import investmentRoutes from "./routes/investmentRoutes";
 
 const port = api_config.PORT;
 const app = express();
 
 registerGlobalMiddleWare(app);
+
+// Register routes
+app.use('/api/eventSeries', eventSeriesRoutes);
+app.use('/api/investments', investmentRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello World");
@@ -56,10 +62,6 @@ async function terminate() {
     }
 }
 
-const mongodb = connect_database();
+connect_database();
 process.on("SIGINT", terminate);
 process.on("SIGTERM", terminate);
-
-
-export {app, sessionStore, mongodb};
-
