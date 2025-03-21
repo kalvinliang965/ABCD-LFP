@@ -1,30 +1,66 @@
 import express from "express";
-import cookieParser from "cookie-parser";
-import bodyParser from "body-parser";
-import cors from "cors";
-import connectDB from "./db/connect";
-import investmentTypeRouter from "./routes/InvestmentType.routes";
+import "./config/environment"; // load environment vairable
+import { registerGlobalMiddleWare, sessionStore } from "./middleware";
+import { connect_database, disconnect_database } from "./db/connections";
+import { api_config } from "./config/api";
+import eventSeriesRoutes from "./routes/eventSeriesRoutes";
+import investmentRoutes from "./routes/investmentRoutes";
+import { scrapping_demo } from "./demo";
 
-// Connect to MongoDB
-connectDB()
-  .then(() => console.log("MongoDB connected successfully"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+//import passport from "passport";
+import userRoutes from "./routes/userRoutes";
+//import "./auth/passport"; // Import passport configuration
 
+const port = api_config.PORT;
 const app = express();
-const port = process.env.PORT || 3000;
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(cors()); // 允许跨域请求
+// Register middleware
+registerGlobalMiddleWare(app);
 
-// Routes
+// Register routes
+app.use("/api/eventSeries", eventSeriesRoutes);
+app.use("/api/investments", investmentRoutes);
+// app.use('/api/users', userRoutes);
+
+// Initialize Passport (add this after registerGlobalMiddleWare)
+// app.use(passport.initialize());
+// app.use(passport.session());
+
+// Add user routes
+// app.use(userRoutes);
+
+// Google OAuth routes
+// app.get("/auth/google",
+//   passport.authenticate("google", { scope: ["profile", "email"] })
+// );
+
+// app.get("/auth/google/callback",
+//   passport.authenticate("google", { failureRedirect: "/login" }),
+//   (req, res) => {
+//     // Successful authentication, redirect to dashboard
+//     res.redirect("/dashboard");
+//   }
+// );
+
+// Logout route - commented out until passport is properly set up
+// app.get("/api/logout", (req, res) => {
+//   if (req.logout) {
+//     req.logout((err) => {
+//       if (err) {
+//         console.error("Error during logout:", err);
+//         return res.status(500).json({ error: "Logout failed" });
+//       }
+//       res.redirect("/");
+//     });
+//   } else {
+//     res.redirect("/");
+//   }
+// });
+
+// Basic health check route
 app.get("/", (req, res) => {
   res.json({ status: "ok", message: "Server is running" });
 });
-
-// Investment Type routes
-app.use("/api/investments", investmentTypeRouter);
 
 // 登录路由
 app.post("/api/login", (req, res) => {
@@ -40,10 +76,43 @@ app.post("/api/login", (req, res) => {
   });
 });
 
-app.listen(port, () => {
+// Start server
+const server = app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
 
-export default app;
+// Graceful shutdown
+async function terminate() {
+  try {
+    console.log("Terminating server...");
 
+    // // sessionStore
+    // if (sessionStore) {
+    //     console.log("Closing session store...");
+    //     sessionStore.close();
+    // }
 
+    await disconnect_database();
+    console.log("Server terminated successfully");
+    // exit process if not in test environment
+    if (process.env.NODE_ENV !== "test") {
+      process.exit(0); // exit gracefully
+    }
+
+    await new Promise((resolve) => server.close(resolve));
+  } catch (error) {
+    console.log("Error during termiantion: ", error);
+    process.exit(1); // exit with error
+  }
+}
+
+process.on("SIGINT", terminate);
+process.on("SIGTERM", terminate);
+
+// Connect to database and handle shutdown
+connect_database().catch((error) => {
+  console.error("Failed to connect to database:", error);
+  process.exit(1);
+});
+
+scrapping_demo();
