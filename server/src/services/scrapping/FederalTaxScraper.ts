@@ -2,7 +2,7 @@ import axios from "axios";
 import "cheerio";
 import { load } from "cheerio";
 import { TaxBrackets, TaxBracketsObject } from "../../core/tax/TaxBrackets";
-import { TaxFilingStatus } from "../../core/Enums";
+import { IncomeType, TaxFilingStatus } from "../../core/Enums";
 import { StandardDeductionObject, StandardDeductions } from "../../core/tax/StandardDeduction";
 import { tax_config } from "../../config/tax";
 import { save_bracket } from "../../db/repositories/TaxBracketRepository";
@@ -25,7 +25,7 @@ async function parse_table_rows(taxBrackets: TaxBracketsObject, status: TaxFilin
         const max = max_text.toLowerCase() === "and up" ? Infinity: extractNumbers(max_text, 1)[0];
         const rate = extractNumbers(rate_text, 1)[0] / 100;
         taxBrackets.add_rate(min, max, rate, status);
-        await save_bracket(min, max, rate, "TAXABLE_INCOME", status);
+        await save_bracket(min, max, rate, IncomeType.TAXABLE_INCOME, status);
     });
 }
 
@@ -149,10 +149,10 @@ async function parse_capital_gains(): Promise<TaxBracketsObject> {
                     const upperbound = extractNumbers(list_item.text(), 1)[0];
                     if (idx == 0) {
                         taxBrackets.add_rate(0, upperbound, rate, TaxFilingStatus.SINGLE);
-                        await save_bracket(0, upperbound, rate, "CAPITAL_GAINS", TaxFilingStatus.SINGLE);
+                        await save_bracket(0, upperbound, rate, IncomeType.CAPITAL_GAINS, TaxFilingStatus.SINGLE);
                     } else if (idx == 1) {
                         taxBrackets.add_rate(0, upperbound, rate, TaxFilingStatus.MARRIED);
-                        await save_bracket(0, upperbound, rate, "CAPITAL_GAINS", TaxFilingStatus.MARRIED);
+                        await save_bracket(0, upperbound, rate, IncomeType.CAPITAL_GAINS, TaxFilingStatus.MARRIED);
                     }
                 });
             }
@@ -172,10 +172,10 @@ async function parse_capital_gains(): Promise<TaxBracketsObject> {
                 const [lowerbound, upperbound] = extractNumbers(list_item.text(), 2);
                     if (idx == 0) {
                         taxBrackets.add_rate(lowerbound + 1, upperbound, rate, TaxFilingStatus.SINGLE);
-                        await save_bracket(lowerbound, upperbound, rate, "CAPITAL_GAINS", TaxFilingStatus.SINGLE);
+                        await save_bracket(lowerbound, upperbound, rate, IncomeType.CAPITAL_GAINS, TaxFilingStatus.SINGLE);
                     } else if (idx == 2) {
                         taxBrackets.add_rate(lowerbound + 1, upperbound, rate, TaxFilingStatus.MARRIED);
-                        await save_bracket(lowerbound, upperbound, rate, "CAPITAL_GAINS", TaxFilingStatus.MARRIED);
+                        await save_bracket(lowerbound, upperbound, rate, IncomeType.CAPITAL_GAINS, TaxFilingStatus.MARRIED);
                     }
                 });
             }

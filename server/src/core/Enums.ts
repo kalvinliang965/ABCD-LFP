@@ -4,6 +4,10 @@ export const enum TaxFilingStatus {
     MARRIED = "MARRIED_JOINTLY",
 }
 
+export const enum IncomeType {
+    TAXABLE_INCOME = "TAXABLE_INCOME",
+    CAPITAL_GAINS = "CAPITAL_GAINS"
+}
 
 export enum DistributionType {
     NORMAL = "NORMAL",

@@ -1,12 +1,12 @@
 import mongoose, { Schema, Document} from "mongoose";
-import { TaxFilingStatus } from "../../core/Enums";
+import { TaxFilingStatus, IncomeType } from "../../core/Enums";
 
 interface ITaxBracket extends Document {
     min: number;
     max: number;
     rate: number;
-    bracket_types: "CAPITAL_GAINS" | "TAXABLE_INCOME";
-    taxpayer_types: TaxFilingStatus.SINGLE | TaxFilingStatus.MARRIED;
+    income_type: IncomeType.CAPITAL_GAINS | IncomeType.TAXABLE_INCOME;
+    taxpayer_type: TaxFilingStatus.SINGLE | TaxFilingStatus.MARRIED;
 }
 
 const TaxBracketSchema = new Schema<ITaxBracket>({
@@ -22,12 +22,12 @@ const TaxBracketSchema = new Schema<ITaxBracket>({
         type: Number,
         required: true,
     },
-    bracket_types: {
+    income_type: {
         type: String,
         required: true,
-        enum: ["CAPITAL_GAINS", "TAXABLE_INCOME"],
+        enum: [IncomeType.CAPITAL_GAINS, IncomeType.TAXABLE_INCOME],
     },
-    taxpayer_types: {
+    taxpayer_type: {
         type: String,
         required: true,
         enum: [TaxFilingStatus.SINGLE, TaxFilingStatus.MARRIED],

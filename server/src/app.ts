@@ -3,7 +3,7 @@ import "./config/environment"; // load environment vairable
 import { registerGlobalMiddleWare, sessionStore } from "./middleware";
 import { connect_database, disconnect_database } from "./db/connections";
 import { api_config } from "./config/api";
-import { parse_capital_gains, parse_standard_deductions, parse_taxable_income } from "./services/scrapping/FederalTaxScraper";
+import { scrapping_demo } from "./demo";
 
 const port = api_config.PORT;
 const app = express();
@@ -61,15 +61,10 @@ const mongodb = connect_database();
 process.on("SIGINT", terminate);
 process.on("SIGTERM", terminate);
 
-async function parse_demo() {
-   const taxBracket = await parse_taxable_income();
-   console.log(taxBracket.to_string());
-   const deduction = await parse_standard_deductions();
-   console.log(deduction.to_string());
-   const capital_gains_brakcet = await parse_capital_gains();
-   console.log(capital_gains_brakcet.to_string());
-} 
- 
-parse_demo();
-export {app, sessionStore, mongodb};
 
+
+async function main() {
+  await scrapping_demo();
+}
+
+main();
