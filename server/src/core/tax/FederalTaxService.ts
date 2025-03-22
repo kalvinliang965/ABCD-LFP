@@ -1,13 +1,13 @@
 
-import { TaxBracketsObject } from "./TaxBrackets";
-import { StandardDeductions, StandardDeductionObject } from "./StandardDeduction";
+import { TaxBracket, TaxBrackets } from "./TaxBrackets";
+import { create_standard_deductions, StandardDeduction } from "./StandardDeduction";
 import { parse_standard_deductions, parse_capital_gains, parse_taxable_income } from "../../services/scrapping/FederalTaxScraper";
 import { check_capital_gains, check_taxable_income, load_brackets } from "../../db/repositories/TaxBracketRepository";
 import { load_standard_deduction } from "../../db/repositories/StandardDeductionRepository";
-import { IncomeType } from "../Enums";
+import { IncomeType, TaxFilingStatus } from "../Enums";
 
 
-async function initialize_taxable_income_bracket(): Promise<TaxBracketsObject> {
+async function initialize_taxable_income_bracket(): Promise<TaxBrackets> {
     try {
         if (await check_taxable_income()) {
             const taxBracket = await load_brackets(IncomeType.TAXABLE_INCOME);
@@ -22,7 +22,7 @@ async function initialize_taxable_income_bracket(): Promise<TaxBracketsObject> {
 
 }
 
-async function initialize_capital_gains_bracket(): Promise<TaxBracketsObject> {
+async function initialize_capital_gains_bracket(): Promise<TaxBrackets> {
 
     try {
         if (await check_capital_gains()) {
@@ -37,11 +37,11 @@ async function initialize_capital_gains_bracket(): Promise<TaxBracketsObject> {
     }
 }
 
-async function initialize_standard_deductions_info(): Promise<StandardDeductionObject> {
+async function initialize_standard_deductions_info(): Promise<StandardDeduction> {
     try {
         const standard_deduction_list = await load_standard_deduction();
         if (standard_deduction_list.length > 0) {
-            const deductions = StandardDeductions();
+            const deductions = create_standard_deductions();
             standard_deduction_list.forEach((deduction) => {
                 const { amount, taxpayer_type }  = deduction;
                 deductions.add_deduction(amount, taxpayer_type);
@@ -55,7 +55,17 @@ async function initialize_standard_deductions_info(): Promise<StandardDeductionO
         throw new Error("Error in initializing standard deductions info");
     }
 }
-async function FederalTaxService() {
+
+export interface FederalTaxService {
+    print_taxable_income_bracket(): void;
+    print_capital_gains_bracket(): void;
+    print_standard_deductions_info(): void;
+    adjust_for_inflation(rate: number): void;
+    find_bracket(rate: number, income_type: IncomeType, status: TaxFilingStatus): TaxBracket;
+    find_rate(income: number, income_type: IncomeType, status: TaxFilingStatus): number;
+}
+
+export async function create_federal_tax_service() : Promise<FederalTaxService> {
     try {        
         const taxable_income_bracket = await initialize_taxable_income_bracket();
         const capital_gains_bracket = await initialize_capital_gains_bracket();
@@ -80,11 +90,45 @@ async function FederalTaxService() {
             capital_gains_bracket.adjust_for_inflation(rate);
             standard_deductions.adjust_for_inflation(rate);
         }
+
+        const find_bracket = (rate: number, income_type: IncomeType, status: TaxFilingStatus): TaxBracket => {
+            try {
+                switch(income_type) {
+                    case IncomeType.CAPITAL_GAINS:
+                        return taxable_income_bracket.find_bracket(rate, status);
+                    case IncomeType.TAXABLE_INCOME:
+                        return capital_gains_bracket.find_bracket(rate, status);
+
+                    default:
+                        throw new Error(`Failed to find bracket due to invalid income type ${income_type}`);
+                } 
+            } catch(error) {
+                throw error;
+            }
+        }
+
+        const find_rate = (income: number, income_type: IncomeType, status: TaxFilingStatus): number => {
+            try {
+                switch(income_type) {
+                    case IncomeType.CAPITAL_GAINS:
+                        return capital_gains_bracket.find_rate(income, status);
+                    case IncomeType.TAXABLE_INCOME:
+                        return taxable_income_bracket.find_rate(income, status);
+                    default:
+                        throw new Error(`find_rate() invalid income type: ${income_type}`);
+                }
+            } catch (error) {
+                throw new Error(`Failed to find income ${income} for ${income_type} and ${status} because ${error instanceof Error? error.message : error}`);
+            }
+        }
+
         return {
             print_taxable_income_bracket,
             print_capital_gains_bracket,
             print_standard_deductions_info,
             adjust_for_inflation,
+            find_bracket,
+            find_rate,
         };
     } catch (error) {
         console.error(`Error in initializing federal tax data: ${error}`);
@@ -92,5 +136,3 @@ async function FederalTaxService() {
     }
 }
 
-
-export default FederalTaxService;

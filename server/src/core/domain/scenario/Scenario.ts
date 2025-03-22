@@ -2,6 +2,7 @@
 // we will use this function to read data read from front end and call other function to parse the data
 import ValueGenerator, { RandomGenerator } from "../../../utils/math/ValueGenerator";
 import { DistributionType, StateType, StatisticType, TaxFilingStatus } from "../../Enums";
+import { create_investment, Investment } from "../investment/Investment";
 
 function parse_state(state: string) {
   switch (state) {
@@ -99,14 +100,14 @@ function parse_life_expectancy(
 
 function parse_inflation_assumption(
   inflationAssumption: Map<string, any>
-): number {
+): RandomGenerator {
   try {
     switch (inflationAssumption.get("type")) {
       case "fixed":
         return ValueGenerator(
           DistributionType.FIXED,
           new Map([[StatisticType.VALUE, inflationAssumption.get("value")]])
-        ).sample();
+        );
       case "normal":
         return ValueGenerator(
           DistributionType.NORMAL,
@@ -114,7 +115,7 @@ function parse_inflation_assumption(
             [StatisticType.MEAN, inflationAssumption.get("mean")],
             [StatisticType.STDDEV, inflationAssumption.get("stdev")],
           ])
-        ).sample();
+        );
       case "uniform":
         return ValueGenerator(
           DistributionType.UNIFORM,
@@ -122,7 +123,7 @@ function parse_inflation_assumption(
             [StatisticType.LOWER, inflationAssumption.get("lower")],
             [StatisticType.UPPER, inflationAssumption.get("upper")],
           ])
-        ).sample();
+        );
       default:
         throw new Error(
           `inflation assumption type is invalid ${inflationAssumption}`
@@ -133,27 +134,6 @@ function parse_inflation_assumption(
       `Failed to parse inflation assumption ${inflationAssumption}`
     );
   }
-}
-export interface ScenarioReturnType {
-  name: string;
-  tax_filing_status: TaxFilingStatus;
-  user_birth_year: number;
-  spouse_birth_year: number;
-  user_life_expectancy: number;
-  spouse_life_expectancy: number;
-  investments: any;
-  eventSeries: any;
-  inflation_assumption: RandomGenerator;
-  after_tax_contribution_limit: number;
-  spending_strategy: string[];
-  expense_withrawal_strategy: string[];
-  rmd_strategy: string[];
-  roth_conversion_opt: boolean;
-  roth_conversion_start: number;
-  roth_conversion_end: number;
-  roth_conversion_strategy: string[];
-  financialGoal: number;
-  residenceState: StateType;
 }
 
 export type InvestmentRaw = {
@@ -181,7 +161,7 @@ export type EventRaw = {
   type: string;
 }
 
-export type incomeEventRaw = EventRaw & {
+export type IncomeEventRaw = EventRaw & {
   initialAmount: number;
   changeAmtOrPct: string;
   changeDistribution: Map<string, any>;
@@ -190,7 +170,7 @@ export type incomeEventRaw = EventRaw & {
   socialSecurity: boolean;
 }
 
-export type expenseEventRaw = EventRaw & {
+export type ExpenseEventRaw = EventRaw & {
   initialAmount: number;
   changeAmtOrPct: string;
   changeDistribution: Map<string, any>;
@@ -199,28 +179,51 @@ export type expenseEventRaw = EventRaw & {
   discretionary: boolean;
 }
 
-export type investmentEventRaw = EventRaw & {
+export type InvestmentEventRaw = EventRaw & {
   initialAmount: number;
 }
 
-export type rebalanceEventRaw = EventRaw & {
+export type RebalanceEventRaw = EventRaw & {
   assetAllocation: Map<string, number>;
   glidePath: boolean;
   assetAllocation2: Map<string, number>;
   maxCash: number;
 }
 
-function Scenario(params: {
+
+export interface Scenario {
+  name: string;
+  tax_filing_status: TaxFilingStatus;
+  user_birth_year: number;
+  spouse_birth_year: number;
+  user_life_expectancy: number;
+  spouse_life_expectancy: number;
+  investments: Array<Investment>;
+  event_series: any;
+  inflation_assumption: RandomGenerator;
+  after_tax_contribution_limit: number;
+  spending_strategy: Array<string>;
+  expense_withrawal_strategy: Array<string>;
+  rmd_strategy: Array<string>;
+  roth_conversion_opt: boolean;
+  roth_conversion_start: number;
+  roth_conversion_end: number;
+  roth_conversion_strategy: Array<string>;
+  financialGoal: number;
+  residenceState: StateType;
+}
+
+export function create_scenario(params: {
   name: string;
   martialStatus: string;
   birthYears: Array<number>;
   lifeExpectancy: Array<Map<string, any>>;
   investments: Set<InvestmentRaw>;
   eventSeries: Set<
-    | incomeEventRaw
-    | expenseEventRaw
-    | investmentEventRaw
-    | rebalanceEventRaw
+    | IncomeEventRaw
+    | ExpenseEventRaw
+    | InvestmentEventRaw
+    | RebalanceEventRaw
   >;
   inflationAssumption: Map<string, number>;
   afterTaxContributionLimit: number;
@@ -233,7 +236,7 @@ function Scenario(params: {
   RothConversionStrategy: Array<string>;
   financialGoal: number;
   residenceState: string;
-}) {
+}): Scenario {
   try {
     const taxfilingStatus: TaxFilingStatus = parse_martial_status(
       params.martialStatus
@@ -243,9 +246,9 @@ function Scenario(params: {
     );
     const [user_life_expectancy, spouse_life_expectancy] =
       parse_life_expectancy(params.lifeExpectancy);
-    const investments = undefined; // TODO
-    const eventSeries = undefined; // TODO
-    const inflation_assumption: number = parse_inflation_assumption(
+    const investments: Array<Investment> = Array.from(params.investments).map((investment:InvestmentRaw): Investment => create_investment(investment));
+    const event_series = undefined; // TODO
+    const inflation_assumption: RandomGenerator = parse_inflation_assumption(
       params.inflationAssumption
     );
     const after_tax_contribution_limit: number =
@@ -263,13 +266,13 @@ function Scenario(params: {
     const residenceState: StateType = parse_state(params.residenceState);
     return {
       name: params.name,
-      taxfilingStatus,
+      tax_filing_status: taxfilingStatus,
       user_birth_year,
       spouse_birth_year,
       user_life_expectancy,
       spouse_life_expectancy,
       investments,
-      eventSeries,
+      event_series,
       inflation_assumption,
       after_tax_contribution_limit,
       spending_strategy,
@@ -289,4 +292,5 @@ function Scenario(params: {
   }
 }
 
-export default Scenario;
+
+

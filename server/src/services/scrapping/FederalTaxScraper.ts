@@ -1,9 +1,9 @@
 import axios from "axios";
 import "cheerio";
 import { load } from "cheerio";
-import { TaxBrackets, TaxBracketsObject } from "../../core/tax/TaxBrackets";
+import { create_tax_brackets, TaxBrackets } from "../../core/tax/TaxBrackets";
 import { IncomeType, TaxFilingStatus } from "../../core/Enums";
-import { StandardDeductionObject, StandardDeductions } from "../../core/tax/StandardDeduction";
+import { StandardDeduction, create_standard_deductions } from "../../core/tax/StandardDeduction";
 import { tax_config } from "../../config/tax";
 import { save_bracket } from "../../db/repositories/TaxBracketRepository";
 
@@ -12,7 +12,7 @@ const SINGLE_TABLE: number = 0;
 const MARRIED_TABLE: number = 1;
 
 // Function to parse table rows and extract tax bracket data
-async function parse_table_rows(taxBrackets: TaxBracketsObject, status: TaxFilingStatus, table: string): Promise<void> {
+async function parse_table_rows(taxBrackets: TaxBrackets, status: TaxFilingStatus, table: string): Promise<void> {
     const $ = load("<table>" + table + "</table");
     // remove header row
     const rows = $("tr").slice(1);
@@ -35,7 +35,7 @@ async function parse_federal_tax_tables(tables: Array<string>) {
     if (!tables || tables.length < 4) {
         throw new Error("Not enough table found");
     }
-    const taxBrackets = TaxBrackets();    
+    const taxBrackets = create_tax_brackets();    
     const single_table = tables[SINGLE_TABLE];
     if (!single_table) {
         throw new Error("Missing single taxpayer table");
@@ -50,7 +50,7 @@ async function parse_federal_tax_tables(tables: Array<string>) {
 }
 
 // Function to fetch and parse the federal tax brackets
-async function parse_taxable_income(): Promise<TaxBracketsObject> {
+async function parse_taxable_income(): Promise<TaxBrackets> {
     try {
         const  { data: html } = await axios.get(tax_config.FEDERAL_TAX_URL);
         const $ = load(html);
@@ -88,7 +88,7 @@ async function parse_standard_deductions() {
         if (!itemizedList) {
             throw new Error("Itemized list not found");
         }
-        const std_deductions: StandardDeductionObject = StandardDeductions();
+        const std_deductions: StandardDeduction = create_standard_deductions();
         itemizedList.find("li").each((idx, item) => {
             const list_item = $(item);
             const paragraph = list_item.find("p");
@@ -116,7 +116,7 @@ async function parse_standard_deductions() {
     }
 }
 
-async function parse_capital_gains(): Promise<TaxBracketsObject> {
+async function parse_capital_gains(): Promise<TaxBrackets> {
     try {
         const { data: html } = await axios.get(tax_config.CAPITAL_GAINS_URL);
         const $ = load(html);
@@ -130,7 +130,7 @@ async function parse_capital_gains(): Promise<TaxBracketsObject> {
         if (!paragraph || paragraph.length != 3) {
              throw new Error(`Expected 3 paragraph contain the text: "a capital gains rate of "`);
         }
-        const taxBrackets = TaxBrackets();
+        const taxBrackets = create_tax_brackets();
         paragraph.each(async (idx,el) => {
             const p = $(el);
             // first p

@@ -1,6 +1,6 @@
 // src/db/repositories/TaxBracketRepository.ts
 import { IncomeType, TaxFilingStatus } from "../../core/Enums";
-import { TaxBrackets, TaxBracket, TaxBracketsObject } from "../../core/tax/TaxBrackets";
+import { TaxBrackets, create_tax_brackets } from "../../core/tax/TaxBrackets";
 import TaxBracketModel from "../models/tax_bracket";
 
 const save_bracket = async (
@@ -19,9 +19,9 @@ const save_bracket = async (
     }
 }
 
-const load_brackets = async (income_type: IncomeType): Promise<TaxBracketsObject> => {
+const load_brackets = async (income_type: IncomeType): Promise<TaxBrackets> => {
     try {
-        const taxBrackets = TaxBrackets();
+        const taxBrackets = create_tax_brackets();
         // find single bracket
         const single_capital_gains_brackets = await TaxBracketModel.find({
             income_type: income_type,

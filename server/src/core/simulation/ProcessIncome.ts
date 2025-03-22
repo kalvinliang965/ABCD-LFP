@@ -1,0 +1,1 @@
+// src/core/simulaiton/ProcessIncome.ts
