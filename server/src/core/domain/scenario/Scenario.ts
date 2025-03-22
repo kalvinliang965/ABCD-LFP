@@ -269,7 +269,7 @@ function Scenario(params: {
     );
     const [user_life_expectancy, spouse_life_expectancy] =
       parse_life_expectancy(params.lifeExpectancy);
-    const investments: Array<InvestmentObject> = Array.from(params.investments).map((investment:InvestmentRaw): InvestmentObject => new Investment(investment));
+    const investments: Array<InvestmentObject> = Array.from(params.investments).map((investment:InvestmentRaw): InvestmentObject => Investment(investment));
     const eventSeries = undefined; // TODO
     const inflation_assumption: RandomGenerator = parse_inflation_assumption(
       params.inflationAssumption
