@@ -9,26 +9,31 @@ import ValueGenerator, {
 } from "../../../utils/math/ValueGenerator";
 import { InvestmentTypeRaw } from "../scenario/Scenario";
 
-export interface InvestmentTypePublicInfo {
+//用于告诉编译器，如果有个对象是InvestmentTypeObject，那么它必须包含这些属性
+//不能被new
+export interface InvestmentTypeObject {
   name: string;
   description: string;
-  expectAnnualReturn: number;
+  returnAmtOrPct: ChangeType;
+  expectAnnualReturn: RandomGenerator;
   expenseRatio: number;
-  expectAnnualIncome: number;
+  incomeAmtOrPct: ChangeType;
+  expectAnnualIncome: RandomGenerator;
   taxability: Taxability;
 }
 
 /**
  * dealing with the raw data from Scenario, and providing calculation functions
+ * 实际的类，可以被new出来
  */
 export class InvestmentType {
   name: string;
   description: string;
-  private _returnAmtOrPct: ChangeType;
+  returnAmtOrPct: ChangeType;
   private _returnDistributionType: DistributionType;
   private _returnDistributionParams: Map<StatisticType, number>;
   expenseRatio: number;
-  private _incomeAmtOrPct: ChangeType;
+  incomeAmtOrPct: ChangeType;
   private _incomeDistributionType: DistributionType;
   private _incomeDistributionParams: Map<StatisticType, number>;
   taxability: Taxability;
@@ -95,6 +100,15 @@ export class InvestmentType {
     // set the basic properties
     this.name = data.name;
     this.description = data.description;
+    
+    // convert the string to ChangeType enum
+    this.returnAmtOrPct = InvestmentType.convertAmtOrPct(data.returnAmtOrPct);
+
+    const returnDist = InvestmentType.parseDistribution(
+      data.returnDistribution
+    );
+    this._returnDistributionType = returnDist.type;
+    this._returnDistributionParams = returnDist.params;
 
     // validate the expense ratio is non-negative
     if (data.expenseRatio < 0) {
@@ -103,17 +117,7 @@ export class InvestmentType {
     this.expenseRatio = data.expenseRatio;
 
     // convert the string to ChangeType enum
-    this._returnAmtOrPct = InvestmentType.convertAmtOrPct(data.returnAmtOrPct);
-
-    // parse the distribution type and parameters
-    const returnDist = InvestmentType.parseDistribution(
-      data.returnDistribution
-    );
-    this._returnDistributionType = returnDist.type;
-    this._returnDistributionParams = returnDist.params;
-
-    // convert the string to ChangeType enum
-    this._incomeAmtOrPct = InvestmentType.convertAmtOrPct(data.incomeAmtOrPct);
+    this.incomeAmtOrPct = InvestmentType.convertAmtOrPct(data.incomeAmtOrPct);
 
     // parse the distribution type and parameters
     const incomeDist = InvestmentType.parseDistribution(
@@ -153,5 +157,22 @@ export class InvestmentType {
       this._incomeDistributionParams
     );
     return incomeValue;
+  }
+
+  /**
+   * get the public information of the investment type
+   * @returns the public information of the investment type
+   */
+  getPublicInfo(): InvestmentTypeObject {
+    return {
+      name: this.name,
+      description: this.description,
+      returnAmtOrPct: this.returnAmtOrPct,
+      expectAnnualReturn: this.generateExpectedAnnualReturn(),
+      expenseRatio: this.expenseRatio,
+      incomeAmtOrPct: this.incomeAmtOrPct,
+      expectAnnualIncome: this.generateExpectedAnnualIncome(),
+      taxability: this.taxability,
+    };
   }
 }
