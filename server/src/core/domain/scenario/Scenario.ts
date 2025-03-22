@@ -1,6 +1,6 @@
 // src/core/domain/Scenario.ts
 // we will use this function to read data read from front end and call other function to parse the data
-import ValueGenerator from "../../../utils/math/ValueGenerator";
+import ValueGenerator, { RandomGenerator } from "../../../utils/math/ValueGenerator";
 import { DistributionType, StateType, StatisticType, TaxFilingStatus } from "../../Enums";
 
 
@@ -85,23 +85,23 @@ function parse_life_expectancy(lifeExpectancy: Array<Map<string, any>> ): Array<
 }
 
 
-function parse_inflation_assumption(inflationAssumption: Map<string, any>): number {
+function parse_inflation_assumption(inflationAssumption: Map<string, any>): RandomGenerator {
     try {
         switch(inflationAssumption.get("type")) {
             case "fixed":
                 return ValueGenerator(DistributionType.FIXED, new Map([
                     [StatisticType.VALUE, inflationAssumption.get("value")]
-                ])).sample();
+                ]));
             case "normal":
                 return ValueGenerator(DistributionType.NORMAL, new Map([
                     [StatisticType.MEAN, inflationAssumption.get("mean")],
                     [StatisticType.STDDEV, inflationAssumption.get("stdev")],
-                ])).sample()
+                ]));
             case "uniform":
                 return ValueGenerator(DistributionType.UNIFORM, new Map([
                     [StatisticType.LOWER, inflationAssumption.get("lower")],
                     [StatisticType.UPPER, inflationAssumption.get("upper")],
-                ])).sample();
+                ]));
             default:
                 throw new Error(`inflation assumption type is invalid ${inflationAssumption}`);
         }
@@ -109,13 +109,34 @@ function parse_inflation_assumption(inflationAssumption: Map<string, any>): numb
         throw new Error(`Failed to parse inflation assumption ${inflationAssumption}`)
     }
 }
+export interface ScenarioReturnType {
+    name: string;
+    tax_filing_status: TaxFilingStatus;
+    user_birth_year: number;
+    spouse_birth_year: number;
+    user_life_expectancy: number;
+    spouse_life_expectancy: number;
+    investments: any; 
+    eventSeries: any; 
+    inflation_assumption: RandomGenerator;
+    after_tax_contribution_limit: number;
+    spending_strategy: string[];
+    expense_withrawal_strategy: string[];
+    rmd_strategy: string[];
+    roth_conversion_opt: boolean;
+    roth_conversion_start: number;
+    roth_conversion_end: number;
+    roth_conversion_strategy: string[];
+    financialGoal: number;
+    residenceState: StateType;
+}
 
 function Scenario(params: {
     name: string,
     martialStatus: string,
     birthYears: Array<number>,
     lifeExpectancy: Array<Map<string, any>>,
-    investmentts: Set<{
+    investments: Set<{
         investmentType: {
             name: string,
             description: string,
@@ -179,14 +200,14 @@ function Scenario(params: {
     RothConversionStrategy: Array<string>,
     financialGoal: number,
     residenceState: string, 
-}) {
+}): ScenarioReturnType {
     try {
-        const taxfilingStatus: TaxFilingStatus = parse_martial_status(params.martialStatus);
+        const tax_filing_status: TaxFilingStatus = parse_martial_status(params.martialStatus);
         const [user_birth_year, spouse_birth_year] = parse_birth_years(params.birthYears);
         const [user_life_expectancy, spouse_life_expectancy] = parse_life_expectancy(params.lifeExpectancy);
         const investments = undefined; // TODO
         const eventSeries = undefined; // TODO
-        const inflation_assumption: number = parse_inflation_assumption(params.inflationAssumption);
+        const inflation_assumption: RandomGenerator = parse_inflation_assumption(params.inflationAssumption);
         const after_tax_contribution_limit: number = params.afterTaxContributionLimit;
         const spending_strategy: Array<string> = params.spendingStrategy;
         const expense_withrawal_strategy: Array<string> = params.expenseWithdrawalStrategy;
@@ -199,7 +220,7 @@ function Scenario(params: {
         const residenceState: StateType = parse_state(params.residenceState);
         return {
             name: params.name,
-            taxfilingStatus,
+            tax_filing_status,
             user_birth_year,
             spouse_birth_year,
             user_life_expectancy,
