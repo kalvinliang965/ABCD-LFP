@@ -4,208 +4,160 @@ import {
   ChangeType,
   StatisticType,
 } from "../../Enums";
-import ValueGenerator from "../../../utils/math/ValueGenerator";
+import ValueGenerator, {
+  RandomGenerator,
+} from "../../../utils/math/ValueGenerator";
+import { InvestmentTypeRaw } from "../scenario/Scenario";
+
+/**
+ * 用于向外部返回的投资类型公共信息
+ */
+export interface InvestmentTypePublicInfo {
+  name: string;
+  description: string;
+  expectAnnualReturn: number;
+  expenseRatio: number;
+  expectAnnualIncome: number;
+  taxability: Taxability;
+}
 
 /**
  * Represents an investment type in the retirement planning system
+ * 处理从Scenario接收的原始投资类型数据，并提供计算功能
  */
 export class InvestmentType {
   name: string;
-  description?: string;
-  returnAmtOrPct: ChangeType;
-  returnDistributionType: DistributionType;
-  returnDistributionParams: Map<StatisticType, number>;
+  description: string;
+  private _returnAmtOrPct: ChangeType;
+  private _returnDistributionType: DistributionType;
+  private _returnDistributionParams: Map<StatisticType, number>;
   expenseRatio: number;
-  incomeAmtOrPct: ChangeType;
-  incomeDistributionType: DistributionType;
-  incomeDistributionParams: Map<StatisticType, number>;
+  private _incomeAmtOrPct: ChangeType;
+  private _incomeDistributionType: DistributionType;
+  private _incomeDistributionParams: Map<StatisticType, number>;
   taxability: Taxability;
 
-  //当我new的时候，我需要传入这些参数只需要传入一个参数，investmentType
-  //todo: 我return distrubution type的时候需要时会给我一个string，所以我MAP<string,any> 然后用switch自己来转换。
-  //todo：需要一个function parse_return_distribution_type(returnDistributionType: Map<string,any>)
-  constructor( investmentType: InvestmentType) {
-    this.name = investmentType.name;
-    this.description = investmentType.description;
-    this.returnAmtOrPct = investmentType.returnAmtOrPct;
-    this.returnDistributionType = investmentType.returnDistributionType;
-    this.returnDistributionParams = investmentType.returnDistributionParams;
-    this.expenseRatio = investmentType.expenseRatio;
-    this.incomeAmtOrPct = investmentType.incomeAmtOrPct;
-    this.incomeDistributionType = investmentType.incomeDistributionType;
-    this.incomeDistributionParams = investmentType.incomeDistributionParams;
-    this.taxability = investmentType.taxability;
+  /**
+   * 解析分布类型和参数
+   * @param distributionData 包含分布信息的Map
+   * @returns 包含分布类型和参数的对象
+   */
+  private static parseDistribution(distributionData: Map<string, any>): {
+    type: DistributionType;
+    params: Map<StatisticType, number>;
+  } {
+    // 解析分布类型
+    const distType =
+      distributionData.get("type") === "fixed"
+        ? DistributionType.FIXED
+        : distributionData.get("type") === "normal"
+        ? DistributionType.NORMAL
+        : DistributionType.UNIFORM;
+
+    // 创建参数Map
+    const params = new Map<StatisticType, number>();
+
+    // 根据分布类型添加相关参数
+    switch (distType) {
+      case DistributionType.FIXED:
+        if (distributionData.get("value") !== undefined) {
+          params.set(StatisticType.VALUE, distributionData.get("value"));
+        }
+        break;
+      case DistributionType.NORMAL:
+        if (distributionData.get("mean") !== undefined) {
+          params.set(StatisticType.MEAN, distributionData.get("mean"));
+        }
+        if (distributionData.get("stdev") !== undefined) {
+          params.set(StatisticType.STDDEV, distributionData.get("stdev"));
+        }
+        break;
+      case DistributionType.UNIFORM:
+        if (distributionData.get("lower") !== undefined) {
+          params.set(StatisticType.LOWER, distributionData.get("lower"));
+        }
+        if (distributionData.get("upper") !== undefined) {
+          params.set(StatisticType.UPPER, distributionData.get("upper"));
+        }
+        break;
+    }
+
+    return { type: distType, params };
   }
 
   /**
-   * Generates the expected annual return based on distribution parameters
-   * @param baseAmount - The base amount for calculating return (used when returnAmtOrPct is PERCENTAGE)
-   * @returns The generated annual return value
+   * 将字符串转换为ChangeType枚举
    */
-  generateExpectedAnnualReturn(baseAmount?: number): number {
-    const returnValue = ValueGenerator(
-      this.returnDistributionType,
-      this.returnDistributionParams
-    ).sample();
+  private static convertAmtOrPct(value: string): ChangeType {
+    return value === "amount" ? ChangeType.FIXED : ChangeType.PERCENTAGE;
+  }
 
-    // If return is specified as percentage and baseAmount is provided, calculate the actual amount
-    if (
-      this.returnAmtOrPct === ChangeType.PERCENTAGE &&
-      baseAmount !== undefined
-    ) {
-      return returnValue * baseAmount;
+  /**
+   * 构造函数 - 接受来自Scenario的InvestmentTypeRaw数据
+   */
+  constructor(data: InvestmentTypeRaw) {
+    // 设置基本属性
+    this.name = data.name;
+    this.description = data.description;
+
+    // 验证expense ratio非负
+    if (data.expenseRatio < 0) {
+      throw new Error("Expense ratio cannot be negative");
     }
+    this.expenseRatio = data.expenseRatio;
+
+    // 处理returnAmtOrPct - 从string转换为ChangeType枚举
+    this._returnAmtOrPct = InvestmentType.convertAmtOrPct(data.returnAmtOrPct);
+
+    // 处理returnDistribution - 解析分布类型和参数
+    const returnDist = InvestmentType.parseDistribution(
+      data.returnDistribution
+    );
+    this._returnDistributionType = returnDist.type;
+    this._returnDistributionParams = returnDist.params;
+
+    // 处理incomeAmtOrPct - 从string转换为ChangeType枚举
+    this._incomeAmtOrPct = InvestmentType.convertAmtOrPct(data.incomeAmtOrPct);
+
+    // 处理incomeDistribution - 解析分布类型和参数
+    const incomeDist = InvestmentType.parseDistribution(
+      data.incomeDistribution
+    );
+    this._incomeDistributionType = incomeDist.type;
+    this._incomeDistributionParams = incomeDist.params;
+
+    // 处理taxability - 从boolean转换为Taxability枚举
+    this.taxability = data.taxability
+      ? Taxability.TAXABLE
+      : Taxability.TAX_EXEMPT;
+  }
+
+  /**
+   * 生成预期年度回报
+   * @param baseAmount 基础金额，用于计算百分比回报
+   * @returns 预期年度回报金额
+   */
+  //todo:这里需要的是valueGenerator 而不是sample，不应该是个数字而是一个ValueGenerator
+  generateExpectedAnnualReturn(baseAmount?: number): RandomGenerator {
+    const returnValue = ValueGenerator(
+      this._returnDistributionType,
+      this._returnDistributionParams
+    );
 
     return returnValue;
   }
 
   /**
-   * Generates the expected annual income based on distribution parameters
-   * @param baseAmount - The base amount for calculating income (used when incomeAmtOrPct is PERCENTAGE)
-   * @returns The generated annual income value
+   * 生成预期年度收入
+   * @param baseAmount 基础金额，用于计算百分比收入
+   * @returns 预期年度收入金额
    */
-  generateExpectedAnnualIncome(baseAmount?: number): number {
+  //todo:这里需要的是valueGenerator 而不是sample，不应该是个数字而是一个ValueGenerator
+  generateExpectedAnnualIncome(baseAmount?: number): RandomGenerator {
     const incomeValue = ValueGenerator(
-      this.incomeDistributionType,
-      this.incomeDistributionParams
-    ).sample();
-
-    // If income is specified as percentage and baseAmount is provided, calculate the actual amount
-    if (
-      this.incomeAmtOrPct === ChangeType.PERCENTAGE &&
-      baseAmount !== undefined
-    ) {
-      return incomeValue * baseAmount;
-    }
-
-    return incomeValue;
-  }
-
-  /**
-   * Creates an InvestmentType instance from raw data
-   */
-  static fromData(data: any): InvestmentType {
-    // Convert string amtOrPct to enum
-    const convertAmtOrPct = (value: string): ChangeType => {
-      return value === "amount" ? ChangeType.FIXED : ChangeType.PERCENTAGE;
-    };
-
-    // Convert boolean taxability to enum
-    const taxabilityEnum = data.taxability
-      ? Taxability.TAXABLE
-      : Taxability.TAX_EXEMPT;
-
-    // Determine return distribution type and create parameter map
-    const returnDistType =
-      data.returnDistribution.get("type") === "fixed"
-        ? DistributionType.FIXED
-        : data.returnDistribution.get("type") === "normal"
-        ? DistributionType.NORMAL
-        : DistributionType.UNIFORM;
-
-    const returnParams = new Map<StatisticType, number>();
-
-    // Add relevant parameters based on distribution type
-    switch (returnDistType) {
-      case DistributionType.FIXED:
-        if (data.returnDistribution.get("value") !== undefined) {
-          returnParams.set(
-            StatisticType.VALUE,
-            data.returnDistribution.get("value")
-          );
-        }
-        break;
-      case DistributionType.NORMAL:
-        if (data.returnDistribution.get("mean") !== undefined) {
-          returnParams.set(
-            StatisticType.MEAN,
-            data.returnDistribution.get("mean")
-          );
-        }
-        if (data.returnDistribution.get("stdev") !== undefined) {
-          returnParams.set(
-            StatisticType.STDDEV,
-            data.returnDistribution.get("stdev")
-          );
-        }
-        break;
-      case DistributionType.UNIFORM:
-        if (data.returnDistribution.get("lower") !== undefined) {
-          returnParams.set(
-            StatisticType.LOWER,
-            data.returnDistribution.get("lower")
-          );
-        }
-        if (data.returnDistribution.get("upper") !== undefined) {
-          returnParams.set(
-            StatisticType.UPPER,
-            data.returnDistribution.get("upper")
-          );
-        }
-        break;
-    }
-
-    // Determine income distribution type and create parameter map
-    const incomeDistType =
-      data.incomeDistribution.get("type") === "fixed"
-        ? DistributionType.FIXED
-        : data.incomeDistribution.get("type") === "normal"
-        ? DistributionType.NORMAL
-        : DistributionType.UNIFORM;
-
-    const incomeParams = new Map<StatisticType, number>();
-
-    // Add relevant parameters based on distribution type
-    switch (incomeDistType) {
-      case DistributionType.FIXED:
-        if (data.incomeDistribution.get("value") !== undefined) {
-          incomeParams.set(
-            StatisticType.VALUE,
-            data.incomeDistribution.get("value")
-          );
-        }
-        break;
-      case DistributionType.NORMAL:
-        if (data.incomeDistribution.get("mean") !== undefined) {
-          incomeParams.set(
-            StatisticType.MEAN,
-            data.incomeDistribution.get("mean")
-          );
-        }
-        if (data.incomeDistribution.get("stdev") !== undefined) {
-          incomeParams.set(
-            StatisticType.STDDEV,
-            data.incomeDistribution.get("stdev")
-          );
-        }
-        break;
-      case DistributionType.UNIFORM:
-        if (data.incomeDistribution.get("lower") !== undefined) {
-          incomeParams.set(
-            StatisticType.LOWER,
-            data.incomeDistribution.get("lower")
-          );
-        }
-        if (data.incomeDistribution.get("upper") !== undefined) {
-          incomeParams.set(
-            StatisticType.UPPER,
-            data.incomeDistribution.get("upper")
-          );
-        }
-        break;
-    }
-
-    return new InvestmentType(
-      data.name,
-      convertAmtOrPct(data.returnAmtOrPct),
-      returnDistType,
-      returnParams,
-      data.expenseRatio,
-      convertAmtOrPct(data.incomeAmtOrPct),
-      incomeDistType,
-      incomeParams,
-      taxabilityEnum,
-      data.description
+      this._incomeDistributionType,
+      this._incomeDistributionParams
     );
+    return incomeValue;
   }
 }
