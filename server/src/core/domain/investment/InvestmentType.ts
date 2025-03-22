@@ -21,34 +21,20 @@ export class InvestmentType {
   incomeDistributionParams: Map<StatisticType, number>;
   taxability: Taxability;
 
-  constructor(
-    name: string,
-    returnAmtOrPct: ChangeType,
-    returnDistributionType: DistributionType,
-    returnDistributionParams: Map<StatisticType, number>,
-    expenseRatio: number,
-    incomeAmtOrPct: ChangeType,
-    incomeDistributionType: DistributionType,
-    incomeDistributionParams: Map<StatisticType, number>,
-    taxability: Taxability,
-    description?: string
-  ) {
-    this.name = name;
-    this.description = description;
-    this.returnAmtOrPct = returnAmtOrPct;
-    this.returnDistributionType = returnDistributionType;
-    this.returnDistributionParams = returnDistributionParams;
-    this.incomeAmtOrPct = incomeAmtOrPct;
-    this.incomeDistributionType = incomeDistributionType;
-    this.incomeDistributionParams = incomeDistributionParams;
-
-    // Validate expense ratio is non-negative
-    if (expenseRatio < 0) {
-      throw new Error("Expense ratio cannot be negative");
-    }
-    this.expenseRatio = expenseRatio;
-
-    this.taxability = taxability;
+  //当我new的时候，我需要传入这些参数只需要传入一个参数，investmentType
+  //todo: 我return distrubution type的时候需要时会给我一个string，所以我MAP<string,any> 然后用switch自己来转换。
+  //todo：需要一个function parse_return_distribution_type(returnDistributionType: Map<string,any>)
+  constructor( investmentType: InvestmentType) {
+    this.name = investmentType.name;
+    this.description = investmentType.description;
+    this.returnAmtOrPct = investmentType.returnAmtOrPct;
+    this.returnDistributionType = investmentType.returnDistributionType;
+    this.returnDistributionParams = investmentType.returnDistributionParams;
+    this.expenseRatio = investmentType.expenseRatio;
+    this.incomeAmtOrPct = investmentType.incomeAmtOrPct;
+    this.incomeDistributionType = investmentType.incomeDistributionType;
+    this.incomeDistributionParams = investmentType.incomeDistributionParams;
+    this.taxability = investmentType.taxability;
   }
 
   /**

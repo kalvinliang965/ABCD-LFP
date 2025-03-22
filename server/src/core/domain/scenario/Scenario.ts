@@ -139,6 +139,27 @@ function parse_inflation_assumption(
     );
   }
 }
+export interface ScenarioReturnType {
+  name: string;
+  tax_filing_status: TaxFilingStatus;
+  user_birth_year: number;
+  spouse_birth_year: number;
+  user_life_expectancy: number;
+  spouse_life_expectancy: number;
+  investments: any;
+  eventSeries: any;
+  inflation_assumption: RandomGenerator;
+  after_tax_contribution_limit: number;
+  spending_strategy: string[];
+  expense_withrawal_strategy: string[];
+  rmd_strategy: string[];
+  roth_conversion_opt: boolean;
+  roth_conversion_start: number;
+  roth_conversion_end: number;
+  roth_conversion_strategy: string[];
+  financialGoal: number;
+  residenceState: StateType;
+}
 
 function Scenario(params: {
   name: string;
