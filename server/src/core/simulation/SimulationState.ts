@@ -1,14 +1,31 @@
 import { Investment } from "../domain/investment/Investment";
-import { ScenarioReturnType } from "../domain/scenario/Scenario";
-import { TaxFilingStatus } from "../Enums";
+import { Scenario } from "../domain/scenario/Scenario";
+import { TaxFilingStatus, TaxStatus } from "../Enums";
 import { FederalTaxService, create_federal_tax_service } from "../tax/FederalTaxService";
 import { StateTaxService, create_state_tax_service } from "../tax/StateTaxService";
 
 
 // return [non-retirment, pre-tax, after-tax] investment
-function parsre_investments(investemnt: Array<Investment>): [Investment, Investment, Investment] {
+function parse_investments(investments: Array<Investment>): [Array<Investment>, Array<Investment>, Array<Investment>] {
+    const non_retirement_account: Array<Investment> = new Array();
+    const pre_tax_account: Array<Investment> = new Array();
+    const after_tax_account: Array<Investment> = new Array();
 
-    return c
+    for (const investment of investments) {
+        switch(investment.taxStatus) {
+            case TaxStatus.NON_RETIREMENT:
+                non_retirement_account.push(investment);
+            case TaxStatus.PRE_TAX:
+                pre_tax_account.push(investment);
+            case TaxStatus.AFTER_TAX:
+                after_tax_account.push(investment);
+            default:
+                console.error("Failed to parse investments");
+                console.error(`Investments contains an invalid tax status type ${investment.taxStatus}`);
+                throw new Error("Failed to parse investments");
+        }
+    }
+    return [non_retirement_account, pre_tax_account, after_tax_account]
 }
 
 export interface SimulationStateObject {
@@ -35,7 +52,7 @@ export interface SimulationStateObject {
 }
 
 async function SimulationState(
-    scenario: ScenarioReturnType, 
+    scenario: Scenario, 
 ) {
     try {
         // user accumulated cash
@@ -104,9 +121,11 @@ async function SimulationState(
             social_security_income += amt;
         }
 
-        const federal_tax_service = await FederalTaxService();
-        const state_tax_service = await StateTaxService();
+        const federal_tax_service = await create_federal_tax_service();
+        const state_tax_service = await create_state_tax_service();
         
+        const [non_retirement_account, pre_tax_account, after_tax_account] = parse_investments(scenario.investments);
+
         const advance_year = () => {
             current_year += 1
             inflation_factor *= (1 + inflation_assumption.sample());

@@ -3,7 +3,6 @@
 import ValueGenerator, { RandomGenerator } from "../../../utils/math/ValueGenerator";
 import { DistributionType, StateType, StatisticType, TaxFilingStatus } from "../../Enums";
 import { create_investment, Investment } from "../investment/Investment";
-import { EventObject } from "../event/Event";
 
 function parse_state(state: string) {
   switch (state) {
@@ -136,7 +135,7 @@ function parse_inflation_assumption(
     );
   }
 }
-export interface ScenarioReturnType {
+export interface Scenario {
   name: string;
   tax_filing_status: TaxFilingStatus;
   user_birth_year: number;
@@ -235,7 +234,7 @@ interface ScenarioObject {
   residenceState: StateType;
 }
 
-function Scenario(params: {
+export function create_scenario(params: {
   name: string;
   martialStatus: string;
   birthYears: Array<number>;
@@ -314,4 +313,3 @@ function Scenario(params: {
   }
 }
 
-export default Scenario;
