@@ -1,13 +1,12 @@
 import { InvestmentRaw } from "../scenario/Scenario";
-import InvestmentType from "./InvestmentType";
-import { InvestmentTypeObject } from "./InvestmentType";
+import { create_investmentType, InvestmentType } from "./InvestmentType";
 import { TaxStatus } from "../../Enums";
 
 /**
  * Public information about an investment
  */
-export interface InvestmentObject {
-  investmentType: InvestmentTypeObject;
+export interface Investment {
+  investmentType: InvestmentType;
   value: number;
   taxStatus: TaxStatus;
   id: string;
@@ -16,9 +15,9 @@ export interface InvestmentObject {
 /**
  * Factory function to create an investment in the retirement planning system
  */
-export function Investment(raw_data: InvestmentRaw): InvestmentObject {
+export function create_investment(raw_data: InvestmentRaw): Investment {
   try {
-    const investmentType = InvestmentType(raw_data.investmentType);
+    const investmentType = create_investmentType(raw_data.investmentType);
     let taxStatus: TaxStatus;
 
     // Convert string to TaxStatus enum

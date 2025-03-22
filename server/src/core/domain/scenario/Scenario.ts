@@ -2,9 +2,8 @@
 // we will use this function to read data read from front end and call other function to parse the data
 import ValueGenerator, { RandomGenerator } from "../../../utils/math/ValueGenerator";
 import { DistributionType, StateType, StatisticType, TaxFilingStatus } from "../../Enums";
-import { InvestmentObject } from "../investment/Investment";
+import { create_investment, Investment } from "../investment/Investment";
 import { EventObject } from "../event/Event";
-import { Investment } from "../investment/Investment";
 
 function parse_state(state: string) {
   switch (state) {
@@ -221,7 +220,7 @@ interface ScenarioObject {
   spouse_birth_year: number;
   user_life_expectancy: number;
   spouse_life_expectancy: number;
-  investments: Array<InvestmentObject>;
+  investments: Array<Investment>;
   eventSeries: any;
   inflation_assumption: RandomGenerator;
   after_tax_contribution_limit: number;
@@ -269,7 +268,7 @@ function Scenario(params: {
     );
     const [user_life_expectancy, spouse_life_expectancy] =
       parse_life_expectancy(params.lifeExpectancy);
-    const investments: Array<InvestmentObject> = Array.from(params.investments).map((investment:InvestmentRaw): InvestmentObject => Investment(investment));
+    const investments: Array<Investment> = Array.from(params.investments).map((investment:InvestmentRaw): Investment => create_investment(investment));
     const eventSeries = undefined; // TODO
     const inflation_assumption: RandomGenerator = parse_inflation_assumption(
       params.inflationAssumption
