@@ -40,4 +40,9 @@ export const enum StateType {
     CT = "CT",
 }
 
+export enum TaxStatus {
+    NON_RETIREMENT = "NON_RETIREMENT",
+    PRE_TAX = "PRE_TAX",
+    AFTER_TAX = "AFTER_TAX",
+}
     

@@ -158,4 +158,21 @@ export class InvestmentType {
     );
     return incomeValue;
   }
+
+  /**
+   * get the public information of the investment type
+   * @returns the public information of the investment type
+   */
+  getPublicInfo(): InvestmentTypeObject {
+    return {
+      name: this.name,
+      description: this.description,
+      returnAmtOrPct: this.returnAmtOrPct,
+      expectAnnualReturn: this.generateExpectedAnnualReturn(),
+      expenseRatio: this.expenseRatio,
+      incomeAmtOrPct: this.incomeAmtOrPct,
+      expectAnnualIncome: this.generateExpectedAnnualIncome(),
+      taxability: this.taxability,
+    };
+  }
 }
