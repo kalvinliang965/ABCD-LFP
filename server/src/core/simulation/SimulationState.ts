@@ -5,175 +5,131 @@ import { FederalTaxService, create_federal_tax_service } from "../tax/FederalTax
 import { StateTaxService, create_state_tax_service } from "../tax/StateTaxService";
 
 
-// return [non-retirment, pre-tax, after-tax] investment
-function parse_investments(investments: Array<Investment>): [Map<string, Investment>, Map<string, Investment>, Map<string, Investment>] {
-    const non_retirement_account: Map<string, Investment> = new Map();
-    const pre_tax_account: Map<string, Investment> = new Map();
-    const after_tax_account: Map<string, Investment> = new Map();
+type AccountMap = Map<string, Investment>;
 
-    for (const investment of investments) {
-        switch(investment.taxStatus) {
-            case TaxStatus.NON_RETIREMENT:
-                non_retirement_account.set(investment.id, investment);
-            case TaxStatus.PRE_TAX:
-                pre_tax_account.set(investment.id, investment);
-            case TaxStatus.AFTER_TAX:
-                after_tax_account.set(investment.id, investment);
-            default:
-                console.error("Failed to parse investments");
-                console.error(`Investments contains an invalid tax status type ${investment.taxStatus}`);
-                throw new Error("Failed to parse investments");
-        }
-    }
-    return [non_retirement_account, pre_tax_account, after_tax_account]
+interface PersonDetails {
+    get_age(): number;
+    year_of_death: number,
+    is_alive(): boolean;
 }
 
-export interface SimulationStateObject {
+export interface SimulationState {
     tax_filing_status: TaxFilingStatus;
     inflation_factor: number;
     roth_conversion_opt: boolean;
     roth_conversion_start: number;
     roth_conversion_end: number;
     roth_conversion_strategy: Array<string>;
-    user_age: number;
-    user_year_of_death: number;
-    is_user_alive: boolean;
-    spouse_age: number;
-    spouse_year_of_death: number;
-    is_spouse_alive: boolean;
+    user: PersonDetails;
+    spouse?: PersonDetails;
     incr_taxable_income(amt: number): void;
     incr_capital_gains_income(amt: number): void;
     incr_social_security_income(amt: number): void;
     setup_year(): void;
     get_current_year(): number;
-    federalTaxService: FederalTaxService,
-    stateTaxService: StateTaxService,
+    federal_tax_service: FederalTaxService,
+    state_tax_service: StateTaxService,
     advance_year(): void,
-}
-
-async function SimulationState(
-    scenario: Scenario, 
-) {
-    try {
-        // user accumulated cash
-        const cash_balance = 0;
-        
-        const start_year: number = new Date().getFullYear();
-        let current_year: number = start_year;
-        const tax_filing_status = scenario.tax_filing_status;
-        const inflation_assumption = scenario.inflation_assumption;
-        let inflation_factor = inflation_assumption.sample();
-
-        const get_current_year = () => {
-            return current_year;
-        }
-
-        const user_age = () => {
-            return current_year - scenario.user_birth_year
-        }
-
-        const user_year_of_death = () => {
-            return (scenario.user_birth_year + scenario.user_life_expectancy) + 1;
-        }
-
-        const is_user_alive = () => {
-            return current_year < user_year_of_death();
-        }
-
-        const spouse_age = () => {
-        if (tax_filing_status !==  TaxFilingStatus.MARRIED) {
-                throw new Error("spounse age: user is single");
-        }
-        return current_year - scenario.user_birth_year;
-        }
-
-        const spouse_year_of_death = () => {
-        if (tax_filing_status !==  TaxFilingStatus.MARRIED) {
-                throw new Error("spounse age: user is single");
-        }
-        return current_year - scenario.spouse_birth_year;
-        }
-        
-        const is_spouse_alive = () => {
-            if (tax_filing_status !==  TaxFilingStatus.MARRIED) {
-                throw new Error("spounse age: user is single");
-            }
-            return current_year < spouse_year_of_death();
-        }
-
-
-        const roth_conversion_opt = scenario.roth_conversion_opt;
-        const roth_conversion_start = scenario.roth_conversion_start;
-        const roth_conversion_end = scenario.roth_conversion_end;
-        const roth_conversion_strategy = scenario.roth_conversion_strategy;
-
-        // same as ordinary income, but because bracket use taxable we will also use it 
-        let taxable_income = 0;
-        const incr_taxable_income = (amt: number) => {
-            taxable_income += amt;
-        }
-        let capital_gains_income = 0;
-        const incr_capital_gains_income = (amt: number) => {
-            capital_gains_income += amt;
-        }   
-        let social_security_income = 0;
-        const incr_social_security_income = (amt: number) => {
-            social_security_income += amt;
-        }
-
-        const federal_tax_service = await create_federal_tax_service();
-        const state_tax_service = await create_state_tax_service();
-        
-        const [non_retirement_account, pre_tax_account, after_tax_account] = parse_investments(scenario.investments);
-
-        const advance_year = () => {
-            current_year += 1
-            inflation_factor *= (1 + inflation_assumption.sample());
-
-        }
-
-        const setup_year = () => {
-            // clear accumulated income
-            taxable_income = 0;
-            capital_gains_income = 0;
-            social_security_income = 0;
-            // adjust for inflation
-            federal_tax_service.adjust_for_inflation(inflation_factor);
-            state_tax_service.adjust_for_inflation(inflation_factor);
-        }
-
-        const process_tax = () => {
-
-        }
-
-        return {
-            tax_filing_status,
-            inflation_factor,
-            roth_conversion_opt,
-            roth_conversion_start,
-            roth_conversion_end,
-            roth_conversion_strategy,
-            user_age,
-            user_year_of_death,
-            is_user_alive,
-            spouse_age,
-            spouse_year_of_death,
-            is_spouse_alive,   
-            incr_taxable_income,
-            incr_capital_gains_income,
-            incr_social_security_income,
-            setup_year,
-            get_current_year,
-            federalTaxService: federal_tax_service,
-            stateTaxService: state_tax_service,
-            advance_year,
-            non_retirement_account,
-            pre_tax_account,
-            after_tax_account,
-        }
-    } catch (error) {
-        throw new Error(`Failed to initialize simulation state: ${error}`);
+    accounts: {
+        non_retirement: AccountMap;
+        pre_tax: AccountMap;
+        after_tax: AccountMap;
     }
 }
 
-export default SimulationState;
+// return [non-retirment, pre-tax, after-tax] investment
+const parse_investments = (investments: Investment[]): [AccountMap, AccountMap, AccountMap] => {
+    const non_retirement_account = new Map<string, Investment>();
+    const pre_tax_account = new Map<string, Investment>();
+    const after_tax_account = new Map<string, Investment>(); 
+
+    for (const investment of investments) {
+        switch(investment.taxStatus) {
+            case TaxStatus.NON_RETIREMENT:
+                non_retirement_account.set(investment.id, investment);
+                break;    
+            case TaxStatus.PRE_TAX:
+                pre_tax_account.set(investment.id, investment);
+                break;
+            case TaxStatus.AFTER_TAX:
+                after_tax_account.set(investment.id, investment);
+                break;
+            default:
+                throw new Error(`Invalid tax status: ${investment.taxStatus}`);
+        }
+    }
+    return [non_retirement_account, pre_tax_account, after_tax_account]
+}
+
+
+const create_person_details = (birth_year: number, life_expectancy: number, get_current_year: () => number): PersonDetails => ({
+    get_age: () => get_current_year() - birth_year,
+    year_of_death: birth_year + life_expectancy + 1,
+    is_alive: () => get_current_year() < birth_year + life_expectancy + 1,
+})
+
+export async function create_simulation_state(
+    scenario: Scenario, 
+): Promise<SimulationState> {
+    try { 
+        const start_year: number = new Date().getFullYear();
+        let current_year: number = start_year;
+        const is_married = scenario.tax_filing_status;
+        
+        
+        // same as ordinary income, but because bracket use taxable we will also use it 
+        let taxable_income = 0;
+        let capital_gains_income = 0;
+        let social_security_income = 0;
+
+
+        const [non_retirement, pre_tax, after_tax] = parse_investments(scenario.investments);
+
+        let inflation_factor = scenario.inflation_assumption.sample();
+
+        const federal_tax_service = await create_federal_tax_service();
+        const state_tax_service = await create_state_tax_service();
+
+        const user = create_person_details(scenario.user_birth_year, scenario.user_life_expectancy, () => current_year);
+
+        const spouse = is_married
+        ? create_person_details(scenario.spouse_birth_year!, scenario.spouse_life_expectancy!, () => current_year)
+        : undefined;
+        return {
+            tax_filing_status: scenario.tax_filing_status,
+            inflation_factor,
+            roth_conversion_opt: scenario.roth_conversion_opt,
+            roth_conversion_start: scenario.roth_conversion_start,
+            roth_conversion_end: scenario.roth_conversion_end,
+            roth_conversion_strategy: scenario.roth_conversion_strategy,
+            user,
+            spouse,
+
+            incr_taxable_income: (amt: number) => taxable_income += amt,
+            incr_capital_gains_income: (amt: number) => capital_gains_income += amt,
+            incr_social_security_income: (amt: number) => social_security_income += amt,
+            
+            setup_year: () => {
+                taxable_income = capital_gains_income = social_security_income = 0;
+                federal_tax_service.adjust_for_inflation(inflation_factor);
+                state_tax_service.adjust_for_inflation(inflation_factor);
+            },
+
+            get_current_year: () => current_year,
+            federal_tax_service,
+            state_tax_service,
+            
+            advance_year: () => {
+                current_year++;
+                inflation_factor *= (1 + scenario.inflation_assumption.sample());
+            },
+            accounts: {
+                non_retirement,
+                pre_tax,
+                after_tax,
+            }
+        }
+    } catch (error) {
+        throw new Error(`Simulation initialization failed: ${error instanceof Error ? error.message: error}`);
+    }
+}
