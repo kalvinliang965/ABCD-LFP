@@ -61,7 +61,7 @@ export interface FederalTaxService {
     print_capital_gains_bracket(): void;
     print_standard_deductions_info(): void;
     adjust_for_inflation(rate: number): void;
-    find_bracket(rate: number, income_type: IncomeType, status: TaxFilingStatus): TaxBracket | undefined;
+    find_bracket(rate: number, income_type: IncomeType, status: TaxFilingStatus): TaxBracket;
     find_rate(income: number, income_type: IncomeType, status: TaxFilingStatus): number;
 }
 
@@ -91,7 +91,7 @@ export async function create_federal_tax_service() : Promise<FederalTaxService> 
             standard_deductions.adjust_for_inflation(rate);
         }
 
-        const find_bracket = (rate: number, income_type: IncomeType, status: TaxFilingStatus): TaxBracket | undefined => {
+        const find_bracket = (rate: number, income_type: IncomeType, status: TaxFilingStatus): TaxBracket => {
             try {
                 switch(income_type) {
                     case IncomeType.CAPITAL_GAINS:

@@ -16,6 +16,7 @@ export async function create_state_tax_service() {
             taxable_income_bracket.adjust_for_inflation(rate);
         }
 
+
         return {
             load_state_tax_data,
             adjust_for_inflation

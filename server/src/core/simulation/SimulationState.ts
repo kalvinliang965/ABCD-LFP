@@ -34,9 +34,12 @@ export interface SimulationState {
   get_ordinary_income(): number;
   get_capital_gains_income(): number;
   get_social_security_income(): number;
+  get_after_tax_contribution(): number;
+  get_after_tax_contribution_limit(): number;
   incr_ordinary_income(amt: number): void;
   incr_capital_gains_income(amt: number): void;
   incr_social_security_income(amt: number): void;
+  incr_after_tax_contribution(amt: number): void;
   setup_year(): void;
   get_current_year(): number;
   federal_tax_service: FederalTaxService;
@@ -175,6 +178,7 @@ export async function create_simulation_state(
     let ordinary_income = 0;
     let capital_gains_income = 0;
     let social_security_income = 0;
+    let after_tax_contribution = 0; // contribution to after tax account.
 
     // Process investments - scenario.investments is already processed in create_scenario
     const [non_retirement, pre_tax, after_tax] = parse_investments(
@@ -183,7 +187,7 @@ export async function create_simulation_state(
 
     // Organize events by type - scenario.eventSeries is already processed in create_scenario
     const [income_events, expense_events, investment_events, rebalance_events] =
-      organize_events_by_type(scenario.eventSeries);
+      organize_events_by_type(scenario.event_series);
 
     let inflation_factor = scenario.inflation_assumption.sample();
 
@@ -209,7 +213,7 @@ export async function create_simulation_state(
     // Create the simulation state object
     const state: SimulationState = {
       investments: scenario.investments,
-      events: scenario.eventSeries,
+      events: scenario.event_series,
       tax_filing_status: scenario.tax_filing_status,
       inflation_factor,
       roth_conversion_opt: scenario.roth_conversion_opt,
@@ -223,6 +227,8 @@ export async function create_simulation_state(
       get_ordinary_income: () => ordinary_income,
       get_capital_gains_income: () => capital_gains_income,
       get_social_security_income: () => social_security_income,
+      get_after_tax_contribution: () => after_tax_contribution,
+      get_after_tax_contribution_limit: () => scenario.after_tax_contribution_limit,
       incr_ordinary_income: (amt: number) => {
         ordinary_income += amt;
       },
@@ -232,12 +238,15 @@ export async function create_simulation_state(
       incr_social_security_income: (amt: number) => {
         social_security_income += amt;
       },
-
+      incr_after_tax_contribution: (amt: number) => {
+        after_tax_contribution += amt;
+      },
       // Year setup and management
       setup_year: () => {
         ordinary_income = 0;
         capital_gains_income = 0;
         social_security_income = 0;
+        after_tax_contribution = 0
         federal_tax_service.adjust_for_inflation(inflation_factor);
         state_tax_service.adjust_for_inflation(inflation_factor);
       },
