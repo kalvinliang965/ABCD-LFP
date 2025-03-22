@@ -181,7 +181,7 @@ export type EventRaw = {
   type: string;
 }
 
-export type incomeEventRaw = EventRaw & {
+export type IncomeEventRaw = EventRaw & {
   initialAmount: number;
   changeAmtOrPct: string;
   changeDistribution: Map<string, any>;
@@ -190,7 +190,7 @@ export type incomeEventRaw = EventRaw & {
   socialSecurity: boolean;
 }
 
-export type expenseEventRaw = EventRaw & {
+export type ExpenseEventRaw = EventRaw & {
   initialAmount: number;
   changeAmtOrPct: string;
   changeDistribution: Map<string, any>;
@@ -199,11 +199,11 @@ export type expenseEventRaw = EventRaw & {
   discretionary: boolean;
 }
 
-export type investmentEventRaw = EventRaw & {
+export type InvestmentEventRaw = EventRaw & {
   initialAmount: number;
 }
 
-export type rebalanceEventRaw = EventRaw & {
+export type RebalanceEventRaw = EventRaw & {
   assetAllocation: Map<string, number>;
   glidePath: boolean;
   assetAllocation2: Map<string, number>;
@@ -217,10 +217,10 @@ function Scenario(params: {
   lifeExpectancy: Array<Map<string, any>>;
   investments: Set<InvestmentRaw>;
   eventSeries: Set<
-    | incomeEventRaw
-    | expenseEventRaw
-    | investmentEventRaw
-    | rebalanceEventRaw
+    | IncomeEventRaw
+    | ExpenseEventRaw
+    | InvestmentEventRaw
+    | RebalanceEventRaw
   >;
   inflationAssumption: Map<string, number>;
   afterTaxContributionLimit: number;
