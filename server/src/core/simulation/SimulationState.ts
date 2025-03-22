@@ -1,7 +1,29 @@
 import { ScenarioReturnType } from "../domain/scenario/Scenario";
 import { TaxFilingStatus } from "../Enums";
-import FederalTaxService from "../tax/FederalTaxService";
-import StateTaxService from "../tax/StateTaxService";
+import FederalTaxService, { FederalTaxServiceObject } from "../tax/FederalTaxService";
+import StateTaxService, { StateTaxServiceObject } from "../tax/StateTaxService";
+
+export interface SimulationStateObject {
+    tax_filing_status: TaxFilingStatus;
+    inflation_factor: number;
+    roth_conversion_opt: boolean;
+    roth_conversion_start: number;
+    roth_conversion_end: number;
+    roth_conversion_strategy: Array<string>;
+    user_age: number;
+    user_year_of_death: number;
+    is_user_alive: boolean;
+    spouse_age: number;
+    spouse_year_of_death: number;
+    is_spouse_alive: boolean;
+    incr_taxable_income(amt: number): void;
+    incr_capital_gains_income(amt: number): void;
+    incr_social_security_income(amt: number): void;
+    setup_year(): void;
+    federalTaxService: FederalTaxServiceObject,
+    stateTaxService: StateTaxServiceObject,
+    advance_year(): void,
+}
 
 async function SimulationState(
     scenario: ScenarioReturnType, 

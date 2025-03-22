@@ -55,6 +55,14 @@ async function initialize_standard_deductions_info(): Promise<StandardDeductionO
         throw new Error("Error in initializing standard deductions info");
     }
 }
+
+export interface FederalTaxServiceObject {
+    print_taxable_income_bracket(): void;
+    print_capital_gains_bracket(): void;
+    print_standard_deductions_info(): void;
+    adjust_for_inflation(rate: number): void;
+}
+
 async function FederalTaxService() {
     try {        
         const taxable_income_bracket = await initialize_taxable_income_bracket();

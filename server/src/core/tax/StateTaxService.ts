@@ -1,4 +1,10 @@
 import { TaxBrackets } from "./TaxBrackets";
+
+export interface StateTaxServiceObject {
+    load_state_tax_data(): void;
+    adjust_for_inflation(rate: number): void;
+}
+
 async function StateTaxService() {
     
     try {
