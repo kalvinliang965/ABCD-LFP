@@ -2,6 +2,9 @@
 // we will use this function to read data read from front end and call other function to parse the data
 import ValueGenerator, { RandomGenerator } from "../../../utils/math/ValueGenerator";
 import { DistributionType, StateType, StatisticType, TaxFilingStatus } from "../../Enums";
+import { InvestmentObject } from "../investment/Investment";
+import { EventObject } from "../event/Event";
+import { Investment } from "../../../db/models/investments";
 
 function parse_state(state: string) {
   switch (state) {
@@ -99,14 +102,14 @@ function parse_life_expectancy(
 
 function parse_inflation_assumption(
   inflationAssumption: Map<string, any>
-): number {
+): RandomGenerator {
   try {
     switch (inflationAssumption.get("type")) {
       case "fixed":
         return ValueGenerator(
           DistributionType.FIXED,
           new Map([[StatisticType.VALUE, inflationAssumption.get("value")]])
-        ).sample();
+        );
       case "normal":
         return ValueGenerator(
           DistributionType.NORMAL,
@@ -114,7 +117,7 @@ function parse_inflation_assumption(
             [StatisticType.MEAN, inflationAssumption.get("mean")],
             [StatisticType.STDDEV, inflationAssumption.get("stdev")],
           ])
-        ).sample();
+        );
       case "uniform":
         return ValueGenerator(
           DistributionType.UNIFORM,
@@ -122,7 +125,7 @@ function parse_inflation_assumption(
             [StatisticType.LOWER, inflationAssumption.get("lower")],
             [StatisticType.UPPER, inflationAssumption.get("upper")],
           ])
-        ).sample();
+        );
       default:
         throw new Error(
           `inflation assumption type is invalid ${inflationAssumption}`
@@ -210,13 +213,36 @@ export type RebalanceEventRaw = EventRaw & {
   maxCash: number;
 }
 
+
+interface ScenarioObject {
+  name: string;
+  taxfilingStatus: TaxFilingStatus;
+  user_birth_year: number;
+  spouse_birth_year: number;
+  user_life_expectancy: number;
+  spouse_life_expectancy: number;
+  investments: Array<InvestmentObject>;
+  eventSeries: any;
+  inflation_assumption: RandomGenerator;
+  after_tax_contribution_limit: number;
+  spending_strategy: Array<string>;
+  expense_withrawal_strategy: Array<string>;
+  rmd_strategy: Array<string>;
+  roth_conversion_opt: boolean;
+  roth_conversion_start: number;
+  roth_conversion_end: number;
+  roth_conversion_strategy: Array<string>;
+  financialGoal: number;
+  residenceState: StateType;
+}
+
 function Scenario(params: {
   name: string;
   martialStatus: string;
   birthYears: Array<number>;
   lifeExpectancy: Array<Map<string, any>>;
-  investments: Set<InvestmentRaw>;
-  eventSeries: Set<
+  investments: Array<InvestmentRaw>;
+  eventSeries: Array<
     | IncomeEventRaw
     | ExpenseEventRaw
     | InvestmentEventRaw
@@ -233,7 +259,7 @@ function Scenario(params: {
   RothConversionStrategy: Array<string>;
   financialGoal: number;
   residenceState: string;
-}) {
+}): ScenarioObject {
   try {
     const taxfilingStatus: TaxFilingStatus = parse_martial_status(
       params.martialStatus
@@ -243,9 +269,9 @@ function Scenario(params: {
     );
     const [user_life_expectancy, spouse_life_expectancy] =
       parse_life_expectancy(params.lifeExpectancy);
-    const investments = undefined; // TODO
+    const investments: Array<InvestmentObject> = Array.from(params.investments).map((investment:InvestmentRaw) => new Investment(investment));
     const eventSeries = undefined; // TODO
-    const inflation_assumption: number = parse_inflation_assumption(
+    const inflation_assumption: RandomGenerator = parse_inflation_assumption(
       params.inflationAssumption
     );
     const after_tax_contribution_limit: number =

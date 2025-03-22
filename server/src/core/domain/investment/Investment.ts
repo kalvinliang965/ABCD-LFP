@@ -18,8 +18,8 @@ export interface InvestmentObject {
 /**
  * Represents an investment in the retirement planning system
  */
-export class Investment {
-  investmentType: InvestmentType;
+export class Investment implements InvestmentObject {
+  investmentType: InvestmentTypeObject;
   value: number;
   taxStatus: TaxStatus;
   id: string;

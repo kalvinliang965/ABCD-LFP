@@ -26,7 +26,7 @@ export interface InvestmentTypeObject {
  * dealing with the raw data from Scenario, and providing calculation functions
  * 实际的类，可以被new出来
  */
-export class InvestmentType {
+export class InvestmentType implements InvestmentTypeObject {
   name: string;
   description: string;
   returnAmtOrPct: ChangeType;
@@ -37,6 +37,8 @@ export class InvestmentType {
   private _incomeDistributionType: DistributionType;
   private _incomeDistributionParams: Map<StatisticType, number>;
   taxability: Taxability;
+  expectAnnualIncome: RandomGenerator;
+  expectAnnualReturn: RandomGenerator;
 
   /**
    * parse the distribution type and parameters
@@ -130,6 +132,8 @@ export class InvestmentType {
     this.taxability = data.taxability
       ? Taxability.TAXABLE
       : Taxability.TAX_EXEMPT;
+      this.expectAnnualReturn = this.generateExpectedAnnualReturn();
+      this.expectAnnualIncome = this.generateExpectedAnnualIncome();
   }
 
   /**
@@ -157,22 +161,5 @@ export class InvestmentType {
       this._incomeDistributionParams
     );
     return incomeValue;
-  }
-
-  /**
-   * get the public information of the investment type
-   * @returns the public information of the investment type
-   */
-  getPublicInfo(): InvestmentTypeObject {
-    return {
-      name: this.name,
-      description: this.description,
-      returnAmtOrPct: this.returnAmtOrPct,
-      expectAnnualReturn: this.generateExpectedAnnualReturn(),
-      expenseRatio: this.expenseRatio,
-      incomeAmtOrPct: this.incomeAmtOrPct,
-      expectAnnualIncome: this.generateExpectedAnnualIncome(),
-      taxability: this.taxability,
-    };
   }
 }
