@@ -1,4 +1,4 @@
-import { InvestmentObject } from "../domain/investment/Investment";
+import { Investment } from "../domain/investment/Investment";
 import { ScenarioReturnType } from "../domain/scenario/Scenario";
 import { TaxFilingStatus } from "../Enums";
 import { FederalTaxService, create_federal_tax_service } from "../tax/FederalTaxService";
@@ -6,8 +6,9 @@ import { StateTaxService, create_state_tax_service } from "../tax/StateTaxServic
 
 
 // return [non-retirment, pre-tax, after-tax] investment
-function parsre_investments(investemnt: Array<InvestmentObject>): [InvestmentObject, InvestmentObject, InvestmentObject] {
+function parsre_investments(investemnt: Array<Investment>): [Investment, Investment, Investment] {
 
+    return c
 }
 
 export interface SimulationStateObject {
