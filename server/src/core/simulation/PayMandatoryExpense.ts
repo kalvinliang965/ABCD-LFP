@@ -1,0 +1,1 @@
+// src/core/simulation/PayMandatoryExpensens.ts
