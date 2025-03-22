@@ -1,7 +1,6 @@
 // src/core/domain/Scenario.ts
 // we will use this function to read data read from front end and call other function to parse the data
 import ValueGenerator, { RandomGenerator } from "../../../utils/math/ValueGenerator";
-=======
 import { DistributionType, StateType, StatisticType, TaxFilingStatus } from "../../Enums";
 
 function parse_state(state: string) {

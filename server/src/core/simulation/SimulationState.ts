@@ -7,6 +7,9 @@ async function SimulationState(
     scenario: ScenarioReturnType, 
 ) {
     try {
+        // user accumulated cash
+        const cash_balance = 0;
+        
         const start_year: number = new Date().getFullYear();
         let current_year: number = start_year;
         const tax_filing_status = scenario.tax_filing_status;
@@ -83,8 +86,12 @@ async function SimulationState(
             federal_tax_service.adjust_for_inflation(inflation_factor);
             state_tax_service.adjust_for_inflation(inflation_factor);
         }
+
+        const process_tax = () => {
+
+        }
+
         return {
-            start_year,
             tax_filing_status,
             inflation_factor,
             roth_conversion_opt,
