@@ -1,6 +1,6 @@
 // src/core/domain/Scenario.ts
 // we will use this function to read data read from front end and call other function to parse the data
-import ValueGenerator from "../../../utils/math/ValueGenerator";
+import ValueGenerator, { RandomGenerator } from "../../../utils/math/ValueGenerator";
 import {
   DistributionType,
   StateType,
@@ -161,68 +161,71 @@ export interface ScenarioReturnType {
   residenceState: StateType;
 }
 
+export type InvestmentRaw = {
+  investmentType: InvestmentTypeRaw;
+  value: number;
+  taxStatus: string; // "non-retirement", "pre-tax", "after-tax"
+  id: string;
+}
+
+export type InvestmentTypeRaw = {
+  name: string;
+  description: string;
+  returnAmtOrPct: string; // amount or percent
+  returnDistribution: Map<string, any>;
+  expenseRatio: 0;
+  incomeAmtOrPct: string;
+  incomeDistribution: Map<string, any>;
+  taxability: boolean;
+}
+
+export type EventRaw = {
+  name: string;
+  start: Map<string, any>;
+  duration: Map<string, any>;
+  type: string;
+}
+
+export type incomeEventRaw = EventRaw & {
+  initialAmount: number;
+  changeAmtOrPct: string;
+  changeDistribution: Map<string, any>;
+  inflationAdjusted: boolean;
+  userFraction: number;
+  socialSecurity: boolean;
+}
+
+export type expenseEventRaw = EventRaw & {
+  initialAmount: number;
+  changeAmtOrPct: string;
+  changeDistribution: Map<string, any>;
+  inflationAdjusted: boolean;
+  userFraction: number;
+  discretionary: boolean;
+}
+
+export type investmentEventRaw = EventRaw & {
+  initialAmount: number;
+}
+
+export type rebalanceEventRaw = EventRaw & {
+  assetAllocation: Map<string, number>;
+  glidePath: boolean;
+  assetAllocation2: Map<string, number>;
+  maxCash: number;
+}
+
 function Scenario(params: {
   name: string;
   martialStatus: string;
   birthYears: Array<number>;
   lifeExpectancy: Array<Map<string, any>>;
-  investments: Set<{
-    investmentType: {
-      name: string;
-      description: string;
-      returnAmtOrPct: string; // amount or percent
-      returnDistribution: Map<string, any>;
-      expenseRatio: 0;
-      incomeAmtOrPct: string;
-      incomeDistribution: Map<string, any>;
-      taxability: boolean;
-    };
-    value: number;
-    taxStatus: string; // "non-retirement", "pre-tax", "after-tax"
-    id: string;
-  }>;
+  investments: Set<InvestmentRaw>;
   eventSeries: Set<
-    | {
-        name: string;
-        start: Map<string, any>;
-        duration: Map<string, any>;
-        type: string;
-        initialAmount: number;
-        changeAmtOrPct: string;
-        changeDistribution: Map<string, any>;
-        inflationAdjusted: boolean;
-        userFraction: number;
-        socialSecurity: boolean;
-      }
-    | {
-        name: string;
-        start: Map<string, any>;
-        duration: Map<string, any>;
-        type: string;
-        initialAmount: number;
-        changeAmtOrPct: string;
-        changeDistribution: Map<string, any>;
-        inflationAdjusted: boolean;
-        userFraction: number;
-        discretionary: boolean;
-      }
-    | {
-        name: string;
-        start: Map<string, any>;
-        duration: Map<string, any>;
-        type: string;
-        assetAllocation: Map<string, number>;
-        glidePath: true;
-        assetAllocation2: Map<string, number>;
-        maxCash: number;
-      }
-    | {
-        name: string;
-        start: Map<string, any>;
-        duration: Map<string, any>;
-        type: string;
-        assetAllocation: Map<string, number>;
-      }
+    | incomeEventRaw
+    | expenseEventRaw
+    | investmentEventRaw
+    | rebalanceEventRaw
   >;
   inflationAssumption: Map<string, number>;
   afterTaxContributionLimit: number;
