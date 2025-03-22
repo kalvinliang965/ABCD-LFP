@@ -6,19 +6,19 @@ import { StateTaxService, create_state_tax_service } from "../tax/StateTaxServic
 
 
 // return [non-retirment, pre-tax, after-tax] investment
-function parse_investments(investments: Array<Investment>): [Array<Investment>, Array<Investment>, Array<Investment>] {
-    const non_retirement_account: Array<Investment> = new Array();
-    const pre_tax_account: Array<Investment> = new Array();
-    const after_tax_account: Array<Investment> = new Array();
+function parse_investments(investments: Array<Investment>): [Map<string, Investment>, Map<string, Investment>, Map<string, Investment>] {
+    const non_retirement_account: Map<string, Investment> = new Map();
+    const pre_tax_account: Map<string, Investment> = new Map();
+    const after_tax_account: Map<string, Investment> = new Map();
 
     for (const investment of investments) {
         switch(investment.taxStatus) {
             case TaxStatus.NON_RETIREMENT:
-                non_retirement_account.push(investment);
+                non_retirement_account.set(investment.id, investment);
             case TaxStatus.PRE_TAX:
-                pre_tax_account.push(investment);
+                pre_tax_account.set(investment.id, investment);
             case TaxStatus.AFTER_TAX:
-                after_tax_account.push(investment);
+                after_tax_account.set(investment.id, investment);
             default:
                 console.error("Failed to parse investments");
                 console.error(`Investments contains an invalid tax status type ${investment.taxStatus}`);
@@ -129,6 +129,7 @@ async function SimulationState(
         const advance_year = () => {
             current_year += 1
             inflation_factor *= (1 + inflation_assumption.sample());
+
         }
 
         const setup_year = () => {
@@ -166,6 +167,9 @@ async function SimulationState(
             federalTaxService: federal_tax_service,
             stateTaxService: state_tax_service,
             advance_year,
+            non_retirement_account,
+            pre_tax_account,
+            after_tax_account,
         }
     } catch (error) {
         throw new Error(`Failed to initialize simulation state: ${error}`);
