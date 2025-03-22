@@ -4,7 +4,7 @@ import ValueGenerator, { RandomGenerator } from "../../../utils/math/ValueGenera
 import { DistributionType, StateType, StatisticType, TaxFilingStatus } from "../../Enums";
 import { InvestmentObject } from "../investment/Investment";
 import { EventObject } from "../event/Event";
-import { Investment } from "../../../db/models/investments";
+import { Investment } from "../investment/Investment";
 
 function parse_state(state: string) {
   switch (state) {
@@ -241,8 +241,8 @@ function Scenario(params: {
   martialStatus: string;
   birthYears: Array<number>;
   lifeExpectancy: Array<Map<string, any>>;
-  investments: Array<InvestmentRaw>;
-  eventSeries: Array<
+  investments: Set<InvestmentRaw>;
+  eventSeries: Set<
     | IncomeEventRaw
     | ExpenseEventRaw
     | InvestmentEventRaw
@@ -269,7 +269,7 @@ function Scenario(params: {
     );
     const [user_life_expectancy, spouse_life_expectancy] =
       parse_life_expectancy(params.lifeExpectancy);
-    const investments: Array<InvestmentObject> = Array.from(params.investments).map((investment:InvestmentRaw) => new Investment(investment));
+    const investments: Array<InvestmentObject> = Array.from(params.investments).map((investment:InvestmentRaw): InvestmentObject => new Investment(investment));
     const eventSeries = undefined; // TODO
     const inflation_assumption: RandomGenerator = parse_inflation_assumption(
       params.inflationAssumption
