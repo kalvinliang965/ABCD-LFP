@@ -22,6 +22,7 @@ app.use("/api/eventSeries", eventSeriesRoutes);
 app.use("/api/investments", investmentRoutes);
 // app.use('/api/users', userRoutes);
 
+//this part is for the login, check it after finishing other backend
 // Initialize Passport (add this after registerGlobalMiddleWare)
 // app.use(passport.initialize());
 // app.use(passport.session());
