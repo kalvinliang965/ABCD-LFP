@@ -1,5 +1,6 @@
 import { InvestmentRaw } from "../scenario/Scenario";
-import { InvestmentType, InvestmentTypeObject } from "./InvestmentType";
+import InvestmentType from "./InvestmentType";
+import { InvestmentTypeObject } from "./InvestmentType";
 import { TaxStatus } from "../../Enums";
 import { RandomGenerator } from "../../../utils/math/ValueGenerator";
 
@@ -19,30 +20,35 @@ export interface InvestmentObject {
  * Factory function to create an investment in the retirement planning system
  */
 export function Investment(raw_data: InvestmentRaw): InvestmentObject {
-  const investmentType = new InvestmentType(raw_data.investmentType);
-  let taxStatus: TaxStatus;
+  try {
+    const investmentType = InvestmentType(raw_data.investmentType);
+    let taxStatus: TaxStatus;
 
-  // Convert string to TaxStatus enum
-  switch (raw_data.taxStatus) {
-    case "non-retirement":
-      taxStatus = TaxStatus.NON_RETIREMENT;
-      break;
-    case "pre-tax":
-      taxStatus = TaxStatus.PRE_TAX;
-      break;
-    case "after-tax":
-      taxStatus = TaxStatus.AFTER_TAX;
-      break;
-    default:
-      throw new Error(`Invalid tax status: ${raw_data.taxStatus}`);
+    // Convert string to TaxStatus enum
+    switch (raw_data.taxStatus) {
+      case "non-retirement":
+        taxStatus = TaxStatus.NON_RETIREMENT;
+        break;
+      case "pre-tax":
+        taxStatus = TaxStatus.PRE_TAX;
+        break;
+      case "after-tax":
+        taxStatus = TaxStatus.AFTER_TAX;
+        break;
+      default:
+        throw new Error(`Invalid tax status: ${raw_data.taxStatus}`);
+    }
+
+    return {
+      investmentType,
+      value: raw_data.value,
+      taxStatus,
+      id: raw_data.id,
+    };
+  } catch (error) {
+    console.error("Error creating investment:", error);
+    throw new Error("Error creating investment");
   }
-
-  return {
-    investmentType,
-    value: raw_data.value,
-    taxStatus,
-    id: raw_data.id,
-  };
 }
 
 /**
