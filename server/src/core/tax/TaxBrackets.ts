@@ -14,6 +14,7 @@ export interface TaxBrackets {
     adjust_for_inflation: (rate: number) => void;
     to_string: () => string;
     find_highest_brackets: () => Array<{taxpayer_type: TaxFilingStatus, taxbracket: TaxBracket}>;
+    find_bracket(rate: number, status: TaxFilingStatus): TaxBracket | undefined;
 };
 
 export function create_tax_brackets(): TaxBrackets {
@@ -64,8 +65,34 @@ export function create_tax_brackets(): TaxBrackets {
                 return bracket.rate;
             }
         }
-        return -1;
+        // There should always exist a rate for income.
+        // The table should cover all range.
+        // res == -1 mean rate not found
+        console.error(`Invalid bracket data for ${status} status`);
+        process.exit(1);
     }
+
+    const find_bracket = (rate: number, status: TaxFilingStatus): TaxBracket | undefined => {
+        const bracketSet = brackets.get(status); 
+        if (!bracketSet) {
+            throw new Error(`Invalid TaxFilingStatus: ${status}`);
+        }
+        const N: number = bracketSet.length; 
+        let [l, r] = [0, N - 1];
+        while (l <= r) {
+            const m = l + Math.floor((r - l) / 2);
+            const bracket = bracketSet[m];
+            if (rate < bracket.rate) {
+                r = m - 1;
+            } else if (rate > bracket.rate) {
+                l = m + 1;
+            } else {
+                return bracket;
+            }
+        }
+        return undefined;
+    }
+
     const adjust_for_inflation = (rate: number):void => {
         for (const bracketSet of brackets.values()) {
             for (const bracket of bracketSet) {
@@ -110,6 +137,7 @@ export function create_tax_brackets(): TaxBrackets {
         adjust_for_inflation,
         to_string,
         find_highest_brackets,
+        find_bracket,
     } as const;
 };
 

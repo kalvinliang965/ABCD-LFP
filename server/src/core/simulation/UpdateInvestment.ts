@@ -3,7 +3,7 @@
 import { ChangeType } from "../Enums";
 import { SimulationState } from "./SimulationState";
 
-export function update_investment(simulation_state: SimulationState) {
+export default function update_investment(simulation_state: SimulationState) {
 
     for (const investment of simulation_state.investments) {
         const return_rate = investment.get_annual_return();

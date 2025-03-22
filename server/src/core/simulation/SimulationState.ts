@@ -23,6 +23,9 @@ export interface SimulationState {
     roth_conversion_strategy: Array<string>;
     user: PersonDetails;
     spouse?: PersonDetails;
+    get_taxable_income(): number;
+    get_capital_gains_income(): number;
+    get_social_security_income(): number;
     incr_taxable_income(amt: number): void;
     incr_capital_gains_income(amt: number): void;
     incr_social_security_income(amt: number): void;
@@ -107,6 +110,9 @@ export async function create_simulation_state(
             user,
             spouse,
 
+            get_taxable_income: () => taxable_income,
+            get_capital_gains_income: () => capital_gains_income,
+            get_social_security_income: () => social_security_income,
             incr_taxable_income: (amt: number) => taxable_income += amt,
             incr_capital_gains_income: (amt: number) => capital_gains_income += amt,
             incr_social_security_income: (amt: number) => social_security_income += amt,
