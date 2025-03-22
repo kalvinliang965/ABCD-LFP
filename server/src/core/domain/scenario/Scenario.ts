@@ -1,8 +1,20 @@
 // src/core/domain/Scenario.ts
 // we will use this function to read data read from front end and call other function to parse the data
-import ValueGenerator, { RandomGenerator } from "../../../utils/math/ValueGenerator";
-import { DistributionType, StateType, StatisticType, TaxFilingStatus } from "../../Enums";
+import ValueGenerator, {
+  RandomGenerator,
+} from "../../../utils/math/ValueGenerator";
+import {
+  DistributionType,
+  StateType,
+  StatisticType,
+  TaxFilingStatus,
+} from "../../Enums";
 import { create_investment, Investment } from "../investment/Investment";
+import { parse_start_year, process_event_dependencies } from "../event/Event";
+import create_income_event from "../event/IncomeEvent";
+import create_expense_event from "../event/ExpenseEvent";
+import create_investment_event from "../event/InvestmentEvent";
+import create_rebalance_event from "../event/RebalanceEvent";
 
 function parse_state(state: string) {
   switch (state) {
@@ -162,7 +174,7 @@ export type InvestmentRaw = {
   value: number;
   taxStatus: string; // "non-retirement", "pre-tax", "after-tax"
   id: string;
-}
+};
 
 export type InvestmentTypeRaw = {
   name: string;
@@ -173,14 +185,14 @@ export type InvestmentTypeRaw = {
   incomeAmtOrPct: string;
   incomeDistribution: Map<string, any>;
   taxability: boolean;
-}
+};
 
 export type EventRaw = {
   name: string;
   start: Map<string, any>;
   duration: Map<string, any>;
   type: string;
-}
+};
 
 export type IncomeEventRaw = EventRaw & {
   initialAmount: number;
@@ -189,7 +201,7 @@ export type IncomeEventRaw = EventRaw & {
   inflationAdjusted: boolean;
   userFraction: number;
   socialSecurity: boolean;
-}
+};
 
 export type ExpenseEventRaw = EventRaw & {
   initialAmount: number;
@@ -198,19 +210,18 @@ export type ExpenseEventRaw = EventRaw & {
   inflationAdjusted: boolean;
   userFraction: number;
   discretionary: boolean;
-}
+};
 
 export type InvestmentEventRaw = EventRaw & {
   initialAmount: number;
-}
+};
 
 export type RebalanceEventRaw = EventRaw & {
   assetAllocation: Map<string, number>;
   glidePath: boolean;
   assetAllocation2: Map<string, number>;
   maxCash: number;
-}
-
+};
 
 interface ScenarioObject {
   name: string;
@@ -241,10 +252,7 @@ export function create_scenario(params: {
   lifeExpectancy: Array<Map<string, any>>;
   investments: Set<InvestmentRaw>;
   eventSeries: Set<
-    | IncomeEventRaw
-    | ExpenseEventRaw
-    | InvestmentEventRaw
-    | RebalanceEventRaw
+    IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw
   >;
   inflationAssumption: Map<string, number>;
   afterTaxContributionLimit: number;
@@ -267,8 +275,39 @@ export function create_scenario(params: {
     );
     const [user_life_expectancy, spouse_life_expectancy] =
       parse_life_expectancy(params.lifeExpectancy);
-    const investments: Array<Investment> = Array.from(params.investments).map((investment:InvestmentRaw): Investment => create_investment(investment));
-    const eventSeries = undefined; // TODO
+    const investments: Array<Investment> = Array.from(params.investments).map(
+      (investment: InvestmentRaw): Investment => create_investment(investment)
+    );
+
+    // Process events
+    const eventsArray = Array.from(params.eventSeries);
+
+    // Resolve all event dependencies using the shared processEventDependencies function
+    process_event_dependencies(eventsArray);
+
+    // Create each event using its specific event creation function
+    const eventList = [];
+    for (const event of eventsArray) {
+      switch (event.type) {
+        case "income":
+          eventList.push(create_income_event(event as IncomeEventRaw));
+          break;
+        case "expense":
+          eventList.push(create_expense_event(event as ExpenseEventRaw));
+          break;
+        case "invest":
+          eventList.push(create_investment_event(event as InvestmentEventRaw));
+          break;
+        case "rebalance":
+          eventList.push(create_rebalance_event(event as RebalanceEventRaw));
+          break;
+        default:
+          throw new Error(`Unknown event type: ${event.type}`);
+      }
+    }
+
+    const eventSeries = eventList;
+
     const inflation_assumption: RandomGenerator = parse_inflation_assumption(
       params.inflationAssumption
     );
@@ -312,4 +351,3 @@ export function create_scenario(params: {
     );
   }
 }
-

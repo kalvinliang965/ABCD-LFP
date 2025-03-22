@@ -1,5 +1,5 @@
 import { ChangeType } from "../../Enums";
-import { IncomeEventRaw } from "../scenario/Scenario";
+import { ExpenseEventRaw } from "../scenario/Scenario";
 import {
   Event,
   parse_duration,
@@ -7,23 +7,23 @@ import {
   parse_expected_annual_change,
 } from "./Event";
 
-interface IncomeEvent extends Event {
+interface ExpenseEvent extends Event {
   initial_amount: number;
   change_type: ChangeType;
   expected_annual_change: number;
   inflation_adjusted: boolean;
   user_fraction: number;
-  social_security: boolean;
+  discretionary: boolean;
 }
 
 function parse_user_fraction(user_fraction: number) {
   if (user_fraction > 1 || user_fraction < 0) {
-    throw new Error(`invalid user fraction ${user_fraction}`);
+    throw new Error(`Invalid user fraction ${user_fraction}`);
   }
   return user_fraction;
 }
 
-function create_income_event(raw_data: IncomeEventRaw): IncomeEvent {
+function create_expense_event(raw_data: ExpenseEventRaw): ExpenseEvent {
   try {
     const start = parse_start_year(raw_data.start);
     const duration = parse_duration(raw_data.duration);
@@ -32,6 +32,7 @@ function create_income_event(raw_data: IncomeEventRaw): IncomeEvent {
       raw_data.changeDistribution
     );
     const user_fraction = parse_user_fraction(raw_data.userFraction);
+
     return {
       name: raw_data.name,
       start,
@@ -42,11 +43,11 @@ function create_income_event(raw_data: IncomeEventRaw): IncomeEvent {
       expected_annual_change,
       inflation_adjusted: raw_data.inflationAdjusted,
       user_fraction,
-      social_security: raw_data.socialSecurity,
+      discretionary: raw_data.discretionary,
     };
   } catch (error) {
-    throw new Error(`Failed to initialize IncomeEvent: ${error}`);
+    throw new Error(`Failed to initialize ExpenseEvent: ${error}`);
   }
 }
 
-export default create_income_event;
+export default create_expense_event;
