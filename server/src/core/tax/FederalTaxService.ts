@@ -1,10 +1,10 @@
 
-import { TaxBracketsObject } from "../TaxBrackets";
-import { StandardDeductions, StandardDeductionObject } from "../StandardDeduction";
-import { parse_standard_deductions, parse_capital_gains, parse_taxable_income } from "../../../services/scrapping/FederalTaxScraper";
-import { check_capital_gains, check_taxable_income, load_brackets } from "../../../db/repositories/TaxBracketRepository";
-import { load_standard_deduction } from "../../../db/repositories/StandardDeductionRepository";
-import { IncomeType } from "../../Enums";
+import { TaxBracketsObject } from "./TaxBrackets";
+import { StandardDeductions, StandardDeductionObject } from "./StandardDeduction";
+import { parse_standard_deductions, parse_capital_gains, parse_taxable_income } from "../../services/scrapping/FederalTaxScraper";
+import { check_capital_gains, check_taxable_income, load_brackets } from "../../db/repositories/TaxBracketRepository";
+import { load_standard_deduction } from "../../db/repositories/StandardDeductionRepository";
+import { IncomeType } from "../Enums";
 
 
 async function initialize_taxable_income_bracket(): Promise<TaxBracketsObject> {
@@ -55,7 +55,7 @@ async function initialize_standard_deductions_info(): Promise<StandardDeductionO
         throw new Error("Error in initializing standard deductions info");
     }
 }
-async function FederalTaxData() {
+async function FederalTaxService() {
     try {        
         const taxable_income_bracket = await initialize_taxable_income_bracket();
         const capital_gains_bracket = await initialize_capital_gains_bracket();
@@ -74,10 +74,17 @@ async function FederalTaxData() {
             console.log("STANDARD DEDUCTION INFO");
             console.log(standard_deductions.to_string());
         }
+
+        const adjust_for_inflation = (rate: number) => {
+            taxable_income_bracket.adjust_for_inflation(rate);
+            capital_gains_bracket.adjust_for_inflation(rate);
+            standard_deductions.adjust_for_inflation(rate);
+        }
         return {
             print_taxable_income_bracket,
             print_capital_gains_bracket,
             print_standard_deductions_info,
+            adjust_for_inflation,
         };
     } catch (error) {
         console.error(`Error in initializing federal tax data: ${error}`);
@@ -86,4 +93,4 @@ async function FederalTaxData() {
 }
 
 
-export default FederalTaxData;
+export default FederalTaxService;

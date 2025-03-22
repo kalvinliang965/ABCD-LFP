@@ -2,7 +2,7 @@ import { TaxFilingStatus } from "../Enums"
 
 export interface StandardDeductionObject {
     add_deduction(amt: number, status: TaxFilingStatus): void,
-    adjust_for_inflation(rate: number, status: TaxFilingStatus): void,
+    adjust_for_inflation(rate: number): void,
     to_string(): string,
     size(): number,
 }
@@ -20,7 +20,7 @@ export function StandardDeductions(): StandardDeductionObject {
         deductions.set(status, amt);
     }
 
-    const adjust_for_inflation = (rate: number, status: TaxFilingStatus): void => {
+    const adjust_for_inflation = (rate: number): void => {
         for (const [key, val] of deductions.entries()) {
             deductions.set(key, val * (1 + rate));
         }        
