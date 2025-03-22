@@ -5,9 +5,9 @@ import { FederalTaxService, create_federal_tax_service } from "../tax/FederalTax
 import { StateTaxService, create_state_tax_service } from "../tax/StateTaxService";
 
 
-type AccountMap = Map<string, Investment>;
+export type AccountMap = Map<string, Investment>;
 
-interface PersonDetails {
+export interface PersonDetails {
     get_age(): number;
     year_of_death: number,
     is_alive(): boolean;
