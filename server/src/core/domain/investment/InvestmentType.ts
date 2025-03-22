@@ -55,7 +55,7 @@ function parse_taxability(taxability: boolean) {
   return Taxability.TAX_EXEMPT;
 }
 
-function create_investmentType(raw_data: InvestmentTypeRaw): InvestmentType {
+function create_investment_type(raw_data: InvestmentTypeRaw): InvestmentType {
   try {
     const return_change_type = parse_change_type(raw_data.returnAmtOrPct);
     const expect_annual_return = parse_distribution(raw_data.returnDistribution);
@@ -77,4 +77,4 @@ function create_investmentType(raw_data: InvestmentTypeRaw): InvestmentType {
   }
 }
 
-export { create_investmentType };
+export { create_investment_type };

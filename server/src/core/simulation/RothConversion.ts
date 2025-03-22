@@ -1,8 +1,8 @@
 // src/core/simulation/RothConversion.ts
 
-import {SimulationStateObject} from "./SimulationState";
+import { SimulationState } from "./SimulationState";
 
-function process_roth_conversion(simulation_state: SimulationStateObject) {
+function process_roth_conversion(simulation_state: SimulationState) {
 
 
 }

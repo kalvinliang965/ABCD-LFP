@@ -14,6 +14,7 @@ export interface PersonDetails {
 }
 
 export interface SimulationState {
+    investments: Array<Investment>
     tax_filing_status: TaxFilingStatus;
     inflation_factor: number;
     roth_conversion_opt: boolean;
@@ -96,6 +97,7 @@ export async function create_simulation_state(
         ? create_person_details(scenario.spouse_birth_year!, scenario.spouse_life_expectancy!, () => current_year)
         : undefined;
         return {
+            investments: scenario.investments,
             tax_filing_status: scenario.tax_filing_status,
             inflation_factor,
             roth_conversion_opt: scenario.roth_conversion_opt,
