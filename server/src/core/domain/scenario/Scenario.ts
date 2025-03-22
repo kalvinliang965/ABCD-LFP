@@ -3,7 +3,6 @@
 import ValueGenerator, { RandomGenerator } from "../../../utils/math/ValueGenerator";
 import { DistributionType, StateType, StatisticType, TaxFilingStatus } from "../../Enums";
 
-
 function parse_state(state: string) {
     switch (state) {
         case "NY":
