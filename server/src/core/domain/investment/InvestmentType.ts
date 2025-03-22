@@ -9,7 +9,7 @@ import ValueGenerator, {
 } from "../../../utils/math/ValueGenerator";
 import { InvestmentTypeRaw } from "../scenario/Scenario";
 
-export interface InvestmentTypeObject {
+export interface InvestmentType {
   name: string;
   description: string;
   return_change_type: ChangeType;
@@ -55,7 +55,7 @@ function parse_taxability(taxability: boolean) {
   return Taxability.TAX_EXEMPT;
 }
 
-function InvestmentType(raw_data: InvestmentTypeRaw): InvestmentTypeObject {
+function create_investmentType(raw_data: InvestmentTypeRaw): InvestmentType {
   try {
     const return_change_type = parse_change_type(raw_data.returnAmtOrPct);
     const expect_annual_return = parse_distribution(raw_data.returnDistribution);
@@ -77,4 +77,4 @@ function InvestmentType(raw_data: InvestmentTypeRaw): InvestmentTypeObject {
   }
 }
 
-export default InvestmentType;
+export { create_investmentType };
