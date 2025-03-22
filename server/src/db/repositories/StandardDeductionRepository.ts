@@ -1,5 +1,4 @@
 import { TaxFilingStatus } from "../../core/Enums";
-import { StandardDeductionObject, StandardDeductions } from "../../core/tax/StandardDeduction";
 import StandardDeductionModel, { IStandardDeduction } from "../models/standard_deduction";
 
 

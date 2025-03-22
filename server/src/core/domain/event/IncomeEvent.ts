@@ -1,8 +1,8 @@
 import { ChangeType } from "../../Enums";
 import { IncomeEventRaw } from "../scenario/Scenario";
-import { EventObject, parse_duration, parse_start_year, parse_expected_annual_change } from "./Event";
+import { Event, parse_duration, parse_start_year, parse_expected_annual_change } from "./Event";
 
-interface IncomeEventObject extends EventObject{
+interface IncomeEvent extends Event{
     initial_amount: number;
     change_type: ChangeType;
     expected_annual_change: number;
@@ -18,7 +18,7 @@ function parse_user_fraction(user_fraction: number) {
     return user_fraction;
 }
 
-function IncomeEvent(raw_data: IncomeEventRaw): IncomeEventObject {
+function create_income_event(raw_data: IncomeEventRaw): IncomeEvent {
     try {
         const start = parse_start_year(raw_data.start);
         const duration = parse_duration(raw_data.duration);
@@ -41,4 +41,4 @@ function IncomeEvent(raw_data: IncomeEventRaw): IncomeEventObject {
     }
 }
 
-export default IncomeEvent;
+export default create_income_event;

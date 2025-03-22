@@ -1,14 +1,14 @@
-import { TaxBrackets } from "./TaxBrackets";
+import { create_tax_brackets } from "./TaxBrackets";
 
-export interface StateTaxServiceObject {
+export interface StateTaxService {
     load_state_tax_data(): void;
     adjust_for_inflation(rate: number): void;
 }
 
-async function StateTaxService() {
+export async function create_state_tax_service() {
     
     try {
-        const taxable_income_bracket = TaxBrackets()
+        const taxable_income_bracket = create_tax_brackets()
         const load_state_tax_data = () => {
             // TODO
         }
@@ -24,5 +24,3 @@ async function StateTaxService() {
         throw new Error(`Error failed to initialize State tax data: ${error}`);
     }
 }
-
-export default StateTaxService;

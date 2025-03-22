@@ -1,13 +1,13 @@
 import { TaxFilingStatus } from "../Enums"
 
-export interface StandardDeductionObject {
+export interface StandardDeduction {
     add_deduction(amt: number, status: TaxFilingStatus): void,
     adjust_for_inflation(rate: number): void,
     to_string(): string,
     size(): number,
 }
 
-export function StandardDeductions(): StandardDeductionObject {
+export function create_standard_deductions(): StandardDeduction {
     
     const deductions: Map<TaxFilingStatus, number> = new Map();
 

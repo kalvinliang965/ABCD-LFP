@@ -1,7 +1,14 @@
+import { InvestmentObject } from "../domain/investment/Investment";
 import { ScenarioReturnType } from "../domain/scenario/Scenario";
 import { TaxFilingStatus } from "../Enums";
-import FederalTaxService, { FederalTaxServiceObject } from "../tax/FederalTaxService";
-import StateTaxService, { StateTaxServiceObject } from "../tax/StateTaxService";
+import { FederalTaxService, create_federal_tax_service } from "../tax/FederalTaxService";
+import { StateTaxService, create_state_tax_service } from "../tax/StateTaxService";
+
+
+// return [non-retirment, pre-tax, after-tax] investment
+function parsre_investments(investemnt: Array<InvestmentObject>): [InvestmentObject, InvestmentObject, InvestmentObject] {
+
+}
 
 export interface SimulationStateObject {
     tax_filing_status: TaxFilingStatus;
@@ -21,8 +28,8 @@ export interface SimulationStateObject {
     incr_social_security_income(amt: number): void;
     setup_year(): void;
     get_current_year(): number;
-    federalTaxService: FederalTaxServiceObject,
-    stateTaxService: StateTaxServiceObject,
+    federalTaxService: FederalTaxService,
+    stateTaxService: StateTaxService,
     advance_year(): void,
 }
 

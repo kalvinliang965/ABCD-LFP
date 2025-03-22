@@ -92,7 +92,7 @@ function parse_expected_annual_change(changeAmtOrPct: string, changeDistribution
 }
 
 
-interface EventObject {
+interface Event {
     name: string,
     start: number,
     duration: number,
@@ -103,5 +103,5 @@ export {
     parse_duration,
     parse_start_year,
     parse_expected_annual_change,
-    EventObject,
+    Event,
 }
