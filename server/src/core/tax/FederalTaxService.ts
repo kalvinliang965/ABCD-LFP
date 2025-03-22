@@ -61,8 +61,7 @@ export interface FederalTaxService {
     print_capital_gains_bracket(): void;
     print_standard_deductions_info(): void;
     adjust_for_inflation(rate: number): void;
-    find_taxable_income_bracket(rate: number, status: TaxFilingStatus): TaxBracket | undefined;
-    find_capital_gains_bracket(rate: number, status: TaxFilingStatus): TaxBracket | undefined;
+    find_bracket(rate: number, income_type: IncomeType, status: TaxFilingStatus): TaxBracket | undefined;
     find_rate(income: number, income_type: IncomeType, status: TaxFilingStatus): number;
 }
 
@@ -92,12 +91,20 @@ export async function create_federal_tax_service() : Promise<FederalTaxService> 
             standard_deductions.adjust_for_inflation(rate);
         }
 
-        const find_taxable_income_bracket = (rate: number, status: TaxFilingStatus): TaxBracket | undefined => {
-            return taxable_income_bracket.find_bracket(rate, status);
-        }
+        const find_bracket = (rate: number, income_type: IncomeType, status: TaxFilingStatus): TaxBracket | undefined => {
+            try {
+                switch(income_type) {
+                    case IncomeType.CAPITAL_GAINS:
+                        return taxable_income_bracket.find_bracket(rate, status);
+                    case IncomeType.TAXABLE_INCOME:
+                        return capital_gains_bracket.find_bracket(rate, status);
 
-        const find_capital_gains_bracket = (rate: number, status: TaxFilingStatus): TaxBracket | undefined => {
-            return capital_gains_bracket.find_bracket(rate, status);
+                    default:
+                        throw new Error(`Failed to find bracket due to invalid income type ${income_type}`);
+                } 
+            } catch(error) {
+                throw error;
+            }
         }
 
         const find_rate = (income: number, income_type: IncomeType, status: TaxFilingStatus): number => {
@@ -120,8 +127,7 @@ export async function create_federal_tax_service() : Promise<FederalTaxService> 
             print_capital_gains_bracket,
             print_standard_deductions_info,
             adjust_for_inflation,
-            find_taxable_income_bracket,
-            find_capital_gains_bracket,
+            find_bracket,
             find_rate,
         };
     } catch (error) {
