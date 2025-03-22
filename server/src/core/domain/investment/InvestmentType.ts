@@ -9,9 +9,6 @@ import ValueGenerator, {
 } from "../../../utils/math/ValueGenerator";
 import { InvestmentTypeRaw } from "../scenario/Scenario";
 
-/**
- * 用于向外部返回的投资类型公共信息
- */
 export interface InvestmentTypePublicInfo {
   name: string;
   description: string;
@@ -22,8 +19,7 @@ export interface InvestmentTypePublicInfo {
 }
 
 /**
- * Represents an investment type in the retirement planning system
- * 处理从Scenario接收的原始投资类型数据，并提供计算功能
+ * dealing with the raw data from Scenario, and providing calculation functions
  */
 export class InvestmentType {
   name: string;
@@ -38,15 +34,15 @@ export class InvestmentType {
   taxability: Taxability;
 
   /**
-   * 解析分布类型和参数
-   * @param distributionData 包含分布信息的Map
-   * @returns 包含分布类型和参数的对象
+   * parse the distribution type and parameters
+   * @param distributionData the Map contains the distribution information
+   * @returns the object contains the distribution type and parameters
    */
   private static parseDistribution(distributionData: Map<string, any>): {
     type: DistributionType;
     params: Map<StatisticType, number>;
   } {
-    // 解析分布类型
+    // parse the distribution type
     const distType =
       distributionData.get("type") === "fixed"
         ? DistributionType.FIXED
@@ -54,10 +50,10 @@ export class InvestmentType {
         ? DistributionType.NORMAL
         : DistributionType.UNIFORM;
 
-    // 创建参数Map
+    // create the parameter Map
     const params = new Map<StatisticType, number>();
 
-    // 根据分布类型添加相关参数
+    // add the related parameters based on the distribution type
     switch (distType) {
       case DistributionType.FIXED:
         if (distributionData.get("value") !== undefined) {
@@ -86,58 +82,57 @@ export class InvestmentType {
   }
 
   /**
-   * 将字符串转换为ChangeType枚举
+   * convert the string to ChangeType enum
    */
   private static convertAmtOrPct(value: string): ChangeType {
     return value === "amount" ? ChangeType.FIXED : ChangeType.PERCENTAGE;
   }
 
   /**
-   * 构造函数 - 接受来自Scenario的InvestmentTypeRaw数据
+   * constructor - accept the InvestmentTypeRaw data from Scenario
    */
   constructor(data: InvestmentTypeRaw) {
-    // 设置基本属性
+    // set the basic properties
     this.name = data.name;
     this.description = data.description;
 
-    // 验证expense ratio非负
+    // validate the expense ratio is non-negative
     if (data.expenseRatio < 0) {
       throw new Error("Expense ratio cannot be negative");
     }
     this.expenseRatio = data.expenseRatio;
 
-    // 处理returnAmtOrPct - 从string转换为ChangeType枚举
+    // convert the string to ChangeType enum
     this._returnAmtOrPct = InvestmentType.convertAmtOrPct(data.returnAmtOrPct);
 
-    // 处理returnDistribution - 解析分布类型和参数
+    // parse the distribution type and parameters
     const returnDist = InvestmentType.parseDistribution(
       data.returnDistribution
     );
     this._returnDistributionType = returnDist.type;
     this._returnDistributionParams = returnDist.params;
 
-    // 处理incomeAmtOrPct - 从string转换为ChangeType枚举
+    // convert the string to ChangeType enum
     this._incomeAmtOrPct = InvestmentType.convertAmtOrPct(data.incomeAmtOrPct);
 
-    // 处理incomeDistribution - 解析分布类型和参数
+    // parse the distribution type and parameters
     const incomeDist = InvestmentType.parseDistribution(
       data.incomeDistribution
     );
     this._incomeDistributionType = incomeDist.type;
     this._incomeDistributionParams = incomeDist.params;
 
-    // 处理taxability - 从boolean转换为Taxability枚举
+    // convert the boolean to Taxability enum
     this.taxability = data.taxability
       ? Taxability.TAXABLE
       : Taxability.TAX_EXEMPT;
   }
 
   /**
-   * 生成预期年度回报
-   * @param baseAmount 基础金额，用于计算百分比回报
-   * @returns 预期年度回报金额
+   * generate the expected annual return
+   * @param baseAmount the base amount, used to calculate the percentage return
+   * @returns the expected annual return amount
    */
-  //todo:这里需要的是valueGenerator 而不是sample，不应该是个数字而是一个ValueGenerator
   generateExpectedAnnualReturn(baseAmount?: number): RandomGenerator {
     const returnValue = ValueGenerator(
       this._returnDistributionType,
@@ -148,11 +143,10 @@ export class InvestmentType {
   }
 
   /**
-   * 生成预期年度收入
-   * @param baseAmount 基础金额，用于计算百分比收入
-   * @returns 预期年度收入金额
+   * generate the expected annual income
+   * @param baseAmount the base amount, used to calculate the percentage income
+   * @returns the expected annual income amount
    */
-  //todo:这里需要的是valueGenerator 而不是sample，不应该是个数字而是一个ValueGenerator
   generateExpectedAnnualIncome(baseAmount?: number): RandomGenerator {
     const incomeValue = ValueGenerator(
       this._incomeDistributionType,
