@@ -20,6 +20,7 @@ export interface SimulationStateObject {
     incr_capital_gains_income(amt: number): void;
     incr_social_security_income(amt: number): void;
     setup_year(): void;
+    get_current_year(): number;
     federalTaxService: FederalTaxServiceObject,
     stateTaxService: StateTaxServiceObject,
     advance_year(): void,
@@ -37,6 +38,10 @@ async function SimulationState(
         const tax_filing_status = scenario.tax_filing_status;
         const inflation_assumption = scenario.inflation_assumption;
         let inflation_factor = inflation_assumption.sample();
+
+        const get_current_year = () => {
+            return current_year;
+        }
 
         const user_age = () => {
             return current_year - scenario.user_birth_year
@@ -130,6 +135,7 @@ async function SimulationState(
             incr_capital_gains_income,
             incr_social_security_income,
             setup_year,
+            get_current_year,
             federalTaxService: federal_tax_service,
             stateTaxService: state_tax_service,
             advance_year,
