@@ -2,7 +2,17 @@
 
 import { SimulationState } from "./SimulationState";
 import { FederalTaxService } from "../tax/FederalTaxService";
+import { IncomeType } from "../Enums";
+import { Investment } from "../domain/investment/Investment";
 
+function transfer_investment(
+    roth_conversion_strategy: string[], 
+    amt: number, 
+    source: Investment, 
+    target: Investment) {
+
+        // TODO
+}
 function process_roth_conversion(simulation_state: SimulationState) {
 
     if (!simulation_state.roth_conversion_opt) {
@@ -16,7 +26,10 @@ function process_roth_conversion(simulation_state: SimulationState) {
         return;
     }
 
-    const taxable_income = simulation_state
+    const taxable_income = simulation_state.get_ordinary_income();
+    const current_bracket = simulation_state
+                    .federal_tax_service
+                    .find_bracket(taxable_income, IncomeType.TAXABLE_INCOME, simulation_state.tax_filing_status);
 
 
 

@@ -25,7 +25,7 @@ export default function update_investment(simulation_state: SimulationState) {
         const dividend = investment.get_value() * investment.get_annual_income();
         if (!investment.is_retirement() && !investment.is_tax_exempt()) {
             simulation_state.incr_capital_gains_income(gains);
-            simulation_state.incr_taxable_income(dividend)
+            simulation_state.incr_ordinary_income(dividend)
         }
         investment.incr_value(gains);
         // reinvest the dividend/interest back to this investment

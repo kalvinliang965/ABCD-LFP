@@ -23,10 +23,10 @@ export interface SimulationState {
     roth_conversion_strategy: Array<string>;
     user: PersonDetails;
     spouse?: PersonDetails;
-    get_taxable_income(): number;
+    get_ordinary_income(): number;
     get_capital_gains_income(): number;
     get_social_security_income(): number;
-    incr_taxable_income(amt: number): void;
+    incr_ordinary_income(amt: number): void;
     incr_capital_gains_income(amt: number): void;
     incr_social_security_income(amt: number): void;
     setup_year(): void;
@@ -82,7 +82,7 @@ export async function create_simulation_state(
         
         
         // same as ordinary income, but because bracket use taxable we will also use it 
-        let taxable_income = 0;
+        let ordinary_income = 0;
         let capital_gains_income = 0;
         let social_security_income = 0;
 
@@ -110,15 +110,15 @@ export async function create_simulation_state(
             user,
             spouse,
 
-            get_taxable_income: () => taxable_income,
+            get_ordinary_income: () => ordinary_income,
             get_capital_gains_income: () => capital_gains_income,
             get_social_security_income: () => social_security_income,
-            incr_taxable_income: (amt: number) => taxable_income += amt,
+            incr_ordinary_income: (amt: number) => ordinary_income += amt,
             incr_capital_gains_income: (amt: number) => capital_gains_income += amt,
             incr_social_security_income: (amt: number) => social_security_income += amt,
             
             setup_year: () => {
-                taxable_income = capital_gains_income = social_security_income = 0;
+                ordinary_income = capital_gains_income = social_security_income = 0;
                 federal_tax_service.adjust_for_inflation(inflation_factor);
                 state_tax_service.adjust_for_inflation(inflation_factor);
             },
