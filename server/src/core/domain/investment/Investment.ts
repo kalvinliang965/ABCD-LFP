@@ -1,6 +1,7 @@
 import { InvestmentRaw } from "../scenario/Scenario";
 import { create_investment_type, InvestmentType } from "./InvestmentType";
 import { ChangeType, Taxability, TaxStatus } from "../../Enums";
+import { Investment } from "../../../db/models/investments";
 
 /**
  * Public information about an investment
@@ -23,6 +24,7 @@ export interface Investment {
   get_annual_return(): number,
   is_retirement(): boolean,
   is_tax_exempt(): boolean,
+  clone(): Investment,
 }
 
 /**
@@ -48,11 +50,12 @@ export function create_investment(raw_data: InvestmentRaw): Investment {
         throw new Error(`Invalid tax status: ${raw_data.taxStatus}`);
     }
 
+
     // how much we bought the investment for 
     let cost_basis = 0;
     // how much we invested
     let value = raw_data.value;
-    return {
+    const investment = {
       investment_type,
       taxStatus,
       id: raw_data.id,
@@ -70,8 +73,10 @@ export function create_investment(raw_data: InvestmentRaw): Investment {
       get_annual_return: () => investment_type.expect_annual_return.sample(),
       is_retirement: () => taxStatus === TaxStatus.AFTER_TAX || taxStatus === TaxStatus.PRE_TAX,
       is_tax_exempt: () => investment_type.taxability === Taxability.TAX_EXEMPT,
+      clone: () => create_investment(raw_data),
+    }
 
-    };
+    return investment;
   } catch (error) {
     console.error("Error creating investment:", error);
     throw new Error("Error creating investment");

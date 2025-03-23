@@ -13,7 +13,7 @@ export default function update_investment(simulation_state: SimulationState) {
         simulation_state.accounts.after_tax,
         simulation_state.accounts.non_retirement,
         simulation_state.accounts.pre_tax
-    ].flatMap(arr => arr);
+    ];
     
     for (const account_map of account_maps) {
         for (const [id, investment] of account_map.entries()) {
