@@ -47,7 +47,7 @@ async function get_distribution_period(age: number): Promise<number> {
     return 2.0;
   }
   
-  return 0;
+  return 0;       //need to implement.  ?????
 }
 
 /**
