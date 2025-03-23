@@ -28,7 +28,6 @@ export interface SimulationState {
   roth_conversion_opt: boolean;
   roth_conversion_start: number;
   roth_conversion_end: number;
-  expected_annual_change: number;
   roth_conversion_strategy: Array<string>;
   user: PersonDetails;
   spouse?: PersonDetails;
@@ -220,7 +219,7 @@ export async function create_simulation_state(
       roth_conversion_opt: scenario.roth_conversion_opt,
       roth_conversion_start: scenario.roth_conversion_start,
       roth_conversion_end: scenario.roth_conversion_end,
-      expected_annual_change: scenario.expected_annual_change || 0,
+    
       roth_conversion_strategy: scenario.roth_conversion_strategy,
       user,
       spouse,
