@@ -22,7 +22,6 @@ export interface PersonDetails {
 
 export interface SimulationState {
   events: Array<Event>;
-  tax_filing_status: TaxFilingStatus;
   inflation_factor: number;
   roth_conversion_opt: boolean;
   roth_conversion_start: number;
@@ -30,6 +29,7 @@ export interface SimulationState {
   roth_conversion_strategy: Array<string>;
   user: PersonDetails;
   spouse?: PersonDetails;
+  get_tax_filing_status(): TaxFilingStatus;
   get_ordinary_income(): number;
   get_capital_gains_income(): number;
   get_social_security_income(): number;
@@ -188,7 +188,7 @@ export async function create_simulation_state(
     const start_year: number = new Date().getFullYear();
     let current_year: number = start_year;
     const is_married = scenario.tax_filing_status === TaxFilingStatus.MARRIED;
-    const tax_filing_status = scenario.tax_filing_status;
+    let tax_filing_status = scenario.tax_filing_status;
 
     // Income tracking variables
     let ordinary_income = 0;
@@ -232,7 +232,6 @@ export async function create_simulation_state(
     const state: SimulationState = {
       cash,
       events: scenario.event_series,
-      tax_filing_status,
       inflation_factor,
       roth_conversion_opt: scenario.roth_conversion_opt,
       roth_conversion_start: scenario.roth_conversion_start,
@@ -244,6 +243,7 @@ export async function create_simulation_state(
       spouse,
 
       // Income getters and setters
+      get_tax_filing_status: () => tax_filing_status,
       get_financial_goal: () => scenario.financialGoal,
       get_ordinary_income: () => ordinary_income,
       get_capital_gains_income: () => capital_gains_income,
@@ -270,6 +270,10 @@ export async function create_simulation_state(
       advance_year: () => {
         current_year++;
         inflation_factor *= 1 + scenario.inflation_assumption.sample();
+
+        if (!spouse?.is_alive) {
+            tax_filing_status = TaxFilingStatus.SINGLE;
+        }
       },
 
       // Account and event organization

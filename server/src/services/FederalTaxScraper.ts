@@ -1,11 +1,11 @@
 import axios from "axios";
 import "cheerio";
 import { load } from "cheerio";
-import { create_tax_brackets, TaxBrackets } from "../../core/tax/TaxBrackets";
-import { IncomeType, TaxFilingStatus } from "../../core/Enums";
-import { StandardDeduction, create_standard_deductions } from "../../core/tax/StandardDeduction";
-import { tax_config } from "../../config/tax";
-import { save_bracket } from "../../db/repositories/TaxBracketRepository";
+import { create_tax_brackets, TaxBrackets } from "../core/tax/TaxBrackets";
+import { IncomeType, TaxFilingStatus } from "../core/Enums";
+import { StandardDeduction, create_standard_deductions } from "../core/tax/StandardDeduction";
+import { tax_config } from "../config/tax";
+import { save_bracket } from "../db/repositories/TaxBracketRepository";
 
 
 const SINGLE_TABLE: number = 0;

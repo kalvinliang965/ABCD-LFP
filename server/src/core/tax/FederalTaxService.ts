@@ -1,7 +1,7 @@
 
 import { TaxBracket, TaxBrackets } from "./TaxBrackets";
 import { create_standard_deductions, StandardDeduction } from "./StandardDeduction";
-import { parse_standard_deductions, parse_capital_gains, parse_taxable_income } from "../../services/scrapping/FederalTaxScraper";
+import { parse_standard_deductions, parse_capital_gains, parse_taxable_income } from "../../services/FederalTaxScraper";
 import { check_capital_gains, check_taxable_income, load_brackets } from "../../db/repositories/TaxBracketRepository";
 import { load_standard_deduction } from "../../db/repositories/StandardDeductionRepository";
 import { IncomeType, TaxFilingStatus } from "../Enums";

@@ -48,7 +48,7 @@ function process_roth_conversion(simulation_state: SimulationState) {
     const taxable_income = income - 0.15 * simulation_state.get_social_security_income();
     const current_bracket = simulation_state
                     .federal_tax_service
-                    .find_bracket(taxable_income, IncomeType.TAXABLE_INCOME, simulation_state.tax_filing_status);
+                    .find_bracket(taxable_income, IncomeType.TAXABLE_INCOME, simulation_state.get_tax_filing_status());
     const upper = current_bracket.max;
     const transfer_amt = Math.min(
         upper - taxable_income,
