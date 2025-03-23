@@ -321,8 +321,8 @@ export async function create_simulation_state(
 
       process_tax: () => {
             try {
-                const taxable_income = (ordinary_income + capital_gains_income) - 0.15 * social_security_income;
-
+                const standard_deduction = federal_tax_service.find_deduction(tax_filing_status);
+                const taxable_income = ((ordinary_income + capital_gains_income) - 0.15 * social_security_income) - standard_deduction;
                 const federal_taxable_income_tax = taxable_income * federal_tax_service.find_rate(
                     taxable_income, 
                     IncomeType.TAXABLE_INCOME, 
