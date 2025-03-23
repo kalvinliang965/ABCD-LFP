@@ -6,6 +6,9 @@ import { AccountMap } from "./SimulationState";
 
 
 export default function update_investment(simulation_state: SimulationState) {
+    
+    // we could just iterate the non-retirment account list
+    // but here i just wanna double check for invalid account type
     const account_maps: Array<AccountMap> = [
         simulation_state.accounts.after_tax,
         simulation_state.accounts.non_retirement,
