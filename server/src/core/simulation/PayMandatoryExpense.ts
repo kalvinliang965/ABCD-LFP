@@ -9,7 +9,6 @@ import { SimulationState } from "./SimulationState";
 import { Event } from "../domain/event/Event";
 import { ChangeType, TaxStatus, IncomeType } from "../Enums";
 import { Investment } from "../domain/investment/Investment";
-import { Scenario } from "../domain/scenario/Scenario";
 
 // Track state across simulation years
 interface TaxTrackingState {
@@ -33,13 +32,10 @@ let taxTrackingState: TaxTrackingState = {
 
 /**
  * Process mandatory expense events and previous year's taxes for the current year
- * todo: 这两个function share a lot same code, can we refactor them?
  * @param state The current simulation state
  * @returns void
  */
-export function pay_mandatory_expenses(
-  state: SimulationState
-): void {
+export function pay_mandatory_expenses(state: SimulationState): void {
   // SEQUENTIAL THINKING STEP 1: Identify mandatory expenses for the current year
   const currentYear = state.get_current_year();
 
@@ -51,43 +47,76 @@ export function pay_mandatory_expenses(
     }
   }
 
-  // SEQUENTIAL THINKING STEP 2: Calculate previous year's taxes
-  // Only calculate taxes if we're past the first year of simulation
-  let federalIncomeTax = 0;
-  let stateIncomeTax = 0;
-  let capitalGainsTax = 0;
+  // SEQUENTIAL THINKING STEP 2: Calculate total mandatory expenses amount for this year only
+  let totalMandatoryExpenseAmount = 0;
+  for (const expense of mandatoryExpenses) {
+    // Calculate the amount for this specific year only
+    const expenseAmount = get_expense_amount_for_current_year(
+      expense,
+      currentYear,
+      state.inflation_factor
+    );
+
+    totalMandatoryExpenseAmount += expenseAmount;
+    // Track paid amount for reporting
+    (expense as any).paid_amount = expenseAmount;
+  }
+
+  // SEQUENTIAL THINKING STEP 3: Process previous year's taxes if not in first simulation year
+  let totalTaxAmount = 0;
   let earlyWithdrawalTax = 0;
 
-  // Update the start year if not set
+  // Update the start year if needed
   if (currentYear < taxTrackingState.start_year) {
     taxTrackingState.start_year = currentYear;
   }
 
   if (currentYear > taxTrackingState.start_year) {
-    // Calculate federal income tax
-    federalIncomeTax = calculate_federal_income_tax(
-      state,
-      taxTrackingState.prev_year_ordinary_income,
-      taxTrackingState.prev_year_social_security_income
+    // Create a temporary simulation state to process the previous year's taxes
+    // We do this because process_tax works with the state's current income values
+    const originalOrdinaryIncome = state.get_ordinary_income();
+    const originalSocialSecurityIncome = state.get_social_security_income();
+    const originalCapitalGainsIncome = state.get_capital_gains_income();
+
+    // Set state to previous year's values to calculate taxes
+    // @ts-ignore - Direct access to income tracking variables
+    state.incr_ordinary_income(
+      taxTrackingState.prev_year_ordinary_income - originalOrdinaryIncome
+    );
+    // @ts-ignore - Direct access to income tracking variables
+    state.incr_social_security_income(
+      taxTrackingState.prev_year_social_security_income -
+        originalSocialSecurityIncome
+    );
+    // @ts-ignore - Direct access to income tracking variables
+    state.incr_capital_gains_income(
+      taxTrackingState.prev_year_capital_gains_income -
+        originalCapitalGainsIncome
     );
 
-    // Calculate state income tax
-    stateIncomeTax = calculate_state_income_tax(
-      state,
-      taxTrackingState.prev_year_ordinary_income,
-      taxTrackingState.prev_year_social_security_income
-    );
+    // Save original cash value
+    const originalCashValue = state.cash.get_value();
 
-    // Calculate capital gains tax (ensure it's not negative)
-    const prevYearCapitalGains =
-      taxTrackingState.prev_year_capital_gains_income;
-    capitalGainsTax = Math.max(
-      0,
-      calculate_capital_gains_tax(
-        state,
-        prevYearCapitalGains,
-        taxTrackingState.prev_year_ordinary_income
-      )
+    // Process taxes using the simulation state's built-in method
+    state.process_tax();
+
+    // Calculate the tax amount (the difference in cash value)
+    totalTaxAmount = state.cash.get_value() - originalCashValue;
+
+    // Restore the original cash value and income values
+    // @ts-ignore - Direct access to cash value
+    state.cash.incr_value(originalCashValue - state.cash.get_value());
+    // @ts-ignore - Direct access to income tracking variables
+    state.incr_ordinary_income(
+      originalOrdinaryIncome - state.get_ordinary_income()
+    );
+    // @ts-ignore - Direct access to income tracking variables
+    state.incr_social_security_income(
+      originalSocialSecurityIncome - state.get_social_security_income()
+    );
+    // @ts-ignore - Direct access to income tracking variables
+    state.incr_capital_gains_income(
+      originalCapitalGainsIncome - state.get_capital_gains_income()
     );
 
     // Calculate early withdrawal tax if applicable
@@ -96,75 +125,35 @@ export function pay_mandatory_expenses(
     earlyWithdrawalTax = calculate_early_withdrawal_tax(
       prevYearEarlyWithdrawals
     );
+
+    // Add early withdrawal tax to total tax amount
+    totalTaxAmount += earlyWithdrawalTax;
   }
 
-  // SEQUENTIAL THINKING STEP 3: Find the cash account for payments
-  let cashAccount: Investment | undefined;
-  for (const [id, investment] of state.accounts.non_retirement) {
-    if (id.toLowerCase() === "cash") {
-      cashAccount = investment;
-      break;
-    }
-  }
+  // SEQUENTIAL THINKING STEP 4: Calculate total payment amount
+  const totalPaymentAmount = totalMandatoryExpenseAmount + totalTaxAmount;
 
-  if (!cashAccount) {
-    console.warn("No cash account found for mandatory expenses");
-    return;
-  }
-
-  // SEQUENTIAL THINKING STEP 4: Calculate total payment amount (P)
-  // Sum of non-discretionary expenses and previous year's taxes
-  let totalPaymentAmount = 0;
-
-  // Add up all mandatory expenses for the current year
-  for (const expense of mandatoryExpenses) {
-    const yearsActive = currentYear - expense.start;
-    const expenseAmount = calculate_event_amount(
-      expense,
-      (expense as any).initial_amount,
-      yearsActive,
-      state.inflation_factor
-    );
-    totalPaymentAmount += expenseAmount;
-  }
-
-  // Add all taxes
-  const totalTaxes =
-    federalIncomeTax + stateIncomeTax + capitalGainsTax + earlyWithdrawalTax;
-  totalPaymentAmount += totalTaxes;
-
-  // SEQUENTIAL THINKING STEP 5: Calculate total withdrawal amount (W)
-  const cashValue = (cashAccount as any).value;
+  // SEQUENTIAL THINKING STEP 5: Check if additional withdrawals are needed
+  const cashValue = state.cash.get_value();
   const totalWithdrawalAmount = Math.max(0, totalPaymentAmount - cashValue);
 
-  // SEQUENTIAL THINKING STEP 6: Withdraw funds if needed
+  // SEQUENTIAL THINKING STEP 6: Withdraw funds if needed based on withdrawal strategy
   if (totalWithdrawalAmount > 0) {
     withdraw_from_investments(state, totalWithdrawalAmount);
   }
 
-  // SEQUENTIAL THINKING STEP 7: Pay expenses and taxes
-  (cashAccount as any).value -= totalPaymentAmount;
+  // SEQUENTIAL THINKING STEP 7: Pay expenses and taxes by deducting from cash
+  // @ts-ignore - Direct access to cash value
+  state.cash.incr_value(-totalPaymentAmount);
 
-  // SEQUENTIAL THINKING STEP 8: Record payments for reporting
-  for (const expense of mandatoryExpenses) {
-    const yearsActive = currentYear - expense.start;
-    const expenseAmount = calculate_event_amount(
-      expense,
-      (expense as any).initial_amount,
-      yearsActive,
-      state.inflation_factor
-    );
-    (expense as any).paid_amount = expenseAmount;
-  }
-
-  // Store tax payments in our tracking state
-  taxTrackingState.tax_payments.set("federal_income_tax", federalIncomeTax);
-  taxTrackingState.tax_payments.set("state_income_tax", stateIncomeTax);
-  taxTrackingState.tax_payments.set("capital_gains_tax", capitalGainsTax);
+  // SEQUENTIAL THINKING STEP 8: Store tax payments for reporting
+  taxTrackingState.tax_payments.set(
+    "income_tax",
+    totalTaxAmount - earlyWithdrawalTax
+  );
   taxTrackingState.tax_payments.set("early_withdrawal_tax", earlyWithdrawalTax);
 
-  // Update tracking state for next year's tax calculations
-  // Save current year values for next year's tax calculations
+  // SEQUENTIAL THINKING STEP 9: Update tracking state for next year's tax calculations
   taxTrackingState.prev_year_ordinary_income = state.get_ordinary_income();
   taxTrackingState.prev_year_social_security_income =
     state.get_social_security_income();
@@ -172,63 +161,6 @@ export function pay_mandatory_expenses(
     state.get_capital_gains_income();
   // Early withdrawals will be tracked in the withdraw_from_investments function
   taxTrackingState.prev_year_early_withdrawals = 0;
-}
-
-/**
- * Calculate the federal income tax
- */
-function calculate_federal_income_tax(
-  state: SimulationState,
-  ordinaryIncome: number,
-  socialSecurityIncome: number
-): number {
-  // Use federal tax service to calculate income tax based on filing status
-  // Find the tax rate for the income and apply it
-  const taxableIncome = ordinaryIncome + socialSecurityIncome;
-  const taxRate = state.federal_tax_service.find_rate(
-    taxableIncome,
-    IncomeType.TAXABLE_INCOME,
-    state.tax_filing_status
-  );
-
-  return taxableIncome * taxRate;
-}
-
-/**
- * Calculate the state income tax
- */
-function calculate_state_income_tax(
-  state: SimulationState & Partial<Scenario>,
-  ordinaryIncome: number,
-  socialSecurityIncome: number
-): number {
-  // For simplicity, using a static state tax rate
-  // In a real implementation, this would use the state tax service
-  const STATE_TAX_RATE = 0.05; // Example state tax rate of 5%
-  return (ordinaryIncome + socialSecurityIncome) * STATE_TAX_RATE;
-}
-
-/**
- * Calculate the capital gains tax
- */
-function calculate_capital_gains_tax(
-  state: SimulationState & Partial<Scenario>,
-  capitalGains: number,
-  ordinaryIncome: number
-): number {
-  // If there are no capital gains or there's a loss, no tax is due
-  if (capitalGains <= 0) {
-    return 0;
-  }
-
-  // Use federal tax service to find the capital gains tax rate
-  const taxRate = state.federal_tax_service.find_rate(
-    ordinaryIncome,
-    IncomeType.CAPITAL_GAINS,
-    state.tax_filing_status
-  );
-
-  return capitalGains * taxRate;
 }
 
 /**
@@ -249,24 +181,10 @@ function calculate_early_withdrawal_tax(earlyWithdrawalAmount: number): number {
  * @param amountNeeded The amount that needs to be withdrawn
  */
 function withdraw_from_investments(
-  state: SimulationState & Partial<Scenario>,
+  state: SimulationState,
   amountNeeded: number
 ): void {
   let remainingAmount = amountNeeded;
-  let cashAccount: Investment | undefined;
-
-  // Find the cash account
-  for (const [id, investment] of state.accounts.non_retirement) {
-    if (id.toLowerCase() === "cash") {
-      cashAccount = investment;
-      break;
-    }
-  }
-
-  if (!cashAccount) {
-    console.warn("No cash account found for withdrawals");
-    return;
-  }
 
   // Go through the withdrawal strategy in order
   for (const investmentId of state.expense_withrawal_strategy || []) {
@@ -274,10 +192,29 @@ function withdraw_from_investments(
 
     // Look for the investment in all account types
     let investment: Investment | undefined;
-    let accountType: "non_retirement" | "pre_tax" | "after_tax" | undefined;
+    let accountType: TaxStatus | undefined;
 
-    for (const type of ["non_retirement", "pre_tax", "after_tax"] as const) {
-      const account = state.accounts[type].get(investmentId);
+    // Use the TaxStatus enum instead of string literals
+    for (const type of [
+      TaxStatus.NON_RETIREMENT,
+      TaxStatus.PRE_TAX,
+      TaxStatus.AFTER_TAX,
+    ] as const) {
+      // Need to get the account map that corresponds to the enum value
+      let accountMap: Map<string, Investment>;
+      switch (type) {
+        case TaxStatus.NON_RETIREMENT:
+          accountMap = state.accounts.non_retirement;
+          break;
+        case TaxStatus.PRE_TAX:
+          accountMap = state.accounts.pre_tax;
+          break;
+        case TaxStatus.AFTER_TAX:
+          accountMap = state.accounts.after_tax;
+          break;
+      }
+
+      const account = accountMap.get(investmentId);
       if (account) {
         investment = account;
         accountType = type;
@@ -285,11 +222,11 @@ function withdraw_from_investments(
       }
     }
 
-    if (!investment || investment === cashAccount || !accountType) continue;
+    if (!investment || investment === state.cash || !accountType) continue;
 
     // Get the current value and purchase price of the investment
-    const currentValue = (investment as any).value;
-    const purchasePrice = (investment as any).purchase_price || 0;
+    const currentValue = investment.get_value();
+    const purchasePrice = (investment as any).get_cost_basis?.() || 0;
 
     // Calculate how much to withdraw from this investment
     const amountToWithdraw = Math.min(currentValue, remainingAmount);
@@ -299,26 +236,27 @@ function withdraw_from_investments(
     const fraction = amountToWithdraw / currentValue;
 
     // Withdraw the funds
-    (investment as any).value -= amountToWithdraw;
-    (cashAccount as any).value += amountToWithdraw;
+    investment.incr_value(-amountToWithdraw);
+    state.cash.incr_value(amountToWithdraw);
     remainingAmount -= amountToWithdraw;
 
     // Handle tax implications based on the account type
-    if (accountType === "non_retirement") {
+    if (accountType === TaxStatus.NON_RETIREMENT) {
       // For non-retirement accounts, calculate capital gains
       const capitalGain = amountToWithdraw - fraction * purchasePrice;
       state.incr_capital_gains_income(capitalGain);
 
       // Update the purchase price after partial sale
-      (investment as any).purchase_price = purchasePrice * (1 - fraction);
-    } else if (accountType === "pre_tax") {
+      (investment as any).incr_cost_basis?.(-fraction * purchasePrice);
+    } else if (accountType === TaxStatus.PRE_TAX) {
       // For pre-tax accounts, the entire withdrawal counts as ordinary income
       state.incr_ordinary_income(amountToWithdraw);
     }
 
     // Check for early withdrawal penalties (before age 59.5)
     if (
-      (accountType === "pre_tax" || accountType === "after_tax") &&
+      (accountType === TaxStatus.PRE_TAX ||
+        accountType === TaxStatus.AFTER_TAX) &&
       state.user.get_age() < 59
     ) {
       // Track early withdrawals for tax calculation in next year
@@ -336,39 +274,6 @@ function withdraw_from_investments(
   }
 }
 
-/**
- * Helper function to calculate the current amount for an event based on
- * its initial amount, changes over time, and inflation
- * @param event The event object
- * @param initial_amount The initial amount of the event
- * @param years_active How many years the event has been active
- * @param inflation_factor The cumulative inflation factor
- * @returns The calculated amount for the current year
- */
-function calculate_event_amount(
-  event: any,
-  initial_amount: number,
-  years_active: number,
-  inflation_factor: number
-): number {
-  let amount = initial_amount;
-
-  // Apply annual changes for each year the event has been active
-  for (let i = 0; i < years_active; i++) {
-    if (event.change_type === ChangeType.FIXED) {
-      amount += event.expected_annual_change;
-    } else if (event.change_type === ChangeType.PERCENTAGE) {
-      amount *= 1 + event.expected_annual_change;
-    }
-  }
-
-  // Apply inflation adjustment if needed
-  if (event.inflation_adjusted) {
-    amount *= inflation_factor;
-  }
-
-  return amount;
-}
 
 /**
  * Helper function to check if an event is active in the current year
@@ -380,4 +285,75 @@ function is_event_active(event: Event, current_year: number): boolean {
   return (
     current_year >= event.start && current_year < event.start + event.duration
   );
+}
+
+/**
+ * Get the expense amount for the current year, taking into account the event's history
+ * and the correct amount for this specific year
+ *
+ * @param event The expense event
+ * @param currentYear The current simulation year
+ * @param inflationFactor The cumulative inflation factor
+ * @returns The expense amount for the current year only
+ */
+function get_expense_amount_for_current_year(
+  event: any,
+  currentYear: number,
+  inflationFactor: number
+): number {
+  // Keep track of the event's current amount across simulation years
+  if (!(event as any).current_amount) {
+    // First time calculating this event, start with initial amount
+    (event as any).current_amount = (event as any).initial_amount;
+    (event as any).last_processed_year = event.start;
+  }
+
+  // If there's a gap in years (simulation jumped ahead), catch up the amount
+  if ((event as any).last_processed_year < currentYear - 1) {
+    // Catch up calculations for missed years
+    for (let y = (event as any).last_processed_year + 1; y < currentYear; y++) {
+      update_event_amount_for_year(event, y, inflationFactor);
+    }
+  }
+
+  // Update the amount for the current year
+  update_event_amount_for_year(event, currentYear, inflationFactor);
+
+  // Return the current year's amount
+  return (event as any).current_amount;
+}
+
+/**
+ * Updates an event's amount for a specific year
+ *
+ * @param event The event to update
+ * @param year The year to calculate for
+ * @param inflationFactor The cumulative inflation factor
+ */
+function update_event_amount_for_year(
+  event: any,
+  year: number,
+  inflationFactor: number
+): void {
+  let amount = (event as any).current_amount;
+
+  // Apply the annual change for this specific year
+  if (event.change_type === ChangeType.FIXED) {
+    amount += event.expected_annual_change;
+  } else if (event.change_type === ChangeType.PERCENTAGE) {
+    amount *= 1 + event.expected_annual_change;
+  }
+
+  // Apply inflation adjustment if needed
+  if (event.inflation_adjusted && year > (event as any).last_processed_year) {
+    // Only apply inflation for the years that haven't been processed
+    // The exact inflation calculation would depend on your model
+    // Here we're making a simplification
+    amount *= inflationFactor / (event as any).last_inflation_factor || 1;
+  }
+
+  // Update the event's stored values
+  (event as any).current_amount = amount;
+  (event as any).last_processed_year = year;
+  (event as any).last_inflation_factor = inflationFactor;
 }
