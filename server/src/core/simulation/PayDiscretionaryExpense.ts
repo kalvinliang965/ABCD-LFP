@@ -12,6 +12,7 @@ import { Event } from "../domain/event/Event";
 import { ChangeType } from "../Enums";
 import { Investment } from "../domain/investment/Investment";
 import { Scenario } from "../domain/scenario/Scenario";
+import { TaxStatus } from "../Enums";
 
 /**
  * Process discretionary expense events for the current year
@@ -182,20 +183,18 @@ function calculate_total_assets(state: SimulationState): number {
 
 /**
  * Withdraw funds from investments according to the expense withdrawal strategy
- * This function liquidates investments in the order specified by the withdrawal strategy
- * until the required amount is obtained. It also handles tax implications of withdrawals.
- *
+ * This function also tracks capital gains and updates relevant income counters
  * @param state The simulation state
  * @param amountNeeded The amount that needs to be withdrawn
  */
 function withdraw_from_investments(
-  state: SimulationState & Partial<Scenario>,
+  state: SimulationState,
   amountNeeded: number
 ): void {
   let remainingAmount = amountNeeded;
   let cashAccount: Investment | undefined;
 
-  // Find the cash account for depositing the withdrawn funds
+  // Find the cash account
   for (const [id, investment] of state.accounts.non_retirement) {
     if (id.toLowerCase() === "cash") {
       cashAccount = investment;
@@ -215,10 +214,29 @@ function withdraw_from_investments(
 
     // Look for the investment in all account types
     let investment: Investment | undefined;
-    let accountType: "non_retirement" | "pre_tax" | "after_tax" | undefined;
+    let accountType: TaxStatus | undefined;
 
-    for (const type of ["non_retirement", "pre_tax", "after_tax"] as const) {
-      const account = state.accounts[type].get(investmentId);
+    // Use the TaxStatus enum instead of string literals
+    for (const type of [
+      TaxStatus.NON_RETIREMENT,
+      TaxStatus.PRE_TAX,
+      TaxStatus.AFTER_TAX,
+    ] as const) {
+      // Need to get the account map that corresponds to the enum value
+      let accountMap: Map<string, Investment>;
+      switch (type) {
+        case TaxStatus.NON_RETIREMENT:
+          accountMap = state.accounts.non_retirement;
+          break;
+        case TaxStatus.PRE_TAX:
+          accountMap = state.accounts.pre_tax;
+          break;
+        case TaxStatus.AFTER_TAX:
+          accountMap = state.accounts.after_tax;
+          break;
+      }
+
+      const account = accountMap.get(investmentId);
       if (account) {
         investment = account;
         accountType = type;
@@ -247,14 +265,14 @@ function withdraw_from_investments(
     remainingAmount -= amountToWithdraw;
 
     // Handle tax implications based on the account type
-    if (accountType === "non_retirement") {
+    if (accountType === TaxStatus.NON_RETIREMENT) {
       // For non-retirement accounts, calculate capital gains (or losses)
       const capitalGain = amountToWithdraw - fraction * purchasePrice;
       state.incr_capital_gains_income(capitalGain);
 
       // Update the purchase price after partial sale
       (investment as any).purchase_price = purchasePrice * (1 - fraction);
-    } else if (accountType === "pre_tax") {
+    } else if (accountType === TaxStatus.PRE_TAX) {
       // For pre-tax accounts, the entire withdrawal counts as ordinary income
       state.incr_ordinary_income(amountToWithdraw);
     }
@@ -266,7 +284,8 @@ function withdraw_from_investments(
     // For demonstration purposes, we just log this since the state doesn't have
     // a direct method to track early withdrawals in this implementation
     if (
-      (accountType === "pre_tax" || accountType === "after_tax") &&
+      (accountType === TaxStatus.PRE_TAX ||
+        accountType === TaxStatus.AFTER_TAX) &&
       state.user.get_age() < 59
     ) {
       console.info(

@@ -3,6 +3,24 @@
  * This module handles mandatory expenses and tax payments in the financial simulation.
  * It processes non-discretionary expenses and the previous year's taxes,
  * withdrawing from investments as needed according to the user's strategy.
+ * todo: 这个文件可以被优化，因为如果创建了本地的event，那么每年更新的时候，我们都需要重新创建event。
+ * todo：最好的方法是在外部创建event，然后在这里使用。
+ * todo：我们可以在simulationState中创建一个方法来获取Mandatory Expense event 和 Discretionary Expense event。
+ * todo：同时我们也可以在Simulation State中创建一个对象来存储这些event。
+ * 
+ * 我们现在有的Expense event object是：
+ *  ExpenseEvent{
+ * name: string;
+ * start: number;
+ * duration: number;
+ * type: string;
+ * initial_amount: number;
+ * change_type: ChangeType; 
+ * expected_annual_change: number;
+ * inflation_adjusted: boolean;
+ * user_fraction: number;
+ * discretionary: boolean;
+ * }
  */
 
 import { SimulationState } from "./SimulationState";
@@ -36,10 +54,10 @@ let taxTrackingState: TaxTrackingState = {
  * @returns void
  */
 export function pay_mandatory_expenses(state: SimulationState): void {
-  // SEQUENTIAL THINKING STEP 1: Identify mandatory expenses for the current year
+  // SEQUENTIAL THINKING STEP 1: Identify mandatory expenses for the current year //人工审查通过
   const currentYear = state.get_current_year();
 
-  // Create an array of mandatory expense events (non-discretionary)
+  // Create an array of mandatory expense events (non-discretionary) // 人工审查通过
   const mandatoryExpenses: Event[] = [];
   for (const [_, event] of state.events_by_type.expense) {
     if (!(event as any).discretionary && is_event_active(event, currentYear)) {
@@ -47,7 +65,7 @@ export function pay_mandatory_expenses(state: SimulationState): void {
     }
   }
 
-  // SEQUENTIAL THINKING STEP 2: Calculate total mandatory expenses amount for this year only
+  // SEQUENTIAL THINKING STEP 2: Calculate total mandatory expenses amount for this year only //我是创建了event么？
   let totalMandatoryExpenseAmount = 0;
   for (const expense of mandatoryExpenses) {
     // Calculate the amount for this specific year only
@@ -58,7 +76,7 @@ export function pay_mandatory_expenses(state: SimulationState): void {
     );
 
     totalMandatoryExpenseAmount += expenseAmount;
-    // Track paid amount for reporting
+    // Track paid amount for reporting //? 这里似乎不需要，我们不用报告我们支付了多少
     (expense as any).paid_amount = expenseAmount;
   }
 
@@ -308,13 +326,14 @@ function get_expense_amount_for_current_year(
     (event as any).last_processed_year = event.start;
   }
 
-  // If there's a gap in years (simulation jumped ahead), catch up the amount
-  if ((event as any).last_processed_year < currentYear - 1) {
-    // Catch up calculations for missed years
-    for (let y = (event as any).last_processed_year + 1; y < currentYear; y++) {
-      update_event_amount_for_year(event, y, inflationFactor);
-    }
-  }
+  // //? gap year 存在么？
+  // // If there's a gap in years (simulation jumped ahead), catch up the amount
+  // if ((event as any).last_processed_year < currentYear - 1) {
+  //   // Catch up calculations for missed years
+  //   for (let y = (event as any).last_processed_year + 1; y < currentYear; y++) {
+  //     update_event_amount_for_year(event, y, inflationFactor);
+  //   }
+  // }
 
   // Update the amount for the current year
   update_event_amount_for_year(event, currentYear, inflationFactor);
