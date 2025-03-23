@@ -187,7 +187,7 @@ function calculate_federal_income_tax(
   const taxRate = state.federal_tax_service.find_rate(
     taxableIncome,
     IncomeType.TAXABLE_INCOME,
-    state.tax_filing_status
+    state.get_tax_filing_status()
   );
 
   return taxableIncome * taxRate;
@@ -224,7 +224,7 @@ function calculate_capital_gains_tax(
   const taxRate = state.federal_tax_service.find_rate(
     ordinaryIncome,
     IncomeType.CAPITAL_GAINS,
-    state.tax_filing_status
+    state.get_tax_filing_status()
   );
 
   return capitalGains * taxRate;
