@@ -5,7 +5,7 @@ import { EventRaw } from "../scenario/Scenario";
 // Map to store the event start years during processing
 let _event_start_years = new Map<string, number>();
 
-/**
+/**1
  * Process a collection of events to resolve their start years including dependencies
  * @param events Collection of events to process
  * @returns Map of event names to their resolved start years
