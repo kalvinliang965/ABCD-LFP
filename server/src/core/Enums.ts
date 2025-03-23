@@ -1,5 +1,5 @@
 
-export const enum TaxFilingStatus {
+export enum TaxFilingStatus {
     SINGLE = "SINGLE",
     MARRIED = "MARRIED",
 }
