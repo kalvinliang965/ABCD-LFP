@@ -1,6 +1,6 @@
 
 import { SimulationState, create_simulation_state } from './SimulationState';
-import { SimulationResult } from './SimulationResult';
+import { SimulationResult, create_simulation_result } from './SimulationResult';
 import { Scenario } from '../domain/scenario/Scenario';
 import process_roth_conversion from './RothConversion';
 import update_investment from './UpdateInvestment';
@@ -20,7 +20,7 @@ export class SimulationEngine {
 
                 return new Promise<SimulationResult>(async (resolve) => {
                     const simulation_state = await create_simulation_state(this.scenario); 
-                    const simulation_result = new SimulationResult();
+                    const simulation_result = create_simulation_result();
                     // Run the simulation synchronously.
                     while (this.should_continue(simulation_state)) {
                         this.simulate_year(simulation_state, simulation_result);
@@ -36,20 +36,15 @@ export class SimulationEngine {
 
     private simulate_year(simulation_state: SimulationState, simulation_result: SimulationResult ) {
         simulation_state.setup_year();
-
         if (simulation_state.roth_conversion_opt) {
             process_roth_conversion(simulation_state);
         }
-
-        
+        update_investment(simulation_state);
+        simulation_result.update(simulation_state);
     }
 
     private should_continue(simulation_state: SimulationState):boolean {
         return simulation_state.user.is_alive();
     }
 
-    private generate_result(): SimulationResult {
-        // TODO
-        return ""
-    }
 }

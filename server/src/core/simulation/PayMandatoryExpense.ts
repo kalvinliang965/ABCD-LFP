@@ -357,3 +357,4 @@ function update_event_amount_for_year(
   (event as any).last_processed_year = year;
   (event as any).last_inflation_factor = inflationFactor;
 }
+
