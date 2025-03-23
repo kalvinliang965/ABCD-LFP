@@ -22,7 +22,7 @@ function transfer_investment(
         }
 
         if (!target_pool.has(label)) {
-            // TODO
+            console.error("TODO");
             process.exit(1);
         }
         const to_investment = target_pool.get(label);
