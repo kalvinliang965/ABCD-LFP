@@ -8,6 +8,7 @@ import {
 } from "./Event";
 
 interface ExpenseEvent extends Event {
+  //todo: 
   initial_amount: number;
   change_type: ChangeType;
   expected_annual_change: number;
