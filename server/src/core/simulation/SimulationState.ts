@@ -41,6 +41,7 @@ export interface SimulationState {
   incr_after_tax_contribution(amt: number): void;
   setup_year(): void;
   get_current_year(): number;
+  get_financial_goal(): number;
   federal_tax_service: FederalTaxService;
   state_tax_service: StateTaxService;
   advance_year(): void;
@@ -55,6 +56,8 @@ export interface SimulationState {
     invest: EventMap;
     rebalance: EventMap;
   };
+  spending_strategy: Array<string>;
+  expense_withrawal_strategy: Array<string>;
   process_events(): void;
   get_active_events(): Event[];
 }
@@ -217,17 +220,20 @@ export async function create_simulation_state(
       roth_conversion_opt: scenario.roth_conversion_opt,
       roth_conversion_start: scenario.roth_conversion_start,
       roth_conversion_end: scenario.roth_conversion_end,
-    
+      spending_strategy: scenario.spending_strategy,
+      expense_withrawal_strategy: scenario.expense_withrawal_strategy,
       roth_conversion_strategy: scenario.roth_conversion_strategy,
       user,
       spouse,
 
       // Income getters and setters
+      get_financial_goal: () => scenario.financialGoal,
       get_ordinary_income: () => ordinary_income,
       get_capital_gains_income: () => capital_gains_income,
       get_social_security_income: () => social_security_income,
       get_after_tax_contribution: () => after_tax_contribution,
-      get_after_tax_contribution_limit: () => scenario.after_tax_contribution_limit,
+      get_after_tax_contribution_limit: () =>
+        scenario.after_tax_contribution_limit,
       incr_ordinary_income: (amt: number) => {
         ordinary_income += amt;
       },
@@ -245,7 +251,7 @@ export async function create_simulation_state(
         ordinary_income = 0;
         capital_gains_income = 0;
         social_security_income = 0;
-        after_tax_contribution = 0
+        after_tax_contribution = 0;
         federal_tax_service.adjust_for_inflation(inflation_factor);
         state_tax_service.adjust_for_inflation(inflation_factor);
       },
