@@ -1,28 +1,49 @@
 import ValueGenerator from "../../../utils/math/ValueGenerator";
 import { ChangeType, DistributionType, StatisticType } from "../../Enums";
 
-function parse_start_year(start: Map<string, any>): number {
-     
-    switch(start.get("type")) {
-        case "fixed":
-            return ValueGenerator(DistributionType.FIXED,  new Map([
-                [StatisticType.VALUE, start.get("value")]
-            ])).sample();
-        case "uniform":
-            return ValueGenerator(DistributionType.UNIFORM, new Map([
-                [StatisticType.LOWER, start.get("lower")],
-                [StatisticType.UPPER, start.get("upper")]
-            ])).sample();
-        case "normal":
-            return ValueGenerator(DistributionType.UNIFORM, new Map([
-                [StatisticType.MEAN, start.get("mean")],
-                [StatisticType.STDDEV, start.get("stdev")]
-            ])).sample();
-        case "startWith":
-            // TODO
-            throw new Error("TODO");
-        default:
-            throw new Error("Invalid start year type");            
+
+// Map to store the event start years during processing
+let _event_start_years = new Map<string, number>();
+
+/**1
+ * Process a collection of events to resolve their start years including dependencies
+ * @param events Collection of events to process
+ * @returns Map of event names to their resolved start years
+ */
+function process_event_dependencies(events: EventRaw[]): Map<string, number> {
+  _event_start_years = new Map<string, number>();
+
+  // First pass: Process events with fixed, uniform, or normal start years
+  for (const event of events) {
+    if (
+      event.start.get("type") !== "startWith" &&
+      event.start.get("type") !== "startAfter"
+    ) {
+      const startYear = parse_start_year(event.start);
+      _event_start_years.set(event.name, startYear);
+    }
+  }
+
+  // Second pass: Resolve dependencies
+  let hasUnresolvedDependencies = true;
+  let iterations = 0;
+  const MAX_ITERATIONS = 100; // Safety to prevent infinite loop
+
+  while (hasUnresolvedDependencies && iterations < MAX_ITERATIONS) {
+    hasUnresolvedDependencies = false;
+    iterations++;
+
+    for (const event of events) {
+      // Skip events already processed
+      if (_event_start_years.has(event.name)) continue;
+
+      try {
+        const startYear = parse_start_year(event.start);
+        _event_start_years.set(event.name, startYear);
+      } catch (error) {
+        // Still has dependencies that aren't resolved
+        hasUnresolvedDependencies = true;
+      }
     }
 }
 
