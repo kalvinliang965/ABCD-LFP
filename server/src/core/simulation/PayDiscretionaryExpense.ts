@@ -18,9 +18,7 @@ import { Scenario } from "../domain/scenario/Scenario";
  * @param state The current simulation state
  * @returns void
  */
-export function pay_discretionary_expenses(
-  state: SimulationState & Partial<Scenario>
-): void {
+export function pay_discretionary_expenses(state: SimulationState): void {
   // SEQUENTIAL THINKING STEP 1: Identify discretionary expense events for the current year
   const currentYear = state.get_current_year();
 
@@ -47,7 +45,7 @@ export function pay_discretionary_expenses(
   // SEQUENTIAL THINKING STEP 3: Calculate total assets and determine available funds
   // Financial goal represents the minimum assets that must be maintained
   const totalAssets = calculate_total_assets(state);
-  const financialGoal = state.financialGoal || 0;
+  const financialGoal = state.get_financial_goal();
 
   // Available funds is the amount that can be spent while maintaining the financial goal
   let availableFunds = Math.max(0, totalAssets - financialGoal);

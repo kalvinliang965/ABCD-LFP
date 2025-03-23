@@ -33,11 +33,12 @@ let taxTrackingState: TaxTrackingState = {
 
 /**
  * Process mandatory expense events and previous year's taxes for the current year
+ * todo: 这两个function share a lot same code, can we refactor them?
  * @param state The current simulation state
  * @returns void
  */
 export function pay_mandatory_expenses(
-  state: SimulationState & Partial<Scenario>
+  state: SimulationState
 ): void {
   // SEQUENTIAL THINKING STEP 1: Identify mandatory expenses for the current year
   const currentYear = state.get_current_year();
@@ -177,7 +178,7 @@ export function pay_mandatory_expenses(
  * Calculate the federal income tax
  */
 function calculate_federal_income_tax(
-  state: SimulationState & Partial<Scenario>,
+  state: SimulationState,
   ordinaryIncome: number,
   socialSecurityIncome: number
 ): number {
