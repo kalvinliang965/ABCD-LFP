@@ -240,15 +240,7 @@ export async function create_simulation_state(
       incr_after_tax_contribution: (amt: number) => {
         after_tax_contribution += amt;
       },
-      // Year setup and management
-      setup_year: () => {
-        ordinary_income = 0;
-        capital_gains_income = 0;
-        social_security_income = 0;
-        after_tax_contribution = 0
-        federal_tax_service.adjust_for_inflation(inflation_factor);
-        state_tax_service.adjust_for_inflation(inflation_factor);
-      },
+     
       get_current_year: () => current_year,
       federal_tax_service,
       state_tax_service,
@@ -302,6 +294,36 @@ export async function create_simulation_state(
         // TODO: Process expense events
         // TODO: Process investment events
         // TODO: Process rebalance events
+      },
+
+      // Year setup and management
+      setup_year: () => {
+        ordinary_income = 0;
+        capital_gains_income = 0;
+        social_security_income = 0;
+        after_tax_contribution = 0
+        federal_tax_service.adjust_for_inflation(inflation_factor);
+        state_tax_service.adjust_for_inflation(inflation_factor);
+        
+        // type check
+        for (const [id, investment] of non_retirement.entries()) {
+            if (investment.taxStatus != TaxStatus.NON_RETIREMENT) {
+                console.error(`non retirment account contain invalid type ${investment.taxStatus}`);
+                process.exit(1);
+            }
+        }
+        for (const [id, investment] of after_tax.entries()) {
+            if (investment.taxStatus != TaxStatus.AFTER_TAX) {
+                console.error(`after tax account contain invalid type ${investment.taxStatus}`);
+                process.exit(1);
+            }
+        }
+        for (const [id, investment] of pre_tax.entries()) {
+            if (investment.taxStatus != TaxStatus.PRE_TAX) {
+                console.error(`pre tax account contain invalid type ${investment.taxStatus}`);
+                process.exit(1);
+            }
+        }
       },
     };
 
