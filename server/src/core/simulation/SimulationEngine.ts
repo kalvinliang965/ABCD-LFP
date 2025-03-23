@@ -2,6 +2,8 @@
 import { SimulationState, create_simulation_state } from './SimulationState';
 import { SimulationResult } from './SimulationResult';
 import { Scenario } from '../domain/scenario/Scenario';
+import process_roth_conversion from './RothConversion';
+import update_investment from './UpdateInvestment';
 
 export class SimulationEngine {
 
@@ -32,8 +34,14 @@ export class SimulationEngine {
         return res;
     }
 
-    private simulate_year(simulate_state: SimulationState, simulation_reuslst: SimulationResult ) {
-        simulate_state.setup_year();
+    private simulate_year(simulation_state: SimulationState, simulation_result: SimulationResult ) {
+        simulation_state.setup_year();
+
+        if (simulation_state.roth_conversion_opt) {
+            process_roth_conversion(simulation_state);
+        }
+
+        
     }
 
     private should_continue(simulation_state: SimulationState):boolean {
