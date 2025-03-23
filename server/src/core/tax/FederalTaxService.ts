@@ -1,11 +1,15 @@
 
 import { TaxBracket, TaxBrackets } from "./TaxBrackets";
 import { create_standard_deductions, StandardDeduction } from "./StandardDeduction";
-import { parse_standard_deductions, parse_capital_gains, parse_taxable_income } from "../../services/FederalTaxScraper";
+import { 
+    fetch_and_parse_capital_gains, 
+    fetch_and_parse_standard_deduction, 
+    fetch_and_parse_taxable_income 
+} from "../../services/FederalTaxScraper";
 import { check_capital_gains, check_taxable_income, load_brackets } from "../../db/repositories/TaxBracketRepository";
 import { load_standard_deduction } from "../../db/repositories/StandardDeductionRepository";
 import { IncomeType, TaxFilingStatus } from "../Enums";
-
+import { tax_config } from "../../config/tax";
 
 async function initialize_taxable_income_bracket(): Promise<TaxBrackets> {
     try {
@@ -14,7 +18,7 @@ async function initialize_taxable_income_bracket(): Promise<TaxBrackets> {
             return taxBracket;       
         }
         console.log("taxable income brackets is not in database");
-        const taxBracket = await parse_taxable_income();
+        const taxBracket = await fetch_and_parse_taxable_income(tax_config.FEDERAL_TAX_URL);
         return taxBracket
     } catch (error) {
         throw new Error("Error in intitializing the taxable income bracket");
@@ -30,7 +34,7 @@ async function initialize_capital_gains_bracket(): Promise<TaxBrackets> {
             return taxBracket;
         }
         console.log("capital gains bracket is not in database");
-        const taxBracket = await parse_capital_gains();
+        const taxBracket = await fetch_and_parse_capital_gains(tax_config.CAPITAL_GAINS_URL);
         return taxBracket;
     } catch (error) {
         throw new Error("Error in initializing capital gains bracket");
@@ -49,7 +53,7 @@ async function initialize_standard_deductions_info(): Promise<StandardDeduction>
             return deductions;
         }
         console.log("standard deduction is not in database");
-        const deductions = await parse_standard_deductions();
+        const deductions = await fetch_and_parse_standard_deduction(tax_config.STD_DEDUCTION_URL);
         return deductions;
     } catch (error) {
         throw new Error("Error in initializing standard deductions info");
