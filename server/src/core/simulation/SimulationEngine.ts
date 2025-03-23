@@ -1,7 +1,9 @@
 
-import { SimulationState } from './SimulationState';
+import { SimulationState, create_simulation_state } from './SimulationState';
 import { SimulationResult } from './SimulationResult';
-import  { Scenario } from "./Scenario";
+import { Scenario } from '../domain/scenario/Scenario';
+import process_roth_conversion from './RothConversion';
+import update_investment from './UpdateInvestment';
 
 export class SimulationEngine {
 
@@ -16,13 +18,13 @@ export class SimulationEngine {
             {length: num_simulations}, // length of the array
              (_, i) => {
 
-                return new Promise<SimulationResult>((resolve) => {
-                    const simulation_state = new SimulationState(this.scenario); 
+                return new Promise<SimulationResult>(async (resolve) => {
+                    const simulation_state = await create_simulation_state(this.scenario); 
                     const simulation_result = new SimulationResult();
-
                     // Run the simulation synchronously.
                     while (this.should_continue(simulation_state)) {
-                        this.simulate_year(simulation_state, simulation_result, this.scenario);
+                        this.simulate_year(simulation_state, simulation_result);
+                        simulation_state.advance_year();
                     }
                     resolve(simulation_result);
                 });
@@ -32,12 +34,18 @@ export class SimulationEngine {
         return res;
     }
 
-    private simulate_year(simulate_state: SimulationState, simulation_reuslst: SimulationResult, scenario: Scenario) {
-        // TODO
+    private simulate_year(simulation_state: SimulationState, simulation_result: SimulationResult ) {
+        simulation_state.setup_year();
+
+        if (simulation_state.roth_conversion_opt) {
+            process_roth_conversion(simulation_state);
+        }
+
+        
     }
 
     private should_continue(simulation_state: SimulationState):boolean {
-        return simulation_state.get_spouse_alive() || simulation_state.get_spouse_alive();
+        return simulation_state.user.is_alive();
     }
 
     private generate_result(): SimulationResult {

@@ -63,6 +63,7 @@ export interface FederalTaxService {
     adjust_for_inflation(rate: number): void;
     find_bracket(rate: number, income_type: IncomeType, status: TaxFilingStatus): TaxBracket;
     find_rate(income: number, income_type: IncomeType, status: TaxFilingStatus): number;
+    find_deduction(status: TaxFilingStatus): number;
 }
 
 export async function create_federal_tax_service() : Promise<FederalTaxService> {
@@ -122,6 +123,13 @@ export async function create_federal_tax_service() : Promise<FederalTaxService> 
             }
         }
 
+        const find_deduction = (status: TaxFilingStatus): number => {
+            try {
+                return standard_deductions.find_deduction(status);
+            } catch (error) {
+                throw error;
+            }
+        }
         return {
             print_taxable_income_bracket,
             print_capital_gains_bracket,
@@ -129,6 +137,7 @@ export async function create_federal_tax_service() : Promise<FederalTaxService> 
             adjust_for_inflation,
             find_bracket,
             find_rate,
+            find_deduction,
         };
     } catch (error) {
         console.error(`Error in initializing federal tax data: ${error}`);

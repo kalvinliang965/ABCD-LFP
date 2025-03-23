@@ -5,6 +5,7 @@ export interface StandardDeduction {
     adjust_for_inflation(rate: number): void,
     to_string(): string,
     size(): number,
+    find_deduction(status: TaxFilingStatus): number;
 }
 
 export function create_standard_deductions(): StandardDeduction {
@@ -35,10 +36,20 @@ export function create_standard_deductions(): StandardDeduction {
         return deductions.size;
     }
 
+    const find_deduction = (status: TaxFilingStatus): number => {
+        const res = deductions.get(status);
+        if (!res) {
+            console.error(`Standard deduction table does not contain ${status}`);
+            process.exit(1);
+        }
+        return res;
+    }
+
     return {
         add_deduction,
         adjust_for_inflation,
         to_string,
         size,
+        find_deduction,
     }
 }
