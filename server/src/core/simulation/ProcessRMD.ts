@@ -2,7 +2,7 @@ import { SimulationState } from "./SimulationState";
 import { Scenario } from "../domain/scenario/Scenario";
 import { TaxStatus } from "../Enums";
 import { Investment } from "../domain/investment/Investment";
-import { getRMDFactors } from "../../services/RMDScraper";
+import getRMDFactors from "../../services/RMDScraper";
 
 /**
  * Computes how income is shared between spouses based on their alive status
