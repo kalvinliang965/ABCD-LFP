@@ -21,7 +21,6 @@ export interface PersonDetails {
 }
 
 export interface SimulationState {
-  investments: Array<Investment>;
   events: Array<Event>;
   tax_filing_status: TaxFilingStatus;
   inflation_factor: number;
@@ -213,7 +212,6 @@ export async function create_simulation_state(
 
     // Create the simulation state object
     const state: SimulationState = {
-      investments: scenario.investments,
       events: scenario.event_series,
       tax_filing_status: scenario.tax_filing_status,
       inflation_factor,

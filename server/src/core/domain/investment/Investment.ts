@@ -48,9 +48,9 @@ export function create_investment(raw_data: InvestmentRaw): Investment {
         throw new Error(`Invalid tax status: ${raw_data.taxStatus}`);
     }
 
-    // how much we invest to the investment
+    // how much we bought the investment for 
     let cost_basis = 0;
-    // value of the investment
+    // how much we invested
     let value = raw_data.value;
     return {
       investment_type,
