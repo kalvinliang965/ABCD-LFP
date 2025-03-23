@@ -1,8 +1,20 @@
 // src/core/domain/Scenario.ts
 // we will use this function to read data read from front end and call other function to parse the data
-import ValueGenerator, { RandomGenerator } from "../../../utils/math/ValueGenerator";
-import { DistributionType, StateType, StatisticType, TaxFilingStatus } from "../../Enums";
+import ValueGenerator, {
+  RandomGenerator,
+} from "../../../utils/math/ValueGenerator";
+import {
+  DistributionType,
+  StateType,
+  StatisticType,
+  TaxFilingStatus,
+} from "../../Enums";
 import { create_investment, Investment } from "../investment/Investment";
+import { Event, process_event_dependencies } from "../event/Event";
+import create_income_event from "../event/IncomeEvent";
+import create_expense_event from "../event/ExpenseEvent";
+import create_investment_event from "../event/InvestmentEvent";
+import create_rebalance_event from "../event/RebalanceEvent";
 
 function parse_state(state: string) {
   switch (state) {
@@ -136,12 +148,46 @@ function parse_inflation_assumption(
   }
 }
 
+// ! Chen made this function to parse events
+function parse_events(
+  eventSeries: Set<
+    IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw
+  >
+): Event[] {
+  let events: Event[] = [];
+
+  if (eventSeries && eventSeries.size > 0) {
+    const rawEvents = Array.from(eventSeries);
+
+    // Process dependencies to resolve start years that depend on other events
+    process_event_dependencies(rawEvents);
+
+    // Process each type of event
+    events = rawEvents.map((rawEvent) => {
+      switch (rawEvent.type) {
+        case "income":
+          return create_income_event(rawEvent as IncomeEventRaw);
+        case "expense":
+          return create_expense_event(rawEvent as ExpenseEventRaw);
+        case "investment":
+          return create_investment_event(rawEvent as InvestmentEventRaw);
+        case "rebalance":
+          return create_rebalance_event(rawEvent as RebalanceEventRaw);
+        default:
+          throw new Error(`Unknown event type: ${rawEvent.type}`);
+      }
+    });
+  }
+
+  return events;
+}
+
 export type InvestmentRaw = {
   investmentType: InvestmentTypeRaw;
   value: number;
   taxStatus: string; // "non-retirement", "pre-tax", "after-tax"
   id: string;
-}
+};
 
 export type InvestmentTypeRaw = {
   name: string;
@@ -152,14 +198,14 @@ export type InvestmentTypeRaw = {
   incomeAmtOrPct: string;
   incomeDistribution: Map<string, any>;
   taxability: boolean;
-}
+};
 
 export type EventRaw = {
   name: string;
   start: Map<string, any>;
   duration: Map<string, any>;
   type: string;
-}
+};
 
 export type IncomeEventRaw = EventRaw & {
   initialAmount: number;
@@ -168,7 +214,7 @@ export type IncomeEventRaw = EventRaw & {
   inflationAdjusted: boolean;
   userFraction: number;
   socialSecurity: boolean;
-}
+};
 
 export type ExpenseEventRaw = EventRaw & {
   initialAmount: number;
@@ -177,27 +223,26 @@ export type ExpenseEventRaw = EventRaw & {
   inflationAdjusted: boolean;
   userFraction: number;
   discretionary: boolean;
-}
+};
 
 export type InvestmentEventRaw = EventRaw & {
   initialAmount: number;
-}
+};
 
 export type RebalanceEventRaw = EventRaw & {
   assetAllocation: Map<string, number>;
   glidePath: boolean;
   assetAllocation2: Map<string, number>;
   maxCash: number;
-}
-
+};
 
 export interface Scenario {
   name: string;
   tax_filing_status: TaxFilingStatus;
   user_birth_year: number;
-  spouse_birth_year: number;
+  spouse_birth_year?: number;
   user_life_expectancy: number;
-  spouse_life_expectancy: number;
+  spouse_life_expectancy?: number;
   investments: Array<Investment>;
   event_series: any;
   inflation_assumption: RandomGenerator;
@@ -220,10 +265,7 @@ export function create_scenario(params: {
   lifeExpectancy: Array<Map<string, any>>;
   investments: Set<InvestmentRaw>;
   eventSeries: Set<
-    | IncomeEventRaw
-    | ExpenseEventRaw
-    | InvestmentEventRaw
-    | RebalanceEventRaw
+    IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw
   >;
   inflationAssumption: Map<string, number>;
   afterTaxContributionLimit: number;
@@ -246,8 +288,13 @@ export function create_scenario(params: {
     );
     const [user_life_expectancy, spouse_life_expectancy] =
       parse_life_expectancy(params.lifeExpectancy);
-    const investments: Array<Investment> = Array.from(params.investments).map((investment:InvestmentRaw): Investment => create_investment(investment));
-    const event_series = undefined; // TODO
+    const investments: Array<Investment> = Array.from(params.investments).map(
+      (investment: InvestmentRaw): Investment => create_investment(investment)
+    );
+
+    //! Change chen made for parsing events  Use the extracted function to parse events
+    const events = parse_events(params.eventSeries);
+
     const inflation_assumption: RandomGenerator = parse_inflation_assumption(
       params.inflationAssumption
     );
@@ -272,7 +319,7 @@ export function create_scenario(params: {
       user_life_expectancy,
       spouse_life_expectancy,
       investments,
-      event_series,
+      event_series: events,
       inflation_assumption,
       after_tax_contribution_limit,
       spending_strategy,
@@ -291,6 +338,3 @@ export function create_scenario(params: {
     );
   }
 }
-
-
-
