@@ -1,4 +1,4 @@
-import ValueGenerator from "../../../utils/math/ValueGenerator";
+import ValueGenerator, { RandomGenerator } from "../../../utils/math/ValueGenerator";
 import { ChangeType, DistributionType, StatisticType } from "../../Enums";
 
 function parse_start_year(start: Map<string, any>): number {
@@ -48,7 +48,7 @@ function parse_duration(duration: Map<string, any>): number {
     }
 }
 
-function parse_expected_annual_change(changeAmtOrPct: string, changeDistribution: Map<string, any>): [ChangeType, number] {
+function parse_expected_annual_change(changeAmtOrPct: string, changeDistribution: Map<string, any>): [ChangeType, RandomGenerator] {
 
     function parse_change_amt__or_pct(): ChangeType {
         switch(changeAmtOrPct) {
@@ -66,17 +66,17 @@ function parse_expected_annual_change(changeAmtOrPct: string, changeDistribution
             case "fixed":
                 return ValueGenerator(DistributionType.FIXED,  new Map([
                     [StatisticType.VALUE, changeDistribution.get("value")]
-                ])).sample();
+                ]));
             case "uniform":
                 return ValueGenerator(DistributionType.UNIFORM, new Map([
                     [StatisticType.LOWER, changeDistribution.get("lower")],
                     [StatisticType.UPPER, changeDistribution.get("upper")]
-                ])).sample();
+                ]));
             case "normal":
                 return ValueGenerator(DistributionType.UNIFORM, new Map([
                     [StatisticType.MEAN, changeDistribution.get("mean")],
                     [StatisticType.STDDEV, changeDistribution.get("stdev")]
-                ])).sample();
+                ]));
             default:
                 throw new Error("Invalid change distribution type");            
         }
@@ -84,7 +84,7 @@ function parse_expected_annual_change(changeAmtOrPct: string, changeDistribution
 
     try {
         const change_type: ChangeType = parse_change_amt__or_pct();
-        const change_distribution: number = parse_change_distribution();
+        const change_distribution: RandomGenerator = parse_change_distribution();
         return [change_type, change_distribution];
     } catch (error) {
         throw error
