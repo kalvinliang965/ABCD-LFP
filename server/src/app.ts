@@ -23,7 +23,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Register routes
-app.use("/api/event-series", eventSeriesRoutes);
+app.use("/api/eventSeries", eventSeriesRoutes);
 app.use("/api/investments", investmentRoutes);
 app.use("/api/users", userRoutes);
 app.use("/auth", authRoutes);
@@ -135,4 +135,4 @@ connect_database().catch((error) => {
 // // Call this function before or after scrapping_demo()
 // testRMDScraper();
 
-scrapping_demo();
+// scrapping_demo();
