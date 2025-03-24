@@ -15,6 +15,7 @@ import create_income_event from "../event/IncomeEvent";
 import create_expense_event from "../event/ExpenseEvent";
 import create_investment_event from "../event/InvestmentEvent";
 import create_rebalance_event from "../event/RebalanceEvent";
+import { SpendingEvent } from "../../simulation/ExpenseHelper";
 
 function parse_state(state: string) {
   switch (state) {
@@ -245,6 +246,10 @@ export interface Scenario {
   spouse_life_expectancy?: number;
   investments: Array<Investment>;
   event_series: any;
+  discretionary_expenses: SpendingEvent[];
+  mandatory_expenses: SpendingEvent[];
+  get_discretionary_expenses(): SpendingEvent[];
+  get_mandatory_expenses(): SpendingEvent[];
   inflation_assumption: RandomGenerator;
   after_tax_contribution_limit: number;
   spending_strategy: Array<string>;
@@ -320,6 +325,15 @@ export function create_scenario(params: {
       spouse_life_expectancy,
       investments,
       event_series: events,
+      discretionary_expenses: [],
+      mandatory_expenses: [],
+      //? 在使用get 方法后是不是代表这我们无法修改其中的值？
+      get_discretionary_expenses: function () {
+        return this.discretionary_expenses;
+      },
+      get_mandatory_expenses: function () {
+        return this.mandatory_expenses;
+      },
       inflation_assumption,
       after_tax_contribution_limit,
       spending_strategy,

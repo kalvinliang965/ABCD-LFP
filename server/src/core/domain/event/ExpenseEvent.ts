@@ -8,7 +8,7 @@ import {
   parse_expected_annual_change,
 } from "./Event";
 
-interface ExpenseEvent extends Event {
+export interface ExpenseEvent extends Event {
   initial_amount: number;
   change_type: ChangeType;
   expected_annual_change: RandomGenerator;
