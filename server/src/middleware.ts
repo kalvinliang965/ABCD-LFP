@@ -8,6 +8,7 @@ import session from "express-session";
 import MongoStore from "connect-mongo";
 import { database_config } from "./config/database";
 import { api_config } from "./config/api";
+import passport from "passport";
 
 const sessionStore = MongoStore.create({ mongoUrl: database_config.MONGO_URL});
 
@@ -20,7 +21,7 @@ function registerGlobalMiddleWare(app: Express) {
     app.use(bodyParser.urlencoded({ extended: false }));
     app.use(cookieParser());
     app.use(cors({
-        origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+        origin: process.env.CLIENT_URL || 'http://localhost:5173',
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization']
@@ -28,7 +29,7 @@ function registerGlobalMiddleWare(app: Express) {
     app.use(express.json());
     app.use(express.urlencoded({extended: false}));
     app.use(session({
-        secret: "do work!!",
+        secret: process.env.SESSION_SECRET || "do work!!",
         cookie: { 
             httpOnly: true, 
             maxAge: 60 * minute,
@@ -38,6 +39,8 @@ function registerGlobalMiddleWare(app: Express) {
         saveUninitialized: false,
         store: sessionStore,
     }));
+    app.use(passport.initialize());
+    app.use(passport.session());
     console.log("Finish registering global middleware");
 }
 
