@@ -23,7 +23,7 @@ function parse_state(state: string) {
     case "CT":
       return StateType.CT;
     case "NJ":
-      return StateType.NY;
+      return StateType.NJ;
     default:
       throw new Error("Invalid state");
   }
@@ -194,7 +194,7 @@ export type InvestmentTypeRaw = {
   description: string;
   returnAmtOrPct: string; // amount or percent
   returnDistribution: Map<string, any>;
-  expenseRatio: 0;
+  expenseRatio: number;
   incomeAmtOrPct: string;
   incomeDistribution: Map<string, any>;
   taxability: boolean;
@@ -226,14 +226,14 @@ export type ExpenseEventRaw = EventRaw & {
 };
 
 export type InvestmentEventRaw = EventRaw & {
-  initialAmount: number;
+  assetAllocation: Map<string, number>;
+  assetAllocation2: Map<string, number>;
+  glidePath: boolean;
+  maxCash: number;
 };
 
 export type RebalanceEventRaw = EventRaw & {
   assetAllocation: Map<string, number>;
-  glidePath: boolean;
-  assetAllocation2: Map<string, number>;
-  maxCash: number;
 };
 
 export interface Scenario {
