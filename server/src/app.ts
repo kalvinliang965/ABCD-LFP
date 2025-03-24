@@ -122,7 +122,7 @@ connect_database().catch((error) => {
   process.exit(1);
 });
 
-// Add this near the end of your file, before scrapping_demo()
+// // Add this near the end of your file, before scrapping_demo()
 // function testRMDScraper() {
 //   console.log("\n--- Testing RMD Scraper ---");
 //   const { getRMDFactors } = require("./services/RMDScraper");
@@ -132,7 +132,8 @@ connect_database().catch((error) => {
 //   console.log("--- End RMD Scraper Test ---\n");
 // }
 
-// Call this function before or after scrapping_demo()
+// // Call this function before or after scrapping_demo()
 // testRMDScraper();
 
+// scrapping_demo();
 // scrapping_demo();

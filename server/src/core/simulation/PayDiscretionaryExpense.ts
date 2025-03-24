@@ -8,7 +8,7 @@
  */
 
 import { SimulationState } from "./SimulationState";
-import {  withdraw_from_investments, SpendingEvent } from "./ExpenseHelper";
+import { withdraw_from_investments, SpendingEvent } from "./ExpenseHelper";
 
 /**
  * Process discretionary expense events for the current year

@@ -1,3 +1,6 @@
 // src/config/environment.ts
 import dotenv from "dotenv";
-dotenv.config();
+import path from "path";
+
+// 配置dotenv指向服务器根目录的.env文件
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
