@@ -1,7 +1,7 @@
 import { IncomeEventRaw } from "../scenario/Scenario";
 
 
-export const salary_income_one: IncomeEventRaw = create_income_event(
+export const salary_income_one: IncomeEventRaw = create_income_event_raw(
     "salary",
     new Map<string, any>([
         ["type", "fixed"],
@@ -24,7 +24,7 @@ export const salary_income_one: IncomeEventRaw = create_income_event(
 )
 
 
-export function create_income_event(
+export function create_income_event_raw(
     name: string,
     start: Map<string, any>,
     duration: Map<string, any>,

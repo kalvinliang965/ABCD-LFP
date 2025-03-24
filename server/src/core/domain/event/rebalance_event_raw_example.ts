@@ -2,7 +2,7 @@
 import { RebalanceEventRaw } from "../scenario/Scenario";
 
 
-export const rebalance_one: RebalanceEventRaw = create_rebalance_event(
+export const rebalance_one: RebalanceEventRaw = create_rebalance_event_raw(
     "my investments",
     new Map<string, any>([
         ["type", "uniform"],
@@ -20,7 +20,7 @@ export const rebalance_one: RebalanceEventRaw = create_rebalance_event(
 )
 
 
-export function create_rebalance_event(
+export function create_rebalance_event_raw(
     name: string,
     start: Map<string, any>,
     duration: Map<string, any>,

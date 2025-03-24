@@ -236,6 +236,28 @@ export type RebalanceEventRaw = EventRaw & {
   assetAllocation: Map<string, number>;
 };
 
+export interface ScenarioRaw {
+  name: string;
+  martialStatus: string;
+  birthYears: Array<number>;
+  lifeExpectancy: Array<Map<string, any>>;
+  investments: Set<InvestmentRaw>;
+  eventSeries: Set<
+    IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw
+  >;
+  inflationAssumption: Map<string, number>;
+  afterTaxContributionLimit: number;
+  spendingStrategy: Array<string>;
+  expenseWithdrawalStrategy: Array<string>;
+  RMDStrategy: Array<string>;
+  RothConversionOpt: boolean;
+  RothConversionStart: number;
+  RothConversionEnd: number;
+  RothConversionStrategy: Array<string>;
+  financialGoal: number;
+  residenceState: string;
+}
+
 export interface Scenario {
   name: string;
   tax_filing_status: TaxFilingStatus;
@@ -258,61 +280,41 @@ export interface Scenario {
   residenceState: StateType;
 }
 
-export function create_scenario(params: {
-  name: string;
-  martialStatus: string;
-  birthYears: Array<number>;
-  lifeExpectancy: Array<Map<string, any>>;
-  investments: Set<InvestmentRaw>;
-  eventSeries: Set<
-    IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw
-  >;
-  inflationAssumption: Map<string, number>;
-  afterTaxContributionLimit: number;
-  spendingStrategy: Array<string>;
-  expenseWithdrawalStrategy: Array<string>;
-  RMDStrategy: Array<string>;
-  RothConversionOpt: boolean;
-  RothConversionStart: number;
-  RothConversionEnd: number;
-  RothConversionStrategy: Array<string>;
-  financialGoal: number;
-  residenceState: string;
-}): Scenario {
+export function create_scenario(scenario_raw: ScenarioRaw): Scenario {
   try {
     const taxfilingStatus: TaxFilingStatus = parse_martial_status(
-      params.martialStatus
+      scenario_raw.martialStatus
     );
     const [user_birth_year, spouse_birth_year] = parse_birth_years(
-      params.birthYears
+      scenario_raw.birthYears
     );
     const [user_life_expectancy, spouse_life_expectancy] =
-      parse_life_expectancy(params.lifeExpectancy);
-    const investments: Array<Investment> = Array.from(params.investments).map(
+      parse_life_expectancy(scenario_raw.lifeExpectancy);
+    const investments: Array<Investment> = Array.from(scenario_raw.investments).map(
       (investment: InvestmentRaw): Investment => create_investment(investment)
     );
 
     //! Change chen made for parsing events  Use the extracted function to parse events
-    const events = parse_events(params.eventSeries);
+    const events = parse_events(scenario_raw.eventSeries);
 
     const inflation_assumption: RandomGenerator = parse_inflation_assumption(
-      params.inflationAssumption
+      scenario_raw.inflationAssumption
     );
     const after_tax_contribution_limit: number =
-      params.afterTaxContributionLimit;
-    const spending_strategy: Array<string> = params.spendingStrategy;
+      scenario_raw.afterTaxContributionLimit;
+    const spending_strategy: Array<string> = scenario_raw.spendingStrategy;
     const expense_withrawal_strategy: Array<string> =
-      params.expenseWithdrawalStrategy;
-    const rmd_strategy: Array<string> = params.RMDStrategy;
-    const roth_conversion_opt: boolean = params.RothConversionOpt;
-    const roth_conversion_start: number = params.RothConversionStart;
-    const roth_conversion_end: number = params.RothConversionEnd;
+      scenario_raw.expenseWithdrawalStrategy;
+    const rmd_strategy: Array<string> = scenario_raw.RMDStrategy;
+    const roth_conversion_opt: boolean = scenario_raw.RothConversionOpt;
+    const roth_conversion_start: number = scenario_raw.RothConversionStart;
+    const roth_conversion_end: number = scenario_raw.RothConversionEnd;
     const roth_conversion_strategy: Array<string> =
-      params.RothConversionStrategy;
-    const financialGoal: number = params.financialGoal;
-    const residenceState: StateType = parse_state(params.residenceState);
+      scenario_raw.RothConversionStrategy;
+    const financialGoal: number = scenario_raw.financialGoal;
+    const residenceState: StateType = parse_state(scenario_raw.residenceState);
     return {
-      name: params.name,
+      name: scenario_raw.name,
       tax_filing_status: taxfilingStatus,
       user_birth_year,
       spouse_birth_year,

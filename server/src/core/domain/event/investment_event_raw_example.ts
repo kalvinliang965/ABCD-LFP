@@ -2,7 +2,7 @@
 import { InvestmentEventRaw } from "../scenario/Scenario";
 
 
-export const my_investments_investment_one: InvestmentEventRaw = create_invest_event(
+export const my_investments_investment_one: InvestmentEventRaw = create_invest_event_raw(
     "my investments",
     new Map<string, any>([
         ["type", "uniform"],
@@ -26,7 +26,7 @@ export const my_investments_investment_one: InvestmentEventRaw = create_invest_e
 )
 
 
-export function create_invest_event(
+export function create_invest_event_raw(
     name: string,
     start: Map<string, any>,
     duration: Map<string, any>,
