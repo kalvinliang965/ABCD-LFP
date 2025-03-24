@@ -26,15 +26,15 @@ export enum Taxability {
 }
 
 
-export const enum StatisticType {
+export enum StatisticType {
     MEAN = "MEAN",
-    STDDEV = "STDDEV",
+    STDEV = "STDEV",
     VALUE = "VALUE",
     LOWER = "LOWER",
     UPPER = "UPPER",
 }
 
-export const enum StateType {
+export enum StateType {
     NY = "NY",
     NJ = "NJ",
     CT = "CT",

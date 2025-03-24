@@ -21,7 +21,7 @@ export interface InvestmentType {
 }
 
 
-function parse_change_type(change_type: string) {
+export function parse_change_type(change_type: string) {
     switch(change_type) {
       case "amount":
         return ChangeType.FIXED;
@@ -32,7 +32,7 @@ function parse_change_type(change_type: string) {
     }
 }
 
-function parse_distribution(distribution: Map<string, any>): RandomGenerator {
+export function parse_distribution(distribution: Map<string, any>): RandomGenerator {
     switch (distribution.get("type")) {
         case "fixed":
             return ValueGenerator(DistributionType.FIXED,  new Map([
@@ -41,14 +41,14 @@ function parse_distribution(distribution: Map<string, any>): RandomGenerator {
         case "normal":
             return ValueGenerator(DistributionType.UNIFORM, new Map([
                 [StatisticType.MEAN, distribution.get("mean")],
-                [StatisticType.STDDEV, distribution.get("stdev")]
+                [StatisticType.STDEV, distribution.get("stdev")]
             ]));
         default:
             throw new Error(`Invalid change distribution type ${distribution}`);            
     }
 }
 
-function parse_taxability(taxability: boolean) {
+export function parse_taxability(taxability: boolean) {
   if (taxability) {
     return Taxability.TAXABLE;
   }
@@ -73,7 +73,7 @@ function create_investment_type(raw_data: InvestmentTypeRaw): InvestmentType {
       expense_ratio: raw_data.expenseRatio,
     }
   } catch(error) {
-    throw new Error(`Failed to initialize InvestmentType ${error}`);
+    throw new Error(`Failed to initialize InvestmentType ${error instanceof Error? error.message: error}`);
   }
 }
 

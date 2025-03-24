@@ -76,7 +76,7 @@ function parse_start_year(start: Map<string, any>): number {
         DistributionType.NORMAL,
         new Map([
           [StatisticType.MEAN, start.get("mean")],
-          [StatisticType.STDDEV, start.get("stdev")],
+          [StatisticType.STDEV, start.get("stdev")],
         ])
       ).sample();
     case "startWith":
@@ -134,7 +134,7 @@ function parse_duration(duration: Map<string, any>): number {
         DistributionType.NORMAL,
         new Map([
           [StatisticType.MEAN, duration.get("mean")],
-          [StatisticType.STDDEV, duration.get("stdev")],
+          [StatisticType.STDEV, duration.get("stdev")],
         ])
       ).sample();
     default:
@@ -177,7 +177,7 @@ function parse_expected_annual_change(
           DistributionType.NORMAL,
           new Map([
             [StatisticType.MEAN, changeDistribution.get("mean")],
-            [StatisticType.STDDEV, changeDistribution.get("stdev")],
+            [StatisticType.STDEV, changeDistribution.get("stdev")],
           ])
         );
       default:
