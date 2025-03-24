@@ -29,26 +29,9 @@ import {
   Icon,
   Divider,
   useToast,
-  Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
-  InputGroup,
-  InputLeftElement,
-  useColorModeValue,
-  Badge,
-  Tooltip,
 } from "@chakra-ui/react";
 import { DeleteIcon, AddIcon } from "@chakra-ui/icons";
 import { TrendingUp } from "lucide-react";
-import {
-  FiChevronLeft,
-  FiChevronRight,
-  FiDollarSign,
-  FiList,
-  FiPlusCircle,
-  FiTrash2,
-} from "react-icons/fi";
 
 // Mock investment types (to be replaced with data from the database)
 const MOCK_INVESTMENT_TYPES = [
@@ -100,14 +83,6 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     value?: string;
   }>({});
   const toast = useToast();
-
-  const cardBg = useColorModeValue("white", "gray.800");
-  const headerBg = useColorModeValue("blue.50", "blue.900");
-  const formBg = useColorModeValue("gray.50", "gray.700");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const tableBg = useColorModeValue("white", "gray.800");
-  const tableHeaderBg = useColorModeValue("gray.50", "gray.700");
-  const hoverBg = useColorModeValue("gray.50", "gray.700");
 
   // Filter out already selected investment types
   const available_investment_types = MOCK_INVESTMENT_TYPES.filter(
@@ -233,278 +208,189 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     }
   };
 
-  const get_tax_status_color = (status: TaxStatus) => {
-    switch (status) {
-      case "non-retirement":
-        return "blue";
-      case "pre-tax":
-        return "green";
-      case "after-tax":
-        return "purple";
-      default:
-        return "gray";
-    }
-  };
-
   return (
-    <Box minH="100vh" bg="gray.50" py={8}>
-      <Box maxW="4xl" mx="auto" px={4}>
-        <Card
-          rounded="lg"
-          shadow="xl"
-          overflow="hidden"
-          borderWidth="1px"
-          borderColor={borderColor}
-          bg={cardBg}
-        >
-          <CardHeader bg={headerBg} py={5} px={6}>
-            <Flex justify="space-between" align="center">
-              <Heading
-                size="lg"
-                color="gray.800"
-                display="flex"
-                alignItems="center"
-              >
-                <Icon as={TrendingUp} mr={2} />
+    <Box minH="100vh" bg="gray.50">
+      <Box maxW="4xl" mx="auto" py={12} px={4}>
+        <Box bg="white" rounded="lg" shadow="lg" overflow="hidden">
+          <Box p={6}>
+            <Flex justify="space-between" align="center" mb={6}>
+              <Heading size="lg" color="gray.900">
                 Investment Configuration
               </Heading>
               <HStack spacing={2}>
-                <Button
-                  variant="ghost"
-                  colorScheme="blue"
-                  onClick={onBack}
-                  leftIcon={<Icon as={FiChevronLeft} />}
-                >
+                <Button variant="ghost" colorScheme="blue" onClick={onBack}>
                   Back
+                </Button>
+                <Button
+                  colorScheme="blue"
+                  onClick={onContinue}
+                  isDisabled={investmentsConfig.investments.length === 0}
+                >
+                  Next
                 </Button>
               </HStack>
             </Flex>
-          </CardHeader>
 
-          <CardBody p={6}>
-            <Text color="gray.600" mb={6} fontSize="md">
-              Add your investments to your financial scenario. Each investment
-              type can only be used once. These investments will be used to
-              model your financial growth over time.
-            </Text>
+            <Flex align="center" mb={6}>
+              <Icon as={TrendingUp} color="blue.500" boxSize={5} mr={2} />
+              <Text color="gray.600">
+                Add your investments to your financial scenario. Each investment
+                type can only be used once.
+              </Text>
+            </Flex>
 
             {/* Current investments list */}
             {investmentsConfig.investments.length > 0 ? (
-              <Box
-                mb={8}
-                border="1px"
-                borderColor={borderColor}
-                borderRadius="md"
-                overflow="hidden"
-              >
-                <Flex
-                  bg={tableHeaderBg}
-                  p={4}
-                  borderBottomWidth="1px"
-                  borderBottomColor={borderColor}
-                  alignItems="center"
+              <Box mb={8}>
+                <Heading size="md" color="gray.700" mb={4}>
+                  Your Investments
+                </Heading>
+                <Box
+                  border="1px"
+                  borderColor="gray.200"
+                  borderRadius="md"
+                  overflow="hidden"
                 >
-                  <Icon as={FiList} color="blue.500" mr={2} />
-                  <Heading size="md" color="gray.700">
-                    Your Investments
-                  </Heading>
-                </Flex>
-
-                <Table variant="simple" bg={tableBg}>
-                  <Thead bg={tableHeaderBg}>
-                    <Tr>
-                      <Th>Investment Type</Th>
-                      <Th>Value</Th>
-                      <Th>Tax Status</Th>
-                      <Th width="80px"></Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {investmentsConfig.investments.map((investment) => (
-                      <Tr key={investment.id} _hover={{ bg: hoverBg }}>
-                        <Td fontWeight="medium">
-                          {investment.investmentTypeName}
-                        </Td>
-                        <Td color="green.600" fontWeight="medium">
-                          {format_currency(investment.value)}
-                        </Td>
-                        <Td>
-                          <Badge
-                            colorScheme={get_tax_status_color(
-                              investment.taxStatus
-                            )}
-                            px={2}
-                            py={1}
-                            borderRadius="md"
-                          >
+                  <Table variant="simple" size="md">
+                    <Thead bg="gray.50">
+                      <Tr>
+                        <Th>Investment Type</Th>
+                        <Th isNumeric>Value</Th>
+                        <Th>Tax Status</Th>
+                        <Th width="80px"></Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      {investmentsConfig.investments.map((investment) => (
+                        <Tr key={investment.id}>
+                          <Td fontWeight="medium">
+                            {investment.investmentTypeName}
+                          </Td>
+                          <Td isNumeric>{format_currency(investment.value)}</Td>
+                          <Td>
                             {get_tax_status_display(investment.taxStatus)}
-                          </Badge>
-                        </Td>
-                        <Td>
-                          <Tooltip label="Remove investment">
+                          </Td>
+                          <Td>
                             <IconButton
                               aria-label="Remove investment"
-                              icon={<Icon as={FiTrash2} />}
+                              icon={<DeleteIcon />}
                               size="sm"
-                              colorScheme="red"
                               variant="ghost"
+                              colorScheme="red"
                               onClick={() =>
                                 handle_remove_investment(investment.id)
                               }
                             />
-                          </Tooltip>
-                        </Td>
-                      </Tr>
-                    ))}
-                  </Tbody>
-                </Table>
+                          </Td>
+                        </Tr>
+                      ))}
+                    </Tbody>
+                  </Table>
+                </Box>
               </Box>
             ) : (
               <Box
-                mb={8}
-                p={6}
-                borderWidth="1px"
-                borderStyle="dashed"
-                borderColor={borderColor}
+                p={5}
+                bg="blue.50"
                 borderRadius="md"
-                textAlign="center"
+                mb={8}
+                borderLeft="4px solid"
+                borderLeftColor="blue.500"
               >
-                <Icon as={FiList} boxSize={8} color="gray.400" mb={2} />
-                <Text color="gray.500">
-                  No investments added yet. Use the form below to add your
-                  investments.
+                <Text color="blue.700">
+                  You haven't added any investments yet. Use the form below to
+                  add your first investment.
                 </Text>
               </Box>
             )}
 
-            {/* Add investment form */}
-            <Box
-              p={6}
-              bg={formBg}
-              borderRadius="md"
-              borderWidth="1px"
-              borderColor={borderColor}
-              mb={4}
-            >
-              <Heading size="md" mb={4} display="flex" alignItems="center">
-                <Icon as={FiPlusCircle} mr={2} color="blue.500" />
+            <Divider mb={6} />
+
+            {/* Add new investment form */}
+            <Box>
+              <Heading size="md" color="gray.700" mb={4}>
                 Add New Investment
               </Heading>
-              <VStack spacing={4} align="stretch">
-                <FormControl isRequired isInvalid={!!errors.investmentType}>
-                  <FormLabel fontWeight="medium">Investment Type</FormLabel>
-                  <Select
-                    value={newInvestment.investmentTypeId}
-                    onChange={handle_change_investment_type}
-                    placeholder="Select investment type"
-                    borderRadius="md"
-                  >
-                    {available_investment_types.map((type) => (
-                      <option key={type.id} value={type.id}>
-                        {type.name}
-                      </option>
-                    ))}
-                  </Select>
-                  {errors.investmentType && (
-                    <FormErrorMessage>{errors.investmentType}</FormErrorMessage>
-                  )}
-                </FormControl>
 
-                <FormControl isRequired isInvalid={!!errors.value}>
-                  <FormLabel fontWeight="medium">Value</FormLabel>
-                  <InputGroup>
-                    <InputLeftElement pointerEvents="none">
-                      <Icon as={FiDollarSign} color="green.500" />
-                    </InputLeftElement>
+              {available_investment_types.length === 0 ? (
+                <Box
+                  p={5}
+                  bg="yellow.50"
+                  borderRadius="md"
+                  borderLeft="4px solid"
+                  borderLeftColor="yellow.500"
+                >
+                  <Text color="yellow.700">
+                    You've added all available investment types. If you want to
+                    add a different type, you'll need to remove one of your
+                    existing investments first.
+                  </Text>
+                </Box>
+              ) : (
+                <VStack spacing={6} align="stretch">
+                  <FormControl isRequired isInvalid={!!errors.investmentType}>
+                    <FormLabel fontWeight="medium">Investment Type</FormLabel>
+                    <Select
+                      placeholder="Select investment type"
+                      value={newInvestment.investmentTypeId}
+                      onChange={handle_change_investment_type}
+                    >
+                      {available_investment_types.map((type) => (
+                        <option key={type.id} value={type.id}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </Select>
+                    <FormErrorMessage>{errors.investmentType}</FormErrorMessage>
+                  </FormControl>
+
+                  <FormControl isRequired isInvalid={!!errors.value}>
+                    <FormLabel fontWeight="medium">Value</FormLabel>
                     <NumberInput
                       min={0}
-                      step={1000}
                       value={newInvestment.value}
                       onChange={handle_change_value}
-                      w="100%"
+                      precision={0}
                     >
-                      <NumberInputField pl={10} borderRadius="md" />
+                      <NumberInputField />
                       <NumberInputStepper>
                         <NumberIncrementStepper />
                         <NumberDecrementStepper />
                       </NumberInputStepper>
                     </NumberInput>
-                  </InputGroup>
-                  {errors.value && (
                     <FormErrorMessage>{errors.value}</FormErrorMessage>
-                  )}
-                </FormControl>
+                  </FormControl>
 
-                <FormControl isRequired>
-                  <FormLabel fontWeight="medium">Tax Status</FormLabel>
-                  <RadioGroup
-                    value={newInvestment.taxStatus}
-                    onChange={handle_change_tax_status}
-                  >
-                    <Stack
-                      direction={{ base: "column", md: "row" }}
-                      spacing={{ base: 2, md: 5 }}
+                  <FormControl as="fieldset">
+                    <FormLabel as="legend" fontWeight="medium">
+                      Tax Status
+                    </FormLabel>
+                    <RadioGroup
+                      value={newInvestment.taxStatus}
+                      onChange={handle_change_tax_status}
                     >
-                      <Radio
-                        value="non-retirement"
-                        colorScheme="blue"
-                        size="lg"
-                      >
-                        <Text fontSize="md">Non-Retirement</Text>
-                      </Radio>
-                      <Radio value="pre-tax" colorScheme="green" size="lg">
-                        <Text fontSize="md">Pre-Tax</Text>
-                      </Radio>
-                      <Radio value="after-tax" colorScheme="purple" size="lg">
-                        <Text fontSize="md">After-Tax</Text>
-                      </Radio>
-                    </Stack>
-                  </RadioGroup>
-                </FormControl>
+                      <Stack direction="row" spacing={5}>
+                        <Radio value="non-retirement">Non-Retirement</Radio>
+                        <Radio value="pre-tax">Pre-Tax</Radio>
+                        <Radio value="after-tax">After-Tax</Radio>
+                      </Stack>
+                    </RadioGroup>
+                  </FormControl>
 
-                <Flex justifyContent="flex-end">
                   <Button
                     leftIcon={<AddIcon />}
-                    colorScheme="blue"
+                    colorScheme="green"
                     onClick={handle_add_investment}
-                    size="md"
+                    alignSelf="flex-start"
                     mt={2}
                   >
                     Add Investment
                   </Button>
-                </Flex>
-              </VStack>
+                </VStack>
+              )}
             </Box>
-
-            {investmentsConfig.investments.length ===
-              MOCK_INVESTMENT_TYPES.length && (
-              <Text color="orange.500" fontSize="sm" mt={2}>
-                All investment types have been used. Remove an existing
-                investment to add a different type.
-              </Text>
-            )}
-          </CardBody>
-
-          <CardFooter
-            p={6}
-            bg={useColorModeValue("gray.50", "gray.700")}
-            borderTopWidth="1px"
-            borderColor={borderColor}
-          >
-            <Flex justifyContent="flex-end" width="100%">
-              <Button
-                colorScheme="blue"
-                size="lg"
-                onClick={onContinue}
-                isDisabled={investmentsConfig.investments.length === 0}
-                px={8}
-                rightIcon={<Icon as={FiChevronRight} />}
-              >
-                Continue
-              </Button>
-            </Flex>
-          </CardFooter>
-        </Card>
+          </Box>
+        </Box>
       </Box>
     </Box>
   );
