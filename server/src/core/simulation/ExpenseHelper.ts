@@ -115,6 +115,7 @@ export function get_discretionary_expenses(
 
 /**
  * 计算给定expense在当前年份的金额，考虑通货膨胀调整
+ * 应该是正确的了，因为expect_annual_change已经只在乎增长的值而不是初始+增长
  *
  * @param event The expense event
  * @param currentYear The current simulation year
@@ -173,24 +174,26 @@ export function withdraw_from_investments(
   amountNeeded: number
 ): { withdrawn: number; unfunded: number; earlyWithdrawals: number } {
   let remainingAmount = amountNeeded;
-  let totalWithdrawn = 0;
-  let earlyWithdrawals = 0;
+  let totalWithdrawn = 0; //计算取出的金额，方便后面计算税率
+  let earlyWithdrawals = 0; //计算early withdrawals的金额，方便后面计算early withdrawal tax
 
   // Go through the withdrawal strategy in order
+  //? 这里的expense_withrawal_strategy是一个String arrary，我们创建了一个investmentId的array来存储
   for (const investmentId of state.expense_withrawal_strategy || []) {
-    if (remainingAmount <= 0) break;
+    //!下面这所有的都只针对一个investmentId，比如cash或者什么别的investment
+    if (remainingAmount <= 0) break; //如果已经取完了，就break
 
     // Look for the investment in all account types
-    let investment: Investment | undefined;
-    let accountType: TaxStatus | undefined;
+    let investment: Investment | undefined; //也就是说这个investment 可以是 investment 的 类型，也可以是 undefined| 但如果是undefined，就说明这个investmentId在state.accounts中不存在
+    let accountType: TaxStatus | undefined;// 这个TaxStatus也一样。
 
-    // Check each account type
+    // Check each account type//! 大概率是对的了
     for (const type of [
       TaxStatus.NON_RETIREMENT,
       TaxStatus.PRE_TAX,
       TaxStatus.AFTER_TAX,
     ] as const) {
-      // Get the appropriate account map
+      // 这里的方法其实是在接受state给我们传出的各个account里面有哪些investment。
       let accountMap: Map<string, Investment>;
       switch (type) {
         case TaxStatus.NON_RETIREMENT:
@@ -204,7 +207,7 @@ export function withdraw_from_investments(
           break;
       }
 
-      const account = accountMap.get(investmentId);
+      const account = accountMap.get(investmentId); //那么我们这里就可以从我们的investment中找到这个investmentId对应的account然后获取信息。
       if (account) {
         investment = account;
         accountType = type;
@@ -212,25 +215,25 @@ export function withdraw_from_investments(
       }
     }
 
-    // Skip if investment not found, is cash, or no account type determined
+    // Skip if investment not found, is cash, or no account type determined 
     if (!investment || investment === state.cash || !accountType) continue;
 
     // Get the current value and purchase price of the investment
-    const currentValue = investment.get_value();
-    const purchasePrice = investment.get_cost_basis?.() || 0;
+    const currentValue = investment.get_value(); //获取当前价值
+    const purchasePrice = investment.get_cost_basis?.() || 0; //获取购买价格
 
     // Calculate how much to withdraw from this investment
-    const amountToWithdraw = Math.min(currentValue, remainingAmount);
-    if (amountToWithdraw <= 0) continue;
+    const amountToWithdraw = Math.min(currentValue, remainingAmount); //取出的金额是当前价值和剩余金额的最小值
+    if (amountToWithdraw <= 0) continue; //如果amountToWithdraw小于0，这就表示我们取完了，就break
 
     // Calculate the fraction of the investment being sold
-    const fraction = amountToWithdraw / currentValue;
+    const fraction = amountToWithdraw / currentValue; //计算我们取出的金额占当前价值的比例, 因为我们需要计算capital gain
 
     // Withdraw the funds
-    investment.incr_value(-amountToWithdraw);
-    state.cash.incr_value(amountToWithdraw);
-    remainingAmount -= amountToWithdraw;
-    totalWithdrawn += amountToWithdraw;
+    investment.incr_value(-amountToWithdraw); //减少investment的价值
+    state.cash.incr_value(amountToWithdraw); //增加cash的价值
+    remainingAmount -= amountToWithdraw; //减少剩余金额
+    totalWithdrawn += amountToWithdraw; //增加totalWithdrawn //? 这里还需要么？我们可以取一次计算一次吧，不需要知道total吧
 
     // Handle tax implications based on the account type
     if (accountType === TaxStatus.NON_RETIREMENT) {
