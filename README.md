@@ -50,14 +50,12 @@ To run this project, you need to set up environment variables for both the serve
 
    ```plaintext
    GOOGLE_CLIENT_ID=368549888816-i3rrgfoc1sgqda8o4hf40tve2lv1n4b5.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
-SESSION_SECRET=some_random_string_for_session_security
-CLIENT_URL=http://localhost:5173
+    GOOGLE_CLIENT_SECRET=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
+    SESSION_SECRET=some_random_string_for_session_security
+    CLIENT_URL=http://localhost:5173
 
    ```
 
-   - Replace `your_google_client_id` and `your_google_client_secret` with the actual credentials.
-   - Ensure `SESSION_SECRET` is a secure random string.
 
 ### Client Setup
 
