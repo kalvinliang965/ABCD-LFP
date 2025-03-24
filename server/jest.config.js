@@ -1,6 +1,15 @@
 module.exports = {
-    preset: "ts-jest",
-    testEnvironment: "node",
-    testMatch: ["**/__tests__/**/*.test.ts"],
-    modulePaths: ["<rootDir>/src"]
+    preset: 'ts-jest',
+    testEnvironment: 'node',
+    testMatch: [
+      '**/__tests__/**/*.test.ts',    // 匹配 __tests__ 目录
+      '**/?(*.)+(spec|test).ts'       // 匹配任意目录的 .test.ts 文件
+    ],
+    testPathIgnorePatterns: [
+      '/node_modules/',
+      '/dist/'                        // 如果有编译输出目录需要排除
+    ],
+    moduleNameMapper: {
+      '^@/(.*)$': '<rootDir>/src/$1'
+    }
   };
