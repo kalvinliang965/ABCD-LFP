@@ -3,6 +3,8 @@ import "./Login.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FaGoogle } from "react-icons/fa"; // 导入Google图标
+import { Box, Button, Center, Container, Heading, Text, VStack, useColorModeValue } from '@chakra-ui/react';
+import { FcGoogle } from 'react-icons/fc'; // Install react-icons if not already installed
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -95,13 +97,10 @@ const Login: React.FC = () => {
     }
   };
 
-  // handle google sign in //todo: need to implement google sign in
+  // Handle Google sign in - this is the only function we need to change
   const handleGoogleSignIn = () => {
-    // here should be OAuth login API
-    // for example: window.location.href = 'http://localhost:3000/api/auth/google';
-    console.log("use google login");
-    // simulate successful login, should be implemented through OAuth process
-    setTimeout(() => navigate("/dashboard"), 1000);
+    // Redirect to backend auth route
+    window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/auth/google`;
   };
 
   return (
