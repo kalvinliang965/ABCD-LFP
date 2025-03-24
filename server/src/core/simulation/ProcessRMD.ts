@@ -5,147 +5,52 @@ import { Investment } from "../domain/investment/Investment";
 import { getRMDFactors } from "../../services/RMDScraper";
 
 /**
- * Computes how income is shared between spouses based on their alive status
- * 
- * @param amount The total income amount
- * @param userPct User's percentage of the income
- * @param spousePct Spouse's percentage of the income
- * @param userAlive Whether the user is alive
- * @param spouseAlive Whether the spouse is alive
- * @returns The adjusted income amount
- */
-function compute_spouse_income_share(
-  amount: number, 
-  userPct: number, 
-  spousePct: number, 
-  userAlive: boolean, 
-  spouseAlive: boolean
-): number {
-  if (!userAlive && !spouseAlive) {
-    return 0;
-  } else if (userAlive && spouseAlive) {
-    return amount; // full amount
-  } else if (userAlive && !spouseAlive) {
-    return amount * userPct;
-  } else {
-    return amount * spousePct;
-  }
-}
-
-/**
  * Get the RMD distribution period for a given age
  * 
  * @param age The age to look up
  * @returns The distribution period from the RMD table
  */
 async function get_distribution_period(age: number): Promise<number> {
-  // Get RMD factors from the scraper service
-  const rmdFactors = await getRMDFactors();
+  // Hardcoded RMD factors based on IRS Uniform Lifetime Table (2022+)
+  // This is a fallback until the scraper is implemented
+  const RMD_FACTORS = new Map([
+    [72, 27.4], [73, 26.5], [74, 25.5], [75, 24.6], [76, 23.7], [77, 22.9], 
+    [78, 22.0], [79, 21.1], [80, 20.2], [81, 19.4], [82, 18.5], [83, 17.7], 
+    [84, 16.8], [85, 16.0], [86, 15.2], [87, 14.4], [88, 13.7], [89, 12.9], 
+    [90, 12.2], [91, 11.5], [92, 10.8], [93, 10.1], [94, 9.5], [95, 8.9], 
+    [96, 8.4], [97, 7.8], [98, 7.3], [99, 6.8], [100, 6.4], [101, 6.0], 
+    [102, 5.6], [103, 5.2], [104, 4.9], [105, 4.6], [106, 4.3], [107, 4.1], 
+    [108, 3.9], [109, 3.7], [110, 3.5], [111, 3.4], [112, 3.3], [113, 3.1], 
+    [114, 3.0], [115, 2.9], [116, 2.8], [117, 2.7], [118, 2.5], [119, 2.3], 
+    [120, 2.0]
+  ]);
   
   // Cap at 120 years
   if (age > 120) {
-    return 2.0;
+    return RMD_FACTORS.get(120) || 2.0;
   }
   
-  return 0;       //need to implement.  ?????
+  return RMD_FACTORS.get(age) || 0;
 }
 
 /**
- * Calculate the total pre-tax balance for a person
+ * Find a cash account in the non-retirement accounts
  * 
  * @param state The simulation state
- * @param isPrimary Whether to calculate for primary user (true) or spouse (false)
- * @returns The total pre-tax balance
+ * @returns The cash account, or undefined if not found
  */
-function get_total_pre_tax_balance(
-  state: SimulationState & Partial<Scenario>,
-  isPrimary: boolean
-): number {
-  let total = 0;
-  
-  // Iterate through pre-tax accounts
-  for (const [_, investment] of state.accounts.pre_tax) {
-    // Check if this investment belongs to the person we're calculating for
-    const isUserInvestment = (investment as any).user_fraction >= 0.5;
-    
-    if ((isPrimary && isUserInvestment) || (!isPrimary && !isUserInvestment)) {
-      total += (investment as any).value;
-    }
-  }
-  
-  return total;
-}
-
-/**
- * Withdraw RMD from pre-tax accounts
- * 
- * @param state The simulation state
- * @param shortfall The amount that needs to be withdrawn
- * @param isPrimary Whether this is for the primary user (true) or spouse (false)
- * @returns The amount actually withdrawn
- */
-function withdraw_rmd_from_pre_tax(
-  state: SimulationState & Partial<Scenario>,
-  shortfall: number,
-  isPrimary: boolean
-): number {
-  let remaining = shortfall;
-  let totalWithdrawn = 0;
-  
-  // Find cash account
-  let cashAccount: Investment | undefined;
+function find_cash_account(state: SimulationState & Partial<Scenario>): Investment | undefined {
   for (const [id, investment] of state.accounts.non_retirement) {
-    if (id.toLowerCase() === "cash") {
-      cashAccount = investment;
-      break;
+    // Look for an account named "cash" (case insensitive)
+    if (id.toLowerCase() === "cash" || investment.name.toLowerCase() === "cash") {
+      return investment;
     }
   }
-  
-  if (!cashAccount) {
-    console.warn("No cash account found for RMD distributions");
-    return 0;
-  }
-  
-  // Iterate through pre-tax accounts in the order specified by RMD strategy
-  for (const accountId of state.rmd_strategy || []) {
-    if (remaining <= 0) break;
-    
-    const account = state.accounts.pre_tax.get(accountId);
-    if (!account) continue;
-    
-    // Check if this account belongs to the person we're processing
-    const isUserAccount = (account as any).user_fraction >= 0.5;
-    if ((isPrimary && !isUserAccount) || (!isPrimary && isUserAccount)) {
-      continue;
-    }
-    
-    // Determine how much to withdraw
-    const accountValue = (account as any).value;
-    const withdrawAmount = Math.min(accountValue, remaining);
-    
-    if (withdrawAmount <= 0) continue;
-    
-    // Update account balance
-    (account as any).value -= withdrawAmount;
-    
-    // Add to cash
-    (cashAccount as any).value += withdrawAmount;
-    
-    // Update taxable income (RMDs are taxable as ordinary income)
-    state.incr_ordinary_income(withdrawAmount);
-    
-    // Update tracking
-    remaining -= withdrawAmount;
-    totalWithdrawn += withdrawAmount;
-    
-    console.log(`RMD withdrawal from ${accountId}: $${withdrawAmount.toFixed(2)}`);
-  }
-  
-  return totalWithdrawn;
+  return undefined;
 }
 
 /**
- * Process Required Minimum Distributions (RMDs) for the simulation
+ * Process Required Minimum Distributions (RMDs) for the user
  * 
  * @param state The simulation state
  * @returns The total RMD amount processed
@@ -153,74 +58,90 @@ function withdraw_rmd_from_pre_tax(
 export default async function process_rmds(
   state: SimulationState & Partial<Scenario>
 ): Promise<number> {
-  let totalRmdAmount = 0;
-  const currentYear = state.get_current_year();
+  // Only process RMDs for the user (not spouse)
+  const userAge = state.user.get_age();
+  const userAlive = state.user.is_alive();
   const rmdStartAge = 72; // Current IRS rule (as of 2023)
   
-  // Process RMDs for both user and spouse
-  const persons = [
-    { 
-      name: "user", 
-      isPrimary: true,
-      age: state.user.get_age(),
-      alive: state.user.is_alive(),
-      fraction: 0.6 // Default user fraction if not specified
-    },
-    { 
-      name: "spouse", 
-      isPrimary: false,
-      age: state.spouse ? state.spouse.get_age() : 0,
-      alive: state.spouse ? state.spouse.is_alive() : false,
-      fraction: 0.4 // Default spouse fraction
-    }
-  ];
-  
-  // Track if RMD was triggered this year
-  let rmdTriggered = false;
-  
-  for (const person of persons) {
-    // Skip if person is not alive or not old enough for RMD
-    if (!person.alive || person.age < rmdStartAge) {
-      continue;
-    }
-    
-    // Get total pre-tax balance for this person
-    const totalPreTaxBalance = get_total_pre_tax_balance(state, person.isPrimary);
-    
-    if (totalPreTaxBalance <= 0) {
-      continue; // No RMD needed if no pre-tax funds
-    }
-    
-    // Get distribution period from RMD table
-    const distributionPeriod = await get_distribution_period(person.age);
-    
-    if (distributionPeriod <= 0) {
-      console.warn(`Invalid distribution period for age ${person.age}`);
-      continue;
-    }
-    
-    // Calculate Required Minimum Distribution
-    const requiredRmd = totalPreTaxBalance / distributionPeriod;
-    
-    // Check if Roth conversions already covered part of the RMD
-    // This would need to be implemented based on your Roth conversion tracking
-    const alreadyWithdrawn = 0; // Placeholder - implement based on your Roth conversion logic
-    
-    // Calculate shortfall if Roth conversion didn't fully cover RMD
-    if (alreadyWithdrawn < requiredRmd) {
-      const shortfall = requiredRmd - alreadyWithdrawn;
-      const withdrawnAmount = withdraw_rmd_from_pre_tax(state, shortfall, person.isPrimary);
-      
-      totalRmdAmount += withdrawnAmount;
-      
-      if (withdrawnAmount > 0) {
-        rmdTriggered = true;
-      }
-    }
+  // Check if the user is alive and old enough for RMD
+  if (!userAlive || userAge < rmdStartAge) {
+    // No RMD needed
+    return 0;
   }
   
-  // Store RMD triggered status in simulation state if needed
-  (state as any).rmd_triggered = rmdTriggered;
+  // Get total pre-tax retirement account balance
+  let totalRmdAmount = 0;
+  let totalPreTaxBalance = 0;
+  
+  // Calculate total balance in pre-tax accounts
+  for (const [_, account] of state.accounts.pre_tax) {
+    totalPreTaxBalance += (account as any).value;
+  }
+  
+  if (totalPreTaxBalance <= 0) {
+    // No RMD needed if there are no pre-tax funds
+    return 0;
+  }
+  
+  // Get distribution period from RMD table
+  const distributionPeriod = await get_distribution_period(userAge);
+  
+  if (distributionPeriod <= 0) {
+    console.warn(`Invalid distribution period for age ${userAge}`);
+    return 0;
+  }
+  
+  // Calculate Required Minimum Distribution (RMD)
+  const requiredRmd = totalPreTaxBalance / distributionPeriod;
+  
+  // Process the RMD withdrawal
+  let remainingRmd = requiredRmd;
+  
+  // Find cash account for receiving the RMD
+  const cashAccount = find_cash_account(state);
+  
+  if (!cashAccount) {
+    console.warn("No cash account found for RMD distributions");
+    return 0;
+  }
+  
+  // Withdraw from pre-tax accounts according to RMD strategy
+  for (const accountId of state.rmd_strategy || []) {
+    if (remainingRmd <= 0) {
+      break;
+    }
+    
+    const account = state.accounts.pre_tax.get(accountId);
+    if (!account) {
+      continue;
+    }
+    
+    // Determine how much to withdraw from this account
+    const accountValue = (account as any).value;
+    const withdrawAmount = Math.min(accountValue, remainingRmd);
+    
+    if (withdrawAmount <= 0) {
+      continue;
+    }
+    
+    // Update account balance
+    (account as any).value -= withdrawAmount;
+    
+    // Transfer to cash account (non-retirement)
+    (cashAccount as any).value += withdrawAmount;
+    
+    // Add to ordinary income (RMDs are taxable)
+    state.incr_ordinary_income(withdrawAmount);
+    
+    // Update tracking
+    remainingRmd -= withdrawAmount;
+    totalRmdAmount += withdrawAmount;
+    
+    console.log(`RMD withdrawal from ${accountId}: $${withdrawAmount.toFixed(2)}`);
+  }
+  
+  // Mark that RMD was processed
+  (state as any).rmd_triggered = (totalRmdAmount > 0);
   
   return totalRmdAmount;
 }
