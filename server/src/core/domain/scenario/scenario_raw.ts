@@ -90,7 +90,7 @@ export function create_scenario_raw(
     RMDStrategy: Array<string>,
     RothConversionOpt: boolean,
     RothConversionStart: number,
-    RothConversionEnd: 2060,
+    RothConversionEnd: number,
     RothConversionStrategy: Array<string>,
     financialGoal: number,
     residenceState: string,
