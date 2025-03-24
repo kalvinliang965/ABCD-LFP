@@ -4,33 +4,34 @@ import { rnorm } from "probability-distributions";
 
 export interface RandomGenerator {
     sample: () => number;
+    _params: Map<StatisticType, number>
 }
 function ValueGenerator(distribution_type: DistributionType, params: Map<StatisticType, number> ): RandomGenerator {
     const sample = (): number => {
         switch (distribution_type) {
             case DistributionType.FIXED: 
                 const value = params.get(StatisticType.VALUE);
-                if (!value) {
+                if (typeof(value) !== "number") {
                     throw new Error("selecting value for fixed type with out `value`");
                 }
                 return value;
             case DistributionType.NORMAL:
                 const mean = params.get(StatisticType.MEAN);
-                if (!mean) {
+                if (typeof(mean) !== "number") {
                     throw new Error("selecting value from normal distribution without `mean`");
                 }
-                const standard_deviation = params.get(StatisticType.STDDEV);
-                if (!standard_deviation) {
+                const standard_deviation = params.get(StatisticType.STDEV);
+                if (typeof(standard_deviation) !== "number") {
                     throw new Error("selecting value from normal distribution without 'standard deviation'");
                 }
                 return rnorm(1, mean, standard_deviation)[0];
             case DistributionType.UNIFORM:
                 const lowerbound = params.get(StatisticType.LOWER);
-                if (!lowerbound) {
+                if (typeof(lowerbound) !== "number") {
                     throw new Error("selecting value from uniform distribution without lowerbound");
                 }
                 const upperbound = params.get(StatisticType.UPPER);       
-                if (!upperbound) {
+                if (typeof(upperbound) !== "number") {
                     throw new Error("selecting value from uniform distribution without upperbound");
                 }
                 return Math.random() * (upperbound - lowerbound) + lowerbound;
@@ -39,7 +40,8 @@ function ValueGenerator(distribution_type: DistributionType, params: Map<Statist
         }
     }
     return {
-        sample
+        sample,
+        _params: params, // for debug
     }
 }
 

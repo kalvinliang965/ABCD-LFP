@@ -92,7 +92,7 @@ function parse_life_expectancy(
           DistributionType.NORMAL,
           new Map([
             [StatisticType.MEAN, mean],
-            [StatisticType.STDDEV, stdev],
+            [StatisticType.STDEV, stdev],
           ])
         ).sample();
       default:
@@ -126,7 +126,7 @@ function parse_inflation_assumption(
           DistributionType.NORMAL,
           new Map([
             [StatisticType.MEAN, inflationAssumption.get("mean")],
-            [StatisticType.STDDEV, inflationAssumption.get("stdev")],
+            [StatisticType.STDEV, inflationAssumption.get("stdev")],
           ])
         );
       case "uniform":
