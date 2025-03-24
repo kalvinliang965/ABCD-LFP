@@ -23,7 +23,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Register routes
-app.use("/api/event-series", eventSeriesRoutes);
+app.use("/api/eventSeries", eventSeriesRoutes);
 app.use("/api/investments", investmentRoutes);
 app.use("/api/users", userRoutes);
 app.use("/auth", authRoutes);
@@ -123,16 +123,16 @@ connect_database().catch((error) => {
 });
 
 // Add this near the end of your file, before scrapping_demo()
-function testRMDScraper() {
-  console.log("\n--- Testing RMD Scraper ---");
-  const { getRMDFactors } = require("./services/RMDScraper");
-  console.log(`RMD Factor for age 72: ${getRMDFactors(72)}`);
-  console.log(`RMD Factor for age 75: ${getRMDFactors(75)}`);
-  console.log(`RMD Factor for age 85: ${getRMDFactors(85)}`);
-  console.log("--- End RMD Scraper Test ---\n");
-}
+// function testRMDScraper() {
+//   console.log("\n--- Testing RMD Scraper ---");
+//   const { getRMDFactors } = require("./services/RMDScraper");
+//   console.log(`RMD Factor for age 72: ${getRMDFactors(72)}`);
+//   console.log(`RMD Factor for age 75: ${getRMDFactors(75)}`);
+//   console.log(`RMD Factor for age 85: ${getRMDFactors(85)}`);
+//   console.log("--- End RMD Scraper Test ---\n");
+// }
 
 // Call this function before or after scrapping_demo()
-testRMDScraper();
+// testRMDScraper();
 
-scrapping_demo();
+// scrapping_demo();
