@@ -136,4 +136,3 @@ connect_database().catch((error) => {
 // testRMDScraper();
 
 // scrapping_demo();
-// scrapping_demo();
