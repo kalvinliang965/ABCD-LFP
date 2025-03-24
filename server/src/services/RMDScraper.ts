@@ -1,146 +1,188 @@
-// /**
-//  * RMD Scraper Service
-//  */
+/**
+ * RMD Scraper Service
+ * 
+ * This service provides functions to get Required Minimum Distribution (RMD) factors
+ * from IRS Publication 590-B.
+ */
 
-// import axios from 'axios';
-// import { load } from 'cheerio';
+import axios from 'axios';
+import { load } from 'cheerio';
 
-// // URL for the IRS page containing the RMD table
-// const RMD_URL = 'https://www.irs.gov/retirement-plans/plan-participant-employee/required-minimum-distribution-worksheets';
+// URL for the IRS publication containing the RMD table
+const RMD_URL = 'https://www.irs.gov/publications/p590b';
 
-// // Default RMD factors based on IRS Uniform Lifetime Table (2022+)
-// // These will be used as a fallback if scraping fails
-// const DEFAULT_RMD_FACTORS: Map<number, number> = new Map([
-//   [72, 27.4], [73, 26.5], [74, 25.5], [75, 24.6], [76, 23.7], [77, 22.9], 
-//   [78, 22.0], [79, 21.1], [80, 20.2], [81, 19.4], [82, 18.5], [83, 17.7], 
-//   [84, 16.8], [85, 16.0], [86, 15.2], [87, 14.4], [88, 13.7], [89, 12.9], 
-//   [90, 12.2], [91, 11.5], [92, 10.8], [93, 10.1], [94, 9.5], [95, 8.9], 
-//   [96, 8.4], [97, 7.8], [98, 7.3], [99, 6.8], [100, 6.4], [101, 6.0], 
-//   [102, 5.6], [103, 5.2], [104, 4.9], [105, 4.6], [106, 4.3], [107, 4.1], 
-//   [108, 3.9], [109, 3.7], [110, 3.5], [111, 3.4], [112, 3.3], [113, 3.1], 
-//   [114, 3.0], [115, 2.9], [116, 2.8], [117, 2.7], [118, 2.5], [119, 2.3], 
-//   [120, 2.0]
-// ]);
+// Default RMD factors based on IRS Uniform Lifetime Table (2022+)
+// These will be used as a fallback if scraping fails
+const DEFAULT_RMD_FACTORS: Map<number, number> = new Map([
+  [72, 27.4]
+]);
 
-// // Helper function to extract numbers from text
-// function extractNumbers(text: string): number[] {
-//   const matches = text.match(/\d+(\.\d+)?/g);
-//   return matches ? matches.map(Number) : [];
-// }
+// Helper function to extract numbers from text
+function extractNumbers(text: string): number[] {
+  const matches = text.match(/\d+(\.\d+)?/g);
+  return matches ? matches.map(Number) : [];
+}
 
-// // Cache for RMD factors to avoid repeated scraping
-// let cachedRMDFactors: Map<number, number> | null = null;
-// let lastScrapedTime: number = 0;
-// const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+// Cache for RMD factors to avoid repeated scraping
+let cachedRMDFactors: Map<number, number> | null = null;
+let lastScrapedTime: number = 0;
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
-// /**
-//  * Scrape RMD factors from the IRS website
-//  * 
-//  * @returns A promise that resolves to a Map of age to RMD factor
-//  */
-// export async function scrapeRMDFactors(): Promise<Map<number, number>> {
-//   try {
-//     console.log("Scraping RMD factors from IRS website...");
+/**
+ * Scrape RMD factors from the IRS publication 590-B
+ * 
+ * @returns A promise that resolves to a Map of age to RMD factor
+ */
+export async function scrapeRMDFactors(): Promise<Map<number, number>> {
+  try {
+    console.log("Scraping RMD factors from IRS website...");
     
-//     // Fetch the IRS page with RMD tables
-//     const { data: html } = await axios.get(RMD_URL);
-//     const $ = load(html);
+    // Test URL access first
+    console.log(`Attempting to access ${RMD_URL}...`);
+    try {
+      const response = await axios.get(RMD_URL);
+      console.log(`Successfully accessed URL. Status: ${response.status}`);
+    } catch (error) {
+      console.error(`Failed to access URL: ${error instanceof Error ? error.message : String(error)}`);
+      return new Map(DEFAULT_RMD_FACTORS);
+    }
     
-//     // Find the Uniform Lifetime Table
-//     // Look for a table with a caption or heading containing "Uniform Lifetime Table"
-//     const tables = $('table');
-//     let uniformLifetimeTable = null;
+    // Fetch the IRS page with RMD tables
+    const { data: html } = await axios.get(RMD_URL);
+    console.log(`Received HTML content of length: ${html.length}`);
     
-//     tables.each((_, table) => {
-//       const tableHtml = $(table).html() || '';
-//       if (tableHtml.toLowerCase().includes('uniform lifetime table')) {
-//         uniformLifetimeTable = table;
-//         return false; // Break the loop
-//       }
-//     });
+    const $ = load(html);
     
-//     if (!uniformLifetimeTable) {
-//       console.warn("Uniform Lifetime Table not found on the IRS website");
-//       console.log("Using default RMD factors");
-//       return new Map(DEFAULT_RMD_FACTORS);
-//     }
+    // Find all tables and log their content
+    const tables = $('table');
+    console.log(`Found ${tables.length} tables on the page`);
     
-//     // Parse the table rows to extract age and distribution period
-//     const rmdFactors = new Map<number, number>();
-//     const rows = $(uniformLifetimeTable).find('tr');
+    tables.each((i, table) => {
+      const tableText = $(table).text().substring(0, 100);
+      console.log(`Table ${i+1} preview: ${tableText}...`);
+    });
     
-//     // Skip the header row
-//     rows.slice(1).each((_, row) => {
-//       const cells = $(row).find('td');
-//       if (cells.length >= 2) {
-//         const ageText = $(cells[0]).text().trim();
-//         const distributionPeriodText = $(cells[1]).text().trim();
-        
-//         const ageNumbers = extractNumbers(ageText);
-//         const distributionPeriodNumbers = extractNumbers(distributionPeriodText);
-        
-//         if (ageNumbers.length > 0 && distributionPeriodNumbers.length > 0) {
-//           const age = ageNumbers[0];
-//           const distributionPeriod = distributionPeriodNumbers[0];
+    // Find the Uniform Lifetime Table
+    // Look for a table with a caption or heading containing "Uniform Lifetime Table"
+    const uniformLifetimeTable = $('table').filter((_, table) => {
+      const tableHtml = $(table).html() || '';
+      const tableText = $(table).text() || '';
+      
+      // Look for the table with "Uniform Lifetime" in its caption or content
+      return (
+        tableHtml.toLowerCase().includes('uniform lifetime') || 
+        tableText.toLowerCase().includes('table iii') ||
+        tableText.toLowerCase().includes('uniform lifetime')
+      );
+    });
+    
+    if (uniformLifetimeTable.length === 0) {
+      console.warn("Uniform Lifetime Table not found on the IRS website");
+      console.log("Using default RMD factors");
+      return new Map(DEFAULT_RMD_FACTORS);
+    }
+    
+    // Parse the table rows to extract age and distribution period
+    const rmdFactors = new Map<number, number>();
+    const rows = $(uniformLifetimeTable).find('tr');
+    
+    // Skip the header rows (there might be multiple header rows in this publication)
+    let headerRowsSkipped = false;
+    
+    rows.each((_, row) => {
+      const cells = $(row).find('td');
+      
+      // Skip header rows until we find a row with numeric data
+      if (!headerRowsSkipped) {
+        const firstCellText = cells.first().text().trim();
+        if (!firstCellText.match(/^\d+$/)) {
+          return; // Continue to next row
+        }
+        headerRowsSkipped = true;
+      }
+      
+      // Process data rows - Table III might have multiple columns of age/distribution pairs
+      // Each pair of columns represents an age and its distribution period
+      for (let i = 0; i < cells.length; i += 2) {
+        if (i + 1 < cells.length) {
+          const ageText = $(cells[i]).text().trim();
+          const distributionPeriodText = $(cells[i + 1]).text().trim();
           
-//           rmdFactors.set(age, distributionPeriod);
-//         }
-//       }
-//     });
+          // Extract numbers from the text
+          const ageNumbers = extractNumbers(ageText);
+          const distributionPeriodNumbers = extractNumbers(distributionPeriodText);
+          
+          if (ageNumbers.length > 0 && distributionPeriodNumbers.length > 0) {
+            const age = ageNumbers[0];
+            const distributionPeriod = distributionPeriodNumbers[0];
+            
+            rmdFactors.set(age, distributionPeriod);
+            console.log(`Scraped: Age ${age} -> Distribution Period ${distributionPeriod}`);
+          }
+        }
+      }
+    });
     
-//     if (rmdFactors.size === 0) {
-//       console.warn("Failed to extract RMD factors from the table");
-//       return new Map(DEFAULT_RMD_FACTORS);
-//     }
+    if (rmdFactors.size === 0) {
+      console.warn("Failed to extract RMD factors from the table");
+      return new Map(DEFAULT_RMD_FACTORS);
+    }
     
-//     console.log(`Successfully scraped ${rmdFactors.size} RMD factors`);
-//     return rmdFactors;
-//   } catch (error) {
-//     console.error("Error scraping RMD factors:", error);
-//     // Return default factors if scraping fails
-//     return new Map(DEFAULT_RMD_FACTORS);
-//   }
-// }
+    console.log(`Successfully scraped ${rmdFactors.size} RMD factors`);
+    return rmdFactors;
+  } catch (error) {
+    console.error("Error scraping RMD factors:", error);
+    // Return default factors if scraping fails
+    return new Map(DEFAULT_RMD_FACTORS);
+  }
+}
 
-// /**
-//  * Get RMD factors, using cached values if available and not expired
-//  * 
-//  * @returns A promise that resolves to a Map of age to RMD factor
-//  */
-// export async function getRMDFactors(): Promise<Map<number, number>> {
-//   const currentTime = Date.now();
+/**
+ * Get RMD factors, using cached values if available and not expired
+ * 
+ * @returns A promise that resolves to a Map of age to RMD factor
+ */
+export async function getRMDFactors(): Promise<Map<number, number>> {
+  const currentTime = Date.now();
   
-//   // If cache is valid, return cached factors
-//   if (cachedRMDFactors && (currentTime - lastScrapedTime < CACHE_DURATION)) {
-//     return cachedRMDFactors;
-//   }
+  // If cache is valid, return cached factors
+  if (cachedRMDFactors && (currentTime - lastScrapedTime < CACHE_DURATION)) {
+    return cachedRMDFactors;
+  }
   
-//   // Otherwise, scrape new factors
-//   const factors = await scrapeRMDFactors();
+  // Otherwise, scrape new factors
+  const factors = await scrapeRMDFactors();
   
-//   // Update cache
-//   cachedRMDFactors = factors;
-//   lastScrapedTime = currentTime;
-//   console.log("RMD factors updated");
+  // Update cache
+  cachedRMDFactors = factors;
+  lastScrapedTime = currentTime;
+  console.log("RMD factors updated");
 
   
-//   return factors;
-// }
+  return factors;
+}
 
-// /**
-//  * Get the RMD factor for a specific age
-//  * 
-//  * @param age The age to look up
-//  * @returns A promise that resolves to the RMD factor for the given age
-//  */
-// export async function getRMDFactorForAge(age: number): Promise<number> {
-//   const factors = await getRMDFactors();
+/**
+ * Get the RMD factor for a specific age
+ * 
+ * @param age The age to look up
+ * @returns A promise that resolves to the RMD factor for the given age
+ */
+export async function getRMDFactorForAge(age: number): Promise<number> {
+  // Check if age is in the valid range
+  if (age < 72 || age > 120) {
+    console.log(`Age ${age} is outside the valid range for RMD calculations (72-120)`);
+    return 0;
+  }
   
-//   // Cap at 120 years
-//   if (age > 120) {
-//     return factors.get(120) || 2.0;
-//   }
+  const factors = await getRMDFactors();
+  const factor = factors.get(age);
   
-//   return factors.get(age) || 0;
-// }
+  if (factor === undefined) {
+    console.log(`No RMD factor found for age ${age}`);
+    return 0;
+  }
+  
+  return factor;
+}
 
