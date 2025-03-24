@@ -1,5 +1,5 @@
 import express from "express";
-import "./config/environment"; // load environment vairable
+import "./config/environment"; // load environment variables
 import { registerGlobalMiddleWare, sessionStore } from "./middleware";
 import { connect_database, disconnect_database } from "./db/connections";
 import { api_config } from "./config/api";
@@ -7,9 +7,10 @@ import eventSeriesRoutes from "./routes/eventSeriesRoutes";
 import investmentRoutes from "./routes/investmentRoutes";
 import { scrapping_demo } from "./demo";
 
-//import passport from "passport";
+import passport from "passport";
 import userRoutes from "./routes/userRoutes";
-//import "./auth/passport"; // Import passport configuration
+import authRoutes from "./routes/authRoutes";
+import "./auth/passport"; // Import passport configuration
 
 const port = api_config.PORT;
 const app = express();
@@ -17,10 +18,15 @@ const app = express();
 // Register middleware
 registerGlobalMiddleWare(app);
 
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Register routes
 app.use("/api/eventSeries", eventSeriesRoutes);
 app.use("/api/investments", investmentRoutes);
-// app.use('/api/users', userRoutes);
+app.use("/api/users", userRoutes);
+app.use("/auth", authRoutes);
 
 //this part is for the login, check it after finishing other backend
 // Initialize Passport (add this after registerGlobalMiddleWare)
@@ -116,4 +122,18 @@ connect_database().catch((error) => {
   process.exit(1);
 });
 
-scrapping_demo();
+// // Add this near the end of your file, before scrapping_demo()
+// function testRMDScraper() {
+//   console.log("\n--- Testing RMD Scraper ---");
+//   const { getRMDFactors } = require("./services/RMDScraper");
+//   console.log(`RMD Factor for age 72: ${getRMDFactors(72)}`);
+//   console.log(`RMD Factor for age 75: ${getRMDFactors(75)}`);
+//   console.log(`RMD Factor for age 85: ${getRMDFactors(85)}`);
+//   console.log("--- End RMD Scraper Test ---\n");
+// }
+
+// // Call this function before or after scrapping_demo()
+// testRMDScraper();
+
+// scrapping_demo();
+// scrapping_demo();

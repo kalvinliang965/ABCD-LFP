@@ -8,6 +8,7 @@ import { Box, Button, Heading, Text, VStack, HStack, useColorModeValue } from "@
 import { FaPlus } from "react-icons/fa";
 
 // Scenarios List Component
+// ! this function is not used anymore
 const ScenariosList = () => {
   const navigate = useNavigate();
   const bgColor = useColorModeValue("white", "gray.800");

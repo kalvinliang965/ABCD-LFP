@@ -4,23 +4,24 @@ import { ChangeType } from "../Enums";
 import { SimulationState } from "./SimulationState";
 import { Event } from "../domain/event/Event";
 import { Scenario } from "../domain/scenario/Scenario";
+import ValueGenerator from "../../utils/math/ValueGenerator";
 
 /**
  * Process all income events for the current simulation year
  * This function identifies active income events for the current year
  */
 export default function process_income(
-    //state: SimulationState & Partial<Scenario>
+    state: SimulationState & Partial<Scenario>
     //used to test
-  state: {
-    get_current_year: () => number;
-    inflation_factor: number;
-    user: { is_alive: () => boolean };
-    spouse?: { is_alive: () => boolean };
-    events_by_type: { income: Map<string, any> };
-    incr_ordinary_income: (amt: number) => void;
-    incr_social_security_income: (amt: number) => void;
-  }
+//   state: {
+//     get_current_year: () => number;
+//     inflation_factor: number;
+//     user: { is_alive: () => boolean };
+//     spouse?: { is_alive: () => boolean };
+//     events_by_type: { income: Map<string, any> };
+//     incr_ordinary_income: (amt: number) => void;
+//     incr_social_security_income: (amt: number) => void;
+//   }
 ): number {
   let total_income_for_year = 0;
   const currentYear = state.get_current_year();
@@ -89,13 +90,6 @@ export default function process_income(
 
 /**
  * Computes how income is shared between spouses based on their alive status
- * 
- * @param amount The total income amount
- * @param userPct User's percentage of the income
- * @param spousePct Spouse's percentage of the income
- * @param userAlive Whether the user is alive
- * @param spouseAlive Whether the spouse is alive
- * @returns The adjusted income amount
  */
 function compute_spouse_income_share(
   amount: number, 
@@ -117,6 +111,7 @@ function compute_spouse_income_share(
 
 /**
  * Helper function to calculate the current amount for an event
+ * Supports both fixed/percentage changes and distribution-based changes
  */
 function calculate_event_amount(
   event: any,
@@ -128,10 +123,13 @@ function calculate_event_amount(
   
   // Apply annual changes for each year the event has been active
   for (let i = 0; i < years_active; i++) {
+    // Get the change amount based on change type and distribution
+    const changeAmount = get_change_amount(event);
+    
     if (event.change_type === ChangeType.FIXED) {
-      amount += event.expected_annual_change;
+      amount += changeAmount;
     } else if (event.change_type === ChangeType.PERCENTAGE) {
-      amount *= 1 + event.expected_annual_change;
+      amount *= (1 + changeAmount);
     }
     
     // Apply inflation adjustment if needed
@@ -141,6 +139,27 @@ function calculate_event_amount(
   }
   
   return amount;
+}
+
+/**
+ * Get the change amount based on the event's distribution type and parameters
+ */
+function get_change_amount(event: any): number {
+  // If the event has a distribution type, use it to sample a value
+  //not sure if this is needed since we could directly use the expected_annual_change ???
+  if (event.distribution_type) {
+    // Create a value generator based on the distribution type and parameters
+    const valueGenerator = ValueGenerator(
+      event.distribution_type,
+      event.distribution_params
+    );
+    
+    // Sample a value from the distribution
+    return valueGenerator.sample();
+  }
+  
+  // Otherwise, use the expected_annual_change directly
+  return event.expected_annual_change || 0;
 }
 
 /**

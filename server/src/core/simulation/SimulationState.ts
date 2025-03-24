@@ -10,6 +10,11 @@ import {
   create_state_tax_service,
 } from "../tax/StateTaxService";
 import { Event } from "../domain/event/Event";
+import {
+  get_mandatory_expenses,
+  get_discretionary_expenses,
+  SpendingEvent,
+} from "./ExpenseHelper";
 
 export type AccountMap = Map<string, Investment>;
 export type EventMap = Map<string, Event>;
@@ -42,6 +47,9 @@ export interface SimulationState {
   setup_year(): void;
   get_current_year(): number;
   get_financial_goal(): number;
+  //! Chen added, but not sure should be here or not
+  get_discretionary_expenses(): SpendingEvent[];
+  get_mandatory_expenses(): SpendingEvent[];
   federal_tax_service: FederalTaxService;
   state_tax_service: StateTaxService;
   advance_year(): void;
@@ -112,9 +120,9 @@ function parse_investments(
     switch (investment.taxStatus) {
       case TaxStatus.NON_RETIREMENT:
         if (investment.id == "cash") {
-            cash_account = investment;
+          cash_account = investment;
         } else {
-            non_retirement_account.set(investment.id, investment);
+          non_retirement_account.set(investment.id, investment);
         }
         break;
       case TaxStatus.PRE_TAX:
@@ -133,7 +141,12 @@ function parse_investments(
     process.exit(1);
   }
 
-  return [cash_account, non_retirement_account, pre_tax_account, after_tax_account];
+  return [
+    cash_account,
+    non_retirement_account,
+    pre_tax_account,
+    after_tax_account,
+  ];
 }
 
 // Organize events by type into maps for easier access
@@ -225,8 +238,6 @@ export async function create_simulation_state(
           () => current_year
         )
       : undefined;
-    
-    
 
     // Create the simulation state object
     const state: SimulationState = {
@@ -263,7 +274,7 @@ export async function create_simulation_state(
       incr_after_tax_contribution: (amt: number) => {
         after_tax_contribution += amt;
       },
-     
+
       get_current_year: () => current_year,
       federal_tax_service,
       state_tax_service,
@@ -272,7 +283,7 @@ export async function create_simulation_state(
         inflation_factor *= 1 + scenario.inflation_assumption.sample();
 
         if (!spouse?.is_alive) {
-            tax_filing_status = TaxFilingStatus.SINGLE;
+          tax_filing_status = TaxFilingStatus.SINGLE;
         }
       },
 
@@ -324,27 +335,44 @@ export async function create_simulation_state(
       },
 
       process_tax: () => {
-            try {
-                const standard_deduction = federal_tax_service.find_deduction(tax_filing_status);
-                const taxable_income = ((ordinary_income + capital_gains_income) - 0.15 * social_security_income) - standard_deduction;
-                const federal_taxable_income_tax = taxable_income * federal_tax_service.find_rate(
-                    taxable_income, 
-                    IncomeType.TAXABLE_INCOME, 
-                    tax_filing_status
-                );
-                const state_taxable_income_tax = taxable_income * state_tax_service.find_rate(
-                    taxable_income,
-                    tax_filing_status,
-                );
-                const federal_capital_gains_tax =  capital_gains_income * federal_tax_service.find_rate(
-                    capital_gains_income, 
-                    IncomeType.CAPITAL_GAINS, 
-                    tax_filing_status
-                );
-                cash.incr_value(taxable_income - federal_capital_gains_tax - federal_taxable_income_tax - state_taxable_income_tax);
-            } catch (error) {
-                throw new Error(`Failed to process tax ${error instanceof Error? error.message : error}`);
-            }
+        try {
+          const standard_deduction =
+            federal_tax_service.find_deduction(tax_filing_status);
+          const taxable_income =
+            ordinary_income +
+            capital_gains_income -
+            0.15 * social_security_income -
+            standard_deduction;
+          const federal_taxable_income_tax =
+            taxable_income *
+            federal_tax_service.find_rate(
+              taxable_income,
+              IncomeType.TAXABLE_INCOME,
+              tax_filing_status
+            );
+          const state_taxable_income_tax =
+            taxable_income *
+            state_tax_service.find_rate(taxable_income, tax_filing_status);
+          const federal_capital_gains_tax =
+            capital_gains_income *
+            federal_tax_service.find_rate(
+              capital_gains_income,
+              IncomeType.CAPITAL_GAINS,
+              tax_filing_status
+            );
+          cash.incr_value(
+            taxable_income -
+              federal_capital_gains_tax -
+              federal_taxable_income_tax -
+              state_taxable_income_tax
+          );
+        } catch (error) {
+          throw new Error(
+            `Failed to process tax ${
+              error instanceof Error ? error.message : error
+            }`
+          );
+        }
       },
 
       // Year setup and management
@@ -352,30 +380,49 @@ export async function create_simulation_state(
         ordinary_income = 0;
         capital_gains_income = 0;
         social_security_income = 0;
-        after_tax_contribution = 0
+        after_tax_contribution = 0;
         federal_tax_service.adjust_for_inflation(inflation_factor);
         state_tax_service.adjust_for_inflation(inflation_factor);
-        
+
+        // 更新scenario中的支出列
+        //! Chen added, but not sure should be here or not
+        if (scenario.discretionary_expenses !== undefined) {
+          scenario.discretionary_expenses = get_discretionary_expenses(state);
+        }
+        if (scenario.mandatory_expenses !== undefined) {
+          scenario.mandatory_expenses = get_mandatory_expenses(state);
+        }
+
         // type check
         for (const [id, investment] of non_retirement.entries()) {
-            if (investment.taxStatus != TaxStatus.NON_RETIREMENT) {
-                console.error(`non retirment account contain invalid type ${investment.taxStatus}`);
-                process.exit(1);
-            }
+          if (investment.taxStatus != TaxStatus.NON_RETIREMENT) {
+            console.error(
+              `non retirment account contain invalid type ${investment.taxStatus}`
+            );
+            process.exit(1);
+          }
         }
         for (const [id, investment] of after_tax.entries()) {
-            if (investment.taxStatus != TaxStatus.AFTER_TAX) {
-                console.error(`after tax account contain invalid type ${investment.taxStatus}`);
-                process.exit(1);
-            }
+          if (investment.taxStatus != TaxStatus.AFTER_TAX) {
+            console.error(
+              `after tax account contain invalid type ${investment.taxStatus}`
+            );
+            process.exit(1);
+          }
         }
         for (const [id, investment] of pre_tax.entries()) {
-            if (investment.taxStatus != TaxStatus.PRE_TAX) {
-                console.error(`pre tax account contain invalid type ${investment.taxStatus}`);
-                process.exit(1);
-            }
+          if (investment.taxStatus != TaxStatus.PRE_TAX) {
+            console.error(
+              `pre tax account contain invalid type ${investment.taxStatus}`
+            );
+            process.exit(1);
+          }
         }
       },
+
+      //! Chen added, but not sure should be here or not
+      get_discretionary_expenses: () => get_discretionary_expenses(state),
+      get_mandatory_expenses: () => get_mandatory_expenses(state),
     };
 
     return state;
