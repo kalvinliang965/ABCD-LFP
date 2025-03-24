@@ -20,20 +20,8 @@ import {
   Stack,
   Divider,
   Icon,
-  Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
-  InputGroup,
-  InputLeftElement,
-  useColorModeValue,
 } from "@chakra-ui/react";
-import {
-  FiActivity,
-  FiCalendar,
-  FiChevronLeft,
-  FiChevronRight,
-} from "react-icons/fi";
+import { CalendarIcon } from "@chakra-ui/icons";
 
 export type ExpectancyType = "fixed" | "distribution";
 
@@ -67,12 +55,6 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
   onBack,
   onContinue,
 }) => {
-  const cardBg = useColorModeValue("white", "gray.800");
-  const headerBg = useColorModeValue("blue.50", "blue.900");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const userBg = useColorModeValue("blue.50", "blue.900");
-  const spouseBg = useColorModeValue("purple.50", "purple.900");
-
   const handle_change_user_expectancy_type = (value: string) => {
     const newType = value as ExpectancyType;
     const updates: Partial<LifeExpectancyConfig> = {
@@ -116,65 +98,42 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
   };
 
   return (
-    <Box minH="100vh" bg="gray.50" py={8}>
-      <Box maxW="4xl" mx="auto" px={4}>
-        <Card
-          rounded="lg"
-          shadow="xl"
-          overflow="hidden"
-          borderWidth="1px"
-          borderColor={borderColor}
-          bg={cardBg}
-        >
-          <CardHeader bg={headerBg} py={5} px={6}>
-            <Flex justify="space-between" align="center">
-              <Heading
-                size="lg"
-                color="gray.800"
-                display="flex"
-                alignItems="center"
-              >
-                <Icon as={FiActivity} mr={2} />
+    <Box minH="100vh" bg="gray.50">
+      <Box maxW="4xl" mx="auto" py={12} px={4}>
+        <Box bg="white" rounded="lg" shadow="lg" overflow="hidden">
+          <Box p={6}>
+            <Flex justify="space-between" align="center" mb={6}>
+              <Heading size="lg" color="gray.900">
                 Life Expectancy Configuration
               </Heading>
               <HStack spacing={2}>
-                <Button
-                  variant="ghost"
-                  colorScheme="blue"
-                  onClick={onBack}
-                  leftIcon={<Icon as={FiChevronLeft} />}
-                >
+                <Button variant="ghost" colorScheme="blue" onClick={onBack}>
                   Back
+                </Button>
+                <Button colorScheme="blue" onClick={onContinue}>
+                  Next
                 </Button>
               </HStack>
             </Flex>
-          </CardHeader>
 
-          <CardBody p={6}>
-            <Text color="gray.600" mb={6} fontSize="md">
-              Configure life expectancy settings for your financial planning
-              scenario. These settings will help simulate your financial future
-              more accurately.
-            </Text>
+            <Flex align="center" mb={6}>
+              <Icon as={CalendarIcon} color="blue.500" boxSize={5} mr={2} />
+              <Text color="gray.600">
+                Configure life expectancy settings for your financial planning
+                scenario.
+              </Text>
+            </Flex>
 
             <VStack spacing={8} align="stretch">
               {/* User Life Expectancy */}
               <Box
                 p={5}
-                bg={userBg}
+                bg="blue.50"
                 borderRadius="md"
                 borderLeft="4px solid"
                 borderLeftColor="blue.500"
-                shadow="sm"
               >
-                <Heading
-                  size="md"
-                  color="gray.700"
-                  mb={4}
-                  display="flex"
-                  alignItems="center"
-                >
-                  <Icon as={FiActivity} mr={2} color="blue.500" />
+                <Heading size="md" color="gray.700" mb={4}>
                   Your Life Expectancy Type
                 </Heading>
 
@@ -184,12 +143,8 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                     onChange={handle_change_user_expectancy_type}
                   >
                     <Stack direction="row" spacing={5}>
-                      <Radio value="fixed" colorScheme="blue" size="lg">
-                        <Text fontSize="md">Fixed Age</Text>
-                      </Radio>
-                      <Radio value="distribution" colorScheme="blue" size="lg">
-                        <Text fontSize="md">Normal Distribution</Text>
-                      </Radio>
+                      <Radio value="fixed">Fixed Age</Radio>
+                      <Radio value="distribution">Normal Distribution</Radio>
                     </Stack>
                   </RadioGroup>
                 </FormControl>
@@ -197,98 +152,68 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                 {lifeExpectancyConfig.userExpectancyType === "fixed" ? (
                   <FormControl isRequired>
                     <FormLabel fontWeight="medium">Expected Age</FormLabel>
-                    <InputGroup>
-                      <InputLeftElement pointerEvents="none">
-                        <Icon as={FiCalendar} color="blue.500" />
-                      </InputLeftElement>
-                      <NumberInput
-                        min={userBirthYear + 1}
-                        max={userBirthYear + 120}
-                        value={lifeExpectancyConfig.userFixedAge}
-                        onChange={(_, value) =>
-                          onChangeLifeExpectancy({
-                            ...lifeExpectancyConfig,
-                            userFixedAge: value,
-                          })
-                        }
-                        w="100%"
-                      >
-                        <NumberInputField
-                          pl={10}
-                          borderRadius="md"
-                          borderColor="blue.400"
-                        />
-                        <NumberInputStepper>
-                          <NumberIncrementStepper />
-                          <NumberDecrementStepper />
-                        </NumberInputStepper>
-                      </NumberInput>
-                    </InputGroup>
+                    <NumberInput
+                      min={userBirthYear + 1}
+                      max={userBirthYear + 120}
+                      value={lifeExpectancyConfig.userFixedAge}
+                      onChange={(_, value) =>
+                        onChangeLifeExpectancy({
+                          ...lifeExpectancyConfig,
+                          userFixedAge: value,
+                        })
+                      }
+                    >
+                      <NumberInputField />
+                      <NumberInputStepper>
+                        <NumberIncrementStepper />
+                        <NumberDecrementStepper />
+                      </NumberInputStepper>
+                    </NumberInput>
                   </FormControl>
                 ) : (
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                     <FormControl isRequired>
                       <FormLabel fontWeight="medium">Mean Age (μ)</FormLabel>
-                      <InputGroup>
-                        <InputLeftElement pointerEvents="none">
-                          <Icon as={FiCalendar} color="blue.500" />
-                        </InputLeftElement>
-                        <NumberInput
-                          min={userBirthYear + 1}
-                          max={userBirthYear + 120}
-                          value={lifeExpectancyConfig.userMeanAge}
-                          onChange={(_, value) =>
-                            onChangeLifeExpectancy({
-                              ...lifeExpectancyConfig,
-                              userMeanAge: value,
-                            })
-                          }
-                          w="100%"
-                        >
-                          <NumberInputField
-                            pl={10}
-                            borderRadius="md"
-                            borderColor="blue.400"
-                          />
-                          <NumberInputStepper>
-                            <NumberIncrementStepper />
-                            <NumberDecrementStepper />
-                          </NumberInputStepper>
-                        </NumberInput>
-                      </InputGroup>
+                      <NumberInput
+                        min={userBirthYear + 1}
+                        max={userBirthYear + 120}
+                        value={lifeExpectancyConfig.userMeanAge}
+                        onChange={(_, value) =>
+                          onChangeLifeExpectancy({
+                            ...lifeExpectancyConfig,
+                            userMeanAge: value,
+                          })
+                        }
+                      >
+                        <NumberInputField />
+                        <NumberInputStepper>
+                          <NumberIncrementStepper />
+                          <NumberDecrementStepper />
+                        </NumberInputStepper>
+                      </NumberInput>
                     </FormControl>
 
                     <FormControl isRequired>
                       <FormLabel fontWeight="medium">
                         Standard Deviation (σ)
                       </FormLabel>
-                      <InputGroup>
-                        <InputLeftElement pointerEvents="none">
-                          <Icon as={FiActivity} color="blue.500" />
-                        </InputLeftElement>
-                        <NumberInput
-                          min={1}
-                          max={20}
-                          value={lifeExpectancyConfig.userStandardDeviation}
-                          onChange={(_, value) =>
-                            onChangeLifeExpectancy({
-                              ...lifeExpectancyConfig,
-                              userStandardDeviation: value,
-                            })
-                          }
-                          w="100%"
-                        >
-                          <NumberInputField
-                            pl={10}
-                            borderRadius="md"
-                            borderColor="blue.400"
-                          />
-                          <NumberInputStepper>
-                            <NumberIncrementStepper />
-                            <NumberDecrementStepper />
-                          </NumberInputStepper>
-                        </NumberInput>
-                      </InputGroup>
+                      <NumberInput
+                        min={1}
+                        max={20}
+                        value={lifeExpectancyConfig.userStandardDeviation}
+                        onChange={(_, value) =>
+                          onChangeLifeExpectancy({
+                            ...lifeExpectancyConfig,
+                            userStandardDeviation: value,
+                          })
+                        }
+                      >
+                        <NumberInputField />
+                        <NumberInputStepper>
+                          <NumberIncrementStepper />
+                          <NumberDecrementStepper />
+                        </NumberInputStepper>
+                      </NumberInput>
                     </FormControl>
                   </SimpleGrid>
                 )}
@@ -296,55 +221,39 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
 
               {/* Spouse Life Expectancy (if couple) */}
               {isCouple && (
-                <Box
-                  p={5}
-                  bg={spouseBg}
-                  borderRadius="md"
-                  borderLeft="4px solid"
-                  borderLeftColor="purple.500"
-                  shadow="sm"
-                >
-                  <Heading
-                    size="md"
-                    color="gray.700"
-                    mb={4}
-                    display="flex"
-                    alignItems="center"
+                <>
+                  <Divider />
+                  <Box
+                    p={5}
+                    bg="purple.50"
+                    borderRadius="md"
+                    borderLeft="4px solid"
+                    borderLeftColor="purple.500"
                   >
-                    <Icon as={FiActivity} mr={2} color="purple.500" />
-                    Spouse's Life Expectancy Type
-                  </Heading>
+                    <Heading size="md" color="gray.700" mb={4}>
+                      Spouse's Life Expectancy Type
+                    </Heading>
 
-                  <FormControl as="fieldset" mb={4}>
-                    <RadioGroup
-                      value={lifeExpectancyConfig.spouseExpectancyType}
-                      onChange={handle_change_spouse_expectancy_type}
-                    >
-                      <Stack direction="row" spacing={5}>
-                        <Radio value="fixed" colorScheme="purple" size="lg">
-                          <Text fontSize="md">Fixed Age</Text>
-                        </Radio>
-                        <Radio
-                          value="distribution"
-                          colorScheme="purple"
-                          size="lg"
-                        >
-                          <Text fontSize="md">Normal Distribution</Text>
-                        </Radio>
-                      </Stack>
-                    </RadioGroup>
-                  </FormControl>
+                    <FormControl as="fieldset" mb={4}>
+                      <RadioGroup
+                        value={lifeExpectancyConfig.spouseExpectancyType}
+                        onChange={handle_change_spouse_expectancy_type}
+                      >
+                        <Stack direction="row" spacing={5}>
+                          <Radio value="fixed">Fixed Age</Radio>
+                          <Radio value="distribution">
+                            Normal Distribution
+                          </Radio>
+                        </Stack>
+                      </RadioGroup>
+                    </FormControl>
 
-                  {lifeExpectancyConfig.spouseExpectancyType === "fixed" ? (
-                    <FormControl isRequired>
-                      <FormLabel fontWeight="medium">Expected Age</FormLabel>
-                      <InputGroup>
-                        <InputLeftElement pointerEvents="none">
-                          <Icon as={FiCalendar} color="purple.500" />
-                        </InputLeftElement>
+                    {lifeExpectancyConfig.spouseExpectancyType === "fixed" ? (
+                      <FormControl isRequired>
+                        <FormLabel fontWeight="medium">Expected Age</FormLabel>
                         <NumberInput
-                          min={spouseBirthYear ? spouseBirthYear + 1 : 1900}
-                          max={spouseBirthYear ? spouseBirthYear + 120 : 2100}
+                          min={spouseBirthYear ? spouseBirthYear + 1 : 1}
+                          max={spouseBirthYear ? spouseBirthYear + 120 : 120}
                           value={lifeExpectancyConfig.spouseFixedAge}
                           onChange={(_, value) =>
                             onChangeLifeExpectancy({
@@ -352,31 +261,23 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                               spouseFixedAge: value,
                             })
                           }
-                          w="100%"
                         >
-                          <NumberInputField
-                            pl={10}
-                            borderRadius="md"
-                            borderColor="purple.400"
-                          />
+                          <NumberInputField />
                           <NumberInputStepper>
                             <NumberIncrementStepper />
                             <NumberDecrementStepper />
                           </NumberInputStepper>
                         </NumberInput>
-                      </InputGroup>
-                    </FormControl>
-                  ) : (
-                    <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                      <FormControl isRequired>
-                        <FormLabel fontWeight="medium">Mean Age (μ)</FormLabel>
-                        <InputGroup>
-                          <InputLeftElement pointerEvents="none">
-                            <Icon as={FiCalendar} color="purple.500" />
-                          </InputLeftElement>
+                      </FormControl>
+                    ) : (
+                      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                        <FormControl isRequired>
+                          <FormLabel fontWeight="medium">
+                            Mean Age (μ)
+                          </FormLabel>
                           <NumberInput
-                            min={spouseBirthYear ? spouseBirthYear + 1 : 1900}
-                            max={spouseBirthYear ? spouseBirthYear + 120 : 2100}
+                            min={spouseBirthYear ? spouseBirthYear + 1 : 1}
+                            max={spouseBirthYear ? spouseBirthYear + 120 : 120}
                             value={lifeExpectancyConfig.spouseMeanAge}
                             onChange={(_, value) =>
                               onChangeLifeExpectancy({
@@ -384,29 +285,19 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                                 spouseMeanAge: value,
                               })
                             }
-                            w="100%"
                           >
-                            <NumberInputField
-                              pl={10}
-                              borderRadius="md"
-                              borderColor="purple.400"
-                            />
+                            <NumberInputField />
                             <NumberInputStepper>
                               <NumberIncrementStepper />
                               <NumberDecrementStepper />
                             </NumberInputStepper>
                           </NumberInput>
-                        </InputGroup>
-                      </FormControl>
+                        </FormControl>
 
-                      <FormControl isRequired>
-                        <FormLabel fontWeight="medium">
-                          Standard Deviation (σ)
-                        </FormLabel>
-                        <InputGroup>
-                          <InputLeftElement pointerEvents="none">
-                            <Icon as={FiActivity} color="purple.500" />
-                          </InputLeftElement>
+                        <FormControl isRequired>
+                          <FormLabel fontWeight="medium">
+                            Standard Deviation (σ)
+                          </FormLabel>
                           <NumberInput
                             min={1}
                             max={20}
@@ -417,46 +308,22 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                                 spouseStandardDeviation: value,
                               })
                             }
-                            w="100%"
                           >
-                            <NumberInputField
-                              pl={10}
-                              borderRadius="md"
-                              borderColor="purple.400"
-                            />
+                            <NumberInputField />
                             <NumberInputStepper>
                               <NumberIncrementStepper />
                               <NumberDecrementStepper />
                             </NumberInputStepper>
                           </NumberInput>
-                        </InputGroup>
-                      </FormControl>
-                    </SimpleGrid>
-                  )}
-                </Box>
+                        </FormControl>
+                      </SimpleGrid>
+                    )}
+                  </Box>
+                </>
               )}
             </VStack>
-          </CardBody>
-
-          <CardFooter
-            p={6}
-            bg={useColorModeValue("gray.50", "gray.700")}
-            borderTopWidth="1px"
-            borderColor={borderColor}
-          >
-            <Flex justifyContent="flex-end" width="100%">
-              <Button
-                colorScheme="blue"
-                size="lg"
-                onClick={onContinue}
-                px={8}
-                rightIcon={<Icon as={FiChevronRight} />}
-              >
-                Continue
-              </Button>
-            </Flex>
-          </CardFooter>
-        </Card>
+          </Box>
+        </Box>
       </Box>
     </Box>
   );

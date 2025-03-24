@@ -11,7 +11,6 @@ import {
   Tooltip,
   VStack,
   IconButton,
-  useToast,
 } from "@chakra-ui/react";
 import { Building2, Wallet, TrendingUp, BarChart } from "lucide-react";
 import { DeleteIcon } from "@chakra-ui/icons";
@@ -32,12 +31,6 @@ import InvestmentsForm, {
   InvestmentsConfig,
   Investment,
 } from "../../components/scenarios/InvestmentsForm";
-import AdditionalSettingsForm, {
-  AdditionalSettingsConfig,
-  InflationConfig,
-  FinancialGoalConfig,
-  StateOfResidence,
-} from "../../components/scenarios/AdditionalSettingsForm";
 
 // Omit the id from EventSeries and add it as optional
 type AddedEvent = Omit<EventSeries, "id"> & {
@@ -89,11 +82,7 @@ export function NewScenarioPage() {
   const navigate = useNavigate();
   const [addedEvents, setAddedEvents] = useState<AddedEvent[]>([]);
   const [step, setStep] = useState<
-    | "details"
-    | "lifeExpectancy"
-    | "investments"
-    | "eventSelection"
-    | "additionalSettings"
+    "details" | "lifeExpectancy" | "investments" | "eventSelection"
   >("details");
   const [scenarioDetails, setScenarioDetails] = useState<ScenarioDetails>({
     name: "",
@@ -112,95 +101,41 @@ export function NewScenarioPage() {
       investments: [],
     }
   );
-  const [additionalSettings, setAdditionalSettings] =
-    useState<AdditionalSettingsConfig>({
-      inflationConfig: {
-        type: "fixed",
-        value: 2.5, // Default 2.5% inflation
-      },
-      financialGoal: {
-        value: 0, // Default to 0 (just meeting expenses)
-      },
-      stateOfResidence: "NY", // Default to NY
-    });
-  const toast = useToast();
 
   const handleEventAdded = async (event: AddedEvent) => {
     try {
-      // if (!event || !event._id) {
-      //   throw new Error("Invalid event data");
-      // }
-      // Instead of sending to the server, just generate a local ID
-      const localEvent: AddedEvent = {
-        ...event,
-        _id: `local-${Date.now()}`, // Generate a temporary local ID
-      };
+      if (!event || !event._id) {
+        throw new Error("Invalid event data");
+      }
 
       // Update the local state with the event from the server
-      // setAddedEvents((prev) => [event, ...prev]);
-      // Update the local state with the event
-      setAddedEvents((prev) => [localEvent, ...prev]);
+      setAddedEvents((prev) => [event, ...prev]);
       setSelectedType(null);
-      //!Chen added
-      toast({
-        title: "Event added",
-        description: "The event was successfully added locally.",
-        status: "success",
-        duration: 2000,
-        isClosable: true,
-      });
     } catch (error) {
       console.error("Error handling event:", error);
-      //!Chen added
-      toast({
-        title: "Error adding event",
-        description:
-          "There was an error adding the event, but it was saved locally.",
-        status: "warning",
-        duration: 4000,
-        isClosable: true,
-      });
     }
   };
 
   const handleDeleteEvent = async (id: string) => {
     try {
-      //temp comment out
-      // await axios.delete(`http://localhost:3000/api/eventSeries/${id}`, {
-      //   withCredentials: true,
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-      // Skip the API call and just update local state
+      await axios.delete(`http://localhost:3000/api/eventSeries/${id}`, {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      // Update the local state to remove the deleted event
       setAddedEvents((prev) =>
         prev.filter((event) => (event.id || event._id) !== id)
       );
-      //!Chen added
-      toast({
-        title: "Event removed",
-        description: "The event was successfully removed locally.",
-        status: "info",
-        duration: 2000,
-        isClosable: true,
-      });
     } catch (error) {
       console.error("Failed to delete event:", error);
-      //!Chen added
-      toast({
-        title: "Error removing event",
-        description:
-          "There was an error, but the event was removed from the local display.",
-        status: "warning",
-        duration: 4000,
-        isClosable: true,
-      });
     }
   };
 
   const handleSaveAndContinue = () => {
-    // Navigate to the additional settings step instead of directly to scenarios
-    setStep("additionalSettings");
+    navigate("/scenarios");
   };
 
   const handle_continue_to_life_expectancy = () => {
@@ -221,22 +156,6 @@ export function NewScenarioPage() {
 
   const handle_continue_to_event_selection = () => {
     setStep("eventSelection");
-  };
-
-  const handle_back_to_event_selection = () => {
-    setStep("eventSelection");
-  };
-
-  const handle_finish_scenario = () => {
-    // Submit the entire scenario and navigate to scenarios page
-    toast({
-      title: "Scenario Created",
-      description: "Your scenario has been created successfully.",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
-    navigate("/scenarios");
   };
 
   const handle_change_scenario_type = (value: string) => {
@@ -291,18 +210,6 @@ export function NewScenarioPage() {
         onChangeInvestmentsConfig={setInvestmentsConfig}
         onBack={handle_back_to_life_expectancy}
         onContinue={handle_continue_to_event_selection}
-      />
-    );
-  }
-
-  // Additional Settings Form
-  if (step === "additionalSettings") {
-    return (
-      <AdditionalSettingsForm
-        additionalSettings={additionalSettings}
-        onChangeAdditionalSettings={setAdditionalSettings}
-        onBack={handle_back_to_event_selection}
-        onContinue={handle_finish_scenario}
       />
     );
   }
