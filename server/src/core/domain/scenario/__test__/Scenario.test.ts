@@ -1,0 +1,4 @@
+
+describe("Scenario initialization test", () => {
+
+});

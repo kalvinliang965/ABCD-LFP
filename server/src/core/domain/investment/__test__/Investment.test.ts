@@ -1,0 +1,4 @@
+
+describe("Investment initialization test", () =>{
+
+})
