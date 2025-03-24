@@ -91,4 +91,7 @@ To run this project, you need to set up environment variables for both the serve
    npm install
    npm run dev
    ```
+⚠️ Note:
+- Run the **frontend** (Vite) on port `5173` (default).
+- Run the **backend** on either **port `3000` or `3346`** to match the Google OAuth **Authorized Redirect URIs**.
 

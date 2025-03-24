@@ -7,12 +7,13 @@
 
 import axios from 'axios';
 import { load } from 'cheerio';
+import { saveRMDFactors, getRMDFactorsFromDB } from '../db/repositories/RMDFactorRepository';
 
 // URL for the IRS publication containing the RMD table
 const RMD_URL = 'https://www.irs.gov/publications/p590b';
 
 // Default RMD factors based on IRS Uniform Lifetime Table (2022+)
-// These will be used as a fallback if scraping fails
+// These will be used as a fallback if scraping fails， easy to debug
 const DEFAULT_RMD_FACTORS: Map<number, number> = new Map([
   [72, 27.4]
 ]);
@@ -28,11 +29,8 @@ let cachedRMDFactors: Map<number, number> | null = null;
 let lastScrapedTime: number = 0;
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
-/**
- * Scrape RMD factors from the IRS publication 590-B
- * 
- * @returns A promise that resolves to a Map of age to RMD factor
- */
+//Scrape RMD factors from the IRS publication 590-B
+
 export async function scrapeRMDFactors(): Promise<Map<number, number>> {
   try {
     console.log("Scraping RMD factors from IRS website...");
@@ -139,8 +137,6 @@ export async function scrapeRMDFactors(): Promise<Map<number, number>> {
 
 /**
  * Get RMD factors, using cached values if available and not expired
- * 
- * @returns A promise that resolves to a Map of age to RMD factor
  */
 export async function getRMDFactors(): Promise<Map<number, number>> {
   const currentTime = Date.now();
@@ -150,23 +146,42 @@ export async function getRMDFactors(): Promise<Map<number, number>> {
     return cachedRMDFactors;
   }
   
-  // Otherwise, scrape new factors
-  const factors = await scrapeRMDFactors();
-  
-  // Update cache
-  cachedRMDFactors = factors;
-  lastScrapedTime = currentTime;
-  console.log("RMD factors updated");
-
-  
-  return factors;
+  try {
+    // First try to get factors from the database
+    const dbFactors = await getRMDFactorsFromDB();
+    
+    if (dbFactors.size > 0) {
+      console.log(`Retrieved ${dbFactors.size} RMD factors from database`);
+      cachedRMDFactors = dbFactors;
+      lastScrapedTime = currentTime;
+      return dbFactors;
+    }
+    
+    // If no factors in database, scrape them
+    console.log('No RMD factors found in database, scraping from IRS website...');
+    const scrapedFactors = await scrapeRMDFactors();
+    
+    // Save the scraped factors to the database
+    if (scrapedFactors.size > 0) {
+      await saveRMDFactors(scrapedFactors);
+    }
+    
+    // Update cache
+    cachedRMDFactors = scrapedFactors;
+    lastScrapedTime = currentTime;
+    console.log("RMD factors updated");
+    
+    return scrapedFactors;
+  } catch (error) {
+    console.error('Error in getRMDFactors:', error);
+    
+    // If all else fails, return default factors
+    return new Map(DEFAULT_RMD_FACTORS);
+  }
 }
 
 /**
  * Get the RMD factor for a specific age
- * 
- * @param age The age to look up
- * @returns A promise that resolves to the RMD factor for the given age
  */
 export async function getRMDFactorForAge(age: number): Promise<number> {
   // Check if age is in the valid range

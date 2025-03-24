@@ -110,8 +110,8 @@ const UserProfile: React.FC = () => {
       if (import.meta.env.MODE === 'development') {
         // Use mock data as fallback in development
         setUser({
-          name: "John Doe (Mock)",
-          email: "john.doe@example.com",
+          name: "Haifeng Wu",
+          email: "haifeng.wu@stonybrook.edu",
           googleId: "123456789",
           scenarios: [
             {

@@ -6,9 +6,6 @@ import { getRMDFactorForAge } from "../../services/RMDScraper";
 
 /**
  * Get the RMD distribution period for a given age
- * 
- * @param age The age to look up
- * @returns The distribution period from the RMD table
  */
 async function get_distribution_period(age: number): Promise<number> {
   return await getRMDFactorForAge(age);
@@ -16,9 +13,6 @@ async function get_distribution_period(age: number): Promise<number> {
 
 /**
  * Find a cash account in the non-retirement accounts
- * 
- * @param state The simulation state
- * @returns The cash account, or undefined if not found
  */
 function find_cash_account(state: SimulationState & Partial<Scenario>): Investment | undefined {
   for (const [id, investment] of state.accounts.non_retirement) {
@@ -32,9 +26,6 @@ function find_cash_account(state: SimulationState & Partial<Scenario>): Investme
 
 /**
  * Process Required Minimum Distributions (RMDs) for the user
- * 
- * @param state The simulation state
- * @returns The total RMD amount processed
  */
 export default async function process_rmds(
   state: SimulationState & Partial<Scenario>
@@ -125,4 +116,8 @@ export default async function process_rmds(
   (state as any).rmd_triggered = (totalRmdAmount > 0);
   
   return totalRmdAmount;
+}
+
+export {
+  process_rmds,
 }
