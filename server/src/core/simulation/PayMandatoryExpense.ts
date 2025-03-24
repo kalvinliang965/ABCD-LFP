@@ -30,26 +30,6 @@ import {
   calculate_detailed_expense_amount,
 } from "./ExpenseHelper";
 
-// Track state across simulation years
-interface TaxTrackingState {
-  prev_year_ordinary_income: number;
-  prev_year_social_security_income: number;
-  prev_year_capital_gains_income: number;
-  prev_year_early_withdrawals: number;
-  tax_payments: Map<string, number>;
-  start_year: number;
-}
-
-// Create the tax tracking state when needed
-let taxTrackingState: TaxTrackingState = {
-  prev_year_ordinary_income: 0,
-  prev_year_social_security_income: 0,
-  prev_year_capital_gains_income: 0,
-  prev_year_early_withdrawals: 0,
-  tax_payments: new Map<string, number>(),
-  start_year: new Date().getFullYear(),
-};
-
 /**
  * Process mandatory expense events and previous year's taxes for the current year
  * @param state The current simulation state

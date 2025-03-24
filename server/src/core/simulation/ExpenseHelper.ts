@@ -23,7 +23,6 @@ import { SimulationState } from "./SimulationState";
 import { ExpenseEvent } from "../domain/event/ExpenseEvent";
 import { ChangeType, TaxStatus } from "../Enums";
 import { Investment } from "../domain/investment/Investment";
-import { Scenario } from "../domain/scenario/Scenario";
 
 // Result interface for expense calculation
 export interface SpendingEvent extends ExpenseEvent {
@@ -64,7 +63,7 @@ export function get_mandatory_expenses(
       if (expenseEvent.inflation_adjusted) {
         const expenseCalculationResult: SpendingEvent = {
           ...expenseEvent,
-          amount: expenseEvent.initial_amount * state.inflation_factor,
+          amount: expenseEvent.initial_amount * (1 + state.inflation_factor),
         };
         mandatoryExpenses.push(expenseCalculationResult);
       } else {
@@ -140,15 +139,16 @@ export function calculate_detailed_expense_amount(
   }
 
   //此时的事件应该是活跃的，所以需要计算每年的变化
-  if(event.change_type === ChangeType.FIXED){
+  if (event.change_type === ChangeType.FIXED) {
     //!固定金额变化，如果需要通货膨胀调整也应用到变化金额
+    //? 可能计算了两次本金、
+    //! 当前并没有计算inflation factor对于增长金额的影响
     let changeAmount = event.expected_annual_change.sample();
     if (event.inflation_adjusted) {
       changeAmount *= inflationFactor;
     }
     event.amount = amount + changeAmount;
-  }
-  else if(event.change_type === ChangeType.PERCENTAGE){
+  } else if (event.change_type === ChangeType.PERCENTAGE) {
     //!百分比变化，如果需要通货膨胀调整也应用到变化金额
     amount *= 1 + event.expected_annual_change.sample();
     if (event.inflation_adjusted) {
