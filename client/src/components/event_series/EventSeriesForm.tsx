@@ -481,28 +481,53 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
     return Math.abs(sum - 100) < 0.01; //allow for small floating point differences
   };
 
-  const renderAllocationInputs = (values: number[], onChange: (index: number, value: number) => void) => (
-    <VStack spacing={4} align="stretch">
-      {investments.map((inv, index) => (
-        <FormControl key={inv.id} isRequired>
-          <FormLabel>{inv.investmentType} ({inv.taxStatus}) (%)</FormLabel>
-          <NumberInput
-            value={values[index] || 0}
-            onChange={(value) => onChange(index, parseFloat(value) || 0)}
-            min={0}
-            max={100}
-            precision={2}
-          >
-            <NumberInputField />
-          </NumberInput>
-        </FormControl>
-      ))}
-      <Text color={validateAllocationPercentages(values) ? "green.500" : "red.500"}>
-        Total: {values.reduce((acc, val) => acc + (val || 0), 0).toFixed(2)}%
-        {!validateAllocationPercentages(values) && " (must equal 100%)"}
-      </Text>
-    </VStack>
-  );
+  const renderAllocationInputs = (values: number[], onChange: (index: number, value: number) => void) => {
+    // For invest event, filter out pre-tax investments
+    let filteredInvestments = [...investments];
+    
+    if (initialType === 'invest') {
+      // For invest events, only show non-retirement and after-tax investments
+      filteredInvestments = investments.filter(inv => 
+        inv.taxStatus === 'non-retirement' || inv.taxStatus === 'after-tax'
+      );
+    }
+
+    return (
+      <VStack spacing={4} align="stretch">
+        {filteredInvestments.length === 0 ? (
+          <Alert status="warning">
+            <AlertIcon />
+            No suitable investments available. For invest events, only non-retirement and after-tax investments can be used.
+          </Alert>
+        ) : (
+          <>
+            {filteredInvestments.map((inv, index) => {
+              // Get the corresponding index in the original investments array
+              const originalIndex = investments.findIndex(originalInv => originalInv.id === inv.id);
+              return (
+                <FormControl key={inv.id} isRequired>
+                  <FormLabel>{inv.investmentType} ({inv.taxStatus}) (%)</FormLabel>
+                  <NumberInput
+                    value={values[originalIndex] || 0}
+                    onChange={(value) => onChange(originalIndex, parseFloat(value) || 0)}
+                    min={0}
+                    max={100}
+                    precision={2}
+                  >
+                    <NumberInputField />
+                  </NumberInput>
+                </FormControl>
+              );
+            })}
+            <Text color={validateAllocationPercentages(values) ? "green.500" : "red.500"}>
+              Total: {values.reduce((acc, val) => acc + (val || 0), 0).toFixed(2)}%
+              {!validateAllocationPercentages(values) && " (must equal 100%)"}
+            </Text>
+          </>
+        )}
+      </VStack>
+    );
+  };
 
   const handlePercentageChange = (isUser: boolean, value: string) => {
     const numValue = value === '' ? 0 : Math.min(100, Math.max(0, parseInt(value) || 0));
@@ -1076,6 +1101,36 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
     }
 
     try {
+      // For invest events, filter investments to only include non-retirement and after-tax ones
+      let filteredAssetAllocation = { ...assetAllocation };
+      
+      if (initialType === 'invest') {
+        // Filter investments by tax status
+        const allowedInvestments = investments.filter(inv => 
+          inv.taxStatus === 'non-retirement' || inv.taxStatus === 'after-tax'
+        ).map(inv => inv.id);
+        
+        // Keep only the allowed investments
+        filteredAssetAllocation.investments = assetAllocation.investments.filter(inv => 
+          allowedInvestments.includes(inv.investment)
+        );
+      }
+      
+      // Calculate the total percentage after filtering
+      const totalPercentage = filteredAssetAllocation.investments.reduce(
+        (sum, inv) => sum + inv.initialPercentage, 
+        0
+      );
+      
+      // If the total is not 100% after filtering, show an error
+      if (Math.abs(totalPercentage - 100) > 0.01 && 
+          (initialType === 'invest' || initialType === 'rebalance') && 
+          filteredAssetAllocation.investments.length > 0) {
+        setErrors(['Asset allocation percentages must sum to 100%. Please adjust your allocation.']);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+
       const eventData = {
         type: initialType,
         name,
@@ -1098,11 +1153,11 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
         ...((initialType === 'invest' || initialType === 'rebalance') ? {
           maxCash: initialType === 'invest' ? Number(maxCash) || 0 : undefined,
           assetAllocation: {
-            type: assetAllocation.type,
-            investments: assetAllocation.investments.map(inv => ({
+            type: filteredAssetAllocation.type,
+            investments: filteredAssetAllocation.investments.map(inv => ({
               investment: inv.investment,
               initialPercentage: inv.initialPercentage,
-              finalPercentage: assetAllocation.type === 'glidePath' ? inv.finalPercentage : undefined
+              finalPercentage: filteredAssetAllocation.type === 'glidePath' ? inv.finalPercentage : undefined
             }))
           }
         } : {})
