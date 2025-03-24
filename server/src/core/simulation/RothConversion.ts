@@ -1,7 +1,6 @@
 // src/core/simulation/RothConversion.ts
 import { AccountMap, SimulationState } from "./SimulationState";
-import { IncomeType } from "../Enums";
-import { Investment } from "../domain/investment/Investment";
+import { IncomeType, TaxStatus } from "../Enums";
 
 function transfer_investment(
     roth_conversion_strategy: string[], 
@@ -20,13 +19,13 @@ function transfer_investment(
             console.error(`Investment with label ${label} not exist`);
             process.exit(1); // will change it later when writing test cases.
         }
-
         if (!target_pool.has(label)) {
-            console.error("TODO");
-            process.exit(1);
+            const cloned_investment = from_investment.clone();
+            cloned_investment.taxStatus = TaxStatus.AFTER_TAX
+            target_pool.set(label, cloned_investment);
         }
         const to_investment = target_pool.get(label);
-        // if we h ave nothing in investment, nothing is transferred
+        // if we have nothing in investment, nothing is transferred
         const transfer_amt = Math.min(from_investment.get_cost_basis(), amt);
         from_investment.incr_cost_basis(-transfer_amt);
         to_investment?.incr_cost_basis(transfer_amt);
@@ -49,7 +48,7 @@ function process_roth_conversion(simulation_state: SimulationState) {
     const taxable_income = income - 0.15 * simulation_state.get_social_security_income();
     const current_bracket = simulation_state
                     .federal_tax_service
-                    .find_bracket(taxable_income, IncomeType.TAXABLE_INCOME, simulation_state.tax_filing_status);
+                    .find_bracket(taxable_income, IncomeType.TAXABLE_INCOME, simulation_state.get_tax_filing_status());
     const upper = current_bracket.max;
     const transfer_amt = Math.min(
         upper - taxable_income,

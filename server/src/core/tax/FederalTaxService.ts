@@ -1,11 +1,15 @@
 
 import { TaxBracket, TaxBrackets } from "./TaxBrackets";
 import { create_standard_deductions, StandardDeduction } from "./StandardDeduction";
-import { parse_standard_deductions, parse_capital_gains, parse_taxable_income } from "../../services/scrapping/FederalTaxScraper";
+import { 
+    fetch_and_parse_capital_gains, 
+    fetch_and_parse_standard_deduction, 
+    fetch_and_parse_taxable_income 
+} from "../../services/FederalTaxScraper";
 import { check_capital_gains, check_taxable_income, load_brackets } from "../../db/repositories/TaxBracketRepository";
 import { load_standard_deduction } from "../../db/repositories/StandardDeductionRepository";
 import { IncomeType, TaxFilingStatus } from "../Enums";
-
+import { tax_config } from "../../config/tax";
 
 async function initialize_taxable_income_bracket(): Promise<TaxBrackets> {
     try {
@@ -14,7 +18,7 @@ async function initialize_taxable_income_bracket(): Promise<TaxBrackets> {
             return taxBracket;       
         }
         console.log("taxable income brackets is not in database");
-        const taxBracket = await parse_taxable_income();
+        const taxBracket = await fetch_and_parse_taxable_income(tax_config.FEDERAL_TAX_URL);
         return taxBracket
     } catch (error) {
         throw new Error("Error in intitializing the taxable income bracket");
@@ -30,7 +34,7 @@ async function initialize_capital_gains_bracket(): Promise<TaxBrackets> {
             return taxBracket;
         }
         console.log("capital gains bracket is not in database");
-        const taxBracket = await parse_capital_gains();
+        const taxBracket = await fetch_and_parse_capital_gains(tax_config.CAPITAL_GAINS_URL);
         return taxBracket;
     } catch (error) {
         throw new Error("Error in initializing capital gains bracket");
@@ -49,7 +53,7 @@ async function initialize_standard_deductions_info(): Promise<StandardDeduction>
             return deductions;
         }
         console.log("standard deduction is not in database");
-        const deductions = await parse_standard_deductions();
+        const deductions = await fetch_and_parse_standard_deduction(tax_config.STD_DEDUCTION_URL);
         return deductions;
     } catch (error) {
         throw new Error("Error in initializing standard deductions info");
@@ -63,6 +67,7 @@ export interface FederalTaxService {
     adjust_for_inflation(rate: number): void;
     find_bracket(rate: number, income_type: IncomeType, status: TaxFilingStatus): TaxBracket;
     find_rate(income: number, income_type: IncomeType, status: TaxFilingStatus): number;
+    find_deduction(status: TaxFilingStatus): number;
 }
 
 export async function create_federal_tax_service() : Promise<FederalTaxService> {
@@ -122,6 +127,13 @@ export async function create_federal_tax_service() : Promise<FederalTaxService> 
             }
         }
 
+        const find_deduction = (status: TaxFilingStatus): number => {
+            try {
+                return standard_deductions.find_deduction(status);
+            } catch (error) {
+                throw error;
+            }
+        }
         return {
             print_taxable_income_bracket,
             print_capital_gains_bracket,
@@ -129,6 +141,7 @@ export async function create_federal_tax_service() : Promise<FederalTaxService> 
             adjust_for_inflation,
             find_bracket,
             find_rate,
+            find_deduction,
         };
     } catch (error) {
         console.error(`Error in initializing federal tax data: ${error}`);

@@ -1,6 +1,6 @@
 import { Investment } from "../domain/investment/Investment";
 import { Scenario } from "../domain/scenario/Scenario";
-import { TaxFilingStatus, TaxStatus, ChangeType } from "../Enums";
+import { TaxFilingStatus, TaxStatus, ChangeType, IncomeType } from "../Enums";
 import {
   FederalTaxService,
   create_federal_tax_service,
@@ -21,9 +21,7 @@ export interface PersonDetails {
 }
 
 export interface SimulationState {
-  investments: Array<Investment>;
   events: Array<Event>;
-  tax_filing_status: TaxFilingStatus;
   inflation_factor: number;
   roth_conversion_opt: boolean;
   roth_conversion_start: number;
@@ -31,6 +29,7 @@ export interface SimulationState {
   roth_conversion_strategy: Array<string>;
   user: PersonDetails;
   spouse?: PersonDetails;
+  get_tax_filing_status(): TaxFilingStatus;
   get_ordinary_income(): number;
   get_capital_gains_income(): number;
   get_social_security_income(): number;
@@ -42,6 +41,7 @@ export interface SimulationState {
   incr_after_tax_contribution(amt: number): void;
   setup_year(): void;
   get_current_year(): number;
+  get_financial_goal(): number;
   federal_tax_service: FederalTaxService;
   state_tax_service: StateTaxService;
   advance_year(): void;
@@ -56,8 +56,12 @@ export interface SimulationState {
     invest: EventMap;
     rebalance: EventMap;
   };
+  spending_strategy: Array<string>;
+  expense_withrawal_strategy: Array<string>;
   process_events(): void;
   get_active_events(): Event[];
+  process_tax(): void;
+  cash: Investment;
 }
 
 // Helper Functions
@@ -98,7 +102,8 @@ function calculate_event_amount(
 // Parse investments by tax status
 function parse_investments(
   investments: Investment[]
-): [AccountMap, AccountMap, AccountMap] {
+): [Investment, AccountMap, AccountMap, AccountMap] {
+  let cash_account = undefined;
   const non_retirement_account = new Map<string, Investment>();
   const pre_tax_account = new Map<string, Investment>();
   const after_tax_account = new Map<string, Investment>();
@@ -106,7 +111,11 @@ function parse_investments(
   for (const investment of investments) {
     switch (investment.taxStatus) {
       case TaxStatus.NON_RETIREMENT:
-        non_retirement_account.set(investment.id, investment);
+        if (investment.id == "cash") {
+            cash_account = investment;
+        } else {
+            non_retirement_account.set(investment.id, investment);
+        }
         break;
       case TaxStatus.PRE_TAX:
         pre_tax_account.set(investment.id, investment);
@@ -118,7 +127,13 @@ function parse_investments(
         throw new Error(`Invalid tax status: ${investment.taxStatus}`);
     }
   }
-  return [non_retirement_account, pre_tax_account, after_tax_account];
+
+  if (!cash_account) {
+    console.log("cash investment not found");
+    process.exit(1);
+  }
+
+  return [cash_account, non_retirement_account, pre_tax_account, after_tax_account];
 }
 
 // Organize events by type into maps for easier access
@@ -173,6 +188,7 @@ export async function create_simulation_state(
     const start_year: number = new Date().getFullYear();
     let current_year: number = start_year;
     const is_married = scenario.tax_filing_status === TaxFilingStatus.MARRIED;
+    let tax_filing_status = scenario.tax_filing_status;
 
     // Income tracking variables
     let ordinary_income = 0;
@@ -181,7 +197,7 @@ export async function create_simulation_state(
     let after_tax_contribution = 0; // contribution to after tax account.
 
     // Process investments - scenario.investments is already processed in create_scenario
-    const [non_retirement, pre_tax, after_tax] = parse_investments(
+    const [cash, non_retirement, pre_tax, after_tax] = parse_investments(
       scenario.investments
     );
 
@@ -209,27 +225,32 @@ export async function create_simulation_state(
           () => current_year
         )
       : undefined;
+    
+    
 
     // Create the simulation state object
     const state: SimulationState = {
-      investments: scenario.investments,
+      cash,
       events: scenario.event_series,
-      tax_filing_status: scenario.tax_filing_status,
       inflation_factor,
       roth_conversion_opt: scenario.roth_conversion_opt,
       roth_conversion_start: scenario.roth_conversion_start,
       roth_conversion_end: scenario.roth_conversion_end,
-    
+      spending_strategy: scenario.spending_strategy,
+      expense_withrawal_strategy: scenario.expense_withrawal_strategy,
       roth_conversion_strategy: scenario.roth_conversion_strategy,
       user,
       spouse,
 
       // Income getters and setters
+      get_tax_filing_status: () => tax_filing_status,
+      get_financial_goal: () => scenario.financialGoal,
       get_ordinary_income: () => ordinary_income,
       get_capital_gains_income: () => capital_gains_income,
       get_social_security_income: () => social_security_income,
       get_after_tax_contribution: () => after_tax_contribution,
-      get_after_tax_contribution_limit: () => scenario.after_tax_contribution_limit,
+      get_after_tax_contribution_limit: () =>
+        scenario.after_tax_contribution_limit,
       incr_ordinary_income: (amt: number) => {
         ordinary_income += amt;
       },
@@ -242,21 +263,17 @@ export async function create_simulation_state(
       incr_after_tax_contribution: (amt: number) => {
         after_tax_contribution += amt;
       },
-      // Year setup and management
-      setup_year: () => {
-        ordinary_income = 0;
-        capital_gains_income = 0;
-        social_security_income = 0;
-        after_tax_contribution = 0
-        federal_tax_service.adjust_for_inflation(inflation_factor);
-        state_tax_service.adjust_for_inflation(inflation_factor);
-      },
+     
       get_current_year: () => current_year,
       federal_tax_service,
       state_tax_service,
       advance_year: () => {
         current_year++;
         inflation_factor *= 1 + scenario.inflation_assumption.sample();
+
+        if (!spouse?.is_alive) {
+            tax_filing_status = TaxFilingStatus.SINGLE;
+        }
       },
 
       // Account and event organization
@@ -304,6 +321,60 @@ export async function create_simulation_state(
         // TODO: Process expense events
         // TODO: Process investment events
         // TODO: Process rebalance events
+      },
+
+      process_tax: () => {
+            try {
+                const standard_deduction = federal_tax_service.find_deduction(tax_filing_status);
+                const taxable_income = ((ordinary_income + capital_gains_income) - 0.15 * social_security_income) - standard_deduction;
+                const federal_taxable_income_tax = taxable_income * federal_tax_service.find_rate(
+                    taxable_income, 
+                    IncomeType.TAXABLE_INCOME, 
+                    tax_filing_status
+                );
+                const state_taxable_income_tax = taxable_income * state_tax_service.find_rate(
+                    taxable_income,
+                    tax_filing_status,
+                );
+                const federal_capital_gains_tax =  capital_gains_income * federal_tax_service.find_rate(
+                    capital_gains_income, 
+                    IncomeType.CAPITAL_GAINS, 
+                    tax_filing_status
+                );
+                cash.incr_value(taxable_income - federal_capital_gains_tax - federal_taxable_income_tax - state_taxable_income_tax);
+            } catch (error) {
+                throw new Error(`Failed to process tax ${error instanceof Error? error.message : error}`);
+            }
+      },
+
+      // Year setup and management
+      setup_year: () => {
+        ordinary_income = 0;
+        capital_gains_income = 0;
+        social_security_income = 0;
+        after_tax_contribution = 0
+        federal_tax_service.adjust_for_inflation(inflation_factor);
+        state_tax_service.adjust_for_inflation(inflation_factor);
+        
+        // type check
+        for (const [id, investment] of non_retirement.entries()) {
+            if (investment.taxStatus != TaxStatus.NON_RETIREMENT) {
+                console.error(`non retirment account contain invalid type ${investment.taxStatus}`);
+                process.exit(1);
+            }
+        }
+        for (const [id, investment] of after_tax.entries()) {
+            if (investment.taxStatus != TaxStatus.AFTER_TAX) {
+                console.error(`after tax account contain invalid type ${investment.taxStatus}`);
+                process.exit(1);
+            }
+        }
+        for (const [id, investment] of pre_tax.entries()) {
+            if (investment.taxStatus != TaxStatus.PRE_TAX) {
+                console.error(`pre tax account contain invalid type ${investment.taxStatus}`);
+                process.exit(1);
+            }
+        }
       },
     };
 

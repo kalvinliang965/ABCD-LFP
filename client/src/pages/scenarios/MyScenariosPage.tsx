@@ -106,6 +106,7 @@ const MyScenariosPage: React.FC = () => {
         Quick Actions
       </Heading>
       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5} mb={8}>
+        {/* here is that create new scenario card*/}
         <Box
           bg={cardBgColor}
           p={5}

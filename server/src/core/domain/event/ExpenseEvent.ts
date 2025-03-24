@@ -1,3 +1,4 @@
+import { RandomGenerator } from "../../../utils/math/ValueGenerator";
 import { ChangeType } from "../../Enums";
 import { ExpenseEventRaw } from "../scenario/Scenario";
 import {
@@ -10,7 +11,7 @@ import {
 interface ExpenseEvent extends Event {
   initial_amount: number;
   change_type: ChangeType;
-  expected_annual_change: number;
+  expected_annual_change: RandomGenerator;
   inflation_adjusted: boolean;
   user_fraction: number;
   discretionary: boolean;

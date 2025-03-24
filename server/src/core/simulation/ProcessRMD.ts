@@ -2,7 +2,7 @@ import { SimulationState } from "./SimulationState";
 import { Scenario } from "../domain/scenario/Scenario";
 import { TaxStatus } from "../Enums";
 import { Investment } from "../domain/investment/Investment";
-import { getRMDFactors } from "../../services/RMDScraper";
+import getRMDFactors from "../../services/RMDScraper";
 
 /**
  * Get the RMD distribution period for a given age
