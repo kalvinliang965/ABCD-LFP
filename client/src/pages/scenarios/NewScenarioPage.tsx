@@ -11,6 +11,7 @@ import {
   Tooltip,
   VStack,
   IconButton,
+  useToast,
 } from "@chakra-ui/react";
 import { Building2, Wallet, TrendingUp, BarChart } from "lucide-react";
 import { DeleteIcon } from "@chakra-ui/icons";
@@ -31,6 +32,12 @@ import InvestmentsForm, {
   InvestmentsConfig,
   Investment,
 } from "../../components/scenarios/InvestmentsForm";
+import AdditionalSettingsForm, {
+  AdditionalSettingsConfig,
+  InflationConfig,
+  FinancialGoalConfig,
+  StateOfResidence,
+} from "../../components/scenarios/AdditionalSettingsForm";
 
 // Omit the id from EventSeries and add it as optional
 type AddedEvent = Omit<EventSeries, "id"> & {
@@ -82,7 +89,11 @@ export function NewScenarioPage() {
   const navigate = useNavigate();
   const [addedEvents, setAddedEvents] = useState<AddedEvent[]>([]);
   const [step, setStep] = useState<
-    "details" | "lifeExpectancy" | "investments" | "eventSelection"
+    | "details"
+    | "lifeExpectancy"
+    | "investments"
+    | "eventSelection"
+    | "additionalSettings"
   >("details");
   const [scenarioDetails, setScenarioDetails] = useState<ScenarioDetails>({
     name: "",
@@ -101,6 +112,18 @@ export function NewScenarioPage() {
       investments: [],
     }
   );
+  const [additionalSettings, setAdditionalSettings] =
+    useState<AdditionalSettingsConfig>({
+      inflationConfig: {
+        type: "fixed",
+        value: 2.5, // Default 2.5% inflation
+      },
+      financialGoal: {
+        value: 0, // Default to 0 (just meeting expenses)
+      },
+      stateOfResidence: "NY", // Default to NY
+    });
+  const toast = useToast();
 
   const handleEventAdded = async (event: AddedEvent) => {
     try {
@@ -135,7 +158,8 @@ export function NewScenarioPage() {
   };
 
   const handleSaveAndContinue = () => {
-    navigate("/scenarios");
+    // Navigate to the additional settings step instead of directly to scenarios
+    setStep("additionalSettings");
   };
 
   const handle_continue_to_life_expectancy = () => {
@@ -156,6 +180,26 @@ export function NewScenarioPage() {
 
   const handle_continue_to_event_selection = () => {
     setStep("eventSelection");
+  };
+
+  const handle_back_to_event_selection = () => {
+    setStep("eventSelection");
+  };
+
+  const handle_back_to_investments = () => {
+    setStep("investments");
+  };
+
+  const handle_finish_scenario = () => {
+    // Submit the entire scenario and navigate to scenarios page
+    toast({
+      title: "Scenario Created",
+      description: "Your scenario has been created successfully.",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+    navigate("/scenarios");
   };
 
   const handle_change_scenario_type = (value: string) => {
@@ -214,8 +258,20 @@ export function NewScenarioPage() {
     );
   }
 
+  // Additional Settings Form
+  if (step === "additionalSettings") {
+    return (
+      <AdditionalSettingsForm
+        additionalSettings={additionalSettings}
+        onChangeAdditionalSettings={setAdditionalSettings}
+        onBack={handle_back_to_event_selection}
+        onContinue={handle_finish_scenario}
+      />
+    );
+  }
+
   // Event Series Selection
-  if (!selectedType) {
+  if (step === "eventSelection" && !selectedType) {
     return (
       <Box minH="100vh" bg="gray.50">
         <Box maxW="4xl" mx="auto" py={12} px={4}>
@@ -226,11 +282,13 @@ export function NewScenarioPage() {
                   New Event Series
                 </Heading>
                 <HStack spacing={2}>
-                  <Tooltip label="to be done" placement="left">
-                    <Button variant="ghost" colorScheme="blue" isDisabled>
-                      Skip
-                    </Button>
-                  </Tooltip>
+                  <Button
+                    variant="ghost"
+                    colorScheme="blue"
+                    onClick={handle_back_to_investments}
+                  >
+                    Back
+                  </Button>
                   <Button
                     colorScheme="blue"
                     onClick={handleSaveAndContinue}
@@ -368,38 +426,52 @@ export function NewScenarioPage() {
     );
   }
 
-  const typeInfo = eventTypeOptions.find((opt) => opt.id === selectedType)!;
+  // Event Series Form when a type is selected
+  if (step === "eventSelection" && selectedType) {
+    const typeInfo = eventTypeOptions.find((opt) => opt.id === selectedType)!;
 
-  return (
-    <Box minH="100vh" bg="gray.50">
-      <Box maxW="4xl" mx="auto" py={12} px={4}>
-        <Box bg="white" rounded="lg" shadow="lg" overflow="hidden">
-          <Box p={6}>
-            <Button
-              onClick={() => setSelectedType(null)}
-              variant="ghost"
-              colorScheme="blue"
-              mb={6}
-              leftIcon={<Text>←</Text>}
-            >
-              Back to event types
-            </Button>
+    return (
+      <Box minH="100vh" bg="gray.50">
+        <Box maxW="4xl" mx="auto" py={12} px={4}>
+          <Box bg="white" rounded="lg" shadow="lg" overflow="hidden">
+            <Box p={6}>
+              <Button
+                onClick={() => setSelectedType(null)}
+                variant="ghost"
+                colorScheme="blue"
+                mb={6}
+                leftIcon={<Text>←</Text>}
+              >
+                Back to event types
+              </Button>
 
-            <Heading size="xl" color="gray.900">
-              {typeInfo.header}
-            </Heading>
-            <Text mt={2} mb={6} color="gray.600">
-              {typeInfo.subheader}
-            </Text>
-            <EventSeriesForm
-              initialType={selectedType}
-              onBack={() => setSelectedType(null)}
-              onEventAdded={handleEventAdded}
-            />
+              <Heading size="xl" color="gray.900">
+                {typeInfo.header}
+              </Heading>
+              <Text mt={2} mb={6} color="gray.600">
+                {typeInfo.subheader}
+              </Text>
+              <EventSeriesForm
+                initialType={selectedType}
+                onBack={() => setSelectedType(null)}
+                onEventAdded={handleEventAdded}
+              />
+            </Box>
           </Box>
         </Box>
       </Box>
-    </Box>
+    );
+  }
+
+  // Default to details step as fallback
+  return (
+    <ScenarioDetailsForm
+      scenarioDetails={scenarioDetails}
+      onChangeScenarioType={handle_change_scenario_type}
+      onChangeScenarioDetails={setScenarioDetails}
+      onContinue={handle_continue_to_life_expectancy}
+      onSkip={handle_continue_to_life_expectancy}
+    />
   );
 }
 
