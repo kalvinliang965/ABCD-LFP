@@ -26,22 +26,24 @@
 import { SimulationState } from "./SimulationState";
 import {
   withdraw_from_investments,
-  calculate_early_withdrawal_tax,
   calculate_detailed_expense_amount,
 } from "./ExpenseHelper";
 
 /**
  * Process mandatory expense events and previous year's taxes for the current year
+ * ! you should check if return true or false.
+ * ! if return true, it means we can continue the simulation.
+ * ! if return false, it means we cannot continue the simulation.
  * @param state The current simulation state
- * @returns void
+ * @returns boolean
  */
-export function pay_mandatory_expenses(state: SimulationState): void {
+export function pay_mandatory_expenses(state: SimulationState): boolean {
   // SEQUENTIAL THINKING STEP 1: 获取已预处理的强制性支出列表
   // 这些支出已经按当前年份进行了筛选，并已经应用了通货膨胀调整
   const currentYear = state.get_current_year();
   const mandatoryExpenses = state.get_mandatory_expenses();
 
-  // 如果没有强制性支出，但仍需要处理税款
+  // totalMandatoryExpenseAmount 是所有强制性支出的总和
   let totalMandatoryExpenseAmount = 0;
 
   // 处理强制性支出
@@ -53,31 +55,33 @@ export function pay_mandatory_expenses(state: SimulationState): void {
     );
   }
 
-
-  // SEQUENTIAL THINKING STEP 5: Check if additional withdrawals are needed 
+  // SEQUENTIAL THINKING STEP 5: Check if additional withdrawals are needed
   //因为cash已经算好了 - tax后的价格，所以我们按道理来说不应该再去计算tax，直接用cashValue - totalMandatoryExpenseAmount
   const cashValue = state.cash.get_value();
-  const totalWithdrawalAmount = Math.max(0, totalMandatoryExpenseAmount - cashValue);
-
-  //? 只差这一个不确定是否正确了！
-  // SEQUENTIAL THINKING STEP 6: Withdraw funds if needed based on withdrawal strategy
-  let earlyWithdrawals = 0;
-  if (totalWithdrawalAmount > 0) {
+  const totalWithdrawalAmount = Math.max(
+    0,
+    totalMandatoryExpenseAmount - cashValue
+  );
+  //如果我们的cash可以cover所有强制性支出，那么我们就不需要再进行任何操作
+  //更新cash的value
+  if (totalWithdrawalAmount == 0) {
+    state.cash.incr_value(-totalMandatoryExpenseAmount);
+    return true;
+  } else {
+    // 我们的钱不够cover，所以需要从其他地方获取资金
+    //同时我们要清空cash的value
+    state.cash.incr_value(-cashValue);
     const withdrawalResult = withdraw_from_investments(
       state,
       totalWithdrawalAmount
     );
-    earlyWithdrawals = withdrawalResult.earlyWithdrawals;
 
-    // Log any unfunded amount
-    if (withdrawalResult.unfunded > 0) {
-      console.warn(
-        `Insufficient funds to cover mandatory expenses: $${withdrawalResult.unfunded} short`
-      );
-    }
+    state.incr_capital_gains_income(withdrawalResult.capitalGain);
+    state.incr_ordinary_income(withdrawalResult.cur_year_income);
+    state.incr_early_withdrawal_penalty(
+      withdrawalResult.early_withdrawal_penalty
+    );
+    //在这种情况下，我们无论如何都会更新capital_gains_income和ordinary_income还有early_withdrawal_penalty| 但是否破产取决于unfunded是否为0
+    return withdrawalResult.unfunded == 0;
   }
-
-  // SEQUENTIAL THINKING STEP 7: Pay expenses and taxes by deducting from cash
-  state.cash.incr_value(-totalMandatoryExpenseAmount);
-  //我不认为需要reporting，如果经过这一步后 cash为负数，那么就意味着我们没有足够的钱来支付强制性支出那么就代表着我们破产了，直接归零就好了。
 }

@@ -21,7 +21,7 @@
 
 import { SimulationState } from "./SimulationState";
 import { ExpenseEvent } from "../domain/event/ExpenseEvent";
-import { ChangeType, TaxStatus } from "../Enums";
+import { ChangeType, IncomeType, TaxStatus } from "../Enums";
 import { Investment } from "../domain/investment/Investment";
 
 // Result interface for expense calculation
@@ -162,38 +162,40 @@ export function calculate_detailed_expense_amount(
 }
 
 /**
- * ?只剩这一个function不知道正确与否了
  * Withdraw funds from investments according to the expense withdrawal strategy
  *
  * @param state The simulation state
  * @param amountNeeded The amount that needs to be withdrawn
- * @returns Information about the withdrawal including any remaining unfunded amount
+ * @returns Information about the withdrawal including capital gains, income, and unfunded amount
  */
 export function withdraw_from_investments(
   state: SimulationState,
   amountNeeded: number
-): { withdrawn: number; unfunded: number; earlyWithdrawals: number } {
+): {
+  unfunded: number;
+  capitalGain: number;
+  cur_year_income: number;
+  early_withdrawal_penalty: number;
+} {
   let remainingAmount = amountNeeded;
-  let totalWithdrawn = 0; //计算取出的金额，方便后面计算税率
-  let earlyWithdrawals = 0; //计算early withdrawals的金额，方便后面计算early withdrawal tax
+  let totalCapitalGain = 0;
+  let totalIncome = 0;
+  let early_withdrawal_penalty = 0;
 
   // Go through the withdrawal strategy in order
-  //? 这里的expense_withrawal_strategy是一个String arrary，我们创建了一个investmentId的array来存储
   for (const investmentId of state.expense_withrawal_strategy || []) {
-    //!下面这所有的都只针对一个investmentId，比如cash或者什么别的investment
-    if (remainingAmount <= 0) break; //如果已经取完了，就break
+    if (remainingAmount <= 0) break;
 
     // Look for the investment in all account types
-    let investment: Investment | undefined; //也就是说这个investment 可以是 investment 的 类型，也可以是 undefined| 但如果是undefined，就说明这个investmentId在state.accounts中不存在
-    let accountType: TaxStatus | undefined;// 这个TaxStatus也一样。
+    let investment: Investment | undefined;
+    let accountType: TaxStatus | undefined;
 
-    // Check each account type//! 大概率是对的了
+    // Check each account type
     for (const type of [
       TaxStatus.NON_RETIREMENT,
       TaxStatus.PRE_TAX,
       TaxStatus.AFTER_TAX,
     ] as const) {
-      // 这里的方法其实是在接受state给我们传出的各个account里面有哪些investment。
       let accountMap: Map<string, Investment>;
       switch (type) {
         case TaxStatus.NON_RETIREMENT:
@@ -207,7 +209,7 @@ export function withdraw_from_investments(
           break;
       }
 
-      const account = accountMap.get(investmentId); //那么我们这里就可以从我们的investment中找到这个investmentId对应的account然后获取信息。
+      const account = accountMap.get(investmentId);
       if (account) {
         investment = account;
         accountType = type;
@@ -215,69 +217,57 @@ export function withdraw_from_investments(
       }
     }
 
-    // Skip if investment not found, is cash, or no account type determined 
+    // Skip if investment not found, is cash, or no account type determined
     if (!investment || investment === state.cash || !accountType) continue;
 
     // Get the current value and purchase price of the investment
-    const currentValue = investment.get_value(); //获取当前价值
-    const purchasePrice = investment.get_cost_basis?.() || 0; //获取购买价格
+    //这一部分是用来计算capital gain的
+    const currentValue = investment.get_value();
+    const purchasePrice = investment.get_cost_basis?.() || 0;
 
     // Calculate how much to withdraw from this investment
-    const amountToWithdraw = Math.min(currentValue, remainingAmount); //取出的金额是当前价值和剩余金额的最小值
-    if (amountToWithdraw <= 0) continue; //如果amountToWithdraw小于0，这就表示我们取完了，就break
+    const amountToWithdraw = Math.min(currentValue, remainingAmount);
+    if (amountToWithdraw <= 0) continue;
 
     // Calculate the fraction of the investment being sold
-    const fraction = amountToWithdraw / currentValue; //计算我们取出的金额占当前价值的比例, 因为我们需要计算capital gain
-
-    // Withdraw the funds
-    investment.incr_value(-amountToWithdraw); //减少investment的价值
-    state.cash.incr_value(amountToWithdraw); //增加cash的价值
-    remainingAmount -= amountToWithdraw; //减少剩余金额
-    totalWithdrawn += amountToWithdraw; //增加totalWithdrawn //? 这里还需要么？我们可以取一次计算一次吧，不需要知道total吧
+    const fraction = amountToWithdraw / currentValue;
 
     // Handle tax implications based on the account type
     if (accountType === TaxStatus.NON_RETIREMENT) {
       // For non-retirement accounts, calculate capital gains
-      const capitalGain = amountToWithdraw - fraction * purchasePrice;
-      state.incr_capital_gains_income(capitalGain);
-
-      // Update the purchase price after partial sale
-      if (investment.incr_cost_basis) {
-        investment.incr_cost_basis(-fraction * purchasePrice);
-      }
+      //! capital gain cannot be negative
+      const capitalGain = Math.max(
+        amountToWithdraw - fraction * purchasePrice, //提取金额 - fraction * 成本价
+        0
+      );
+      totalCapitalGain += capitalGain; // Add to running total of capital gains
+      //! 成本价不会因为卖出而改变
     } else if (accountType === TaxStatus.PRE_TAX) {
       // For pre-tax accounts, the entire withdrawal counts as ordinary income
-      state.incr_ordinary_income(amountToWithdraw);
+      totalIncome += amountToWithdraw; // Add to running total of income
     }
 
     // Check for early withdrawal penalties (before age 59.5)
     if (
       (accountType === TaxStatus.PRE_TAX ||
         accountType === TaxStatus.AFTER_TAX) &&
-      state.user.get_age() < 59
+      state.user.get_age() < 60
     ) {
       // Track early withdrawals
-      earlyWithdrawals += amountToWithdraw;
+      early_withdrawal_penalty += amountToWithdraw * 0.1;
     }
+
+    // Withdraw the funds
+    investment.incr_value(-amountToWithdraw);
+    remainingAmount -= amountToWithdraw;
   }
 
   // Return information about the withdrawal
+  // ?你有没有可能支付多余你需要的？
   return {
-    withdrawn: totalWithdrawn,
-    unfunded: remainingAmount,
-    earlyWithdrawals,
+    unfunded: remainingAmount > 0 ? remainingAmount : 0,
+    capitalGain: totalCapitalGain,
+    cur_year_income: totalIncome,
+    early_withdrawal_penalty: early_withdrawal_penalty,
   };
-}
-
-/**
- * Calculate the early withdrawal tax penalty
- *
- * @param earlyWithdrawalAmount The amount withdrawn early from retirement accounts
- * @returns The early withdrawal tax penalty
- */
-export function calculate_early_withdrawal_tax(
-  earlyWithdrawalAmount: number
-): number {
-  const EARLY_WITHDRAWAL_PENALTY_RATE = 0.1; // 10% penalty
-  return earlyWithdrawalAmount * EARLY_WITHDRAWAL_PENALTY_RATE;
 }

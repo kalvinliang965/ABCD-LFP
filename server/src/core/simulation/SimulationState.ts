@@ -50,6 +50,8 @@ export interface SimulationState {
   //! Chen added, but not sure should be here or not
   get_discretionary_expenses(): SpendingEvent[];
   get_mandatory_expenses(): SpendingEvent[];
+  get_early_withdrawal_penalty(): number;
+  incr_early_withdrawal_penalty(amt: number): void;
   federal_tax_service: FederalTaxService;
   state_tax_service: StateTaxService;
   advance_year(): void;
@@ -239,6 +241,7 @@ export async function create_simulation_state(
         )
       : undefined;
 
+    let early_withdrawal_penalty = 0;
     // Create the simulation state object
     const state: SimulationState = {
       cash,
@@ -252,7 +255,10 @@ export async function create_simulation_state(
       roth_conversion_strategy: scenario.roth_conversion_strategy,
       user,
       spouse,
-
+      get_early_withdrawal_penalty: () => early_withdrawal_penalty,
+      incr_early_withdrawal_penalty: (amt: number) => {
+        early_withdrawal_penalty += amt;
+      },
       // Income getters and setters
       get_tax_filing_status: () => tax_filing_status,
       get_financial_goal: () => scenario.financialGoal,
