@@ -1,6 +1,6 @@
 import { SimulationState } from "./SimulationState";
 import { Scenario } from "../domain/scenario/Scenario";
-import { TaxStatus } from "../Enums";
+//import { TaxStatus } from "../Enums";
 import { Investment } from "../domain/investment/Investment";
 import { getRMDFactorForAge } from "../../services/RMDScraper";
 
@@ -89,7 +89,7 @@ export default async function process_rmds(
       totalRmdAccountsValue += (account as any).value;
     }
   }
-  
+  //show add a rmd_strategy to the InvestmentType ????
   // Then calculate proportional RMD for each account
   for (const accountId of state.rmd_strategy || []) {
     const account = state.accounts.pre_tax.get(accountId);
@@ -115,6 +115,7 @@ export default async function process_rmds(
     (cashAccount as any).value += withdrawAmount;
     
     // Update tracking
+    //transfer RMD funds directly to non-retirement accounts
     totalRmdAmount += withdrawAmount;
     
     console.log(`RMD withdrawal from ${accountId}: $${withdrawAmount.toFixed(2)}`);
