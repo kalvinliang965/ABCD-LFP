@@ -6,17 +6,16 @@
  */
 
 import axios from 'axios';
-import { load } from 'cheerio';
+import cheerio from 'cheerio';
 import { saveRMDFactors, getRMDFactorsFromDB } from '../db/repositories/RMDFactorRepository';
 import { tax_config } from '../config/tax';
+import { rmd_urls, rmd_config, default_rmd_factors } from "../config/rmd";
 
 const RMD_URL = tax_config.RMD_URL;
 
 // Default RMD factors based on IRS Uniform Lifetime Table (2022+)
-// These will be used as a fallback if scraping fails， easy to debug
-const DEFAULT_RMD_FACTORS: Map<number, number> = new Map([
-  [72, 27.4]
-]);
+// These will be used as a fallback if scraping fails
+const DEFAULT_RMD_FACTORS: Map<number, number> = new Map(default_rmd_factors);
 
 // Helper function to extract numbers from text
 function extractNumbers(text: string): number[] {
@@ -27,7 +26,7 @@ function extractNumbers(text: string): number[] {
 // Cache for RMD factors to avoid repeated scraping
 let cachedRMDFactors: Map<number, number> | null = null;
 let lastScrapedTime: number = 0;
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const CACHE_DURATION = rmd_config.CACHE_DURATION;
 
 //Scrape RMD factors from the IRS publication 590-B
 
@@ -49,7 +48,7 @@ export async function scrapeRMDFactors(): Promise<Map<number, number>> {
     const { data: html } = await axios.get(RMD_URL);
     console.log(`Received HTML content of length: ${html.length}`);
     
-    const $ = load(html);
+    const $ = cheerio.load(html);
     
     // Find all tables and log their content
     const tables = $('table');
@@ -183,10 +182,13 @@ export async function getRMDFactors(): Promise<Map<number, number>> {
 /**
  * Get the RMD factor for a specific age
  */
-export async function getRMDFactorForAge(age: number): Promise<number> {
+export async function getRMDFactorForAge(age: number, url = rmd_urls.RMD_PUBLICATION): Promise<number> {
+  // Use the provided URL or fall back to the default from config
+  const RMD_URL = url;
+  
   // Check if age is in the valid range
-  if (age < 72 || age > 120) {
-    console.log(`Age ${age} is outside the valid range for RMD calculations (72-120)`);
+  if (age < rmd_config.START_AGE || age > 120) {
+    console.log(`Age ${age} is outside the valid range for RMD calculations (${rmd_config.START_AGE}-120)`);
     return 0;
   }
   
