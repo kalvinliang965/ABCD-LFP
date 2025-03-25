@@ -1,5 +1,6 @@
 import express from "express";
 import passport from "passport";
+import { client_confg } from "../config/client";
 
 const router = express.Router();
 
@@ -13,12 +14,12 @@ router.get(
 router.get(
   "/google/callback",
   passport.authenticate("google", {
-    failureRedirect: `${process.env.CLIENT_URL}/login`,
+    failureRedirect: `${client_confg.CLIENT_URL}/login`,
     session: true,
   }),
   (req, res) => {
     // Successful authentication, redirect to dashboard on the frontend
-    res.redirect(`${process.env.CLIENT_URL}/dashboard`);
+    res.redirect(`${client_confg.CLIENT_URL}/dashboard`);
   }
 );
 
@@ -29,7 +30,7 @@ router.get("/logout", (req, res) => {
       console.error("Error during logout:", err);
       return res.status(500).json({ error: "Failed to logout" });
     }
-    res.redirect(`${process.env.CLIENT_URL}/login`);
+    res.redirect(`${client_confg.CLIENT_URL}/login`);
   });
 });
 
