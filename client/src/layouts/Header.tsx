@@ -15,6 +15,9 @@ import {
 } from "@chakra-ui/react";
 import { FaSun, FaMoon, FaUser } from "react-icons/fa";
 
+/**
+ * AI prompt : I need a header component to show the title and the user menu, and in this component, I need to use the chakra ui to switch the color mode, and I need to use the avatar to show the user icon, and I need to use the menu to show the user menu
+ */
 interface HeaderProps {
   title?: string;
 }

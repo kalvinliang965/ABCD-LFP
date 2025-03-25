@@ -24,6 +24,9 @@ import {
   FaServer,
 } from "react-icons/fa";
 
+/**
+ * AI prompt :based on the Prompt I gived to you earlier, I need you to help me design a sidebar to show the menu items and the menu groups and that the sidebar will be on the left and the header will be on the top
+ */
 interface NavItemProps {
   icon: any;
   children: React.ReactNode;

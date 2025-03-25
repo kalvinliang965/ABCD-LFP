@@ -6,6 +6,7 @@ import Header from "./Header";
 // this component is used to wrap the page content
 // which is like the shell for the whole page
 // so the page would always have a sidebar and a header
+// AI prompt : now combine the sidebar and the header into a layout component, and make sure we will not have the double header and the double sidebar problem, and make sure header will always be on the top and the sidebar will always be on the left.
 interface LayoutProps {
   children: React.ReactNode;
   title?: string;

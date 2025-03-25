@@ -26,6 +26,10 @@ import {
 import Card from "../common/Card";
 import { Scenario, ScenarioType } from "../../types/scenario";
 
+/**
+ * AI prompt : help me design a card to show the scenario details by using the card component and the scenario type
+ * I need to show the scenario name, type, birth year, life expectancy, financial goal, state, event count, investment count, and last modified date
+ */
 interface ScenarioDetailCardProps {
   scenario: Scenario;
 }

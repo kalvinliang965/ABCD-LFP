@@ -56,7 +56,9 @@ const EventSeries = () => <div>Event Series</div>;
 
 const Strategies = () => <div>Strategies</div>;
 
-
+/**
+ * AI prompt : help me design a scenario route to show the scenario list page, new scenario page, import/export scenario page, shared scenario page, basic info page, event series page, strategies page
+ */
 const ScenarioRoutes = [
   // Scenarios Routes
   <Route

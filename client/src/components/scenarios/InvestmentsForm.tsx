@@ -101,6 +101,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
   }>({});
   const toast = useToast();
 
+  /* AI prompt : help me design a form to add investments to the financial scenario and I need to add a button to remove the investment */
   const cardBg = useColorModeValue("white", "gray.800");
   const headerBg = useColorModeValue("blue.50", "blue.900");
   const formBg = useColorModeValue("gray.50", "gray.700");

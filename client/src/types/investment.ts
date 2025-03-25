@@ -7,7 +7,9 @@ export enum ReturnType {
   FIXED = "fixed",
   NORMAL = "normal",
 }
-
+/*
+AI prompt : based on the project requirment I give you earlier, I need you to help me design a return type enum to show the return type of the investment
+*/
 // Define input modes
 export enum ValueInputMode {
   PERCENTAGE = "percentage",

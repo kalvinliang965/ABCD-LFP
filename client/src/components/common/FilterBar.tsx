@@ -12,6 +12,9 @@ import {
 } from "@chakra-ui/react";
 import { FaSearch } from "react-icons/fa";
 
+/**
+ * AI prompt : help me design a filter bar to filter the data by using the filter options and the sort options, I want to use the filter bar in the scenario list page and the investment list page
+ */
 export interface FilterOption {
   value: string;
   label: string;

@@ -11,6 +11,9 @@ import {
   CardProps as ChakraCardProps,
 } from "@chakra-ui/react";
 
+/**
+ * AI prompt :take out the card component and make it a reusable component
+ */
 export interface BadgeInfo {
   text: string;
   colorScheme?: string;

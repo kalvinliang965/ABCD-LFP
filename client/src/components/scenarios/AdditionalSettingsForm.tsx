@@ -1,3 +1,24 @@
+/**
+ * Now I want you to help me design another page after the event series to ask the user about his
+1. inflation assumption
+2. financial goal
+3. user's state of residence
+
+This is the demand for financial goals
+2.1 Financial goal
+A financial goal is a non-negative number specifying the desired minimum total value of the user's investments. If a financial goal of 0 is achieved, it means the user is always able to meet their expenses. A positive value for the financial goal represents a safety margin during the user's lifetime and an estate to bequeath afterward.
+
+We only assume a financial goal for one year, not for the entire plan.
+
+The demand for inflation assumption is as follows:
+2.6 Inflation assumption
+An inflation assumption is defined by (1) a fixed percentage, or (2) a percentage sampled from a specified uniform or normal distribution.
+
+For residence state, we only consider Ny, NJ and CT
+
+Please use sequential thinking to think about how to add this new page after the event series and implement it
+ */
+
 import React from "react";
 import {
   Box,
