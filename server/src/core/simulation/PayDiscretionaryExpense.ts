@@ -7,20 +7,20 @@
 
 现在请你更新并实现PayDiscretionaryExpenses。使用sequencial thinking
 
-Pay non-discretionary expenses and the previous year’s taxes, i.e., subtract them from the cash investment.  Perform additional withdrawals if needed to pay them.
-Calculate the previous year’s federal and state income tax using the value of curYearIncome and curYearSS from the previous year, and inflation-adjusted federal and state income tax data (rates, brackets, and standard deduction) for the previous year.
-Calculate the previous year’s capital gains tax using the value of curYearGains from the previous year, and inflation-adjusted federal capital gains tax data for the previous year. I recommend SmartAsset’s article on capital gains tax  Note that capital gains tax cannot be negative, even if the user has a net loss.  The IRS allows carrying capital losses forward to future years; we ignore this.
-Calculate the previous year’s early withdrawal tax, using the value of curYearEarlyWithdrawals from the previous year.
-total payment amount P = sum of non-discretionary expenses in the current year plus the previous year’s taxes.  Calculate the amount of expense events in a similar way as calculating the amount of income events.
+Pay non-discretionary expenses and the previous year's taxes, i.e., subtract them from the cash investment.  Perform additional withdrawals if needed to pay them.
+Calculate the previous year's federal and state income tax using the value of curYearIncome and curYearSS from the previous year, and inflation-adjusted federal and state income tax data (rates, brackets, and standard deduction) for the previous year.
+Calculate the previous year's capital gains tax using the value of curYearGains from the previous year, and inflation-adjusted federal capital gains tax data for the previous year. I recommend SmartAsset's article on capital gains tax  Note that capital gains tax cannot be negative, even if the user has a net loss.  The IRS allows carrying capital losses forward to future years; we ignore this.
+Calculate the previous year's early withdrawal tax, using the value of curYearEarlyWithdrawals from the previous year.
+total payment amount P = sum of non-discretionary expenses in the current year plus the previous year's taxes.  Calculate the amount of expense events in a similar way as calculating the amount of income events.
 total withdrawal amount W = P - (amount of cash)
 Iterate over investments in the expense withdrawal strategy, selling them one by one, until the total amount sold equals W.  The last investment to be sold might be partially sold.
-For each sale, compute the capital gain, and update running total curYearGains of capital gains, if the sold investment’s tax status is not “pre-tax retirement”.  If the entire investment is sold, capital gain = current value - purchase price, where purchase price = sum of the amounts of purchases of this investment plus the initial value at the start of the simulation.  Note that the purchase price must be stored, and updated upon each purchase.  If a fraction f of an investment is sold, then capital gain = f * (current value - purchase price).   
-Note that the capital “gain” may be negative (i.e., a loss), and that capital gains tax is paid on the net capital gain for the year.   Note that capital gains in pre-tax retirement accounts are taxed as regular income upon withdrawal from the pre-tax retirement account.
+For each sale, compute the capital gain, and update running total curYearGains of capital gains, if the sold investment's tax status is not "pre-tax retirement".  If the entire investment is sold, capital gain = current value - purchase price, where purchase price = sum of the amounts of purchases of this investment plus the initial value at the start of the simulation.  Note that the purchase price must be stored, and updated upon each purchase.  If a fraction f of an investment is sold, then capital gain = f * (current value - purchase price).   
+Note that the capital "gain" may be negative (i.e., a loss), and that capital gains tax is paid on the net capital gain for the year.   Note that capital gains in pre-tax retirement accounts are taxed as regular income upon withdrawal from the pre-tax retirement account.
 Update running total curYearIncome, if the investment sold is held in a pre-tax retirement account.  This reflects that we are both selling the investment and withdrawing the funds from the pre-tax retirement account in order to pay the expense.
-Update running total curYearEarlyWithdrawals, if the investment sold is held in a pre-tax or after-tax retirement account and the user’s age is less than 59.  If the user’s age equals 59, we assume they perform this withdrawal after they turn 59½.
+Update running total curYearEarlyWithdrawals, if the investment sold is held in a pre-tax or after-tax retirement account and the user's age is less than 59.  If the user's age equals 59, we assume they perform this withdrawal after they turn 59½.
 
 
-Pay discretionary expenses in the order given by the spending strategy, except stop if continuing would reduce the user’s total assets below the financial goal.  The last discretionary expense to be paid can be partially paid, if incurring the entire expense would violate the financial goal.  Perform additional withdrawals if needed to pay them.
+Pay discretionary expenses in the order given by the spending strategy, except stop if continuing would reduce the user's total assets below the financial goal.  The last discretionary expense to be paid can be partially paid, if incurring the entire expense would violate the financial goal.  Perform additional withdrawals if needed to pay them.
 Details are similar to the details of paying non-discretionary expenses.
 
 
@@ -33,97 +33,89 @@ import {
   SpendingEvent,
   withdraw_from_investments,
   calculate_detailed_expense_amount,
+  sort_expenses_by_strategy,
 } from "./ExpenseHelper";
+import { TaxStatus } from "../Enums";
 
 /**
- * Calculate the total assets across all accounts
- *
+ * 思考： 如果我是simulation的话，我在simulation开始就支付上一年的税款，这样不就保证了我剩下的现金一定是干净的了么？
+ * 那么我可以随意拿取我想要的资金，并且随意的使用，因为即使破坏了也是破坏的下一年的financial goal，而不是当前的financial goal。
+ * 那么扣税导致的financial goal被破坏就不是我需要担心的问题了。
+ */
+
+
+/**
+ * 计算当前的现金和投资的价值
  * @param state The simulation state
- * @returns The total value of all assets
+ * @returns The total value of cash and investments
  */
-function calculate_total_assets(state: SimulationState): number {
-  let totalAssets = state.cash.get_value();
+function calculate_current_assets(state: SimulationState): {
+  cashValue: number;
+  non_retirement_accounts_value: number;
+  pre_tax_retirement_accounts_value: number;
+  after_tax_retirement_accounts_value: number;
+} {
+  let cashValue = state.cash.get_value();
+  let non_retirement_accounts_value = 0;
+  let pre_tax_retirement_accounts_value = 0;
+  let after_tax_retirement_accounts_value = 0;
 
-  // Add non-retirement accounts
   for (const [_, investment] of state.accounts.non_retirement) {
-    totalAssets += investment.get_value();
+    non_retirement_accounts_value += investment.get_value();
   }
 
-  // Add pre-tax retirement accounts
   for (const [_, investment] of state.accounts.pre_tax) {
-    totalAssets += investment.get_value();
+    pre_tax_retirement_accounts_value += investment.get_value();
   }
 
-  // Add after-tax retirement accounts
   for (const [_, investment] of state.accounts.after_tax) {
-    totalAssets += investment.get_value();
+    after_tax_retirement_accounts_value += investment.get_value();
   }
 
-  return totalAssets;
-}
-
-/**
- * Sort discretionary expenses according to the spending strategy
- *
- * @param expenses The list of discretionary expenses
- * @param strategy The spending strategy (ordered list of expense names)
- * @returns Sorted list of expenses
- */
-function sort_expenses_by_strategy(
-  expenses: SpendingEvent[],
-  strategy: string[]
-): SpendingEvent[] {
-  // Create a priority map based on the strategy order
-  const priorityMap = new Map<string, number>();
-
-  strategy.forEach((name, index) => {
-    priorityMap.set(name, index);
-  });
-
-  // Sort expenses by priority
-  return [...expenses].sort((a, b) => {
-    const priorityA = priorityMap.has(a.name)
-      ? priorityMap.get(a.name)!
-      : Number.MAX_SAFE_INTEGER;
-    const priorityB = priorityMap.has(b.name)
-      ? priorityMap.get(b.name)!
-      : Number.MAX_SAFE_INTEGER;
-    return priorityA - priorityB;
-  });
+  return {
+    cashValue,
+    non_retirement_accounts_value,
+    pre_tax_retirement_accounts_value,
+    after_tax_retirement_accounts_value,
+  };
 }
 
 /**
  * Process discretionary expense events for the current year, respecting the financial goal
- * ! you should check if return true or false.
- * ! if return true, it means we can continue the simulation.
- * ! if return false, it means we cannot continue the simulation.
- *
+ * ! 这里不再返回true或者false，而是直接修改state，因为我们完全可以不支付任何discretionary expense。
+ *! 我们在这里假定拿到的discretionaryExpenses是已经按照spending strategy排序好的。
  * @param state The current simulation state
- * @returns boolean
+ * @returns void
  */
-export function pay_discretionary_expenses(state: SimulationState): boolean {
+export function pay_discretionary_expenses(state: SimulationState): void {
   // SEQUENTIAL THINKING STEP 1: Get discretionary expenses for the current year
   const currentYear = state.get_current_year();
   const discretionaryExpenses = state.get_discretionary_expenses();
 
-  // SEQUENTIAL THINKING STEP 2: Sort expenses according to the spending strategy
-  const sortedExpenses =
-    state.spending_strategy && state.spending_strategy.length > 0
-      ? sort_expenses_by_strategy(
-          discretionaryExpenses,
-          state.spending_strategy
-        )
-      : discretionaryExpenses;
+  //检查是否存在discretionaryExpenses
+  if (discretionaryExpenses.length === 0) {
+    return;
+  }
 
-  // SEQUENTIAL THINKING STEP 3: Calculate current total assets and financial goal
-  let totalAssets = calculate_total_assets(state);
-  const financialGoal = state.get_financial_goal();
+  //获得当前的现金和投资的价值
+  let {
+    cashValue,
+    non_retirement_accounts_value,
+    pre_tax_retirement_accounts_value,
+    after_tax_retirement_accounts_value,
+  } = calculate_current_assets(state);
 
-  // SEQUENTIAL THINKING STEP 4: Calculate total discretionary expense amount
-  let totalProcessedAmount = 0;
+  const financial_goal = state.get_financial_goal();
 
-  // SEQUENTIAL THINKING STEP 5: Process each expense in order
-  for (const expense of sortedExpenses) {
+  //计算离打破financial goal还差多少钱
+  const available_amount = financial_goal - (cashValue + non_retirement_accounts_value + pre_tax_retirement_accounts_value + after_tax_retirement_accounts_value);
+
+  if (available_amount <= 0) {
+    return;
+  }
+
+  // SEQUENTIAL THINKING STEP 4: Process each expense in order
+  for (const expense of discretionaryExpenses) {
     // Calculate the expense amount for this year
     const expenseAmount = calculate_detailed_expense_amount(
       expense,
@@ -133,81 +125,28 @@ export function pay_discretionary_expenses(state: SimulationState): boolean {
 
     if (expenseAmount <= 0) continue; // Skip zero-amount expenses
 
-    // Check if paying this expense would violate the financial goal
-    if (totalAssets - expenseAmount < financialGoal) {
-      // Calculate maximum allowable amount to pay partially
-      const maxAllowableAmount = Math.max(0, totalAssets - financialGoal);
+    //计算支付当前discretionary expense需要的资金
+    //如果remain_amount大于0，那么就支付当前discretionary expense
+    const remain_amount = available_amount - expenseAmount;
 
-      if (maxAllowableAmount > 0) {
-        // Pay partial amount
-        const cashValue = state.cash.get_value();
-
-        if (cashValue >= maxAllowableAmount) {
-          // Cash is sufficient for partial payment
-          state.cash.incr_value(-maxAllowableAmount);
-        } else {
-          // Use all available cash first
-          state.cash.incr_value(-cashValue);
-          const remainingNeeded = maxAllowableAmount - cashValue;
-
-          // Withdraw remaining amount from investments
-          const withdrawalResult = withdraw_from_investments(
-            state,
-            remainingNeeded
-          );
-
-          // Update tax-related values
-          state.incr_capital_gains_income(withdrawalResult.capitalGain);
-          state.incr_ordinary_income(withdrawalResult.cur_year_income);
-          state.incr_early_withdrawal_penalty(
-            withdrawalResult.early_withdrawal_penalty
-          );
-
-          // Check if withdrawal was successful
-          if (withdrawalResult.unfunded > 0) {
-            return false; // Unable to pay even partial expense
-          }
-        }
-      }
-
-      // Stop processing more expenses after handling partial payment
-      return true;
-    }
-
-    // SEQUENTIAL THINKING STEP 6: Pay the full expense
-    const cashValue = state.cash.get_value();
-
-    if (cashValue >= expenseAmount) {
-      // Cash is sufficient, pay directly
-      state.cash.incr_value(-expenseAmount);
-    } else {
-      // Use all available cash first
-      state.cash.incr_value(-cashValue);
-      const remainingNeeded = expenseAmount - cashValue;
-
-      // Withdraw remaining amount from investments
-      const withdrawalResult = withdraw_from_investments(
-        state,
-        remainingNeeded
-      );
-
-      // Update tax-related values
-      state.incr_capital_gains_income(withdrawalResult.capitalGain);
-      state.incr_ordinary_income(withdrawalResult.cur_year_income);
-      state.incr_early_withdrawal_penalty(
-        withdrawalResult.early_withdrawal_penalty
-      );
-
-      // Check if all expenses were paid
-      if (withdrawalResult.unfunded > 0) {
-        return false; // Payment failed
+    //todo: 未完成，需要思考。3月25日
+    //如果支付当前discretionary expense需要的资金大于0，就表示我可以支付当前discretionary expense
+    if (remain_amount > 0) {
+      //表示可以完全支付当前discretionary expense
+      //那么首先检查自己有没有足够的现金
+      if (cashValue >= expenseAmount) {
+        //那么就从cashValue中扣除expenseAmount
+        cashValue -= expenseAmount;
+      } else if (non_retirement_accounts_value+cashValue >= expenseAmount) {
+        //先从cash中支付所有cashValue
+        cashValue = 0;
+        //然后从non_retirement_accounts_value中扣除expenseAmount
+        non_retirement_accounts_value -= expenseAmount - cashValue;
+      } else {
+        //那么就从pre_tax_retirement_accounts_value中扣除expenseAmount
+        pre_tax_retirement_accounts_value -= expenseAmount;
       }
     }
 
-    // Update remaining assets
-    totalAssets -= expenseAmount;
-    totalProcessedAmount += expenseAmount;
   }
-
-  return true;
 }
