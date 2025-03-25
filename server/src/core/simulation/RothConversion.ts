@@ -14,10 +14,9 @@ function transfer_investment(
     for (let i = 0; i < roth_conversion_strategy.length && transferred < amt; i++) {
         const label = roth_conversion_strategy[i];
         const from_investment = source_pool.get(label);
-
         if (!from_investment) {
             console.error(`Investment with label ${label} not exist`);
-            process.exit(1); // will change it later when writing test cases.
+            process.exit(1);
         }
         if (!target_pool.has(label)) {
             const cloned_investment = from_investment.clone();
@@ -26,9 +25,9 @@ function transfer_investment(
         }
         const to_investment = target_pool.get(label);
         // if we have nothing in investment, nothing is transferred
-        const transfer_amt = Math.min(from_investment.get_cost_basis(), amt);
-        from_investment.incr_cost_basis(-transfer_amt);
-        to_investment?.incr_cost_basis(transfer_amt);
+        const transfer_amt = Math.min(from_investment.get_value(), amt);
+        from_investment.incr_value(-transfer_amt);
+        to_investment?.incr_value(transfer_amt);
         transferred += transfer_amt;
     }
 }
@@ -50,10 +49,10 @@ function process_roth_conversion(simulation_state: SimulationState) {
                     .federal_tax_service
                     .find_bracket(taxable_income, IncomeType.TAXABLE_INCOME, simulation_state.get_tax_filing_status());
     const upper = current_bracket.max;
-    const transfer_amt = Math.min(
-        upper - taxable_income,
-        simulation_state.get_after_tax_contribution_limit() - simulation_state.get_after_tax_contribution(),
-    );
+    const transfer_amt = upper - taxable_income;
+    
+    // does not go into annual contribution for after tax
+
     if (transfer_amt > 0) {
         transfer_investment(
             simulation_state.roth_conversion_strategy,
@@ -62,7 +61,6 @@ function process_roth_conversion(simulation_state: SimulationState) {
             simulation_state.accounts.after_tax
         );
         simulation_state.incr_ordinary_income(transfer_amt);
-        simulation_state.incr_after_tax_contribution(transfer_amt);
     }
 }
 

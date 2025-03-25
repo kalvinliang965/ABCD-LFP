@@ -1,15 +1,14 @@
 import { InvestmentRaw } from "../scenario/Scenario";
 import { create_investment_type, InvestmentType } from "./InvestmentType";
 import { ChangeType, Taxability, TaxStatus } from "../../Enums";
-import { Investment } from "../../../db/models/investments";
 
 /**
  * Public information about an investment
  */
 export interface Investment {
-  investment_type: InvestmentType;
-  taxStatus: TaxStatus;
   id: string;
+  taxStatus: TaxStatus;
+  investment_type: InvestmentType;
 
   return_change_type: ChangeType,
   income_change_type: ChangeType,
@@ -52,7 +51,7 @@ export function create_investment(raw_data: InvestmentRaw): Investment {
 
 
     // how much we bought the investment for 
-    let cost_basis = 0;
+    let cost_basis = raw_data.value;
     // how much we invested
     let value = raw_data.value;
     const investment = {
