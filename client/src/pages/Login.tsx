@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { FaGoogle } from "react-icons/fa"; // 导入Google图标
 import { Box, Button, Center, Container, Heading, Text, VStack, useColorModeValue } from '@chakra-ui/react';
 import { FcGoogle } from 'react-icons/fc'; // Install react-icons if not already installed
+import { appConfig } from "../config/appConfig";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -81,7 +82,7 @@ const Login: React.FC = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post("http://localhost:3000/api/login", {
+      const response = await axios.post(`${appConfig.api.baseURL}/api/login}`, {
         username: email,
         password,
       });
@@ -100,7 +101,8 @@ const Login: React.FC = () => {
   // Handle Google sign in - this is the only function we need to change
   const handleGoogleSignIn = () => {
     // Redirect to backend auth route
-    window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/auth/google`;
+    console.log(appConfig.dev.port);
+    window.location.href = `${appConfig.api.baseURL}/auth/google`;
   };
 
   return (
