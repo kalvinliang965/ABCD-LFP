@@ -96,9 +96,9 @@ describe('Roth Conversion Process', () => {
       process_roth_conversion(state);
       expect(state.incr_ordinary_income).toHaveBeenCalled();
 
-      state.get_current_year = jest.fn().mockReturnValue(2031);
+      state.get_current_year = jest.fn().mockReturnValue(2032);
       process_roth_conversion(state);
-      expect(state.incr_ordinary_income).toHaveBeenCalled();
+      expect(state.incr_ordinary_income).toHaveBeenCalledTimes(1);
     });
 
     test('nothing is transfer', () => {
