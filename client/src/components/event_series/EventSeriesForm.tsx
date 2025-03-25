@@ -109,6 +109,7 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [loadingInvestments, setLoadingInvestments] = useState(true);
   const [existingEvents, setExistingEvents] = useState<{ name: string }[]>([]);
+  const [selectedTaxStatus, setSelectedTaxStatus] = useState<'non-retirement' | 'pre-tax' | 'after-tax' | ''>('');
 
   useEffect(() => {
     const fetchInvestments = async () => {
@@ -482,7 +483,7 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
   };
 
   const renderAllocationInputs = (values: number[], onChange: (index: number, value: number) => void) => {
-    // For invest event, filter out pre-tax investments
+    // Filter investments based on event type and selected tax status
     let filteredInvestments = [...investments];
     
     if (initialType === 'invest') {
@@ -490,6 +491,9 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
       filteredInvestments = investments.filter(inv => 
         inv.taxStatus === 'non-retirement' || inv.taxStatus === 'after-tax'
       );
+    } else if (initialType === 'rebalance' && selectedTaxStatus) {
+      // For rebalance events, only show investments with the selected tax status
+      filteredInvestments = investments.filter(inv => inv.taxStatus === selectedTaxStatus);
     }
 
     return (
@@ -497,7 +501,9 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
         {filteredInvestments.length === 0 ? (
           <Alert status="warning">
             <AlertIcon />
-            No suitable investments available. For invest events, only non-retirement and after-tax investments can be used.
+            {initialType === 'invest' 
+              ? "No suitable investments available. For invest events, only non-retirement and after-tax investments can be used."
+              : `No investments with '${selectedTaxStatus}' tax status available. Please add investments with this tax status first.`}
           </Alert>
         ) : (
           <>
@@ -652,7 +658,7 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
                 <FormControl isRequired>
                   <FormLabel>Mean Change ($)</FormLabel>
                   <Input
-                    type="number"
+                  type="number"
                     value={annualChange.mean ?? ''}
                     onChange={(e) => setAnnualChange({ ...annualChange, mean: parseInt(e.target.value) })}
                     min="0"
@@ -662,7 +668,7 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
                 <FormControl isRequired>
                   <FormLabel>Standard Deviation ($)</FormLabel>
                   <Input
-                    type="number"
+                  type="number"
                     value={annualChange.stdDev ?? ''}
                     onChange={(e) => setAnnualChange({ ...annualChange, stdDev: parseInt(e.target.value) })}
                     min="0"
@@ -715,7 +721,7 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
                 <FormControl isRequired>
                   <FormLabel>Spouse Percentage</FormLabel>
                   <NumberInput
-                    value={spousePercentage}
+                  value={spousePercentage}
                     onChange={(value) => handlePercentageChange(false, value)}
                     min={0}
                     max={100}
@@ -950,6 +956,31 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
               </FormControl>
             )}
 
+            {initialType === 'rebalance' && (
+              <FormControl isRequired>
+                <FormLabel>Account Tax Status</FormLabel>
+                <Select
+                  value={selectedTaxStatus}
+                  onChange={(e) => {
+                    setSelectedTaxStatus(e.target.value as 'non-retirement' | 'pre-tax' | 'after-tax');
+                    // Reset asset allocation when tax status changes
+                    setAssetAllocation({
+                      type: 'fixed',
+                      investments: investments.map(inv => ({
+                        investment: inv.id,
+                        initialPercentage: 0
+                      }))
+                    });
+                  }}
+                  placeholder="Select account type"
+                >
+                  <option value="non-retirement">Non-Retirement</option>
+                  <option value="pre-tax">Pre-Tax</option>
+                  <option value="after-tax">After-Tax</option>
+                </Select>
+              </FormControl>
+            )}
+
             {loadingInvestments ? (
               <Box p={4} bg="gray.50" borderRadius="lg">
                 <Text>Loading investments...</Text>
@@ -957,6 +988,10 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
             ) : investments.length === 0 ? (
               <Box p={4} bg="gray.50" borderRadius="lg">
                 <Text>No investments available. Please add some investments first.</Text>
+              </Box>
+            ) : initialType === 'rebalance' && !selectedTaxStatus ? (
+              <Box p={4} bg="gray.50" borderRadius="lg">
+                <Text>Please select an account tax status first.</Text>
               </Box>
             ) : (
               <Box p={4} bg="gray.50" borderRadius="lg">
@@ -1052,7 +1087,6 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
       newErrors.push("Please enter a name");
     }
 
-    //only validate amount for income and expense types
     if ((initialType === 'income' || initialType === 'expense') && 
         (!amount || isNaN(Number(amount)) || Number(amount) <= 0)) {
       newErrors.push("Please enter a valid amount greater than 0");
@@ -1066,23 +1100,50 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
       newErrors.push("Please enter a valid duration");
     }
 
-    //add validation for asset allocation if its invest or rebalance type
-    if ((initialType === 'invest' || initialType === 'rebalance') && 
-        assetAllocation.investments.length > 0) {
-      const initialPercentages = assetAllocation.investments.map(inv => inv.initialPercentage);
-      if (!validateAllocationPercentages(initialPercentages)) {
-        newErrors.push("Initial asset allocation percentages must sum to 100%");
+    if (initialType === 'rebalance' && !selectedTaxStatus) {
+      newErrors.push("Please select an account tax status");
+    }
+
+    // Check if suitable investments are available for invest/rebalance events
+    if (initialType === 'invest' || initialType === 'rebalance') {
+      let availableInvestments: Investment[] = [];
+      
+      if (initialType === 'invest') {
+        // For invest events, check for non-retirement and after-tax investments
+        availableInvestments = investments.filter(inv => 
+          inv.taxStatus === 'non-retirement' || inv.taxStatus === 'after-tax'
+        );
+        if (availableInvestments.length === 0) {
+          newErrors.push("No suitable investments available. For invest events, only non-retirement and after-tax investments can be used. Please add some investments first.");
+          setErrors(newErrors);
+          return false;
+        }
+      } else if (initialType === 'rebalance' && selectedTaxStatus) {
+        // For rebalance events, check for investments with the selected tax status
+        availableInvestments = investments.filter(inv => inv.taxStatus === selectedTaxStatus);
+        if (availableInvestments.length === 0) {
+          newErrors.push(`No investments with '${selectedTaxStatus}' tax status available. Please add investments with this tax status first.`);
+          setErrors(newErrors);
+          return false;
+        }
       }
 
-      if (assetAllocation.type === 'glidePath') {
-        const finalPercentages = assetAllocation.investments.map(inv => inv.finalPercentage || 0);
-        if (!validateAllocationPercentages(finalPercentages)) {
-          newErrors.push("Final asset allocation percentages must sum to 100%");
+      // If investments are available, check percentages
+      if (availableInvestments.length > 0 && assetAllocation.investments.length > 0) {
+        const initialPercentages = assetAllocation.investments.map(inv => inv.initialPercentage);
+        if (!validateAllocationPercentages(initialPercentages)) {
+          newErrors.push("Initial asset allocation percentages must sum to 100%");
+        }
+
+        if (assetAllocation.type === 'glidePath') {
+          const finalPercentages = assetAllocation.investments.map(inv => inv.finalPercentage || 0);
+          if (!validateAllocationPercentages(finalPercentages)) {
+            newErrors.push("Final asset allocation percentages must sum to 100%");
+          }
         }
       }
     }
 
-    //add validation for user and spouse split for income and expense types
     if ((initialType === 'income' || initialType === 'expense') && 
         (userPercentage + spousePercentage !== 100)) {
       newErrors.push("User and spouse percentages must sum to 100%");
@@ -1101,16 +1162,24 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
     }
 
     try {
-      // For invest events, filter investments to only include non-retirement and after-tax ones
+      // Filter investments based on event type
       let filteredAssetAllocation = { ...assetAllocation };
       
       if (initialType === 'invest') {
-        // Filter investments by tax status
+        // For invest events, only include non-retirement and after-tax investments
         const allowedInvestments = investments.filter(inv => 
           inv.taxStatus === 'non-retirement' || inv.taxStatus === 'after-tax'
         ).map(inv => inv.id);
         
-        // Keep only the allowed investments
+        filteredAssetAllocation.investments = assetAllocation.investments.filter(inv => 
+          allowedInvestments.includes(inv.investment)
+        );
+      } else if (initialType === 'rebalance' && selectedTaxStatus) {
+        // For rebalance events, only include investments with the selected tax status
+        const allowedInvestments = investments.filter(inv => 
+          inv.taxStatus === selectedTaxStatus
+        ).map(inv => inv.id);
+        
         filteredAssetAllocation.investments = assetAllocation.investments.filter(inv => 
           allowedInvestments.includes(inv.investment)
         );
@@ -1152,6 +1221,7 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
         } : {}),
         ...((initialType === 'invest' || initialType === 'rebalance') ? {
           maxCash: initialType === 'invest' ? Number(maxCash) || 0 : undefined,
+          selectedTaxStatus: initialType === 'rebalance' ? selectedTaxStatus : undefined,
           assetAllocation: {
             type: filteredAssetAllocation.type,
             investments: filteredAssetAllocation.investments.map(inv => ({

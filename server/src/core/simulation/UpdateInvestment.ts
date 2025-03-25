@@ -65,10 +65,8 @@ export default function update_investment(simulation_state: SimulationState) {
             // steps e remove annual fee
             const avg = (investment.get_value() + investment_previous_value) / 2
             const expense = avg * investment.get_expense_ratio();
-            investment.incr_value(-expense);
-            
+            investment.incr_value(-1 * expense);
             simulation_state.incr_capital_gains_income(annual_gains);
-            simulation_state.incr_ordinary_income(annual_income);
         }
     }
 }

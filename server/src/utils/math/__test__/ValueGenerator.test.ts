@@ -5,6 +5,8 @@ import { create_investment_type } from "../../../core/domain/investment/Investme
 // following code are generate by AI
 // it is really bad tho because it mess up some of the constant. e.g returnAmtorPct it gave me fixed for one of them
 
+// the prompt i gave is passing my ValueGenerator file to AI and ask them to write the test case
+
 // 枚举到字符串的转换函数
 const statisticTypeToString = (type: StatisticType): string => {
     return StatisticType[type].toLowerCase();
