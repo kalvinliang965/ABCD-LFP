@@ -70,31 +70,43 @@ export default async function process_rmds(
   let remainingRmd = requiredRmd;
   
   // Find cash account for receiving the RMD
-  const cashAccount = find_cash_account(state);
+  let cashAccount = find_cash_account(state);
   
   if (!cashAccount) {
-    console.warn("No cash account found for RMD distributions");
-    return 0;
+    console.warn("No cash account found for RMD distributions, creating one");
+    cashAccount = { value: 0 } as any; // Simplified version using type assertion
+    state.accounts.non_retirement.set('cash', cashAccount as Investment);
   }
   
-  // Withdraw from pre-tax accounts according to RMD strategy
+  // Calculate RMD amount for each account proportionally
+  const accountRmds = new Map<string, number>();
+  let totalRmdAccountsValue = 0;
+  
+  // First, calculate the total value of accounts in the RMD strategy
   for (const accountId of state.rmd_strategy || []) {
-    if (remainingRmd <= 0) {
-      break;
+    const account = state.accounts.pre_tax.get(accountId);
+    if (account) {
+      totalRmdAccountsValue += (account as any).value;
     }
+  }
+  
+  // Then calculate proportional RMD for each account
+  for (const accountId of state.rmd_strategy || []) {
+    const account = state.accounts.pre_tax.get(accountId);
+    if (!account) continue;
+    
+    const accountValue = (account as any).value;
+    // Calculate this account's share of the total RMD
+    const accountRmd = (accountValue / totalRmdAccountsValue) * requiredRmd;
+    accountRmds.set(accountId, accountRmd);
+  }
+  
+  // Now process the withdrawals
+  for (const [accountId, withdrawAmount] of accountRmds.entries()) {
+    if (withdrawAmount <= 0) continue;
     
     const account = state.accounts.pre_tax.get(accountId);
-    if (!account) {
-      continue;
-    }
-    
-    // Determine how much to withdraw from this account
-    const accountValue = (account as any).value;
-    const withdrawAmount = Math.min(accountValue, remainingRmd);
-    
-    if (withdrawAmount <= 0) {
-      continue;
-    }
+    if (!account) continue;
     
     // Update account balance
     (account as any).value -= withdrawAmount;
@@ -102,11 +114,7 @@ export default async function process_rmds(
     // Transfer to cash account (non-retirement)
     (cashAccount as any).value += withdrawAmount;
     
-    // Add to ordinary income (RMDs are taxable)
-    state.incr_ordinary_income(withdrawAmount);
-    
     // Update tracking
-    remainingRmd -= withdrawAmount;
     totalRmdAmount += withdrawAmount;
     
     console.log(`RMD withdrawal from ${accountId}: $${withdrawAmount.toFixed(2)}`);
@@ -114,6 +122,13 @@ export default async function process_rmds(
   
   // Mark that RMD was processed
   (state as any).rmd_triggered = (totalRmdAmount > 0);
+  
+  // Add the total RMD to ordinary income (call once with total)
+  if (totalRmdAmount > 0) {
+    // Round to 2 decimal places for currency
+    const roundedAmount = Math.round(totalRmdAmount * 100) / 100;
+    state.incr_ordinary_income(roundedAmount);
+  }
   
   return totalRmdAmount;
 }
