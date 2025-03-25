@@ -35,7 +35,14 @@
 
 To run this project, you need to set up environment variables for both the server and client. Follow the instructions below to create the necessary `.env` files.
 
-### Server Setup
+
+### Running our code setup
+1. run npm install for both `client` and `server` directory
+2. to run our frontend, run `npm start dev`
+3. to run our backend, run `npm start`
+4. to run our backend test case run `npm test`
+
+### Authentication Setup
 
 1. **Create a `.env` file in the `server` directory:**
 
