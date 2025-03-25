@@ -7,6 +7,59 @@ import * as RMDScraper from '../../../services/RMDScraper';
 // cd server 
 // npm test -- src/core/simulation/__test__/ProcessRMD.test.ts
 
+/**
+ * Test Case 1: Process RMDs Correctly for User Over RMD Age
+Scenario:
+Age 75 → IRS factor mocked as 22.9
+Pre-tax: IRA1 ($100,000), IRA2 ($200,000)
+Cash starts at $50,000
+Pass Criteria:
+Total RMD = ~$13,100.44
+IRA balances decrease
+Cash account increases by RMD
+Ordinary income updated
+rmd_triggered flag set
+
+Test Case 2: Skip RMDs for User Below RMD Age
+Scenario:
+User age 65
+Pass Criteria:
+No balance changes
+RMD amount = 0
+incr_ordinary_income not called
+rmd_triggered false
+
+Test Case 3: Skip RMDs for Deceased User
+Scenario:
+Age 75, but user is dead
+Pass Criteria:
+No balance changes
+No income update
+rmd_triggered false
+Test Case 4: Handle Empty Pre-Tax Accounts
+Goal: Verify RMD gracefully skips when no pre-tax accounts exist.
+Scenario:
+Age 75
+Pre-tax accounts empty
+Pass Criteria:
+RMD = 0
+Cash account unchanged
+No income update
+rmd_triggered false
+
+Test Case 5: Handle Missing Cash Account Gracefully
+Scenario:
+Age 75
+Only ira1 exists, no cash account
+Pass Criteria:
+RMD > 0
+IRA balance reduced
+Cash created or increased
+incr_ordinary_income called
+rmd_triggered true
+
+ */
+
 describe('ProcessRMD', () => {
   // Mock the RMD factor function
   beforeEach(() => {

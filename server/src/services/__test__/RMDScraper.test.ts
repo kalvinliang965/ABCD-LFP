@@ -6,6 +6,26 @@ import { connect_database, disconnect_database } from '../../db/connections';
 // cd server 
 // npm test -- src/services/__test__/RMDScraper.test.ts
 
+/**
+ * Test Case 1: RMD Factor Retrieval for Valid Ages
+
+Scenario: Call getRMDFactorForAge() for ages 72, 75, 80, 85, 90, 95, and 100.
+Pass Criteria:
+Each factor is a number between 0 and 100
+RMD factors decrease as age increases (consistent with IRS rules)
+
+Test Case 2: Handle Edge Cases (Out-of-Range Ages)
+Scenario: Call getRMDFactorForAge() with ages 60, 120, and -5.
+Pass Criteria:
+Age 60 → Returns 0 (below RMD age)
+Age 120 → Returns a valid positive factor
+Negative age → Returns 0 or valid default
+
+Test Case 3: Handle Database Error Gracefully
+Scenario: Disconnect from MongoDB and call getRMDFactorForAge(75).
+Pass Criteria: System either throws an error or returns a safe default (0) Test confirms the system does not crash
+ */
+
 describe('RMDScraper', () => {
   // Connect to the database before all tests
   beforeAll(async () => {

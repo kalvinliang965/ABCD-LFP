@@ -6,6 +6,43 @@ import { TaxStatus } from '../../Enums';
 // cd server 
 // npm test -- src/core/simulation/__test__/ProcessIncome.test.ts
 
+/**
+ * Test Case 1: Process All Investment Types Correctly
+Scenario:
+cash: 2% interest
+stocks: 3% dividend
+IRA (pre-tax): 4% growth
+Pass Criteria:
+Cash, stock, and IRA values increase correctly
+Correct taxable income and qualified dividends are recorded
+Total income returned matches expected (5700)
+
+Test Case 2: Process Fixed Amount Income Correctly
+Goal: Test fixed amount income handling (non-percent-based)
+Scenario:
+Bond generates $1000 fixed
+Pass Criteria:
+Bond value updated properly
+Ordinary income incremented by $1000
+Function returns total income $1000
+
+Test Case 3: Handle Tax-Exempt Investments
+Scenario:
+muni_bonds: 3% interest, tax-exempt
+Pass Criteria:
+Bond value increases by $900
+No taxable income is recorded
+Function returns $900
+
+Test Case 4: Handle Empty Accounts Gracefully
+Scenario:
+No investments
+Pass Criteria:
+No changes to income
+Returns total income of 0
+
+ */
+
 describe('ProcessIncome', () => {
   // Test basic income processing
   test('should process income correctly for all investment types', async () => {
