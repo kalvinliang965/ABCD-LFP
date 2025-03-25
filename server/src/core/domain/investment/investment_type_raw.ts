@@ -66,12 +66,29 @@ export const incr_300_investment_type_one = create_investment_type_raw(
         ["value", 300],
     ]),
     0.004,
-    "percent",
+    "amount",
     new Map<string, any>([
         ["type", "fixed"],
         ["value", 300],
     ]),
     false
+);
+
+export const incr_300_investment_type_two = create_investment_type_raw(
+    "fixed investment",
+    "increase by 300 on everything",
+    "amount",
+    new Map<string, any>([
+        ["type", "fixed"],
+        ["value", 300],
+    ]),
+    0.004,
+    "amount",
+    new Map<string, any>([
+        ["type", "fixed"],
+        ["value", 300],
+    ]),
+    true,
 );
 
 export const incr_600_investment_type_one = create_investment_type_raw(
@@ -83,12 +100,29 @@ export const incr_600_investment_type_one = create_investment_type_raw(
         ["value", 600],
     ]),
     0.004,
-    "percent",
+    "amount",
     new Map<string, any>([
         ["type", "fixed"],
         ["value", 600],
     ]),
     false
+);
+
+export const incr_600_investment_type_two = create_investment_type_raw(
+    "fixed investment",
+    "increase by 600 on everything",
+    "amount",
+    new Map<string, any>([
+        ["type", "fixed"],
+        ["value", 600],
+    ]),
+    0.004,
+    "amount",
+    new Map<string, any>([
+        ["type", "fixed"],
+        ["value", 600],
+    ]),
+    true
 );
 
 export function create_investment_type_raw(

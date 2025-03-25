@@ -4,10 +4,10 @@ import { SimulationState, AccountMap } from '../SimulationState';
 import { TaxStatus, TaxFilingStatus, IncomeType, ChangeType } from '../../Enums';
 import { create_investment, Investment } from '../../domain/investment/Investment';
 import { InvestmentType } from '../../domain/investment/InvestmentType';
-import { incr_300_init_300_investment, incr_600_init_600_investment } from '../../domain/investment/investment_raw';
+import { incr_300_init_300_investment_one, incr_600_init_600_investment_one } from '../../domain/investment/investment_raw';
 
-const pre_tax_1 = create_investment(incr_300_init_300_investment);
-const pre_tax_2 = create_investment(incr_600_init_600_investment);
+const pre_tax_1 = create_investment(incr_300_init_300_investment_one);
+const pre_tax_2 = create_investment(incr_600_init_600_investment_one);
 pre_tax_1.incr_value = jest.fn();
 pre_tax_1.clone = function() {
     return {
