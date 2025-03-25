@@ -116,6 +116,7 @@ export function get_discretionary_expenses(
 /**
  * 计算给定expense在当前年份的金额，考虑通货膨胀调整
  * 应该是正确的了，因为expect_annual_change已经只在乎增长的值而不是初始+增长
+ * 这个function只会计算一个event的金额，不会计算所有event的金额
  *
  * @param event The expense event
  * @param currentYear The current simulation year
@@ -159,6 +160,31 @@ export function calculate_detailed_expense_amount(
   }
 
   return amount;
+}
+
+/**
+ * 排列所有的discretionary expense，按照spending strategy的顺序
+ * ! 这个function当前还没有被simulation调用。
+ * @param expenses The list of discretionary expenses
+ * @param strategy The spending strategy (ordered list of expense names)
+ * @returns Sorted list of expenses
+*/
+export function sort_expenses_by_strategy(
+  expenses: SpendingEvent[],
+  strategy: string[]
+): SpendingEvent[] {
+  const priorityMap = new Map<string, number>();
+
+  strategy.forEach((name, index) => {
+    priorityMap.set(name, index);
+  });
+
+  return [...expenses].sort((a, b) => {
+    const priorityA = priorityMap.has(a.name) ? priorityMap.get(a.name)! : Number.MAX_SAFE_INTEGER;
+    const priorityB = priorityMap.has(b.name) ? priorityMap.get(b.name)! : Number.MAX_SAFE_INTEGER;
+    return priorityA - priorityB;
+  });
+
 }
 
 /**
