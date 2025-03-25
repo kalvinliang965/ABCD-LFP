@@ -8,9 +8,9 @@
 import axios from 'axios';
 import { load } from 'cheerio';
 import { saveRMDFactors, getRMDFactorsFromDB } from '../db/repositories/RMDFactorRepository';
+import { tax_config } from '../config/tax';
 
-// URL for the IRS publication containing the RMD table
-const RMD_URL = 'https://www.irs.gov/publications/p590b';
+const RMD_URL = tax_config.RMD_URL;
 
 // Default RMD factors based on IRS Uniform Lifetime Table (2022+)
 // These will be used as a fallback if scraping fails， easy to debug
