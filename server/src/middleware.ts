@@ -41,6 +41,17 @@ function registerGlobalMiddleWare(app: Express) {
     }));
     app.use(passport.initialize());
     app.use(passport.session());
+    // profiling
+    app.use((req, res, next) => {
+        const start = process.hrtime(); // High-resolution time
+        res.on("finish", () => { // When response is sent
+          const end = process.hrtime(start);
+          const elapsedMs = end[0] * 1000 + end[1] / 1e6; // Convert to ms
+          console.log(`${req.method} ${req.url} took ${elapsedMs.toFixed(2)}ms`);
+        });
+        next();
+      });
+      
     console.log("Finish registering global middleware");
 }
 
