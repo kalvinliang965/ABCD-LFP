@@ -40,9 +40,9 @@ describe("create_investment", () => {
     });
   
     // Test cost basis initialization
-    test("should initialize cost basis to 0", () => {
+    test("should initialize cost basis to original value", () => {
       const investment = create_investment(baseRawData);
-      expect(investment.get_cost_basis()).toBe(0);
+      expect(investment.get_cost_basis()).toBe(baseRawData.value);
     });
   
     // Test value increment
@@ -56,7 +56,7 @@ describe("create_investment", () => {
     test("should increment cost basis correctly", () => {
       const investment = create_investment(baseRawData);
       investment.incr_cost_basis(300);
-      expect(investment.get_cost_basis()).toBe(300);
+      expect(investment.get_cost_basis()).toBe(300 + baseRawData.value);
     });
   
     // Test retirement status
