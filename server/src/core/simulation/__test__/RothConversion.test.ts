@@ -108,6 +108,11 @@ describe('Roth Conversion Process', () => {
         max: 50000,
         rate: 0.12
       });
+      // Ordinary income: 80000
+      // capital gains income 20000
+      // social security benefit 30000
+      // taxable income = 95500
+      // exceed the current bracket
       process_roth_conversion(state);
       expect(state.incr_ordinary_income).not.toHaveBeenCalled();
     });
