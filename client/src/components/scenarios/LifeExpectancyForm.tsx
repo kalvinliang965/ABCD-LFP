@@ -72,6 +72,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const userBg = useColorModeValue("blue.50", "blue.900");
   const spouseBg = useColorModeValue("purple.50", "purple.900");
+  const user_current_age = new Date().getFullYear() - userBirthYear;
 
   const handle_change_user_expectancy_type = (value: string) => {
     const newType = value as ExpectancyType;
@@ -202,8 +203,8 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                         <Icon as={FiCalendar} color="blue.500" />
                       </InputLeftElement>
                       <NumberInput
-                        min={userBirthYear + 1}
-                        max={userBirthYear + 120}
+                        min={user_current_age + 1}
+                        max={user_current_age + 120}
                         value={lifeExpectancyConfig.userFixedAge}
                         onChange={(_, value) =>
                           onChangeLifeExpectancy({
@@ -234,8 +235,8 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                           <Icon as={FiCalendar} color="blue.500" />
                         </InputLeftElement>
                         <NumberInput
-                          min={userBirthYear + 1}
-                          max={userBirthYear + 120}
+                          min={user_current_age + 1}
+                          max={user_current_age + 120}
                           value={lifeExpectancyConfig.userMeanAge}
                           onChange={(_, value) =>
                             onChangeLifeExpectancy({
