@@ -30,7 +30,6 @@ export interface Investment {
  * Factory function to create an investment in the retirement planning system
  */
 export function create_investment(raw_data: InvestmentRaw): Investment {
-  console.log("create_investment 可以正确进入 raw_data 状态如下", raw_data);
   try {
     const investment_type = create_investment_type(raw_data.investmentType);
     let taxStatus: TaxStatus;

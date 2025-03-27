@@ -17,7 +17,7 @@ import {
 
 describe("Scenario creation test", () => {
   it("should create a scenario from YAML data and inspect it", () => {
-    // 1) 这里直接内联一个“安全版” YAML 字符串:
+    // 1) 这里直接内联一个"安全版" YAML 字符串:
     const scenarioYaml = `
 # file format for scenario import/export.  version: 2025-03-23
 # CSE416, Software Engineering, Scott D. Stoller.
@@ -169,7 +169,6 @@ residenceState: NY
 
     // 3) 转换为 ScenarioRaw（把需要 Map 的字段全部转成 Map）
     const scenarioRaw: ScenarioRaw = convert_yaml_to_scenario_raw(parsedYaml);
-    console.log(scenarioRaw);
 
     // 4) 调用 create_scenario(...) 进行解析
     const scenario: Scenario = create_scenario(scenarioRaw);
@@ -177,7 +176,26 @@ residenceState: NY
     // 5) 断言和/或打印一些结果
     expect(scenario).toBeDefined();
     expect(scenario.name).toBe("chen's Retirement Planning Scenario");
-    console.log("Scenario created successfully:", scenario);
+    console.log("inflation_assumption", scenario.inflation_assumption.sample());
+    console.log("event_series", scenario.event_series);
+
+    // 测试 mandatory_expenses 和 discretionary_expenses 是否正确
+    console.log("mandatory_expenses", scenario.mandatory_expenses);
+    console.log("discretionary_expenses", scenario.discretionary_expenses);
+
+    // 验证 mandatory_expenses 是否包含 "food" 事件
+    expect(scenario.mandatory_expenses.length).toBe(1);
+    expect(scenario.mandatory_expenses[0].name).toBe("food");
+    expect(scenario.mandatory_expenses[0].discretionary).toBe(false);
+
+    // 验证 discretionary_expenses 是否包含 "vacation" 和 "streaming services" 事件
+    expect(scenario.discretionary_expenses.length).toBe(2);
+    // 检查是否包含所有期望的 discretionary expense
+    const discretionaryExpenseNames = scenario.discretionary_expenses.map(
+      (expense) => expense.name
+    );
+    expect(discretionaryExpenseNames).toContain("vacation");
+    expect(discretionaryExpenseNames).toContain("streaming services");
 
     // 也可检查更多字段:
     expect(scenario.user_birth_year).not.toBeNaN; // 假设 scenario 里有 user_birth_year

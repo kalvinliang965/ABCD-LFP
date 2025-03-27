@@ -15,7 +15,11 @@ import create_income_event from "../event/IncomeEvent";
 import create_expense_event, { ExpenseEvent } from "../event/ExpenseEvent";
 import create_investment_event from "../event/InvestmentEvent";
 import create_rebalance_event from "../event/RebalanceEvent";
-import { SpendingEvent } from "../../simulation/ExpenseHelper";
+import {
+  get_discretionary_expenses,
+  get_mandatory_expenses,
+  SpendingEvent,
+} from "../../simulation/ExpenseHelper";
 
 function parse_state(state: string) {
   switch (state) {
@@ -31,7 +35,6 @@ function parse_state(state: string) {
 }
 
 function parse_martial_status(status: string) {
-  
   switch (status) {
     case "individual":
       return TaxFilingStatus.SINGLE;
@@ -165,17 +168,10 @@ function parse_events(
     // Process dependencies to resolve start years that depend on other events
     process_event_dependencies(rawEvents);
 
-
     // Process each type of event
     events = rawEvents.map((rawEvent) => {
-      console.log("rawEvent 可以正确进入 rawEvent 状态如下", rawEvent);
-      console.log(
-        "rawEvent.type 可以正确进入 rawEvent.type 状态如下",
-        rawEvent.type
-      );
       switch (rawEvent.type) {
         case "income":
-          console.log("即将进入 create_income_event 状态");
           return create_income_event(rawEvent as IncomeEventRaw);
         case "expense":
           return create_expense_event(rawEvent as ExpenseEventRaw);
@@ -276,7 +272,10 @@ export interface Scenario {
   user_life_expectancy: number;
   spouse_life_expectancy?: number;
   investments: Array<Investment>;
-  event_series: any;
+  //! chen changed the type from any to Event[]
+  event_series: Array<Event>;
+  mandatory_expenses: Array<SpendingEvent>;
+  discretionary_expenses: Array<SpendingEvent>;
   inflation_assumption: RandomGenerator;
   after_tax_contribution_limit: number;
   spending_strategy: Array<string>;
@@ -307,8 +306,9 @@ export function create_scenario(scenario_raw: ScenarioRaw): Scenario {
       (investment: InvestmentRaw): Investment => create_investment(investment)
     );
 
-    //! Change chen made for parsing events  Use the extracted function to parse events
     const events = parse_events(scenario_raw.eventSeries);
+    const mandatory_expenses = get_mandatory_expenses(events);
+    const discretionary_expenses = get_discretionary_expenses(events);
 
     const inflation_assumption: RandomGenerator = parse_inflation_assumption(
       scenario_raw.inflationAssumption
@@ -326,6 +326,7 @@ export function create_scenario(scenario_raw: ScenarioRaw): Scenario {
       scenario_raw.RothConversionStrategy;
     const financialGoal: number = scenario_raw.financialGoal;
     const residenceState: StateType = parse_state(scenario_raw.residenceState);
+
     return {
       name: scenario_raw.name,
       tax_filing_status: taxfilingStatus,
@@ -335,6 +336,8 @@ export function create_scenario(scenario_raw: ScenarioRaw): Scenario {
       spouse_life_expectancy,
       investments,
       event_series: events,
+      mandatory_expenses,
+      discretionary_expenses,
       inflation_assumption,
       after_tax_contribution_limit,
       spending_strategy,

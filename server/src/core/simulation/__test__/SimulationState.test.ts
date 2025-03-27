@@ -12,7 +12,7 @@ const baseScenario: Scenario = {
   inflation_assumption: { sample: () => 0.03 },
   investments: [] as any,
   event_series: [],
-} as Scenario;
+} as any as Scenario;
 
 describe("Simulation State Methods", () => {
   let state: any;

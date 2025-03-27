@@ -23,10 +23,12 @@ import { SimulationState } from "./SimulationState";
 import { ExpenseEvent } from "../domain/event/ExpenseEvent";
 import { ChangeType, IncomeType, TaxStatus } from "../Enums";
 import { Investment } from "../domain/investment/Investment";
+import { Event } from "../domain/event/Event";
 
 // Result interface for expense calculation
 export interface SpendingEvent extends ExpenseEvent {
   amount: number;
+  remaining_amount: number;
 }
 
 /**
@@ -47,29 +49,24 @@ export function is_event_active(
 
 /**
  * Filters events to get only mandatory (non-discretionary) expenses that are active in the current year
- * 这个函数会给我们所有在这一年里面必须的events。
- * @param state The simulation state
+ * 这个函数会给我们所有在events。
+ * @param events Array of events to filter
  * @returns Array of mandatory expense events with their calculated amounts
  */
-export function get_mandatory_expenses(
-  state: SimulationState
-): SpendingEvent[] {
+export function get_mandatory_expenses(events: Event[]): SpendingEvent[] {
   const mandatoryExpenses: SpendingEvent[] = [];
 
-  for (const [_, event] of state.events_by_type.expense) {
-    const expenseEvent = event as ExpenseEvent;
-    if (!expenseEvent.discretionary) {
-      // 根据是否需要通货膨胀调整来计算金额
-      if (expenseEvent.inflation_adjusted) {
-        const expenseCalculationResult: SpendingEvent = {
-          ...expenseEvent,
-          amount: expenseEvent.initial_amount * (1 + state.inflation_factor),
-        };
-        mandatoryExpenses.push(expenseCalculationResult);
-      } else {
+  for (const event of events) {
+    // Only process expense type events and check if they are non-discretionary
+    if (event.type === "expense") {
+      // Type guard to safely handle ExpenseEvent properties
+      const expenseEvent = event as ExpenseEvent;
+      if (!expenseEvent.discretionary) {
+        // 根据是否需要通货膨胀调整来计算金额
         const expenseCalculationResult: SpendingEvent = {
           ...expenseEvent,
           amount: expenseEvent.initial_amount,
+          remaining_amount: expenseEvent.initial_amount,
         };
         mandatoryExpenses.push(expenseCalculationResult);
       }
@@ -82,28 +79,22 @@ export function get_mandatory_expenses(
 /**
  * Filters events to get only discretionary expenses that are active in the current year
  * 这个函数会给我们所有在这一年里面 discretionary 的events。
- * @param state The simulation state
+ * @param events Array of events to filter
  * @returns Array of discretionary expense events with their calculated amounts
  */
-export function get_discretionary_expenses(
-  state: SimulationState
-): SpendingEvent[] {
+export function get_discretionary_expenses(events: Event[]): SpendingEvent[] {
   const discretionaryExpenses: SpendingEvent[] = [];
 
-  for (const [_, event] of state.events_by_type.expense) {
-    const expenseEvent = event as ExpenseEvent;
-    if (expenseEvent.discretionary) {
-      // 根据是否需要通货膨胀调整来计算金额
-      if (expenseEvent.inflation_adjusted) {
-        const expenseCalculationResult: SpendingEvent = {
-          ...expenseEvent,
-          amount: expenseEvent.initial_amount * state.inflation_factor,
-        };
-        discretionaryExpenses.push(expenseCalculationResult);
-      } else {
+  for (const event of events) {
+    // Only process expense type events and check if they are discretionary
+    if (event.type === "expense") {
+      // Type guard to safely handle ExpenseEvent properties
+      const expenseEvent = event as ExpenseEvent;
+      if (expenseEvent.discretionary) {
         const expenseCalculationResult: SpendingEvent = {
           ...expenseEvent,
           amount: expenseEvent.initial_amount,
+          remaining_amount: expenseEvent.initial_amount,
         };
         discretionaryExpenses.push(expenseCalculationResult);
       }
@@ -128,15 +119,16 @@ export function calculate_detailed_expense_amount(
   currentYear: number,
   inflationFactor: number
 ): number {
-  // 计算基础金额（ 
+  // 计算基础金额（
   let amount = event.inflation_adjusted
-    ? event.initial_amount * inflationFactor
+    ? event.initial_amount * (1 + inflationFactor)
     : event.initial_amount;
 
   // 检查事件是否活跃
   if (!is_event_active(event, currentYear)) {
     // 如果事件不活跃，将计算的金额保存在event.amount中，但返回0
     event.amount = amount;
+    event.remaining_amount = amount;
     return 0;
   }
 

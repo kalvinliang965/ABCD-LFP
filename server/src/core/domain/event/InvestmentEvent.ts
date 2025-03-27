@@ -12,10 +12,6 @@ function create_investment_event(
   raw_data: InvestmentEventRaw
 ): InvestmentEvent {
   try {
-    console.log(
-      "create_investment_event 可以正确进入 raw_data 状态如下",
-      raw_data
-    );
     const start = parse_start_year(raw_data.start);
     const duration = parse_duration(raw_data.duration);
 
