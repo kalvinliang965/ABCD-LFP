@@ -41,6 +41,7 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   // SEQUENTIAL THINKING STEP 1: 获取已预处理的强制性支出列表
   // 这些支出已经按当前年份进行了筛选，并已经应用了通货膨胀调整
   const currentYear = state.get_current_year();
+  console.log("currentYear", currentYear);
   const mandatoryExpenses = state.mandatory_expenses;
 
   // totalMandatoryExpenseAmount 是所有强制性支出的总和
@@ -55,13 +56,18 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
     );
   }
 
+  console.log("totalMandatoryExpenseAmount", totalMandatoryExpenseAmount);
+
   // SEQUENTIAL THINKING STEP 5: Check if additional withdrawals are needed
   //因为cash已经算好了 - tax后的价格，所以我们按道理来说不应该再去计算tax，直接用cashValue - totalMandatoryExpenseAmount
   const cashValue = state.cash.get_value();
+  console.log("此时我们有cashValue", cashValue);
   const totalWithdrawalAmount = Math.max(
     0,
     totalMandatoryExpenseAmount - cashValue
   );
+
+  console.log("那么我们totalWithdrawalAmount需要", totalWithdrawalAmount);
   //如果我们的cash可以cover所有强制性支出，那么我们就不需要再进行任何操作
   //更新cash的value
   if (totalWithdrawalAmount == 0) {
@@ -71,6 +77,7 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
     // 我们的钱不够cover，所以需要从其他地方获取资金
     //同时我们要清空cash的value
     state.cash.incr_value(-cashValue);
+    console.log("我们清空了cash的value", state.cash.get_value());
     const withdrawalResult = withdraw_from_investments(
       state,
       totalWithdrawalAmount

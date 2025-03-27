@@ -160,13 +160,9 @@ export async function create_simulation_state(
 ): Promise<SimulationState> {
   try {
     const start_year: number = new Date().getFullYear();
-    console.log("start_year", start_year);
     let current_year: number = start_year;
-    console.log("current_year", current_year);
     const is_married = scenario.tax_filing_status === TaxFilingStatus.MARRIED;
-    console.log("is_married", is_married);
     let tax_filing_status = scenario.tax_filing_status;
-    console.log("tax_filing_status", tax_filing_status);
 
     // Income tracking variables
     let ordinary_income = 0;
@@ -175,29 +171,23 @@ export async function create_simulation_state(
     let after_tax_contribution = 0; // contribution to after tax account.
 
     // Process investments - scenario.investments is already processed in create_scenario
-    console.log("准备进入parse_investments");
     const [cash, non_retirement, pre_tax, after_tax] = parse_investments(
       scenario.investments
     );
-    console.log("parse_investments完成");
     // Organize events by type - scenario.eventSeries is already processed in create_scenario
     const [income_events, expense_events, investment_events, rebalance_events] =
       organize_events_by_type(scenario.event_series);
-    console.log("organize_events_by_type完成");
     let inflation_factor = scenario.inflation_assumption.sample();
-    console.log("inflation_factor", inflation_factor);
 
     // Create tax services
     const federal_tax_service = await create_federal_tax_service();
     const state_tax_service = await create_state_tax_service();
-    console.log("create_tax_service完成");
     // Create person details
     const user = create_person_details(
       scenario.user_birth_year,
       scenario.user_life_expectancy,
       () => current_year
     );
-    console.log("create_person_details完成");
     const spouse = is_married
       ? create_person_details(
           scenario.spouse_birth_year!,
@@ -205,7 +195,6 @@ export async function create_simulation_state(
           () => current_year
         )
       : undefined;
-    console.log("create_person_details完成");
     let early_withdrawal_penalty = 0;
     // Create the simulation state object
     const state: SimulationState = {
@@ -217,6 +206,8 @@ export async function create_simulation_state(
       roth_conversion_end: scenario.roth_conversion_end,
       spending_strategy: scenario.spending_strategy,
       expense_withrawal_strategy: scenario.expense_withrawal_strategy,
+      mandatory_expenses: scenario.mandatory_expenses,
+      discretionary_expenses: scenario.discretionary_expenses,
       roth_conversion_strategy: scenario.roth_conversion_strategy,
       user,
       spouse,
@@ -279,8 +270,7 @@ export async function create_simulation_state(
         rebalance: rebalance_events,
       },
 
-      mandatory_expenses: scenario.mandatory_expenses,
-      discretionary_expenses: scenario.discretionary_expenses,
+      
 
       process_tax: () => {
         try {

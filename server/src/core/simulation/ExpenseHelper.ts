@@ -119,12 +119,15 @@ export function calculate_detailed_expense_amount(
   currentYear: number,
   inflationFactor: number
 ): number {
-  // 计算基础金额（
+  console.log("event", event);
+
   let amount = event.inflation_adjusted
     ? event.initial_amount * (1 + inflationFactor)
     : event.initial_amount;
 
+  console.log("amount", amount);
   // 检查事件是否活跃
+  console.log("is_event_active", is_event_active(event, currentYear));
   if (!is_event_active(event, currentYear)) {
     // 如果事件不活跃，将计算的金额保存在event.amount中，但返回0
     event.amount = amount;
@@ -142,10 +145,12 @@ export function calculate_detailed_expense_amount(
     }
     event.amount = amount + changeAmount;
   } else if (event.change_type === ChangeType.PERCENTAGE) {
+    console.log("我们正在调用percentage变化");
     //!百分比变化，如果需要通货膨胀调整也应用到变化金额
     amount *= 1 + event.expected_annual_change.sample();
+    console.log("此时的amount是，但我们还没有考虑inflation factor", amount);
     if (event.inflation_adjusted) {
-      amount *= inflationFactor;
+      amount *= 1 + inflationFactor;
     }
     event.amount = amount;
   }
@@ -202,10 +207,12 @@ export function withdraw_from_investments(
   let totalIncome = 0;
   let early_withdrawal_penalty = 0;
 
+  console.log("我们正在调用withdraw_from_investments");
   // Go through the withdrawal strategy in order
   for (const investmentId of state.expense_withrawal_strategy || []) {
     if (remainingAmount <= 0) break;
 
+    console.log("我们正在处理investmentId", investmentId);
     // Look for the investment in all account types
     let investment: Investment | undefined;
     let accountType: TaxStatus | undefined;
@@ -228,11 +235,14 @@ export function withdraw_from_investments(
           accountMap = state.accounts.after_tax;
           break;
       }
+      console.log("accountMap", accountMap);
 
       const account = accountMap.get(investmentId);
       if (account) {
         investment = account;
         accountType = type;
+        console.log("investment", investment);
+        console.log("accountType", accountType);
         break;
       }
     }
@@ -244,6 +254,9 @@ export function withdraw_from_investments(
     //这一部分是用来计算capital gain的
     const currentValue = investment.get_value();
     const purchasePrice = investment.get_cost_basis?.() || 0;
+    console.log("currentValue", currentValue);
+    console.log("purchasePrice", purchasePrice);
+
 
     // Calculate how much to withdraw from this investment
     const amountToWithdraw = Math.min(currentValue, remainingAmount);

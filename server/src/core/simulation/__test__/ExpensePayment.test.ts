@@ -111,17 +111,6 @@ eventSeries:
     userFraction: 0.5
     discretionary: false
 
-  - name: vacation
-    start: {type: fixed, value: 2025}
-    duration: {type: fixed, value: 40}
-    type: expense
-    initialAmount: 1200
-    changeAmtOrPct: amount
-    changeDistribution: {type: fixed, value: 0}
-    inflationAdjusted: true
-    userFraction: 0.6
-    discretionary: true
-
   - name: streaming services
     start: {type: fixed, value: 2025}
     duration: {type: fixed, value: 40}
@@ -131,6 +120,17 @@ eventSeries:
     changeDistribution: {type: fixed, value: 0}
     inflationAdjusted: true
     userFraction: 1.0
+    discretionary: true
+
+  - name: vacation
+    start: {type: fixed, value: 2025}
+    duration: {type: fixed, value: 40}
+    type: expense
+    initialAmount: 1200
+    changeAmtOrPct: amount
+    changeDistribution: {type: fixed, value: 0}
+    inflationAdjusted: true
+    userFraction: 0.6
     discretionary: true
 
   - name: my investments
@@ -172,19 +172,17 @@ const mongodb_addr = "mongodb://127.0.0.1:27017/phreddit_test";
 let mongodb;
 
 beforeAll(async () => {
-    await mongoose.connect(mongodb_addr, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-    });
+  await mongoose.connect(mongodb_addr, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
 
-    mongodb = mongoose.connection;
-
-
+  mongodb = mongoose.connection;
 });
 
 afterAll(async () => {
-    await mongoose.connection.dropDatabase();
-    await mongoose.connection.close();
+  await mongoose.connection.dropDatabase();
+  await mongoose.connection.close();
 });
 
 // describe("Scenario creation test", () => {
@@ -201,13 +199,18 @@ afterAll(async () => {
 //   });
 // });
 
-
 describe("Testing Simulation State", () => {
   it("should pay mandatory expense", async () => {
     const scenario = create_scenario(scenarioRaw);
-    console.log("scenario create successfully");
     const state = await create_simulation_state(scenario);
-    console.log("state", state);
+
+    console.log("mandatory_expenses", state.mandatory_expenses);
+    //查看mandatory_expenses的expected_annual_change
+    for (const expense of state.mandatory_expenses) {
+      console.log("expense", expense.expected_annual_change.sample());
+    }
+    const result = pay_mandatory_expenses(state);
+    console.log("result", result);
   });
 });
 

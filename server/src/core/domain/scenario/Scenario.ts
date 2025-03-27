@@ -20,6 +20,7 @@ import {
   get_mandatory_expenses,
   SpendingEvent,
 } from "../../simulation/ExpenseHelper";
+import { copyFileSync } from "fs";
 
 function parse_state(state: string) {
   switch (state) {
@@ -188,6 +189,40 @@ function parse_events(
   return events;
 }
 
+export function sort_expenses_by_strategy(
+  expenses: SpendingEvent[],
+  strategy: string[]
+): SpendingEvent[] {
+  const priorityMap = new Map<string, number>();
+
+  strategy.forEach((name, index) => {
+    priorityMap.set(name, index);
+  });
+
+  return [...expenses].sort((a, b) => {
+    const priorityA = priorityMap.has(a.name)
+      ? priorityMap.get(a.name)!
+      : Number.MAX_SAFE_INTEGER;
+    const priorityB = priorityMap.has(b.name)
+      ? priorityMap.get(b.name)!
+      : Number.MAX_SAFE_INTEGER;
+    return priorityA - priorityB;
+  });
+}
+
+function get_sorted_discretionary_expenses(
+  events: Event[],
+  strategy: string[]
+): SpendingEvent[] {
+
+  const unsorted_discretionary_expenses = get_discretionary_expenses(events);
+  console.log(
+    "unsorted_discretionary_expenses",
+    unsorted_discretionary_expenses
+  );
+  return sort_expenses_by_strategy(unsorted_discretionary_expenses, strategy);
+}
+
 export type InvestmentRaw = {
   investmentType: InvestmentTypeRaw;
   value: number;
@@ -308,7 +343,10 @@ export function create_scenario(scenario_raw: ScenarioRaw): Scenario {
 
     const events = parse_events(scenario_raw.eventSeries);
     const mandatory_expenses = get_mandatory_expenses(events);
-    const discretionary_expenses = get_discretionary_expenses(events);
+    const discretionary_expenses = get_sorted_discretionary_expenses(
+      events,
+      scenario_raw.spendingStrategy
+    );
 
     const inflation_assumption: RandomGenerator = parse_inflation_assumption(
       scenario_raw.inflationAssumption
