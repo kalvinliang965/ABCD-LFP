@@ -12,7 +12,7 @@ import {
 import { create_investment, Investment } from "../investment/Investment";
 import { Event, process_event_dependencies } from "../event/Event";
 import create_income_event from "../event/IncomeEvent";
-import create_expense_event from "../event/ExpenseEvent";
+import create_expense_event, { ExpenseEvent } from "../event/ExpenseEvent";
 import create_investment_event from "../event/InvestmentEvent";
 import create_rebalance_event from "../event/RebalanceEvent";
 import { SpendingEvent } from "../../simulation/ExpenseHelper";
@@ -31,6 +31,7 @@ function parse_state(state: string) {
 }
 
 function parse_martial_status(status: string) {
+  
   switch (status) {
     case "individual":
       return TaxFilingStatus.SINGLE;
@@ -51,6 +52,7 @@ function parse_birth_years(birthYears: Array<number>): Array<number> {
   return [user_birth_year, spouse_birth_year];
 }
 
+//! this function expect a array of Map<string, any>, if used for other type, it will throw error
 function parse_life_expectancy(
   lifeExpectancy: Array<Map<string, any>>
 ): Array<number> {
@@ -163,10 +165,17 @@ function parse_events(
     // Process dependencies to resolve start years that depend on other events
     process_event_dependencies(rawEvents);
 
+
     // Process each type of event
     events = rawEvents.map((rawEvent) => {
+      console.log("rawEvent 可以正确进入 rawEvent 状态如下", rawEvent);
+      console.log(
+        "rawEvent.type 可以正确进入 rawEvent.type 状态如下",
+        rawEvent.type
+      );
       switch (rawEvent.type) {
         case "income":
+          console.log("即将进入 create_income_event 状态");
           return create_income_event(rawEvent as IncomeEventRaw);
         case "expense":
           return create_expense_event(rawEvent as ExpenseEventRaw);
@@ -268,10 +277,6 @@ export interface Scenario {
   spouse_life_expectancy?: number;
   investments: Array<Investment>;
   event_series: any;
-  discretionary_expenses: SpendingEvent[];
-  mandatory_expenses: SpendingEvent[];
-  get_discretionary_expenses(): SpendingEvent[];
-  get_mandatory_expenses(): SpendingEvent[];
   inflation_assumption: RandomGenerator;
   after_tax_contribution_limit: number;
   spending_strategy: Array<string>;
@@ -295,7 +300,10 @@ export function create_scenario(scenario_raw: ScenarioRaw): Scenario {
     );
     const [user_life_expectancy, spouse_life_expectancy] =
       parse_life_expectancy(scenario_raw.lifeExpectancy);
-    const investments: Array<Investment> = Array.from(scenario_raw.investments).map(
+
+    const investments: Array<Investment> = Array.from(
+      scenario_raw.investments
+    ).map(
       (investment: InvestmentRaw): Investment => create_investment(investment)
     );
 
@@ -327,15 +335,6 @@ export function create_scenario(scenario_raw: ScenarioRaw): Scenario {
       spouse_life_expectancy,
       investments,
       event_series: events,
-      discretionary_expenses: [],
-      mandatory_expenses: [],
-      //? 在使用get 方法后是不是代表这我们无法修改其中的值？
-      get_discretionary_expenses: function () {
-        return this.discretionary_expenses;
-      },
-      get_mandatory_expenses: function () {
-        return this.mandatory_expenses;
-      },
       inflation_assumption,
       after_tax_contribution_limit,
       spending_strategy,

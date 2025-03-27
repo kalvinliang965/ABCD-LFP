@@ -3,12 +3,13 @@ import { Scenario } from "../domain/scenario/Scenario";
 //import { TaxStatus } from "../Enums";
 import { Investment } from "../domain/investment/Investment";
 import { getRMDFactorForAge } from "../../services/RMDScraper";
+import { rmd_urls, rmd_config } from "../../config/rmd";
 
 /**
  * Get the RMD distribution period for a given age
  */
 async function get_distribution_period(age: number): Promise<number> {
-  return await getRMDFactorForAge(age);
+  return await getRMDFactorForAge(age, rmd_urls.RMD_PUBLICATION);
 }
 
 /**
@@ -33,7 +34,7 @@ export default async function process_rmds(
   // Only process RMDs for the user (not spouse)
   const userAge = state.user.get_age();
   const userAlive = state.user.is_alive();
-  const rmdStartAge = 72; // Current IRS rule (as of 2023)
+  const rmdStartAge = rmd_config.START_AGE; // Use the value from config
   
   // Check if the user is alive and old enough for RMD
   if (!userAlive || userAge < rmdStartAge) {

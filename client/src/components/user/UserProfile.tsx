@@ -90,6 +90,11 @@ const UserProfile: React.FC = () => {
   const [yamlFileName, setYamlFileName] = useState<string>("");
   const [yamlContent, setYamlContent] = useState<string>("");
 
+  // Add these state variables back
+  const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
+  const { isOpen: isEditModalOpen, onOpen: onEditModalOpen, onClose: onEditModalClose } = useDisclosure();
+  const [editScenarioName, setEditScenarioName] = useState("");
+
   // Colors
   const cardBg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
@@ -317,6 +322,17 @@ const UserProfile: React.FC = () => {
     onShareScenarioOpen();
   };
 
+  // Add this function to handle edit button clicks
+  const handleEditScenario = (id: string) => {
+    // Find the scenario to edit
+    const scenarioToEdit = user?.scenarios.find(s => s._id === id);
+    if (scenarioToEdit) {
+      setSelectedScenarioId(id);
+      setEditScenarioName(scenarioToEdit.name);
+      onEditModalOpen();
+    }
+  };
+
   // Show loading state while fetching user data
   if (isLoading) {
     return (
@@ -445,6 +461,7 @@ const UserProfile: React.FC = () => {
                             size="sm"
                             colorScheme="green"
                             variant="ghost"
+                            onClick={() => handleEditScenario(scenario._id)}
                           />
                         </HStack>
                       </Flex>
@@ -650,6 +667,41 @@ const UserProfile: React.FC = () => {
             </Button>
             <Button colorScheme="blue" onClick={handleShareScenario}>
               Share
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Edit Scenario Modal */}
+      <Modal isOpen={isEditModalOpen} onClose={onEditModalClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Edit Scenario</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text mb={4}>
+              The following is the scenario will be implementation:
+            </Text>
+            <VStack align="start" spacing={2} pl={4}>
+              <Text>• Change the scenario name</Text>
+              <Text>• Modify financial parameters</Text>
+              <Text>• Update investment allocations</Text>
+              <Text>• Adjust retirement goals</Text>
+            </VStack>
+            <FormControl mt={4}>
+              <FormLabel>Scenario Name</FormLabel>
+              <Input 
+                value={editScenarioName}
+                onChange={(e) => setEditScenarioName(e.target.value)}
+              />
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onEditModalClose}>
+              Cancel
+            </Button>
+            <Button colorScheme="blue" onClick={onEditModalClose}>
+              Close
             </Button>
           </ModalFooter>
         </ModalContent>
