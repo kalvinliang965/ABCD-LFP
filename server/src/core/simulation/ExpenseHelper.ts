@@ -128,7 +128,7 @@ export function calculate_detailed_expense_amount(
   currentYear: number,
   inflationFactor: number
 ): number {
-  // 计算基础金额（根据通货膨胀调整）
+  // 计算基础金额（
   let amount = event.inflation_adjusted
     ? event.initial_amount * inflationFactor
     : event.initial_amount;
@@ -168,7 +168,7 @@ export function calculate_detailed_expense_amount(
  * @param expenses The list of discretionary expenses
  * @param strategy The spending strategy (ordered list of expense names)
  * @returns Sorted list of expenses
-*/
+ */
 export function sort_expenses_by_strategy(
   expenses: SpendingEvent[],
   strategy: string[]
@@ -180,11 +180,14 @@ export function sort_expenses_by_strategy(
   });
 
   return [...expenses].sort((a, b) => {
-    const priorityA = priorityMap.has(a.name) ? priorityMap.get(a.name)! : Number.MAX_SAFE_INTEGER;
-    const priorityB = priorityMap.has(b.name) ? priorityMap.get(b.name)! : Number.MAX_SAFE_INTEGER;
+    const priorityA = priorityMap.has(a.name)
+      ? priorityMap.get(a.name)!
+      : Number.MAX_SAFE_INTEGER;
+    const priorityB = priorityMap.has(b.name)
+      ? priorityMap.get(b.name)!
+      : Number.MAX_SAFE_INTEGER;
     return priorityA - priorityB;
   });
-
 }
 
 /**

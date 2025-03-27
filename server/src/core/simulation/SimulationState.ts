@@ -47,9 +47,6 @@ export interface SimulationState {
   setup_year(): void;
   get_current_year(): number;
   get_financial_goal(): number;
-  //! Chen added, but not sure should be here or not
-  get_discretionary_expenses(): SpendingEvent[];
-  get_mandatory_expenses(): SpendingEvent[];
   get_early_withdrawal_penalty(): number;
   incr_early_withdrawal_penalty(amt: number): void;
   federal_tax_service: FederalTaxService;
@@ -69,7 +66,6 @@ export interface SimulationState {
   spending_strategy: Array<string>;
   expense_withrawal_strategy: Array<string>;
   process_events(): void;
-  get_active_events(): Event[];
   process_tax(): void;
   cash: Investment;
 }
@@ -306,13 +302,6 @@ export async function create_simulation_state(
         rebalance: rebalance_events,
       },
 
-      // Event processing methods
-      get_active_events: function () {
-        return this.events.filter((e) =>
-          is_event_active(e, this.get_current_year())
-        );
-      },
-
       process_events: function () {
         const year = this.get_current_year();
 
@@ -391,13 +380,6 @@ export async function create_simulation_state(
         state_tax_service.adjust_for_inflation(inflation_factor);
 
         // 更新scenario中的支出列
-        //! Chen added, but not sure should be here or not
-        if (scenario.discretionary_expenses !== undefined) {
-          scenario.discretionary_expenses = get_discretionary_expenses(state);
-        }
-        if (scenario.mandatory_expenses !== undefined) {
-          scenario.mandatory_expenses = get_mandatory_expenses(state);
-        }
 
         // type check
         for (const [id, investment] of non_retirement.entries()) {
@@ -426,9 +408,6 @@ export async function create_simulation_state(
         }
       },
 
-      //! Chen added, but not sure should be here or not
-      get_discretionary_expenses: () => get_discretionary_expenses(state),
-      get_mandatory_expenses: () => get_mandatory_expenses(state),
     };
 
     return state;
