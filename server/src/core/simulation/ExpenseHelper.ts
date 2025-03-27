@@ -128,7 +128,7 @@ export function calculate_detailed_expense_amount(
   currentYear: number,
   inflationFactor: number
 ): number {
-  // 计算基础金额（
+  // 计算基础金额（ 
   let amount = event.inflation_adjusted
     ? event.initial_amount * inflationFactor
     : event.initial_amount;
@@ -143,7 +143,6 @@ export function calculate_detailed_expense_amount(
   //此时的事件应该是活跃的，所以需要计算每年的变化
   if (event.change_type === ChangeType.FIXED) {
     //!固定金额变化，如果需要通货膨胀调整也应用到变化金额
-    //? 可能计算了两次本金、
     //! 当前并没有计算inflation factor对于增长金额的影响
     let changeAmount = event.expected_annual_change.sample();
     if (event.inflation_adjusted) {
@@ -271,6 +270,8 @@ export function withdraw_from_investments(
       );
       totalCapitalGain += capitalGain; // Add to running total of capital gains
       //! 成本价不会因为卖出而改变
+      //! 3月25日更新investment的value 明早从这里看。
+      investment.incr_value(-amountToWithdraw);
     } else if (accountType === TaxStatus.PRE_TAX) {
       // For pre-tax accounts, the entire withdrawal counts as ordinary income
       totalIncome += amountToWithdraw; // Add to running total of income

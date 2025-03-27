@@ -43,19 +43,16 @@ import { TaxStatus } from "../Enums";
  * 那么扣税导致的financial goal被破坏就不是我需要担心的问题了。
  */
 
-
 /**
  * 计算当前的现金和投资的价值
  * @param state The simulation state
  * @returns The total value of cash and investments
  */
 function calculate_current_assets(state: SimulationState): {
-  cashValue: number;
   non_retirement_accounts_value: number;
   pre_tax_retirement_accounts_value: number;
   after_tax_retirement_accounts_value: number;
 } {
-  let cashValue = state.cash.get_value();
   let non_retirement_accounts_value = 0;
   let pre_tax_retirement_accounts_value = 0;
   let after_tax_retirement_accounts_value = 0;
@@ -73,7 +70,6 @@ function calculate_current_assets(state: SimulationState): {
   }
 
   return {
-    cashValue,
     non_retirement_accounts_value,
     pre_tax_retirement_accounts_value,
     after_tax_retirement_accounts_value,
@@ -91,6 +87,7 @@ export function pay_discretionary_expenses(state: SimulationState): void {
   // SEQUENTIAL THINKING STEP 1: Get discretionary expenses for the current year
   const currentYear = state.get_current_year();
   const discretionaryExpenses = state.get_discretionary_expenses();
+  let cashValue = state.cash.get_value();
 
   //检查是否存在discretionaryExpenses
   if (discretionaryExpenses.length === 0) {
@@ -99,7 +96,6 @@ export function pay_discretionary_expenses(state: SimulationState): void {
 
   //获得当前的现金和投资的价值
   let {
-    cashValue,
     non_retirement_accounts_value,
     pre_tax_retirement_accounts_value,
     after_tax_retirement_accounts_value,
@@ -108,8 +104,13 @@ export function pay_discretionary_expenses(state: SimulationState): void {
   const financial_goal = state.get_financial_goal();
 
   //计算离打破financial goal还差多少钱
-  const available_amount = financial_goal - (cashValue + non_retirement_accounts_value + pre_tax_retirement_accounts_value + after_tax_retirement_accounts_value);
+  let available_amount =
+    financial_goal -
+    (non_retirement_accounts_value +
+      pre_tax_retirement_accounts_value +
+      after_tax_retirement_accounts_value);
 
+  //如果无论如何都会打破financial goal，那么就什么都不做
   if (available_amount <= 0) {
     return;
   }
@@ -117,36 +118,94 @@ export function pay_discretionary_expenses(state: SimulationState): void {
   // SEQUENTIAL THINKING STEP 4: Process each expense in order
   for (const expense of discretionaryExpenses) {
     // Calculate the expense amount for this year
-    const expenseAmount = calculate_detailed_expense_amount(
+    let expenseAmount = calculate_detailed_expense_amount(
       expense,
       currentYear,
       state.inflation_factor
     );
 
-    if (expenseAmount <= 0) continue; // Skip zero-amount expenses
+    if (expenseAmount <= 0) continue; // 如果完全不同掏钱的活动就跳过。
 
-    //计算支付当前discretionary expense需要的资金
-    //如果remain_amount大于0，那么就支付当前discretionary expense
-    const remain_amount = available_amount - expenseAmount;
+    //如果无论如何都会打破financial goal，那么就什么都不做
+    if (available_amount <= 0) {
+      return;
+    }
+
+    //remain_amount 表示支付当前discretionary expense后，离打破financial goal还差多少钱,可以用于迭代下一个discretionary expense
+    let remain_amount = available_amount - expenseAmount;
+
+    /**
+     * 假设你离打破financial goal还差1000，但你需要支付的价格是1200.
+     * 那么这个时候remain_amount = -200，表示你已经没有钱了，那么你就需要partial pay。
+     */
+
+    //检查是否需要partial pay
+    if (remain_amount < 0) {
+      //那么就partial pay
+      expenseAmount = available_amount;
+      remain_amount = 0;
+    }
+
+    //此算到此，的expenseAmount 有两种情况
+    // 1. expenseAmount就是event的金额
+    // 2. expenseAmount是event的金额的一部分，因为需要partial pay
+    // 但是无论是哪种情况，expenseAmount 都是当前需要支付的金额。
+
+    //先尝试使用现金支付，这样不产生任何税款。
+    //无论如何都先从cash中扣费。 不判断。但要确保cashValue !< 0
+
+    //先计算可以从cash中拿到多少， cash_amount表示从cash中扣除的金额
+
+    //假设cashValue = 1000， expenseAmount = 1200
+    //那么cash_amount = 1000
+    //那么expenseAmount = 200
+    //表示我们还需要从其他地方获取200
+
+    //假设2 cashvalue = 1200， expenseAmount = 1000
+    //那么cash_amount = 1000
+    //那么expenseAmount = 0
+    //表示我们刚好支付了当前的discretionary expense
+    //! 3月25日，明早从这里看。
+    
+    let cash_amount = Math.min(cashValue, expenseAmount);
+    cashValue -= cash_amount;
+    state.cash.incr_value(-cash_amount);
+
+    expenseAmount -= cash_amount;
+
+    //这就表示，expenseAmount < 0的情况，cash可以完全支付当前的discretionary expense
+    if (expenseAmount <= 0) continue;
+
+    //1. cash此时为0，expenseAmount 此时表示需要从其他地方获取的资金
+    //由于我们的if判断中保证了available_amount > 0，所以不会破坏财政计划，直接掏钱就好了。
+    //也不存在unfunded的情况，因为已经检查过了partial pay的情况。
+
+    const withdrawalResult = withdraw_from_investments(state, expenseAmount);
+
+    state.incr_capital_gains_income(withdrawalResult.capitalGain);
+    state.incr_ordinary_income(withdrawalResult.cur_year_income);
+    state.incr_early_withdrawal_penalty(
+      withdrawalResult.early_withdrawal_penalty
+    );
+
+    //更新available_amount
+    //获得当前的现金和投资的价值
+    let {
+      non_retirement_accounts_value,
+      pre_tax_retirement_accounts_value,
+      after_tax_retirement_accounts_value,
+    } = calculate_current_assets(state);
+
+    available_amount =
+      financial_goal -
+      (non_retirement_accounts_value +
+        pre_tax_retirement_accounts_value +
+        after_tax_retirement_accounts_value);
 
     //todo: 未完成，需要思考。3月25日
     //如果支付当前discretionary expense需要的资金大于0，就表示我可以支付当前discretionary expense
-    if (remain_amount > 0) {
-      //表示可以完全支付当前discretionary expense
-      //那么首先检查自己有没有足够的现金
-      if (cashValue >= expenseAmount) {
-        //那么就从cashValue中扣除expenseAmount
-        cashValue -= expenseAmount;
-      } else if (non_retirement_accounts_value+cashValue >= expenseAmount) {
-        //先从cash中支付所有cashValue
-        cashValue = 0;
-        //然后从non_retirement_accounts_value中扣除expenseAmount
-        non_retirement_accounts_value -= expenseAmount - cashValue;
-      } else {
-        //那么就从pre_tax_retirement_accounts_value中扣除expenseAmount
-        pre_tax_retirement_accounts_value -= expenseAmount;
-      }
-    }
-
+    //!当前实现方法有问题，我们需要从non retirement account中扣除，那么就说明我们需要遍历每一个investment event并更新。
+    //? 是否可以使用helper 中的withdraw_from_investments 来实现？
+    //* 使用cash时不需要缴税。
   }
 }
