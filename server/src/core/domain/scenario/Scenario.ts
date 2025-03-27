@@ -180,7 +180,6 @@ function parse_events(
         case "expense":
           return create_expense_event(rawEvent as ExpenseEventRaw);
         case "invest":
-          console.log("即将进入 create_investment_event 状态");
           return create_investment_event(rawEvent as InvestmentEventRaw);
         case "rebalance":
           return create_rebalance_event(rawEvent as RebalanceEventRaw);

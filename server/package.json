@@ -17,6 +17,7 @@
   "type": "commonjs",
   "description": "",
   "dependencies": {
+    "@stdlib/random-base-normal": "^0.2.1",
     "@types/cheerio": "^0.22.35",
     "@types/connect-mongo": "^3.1.2",
     "@types/express-session": "^1.18.1",
@@ -28,6 +29,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.17.1",
+    "js-yaml": "^4.1.0",
     "mongoose": "^8.12.1",
     "nodemon": "^3.1.9",
     "passport": "^0.7.0",
