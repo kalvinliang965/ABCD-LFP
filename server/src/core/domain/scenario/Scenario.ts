@@ -170,7 +170,7 @@ function parse_events(
           return create_income_event(rawEvent as IncomeEventRaw);
         case "expense":
           return create_expense_event(rawEvent as ExpenseEventRaw);
-        case "investment":
+        case "invest":
           return create_investment_event(rawEvent as InvestmentEventRaw);
         case "rebalance":
           return create_rebalance_event(rawEvent as RebalanceEventRaw);
