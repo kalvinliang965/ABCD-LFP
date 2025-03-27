@@ -233,6 +233,24 @@ export const RothConversionOptimizerForm: React.FC<RothConversionOptimizerFormPr
               </Box>
             </VStack>
             </CardBody>
+          <CardFooter
+            p={6}
+            bg={useColorModeValue("gray.50", "gray.700")}
+            borderTopWidth="1px"
+            borderColor={borderColor}
+          >
+            <Flex justifyContent="flex-end" width="100%">
+              <Button
+                colorScheme="blue"
+                size="lg"
+                onClick={onContinue}
+                px={8}
+                rightIcon={<Icon as={FiChevronRight} />}
+              >
+                Continue
+              </Button>
+            </Flex>
+          </CardFooter>
         </Card>
         </Box>
     </Box>
