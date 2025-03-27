@@ -10,11 +10,7 @@ import {
   create_state_tax_service,
 } from "../tax/StateTaxService";
 import { Event } from "../domain/event/Event";
-import {
-  get_mandatory_expenses,
-  get_discretionary_expenses,
-  SpendingEvent,
-} from "./ExpenseHelper";
+import { SpendingEvent } from "./ExpenseHelper";
 
 export type AccountMap = Map<string, Investment>;
 export type EventMap = Map<string, Event>;
@@ -68,41 +64,8 @@ export interface SimulationState {
   process_events(): void;
   process_tax(): void;
   cash: Investment;
-}
-
-// Helper Functions
-
-// Check if an event is active in the current year
-function is_event_active(event: Event, current_year: number): boolean {
-  return (
-    current_year >= event.start && current_year < event.start + event.duration
-  );
-}
-
-// Calculate the current amount for an event based on its initial amount, changes, and inflation
-function calculate_event_amount(
-  event: any,
-  initial_amount: number,
-  years_active: number,
-  inflation_factor: number
-): number {
-  let amount = initial_amount;
-
-  // Apply annual changes for each year the event has been active
-  for (let i = 0; i < years_active; i++) {
-    if (event.change_type === ChangeType.FIXED) {
-      amount += event.expected_annual_change;
-    } else if (event.change_type === ChangeType.PERCENTAGE) {
-      amount *= 1 + event.expected_annual_change;
-    }
-  }
-
-  // Apply inflation adjustment if needed
-  if (event.inflation_adjusted) {
-    amount *= inflation_factor;
-  }
-
-  return amount;
+  mandatory_expenses: SpendingEvent[];
+  discretionary_expenses: SpendingEvent[];
 }
 
 // Parse investments by tax status
@@ -197,9 +160,13 @@ export async function create_simulation_state(
 ): Promise<SimulationState> {
   try {
     const start_year: number = new Date().getFullYear();
+    console.log("start_year", start_year);
     let current_year: number = start_year;
+    console.log("current_year", current_year);
     const is_married = scenario.tax_filing_status === TaxFilingStatus.MARRIED;
+    console.log("is_married", is_married);
     let tax_filing_status = scenario.tax_filing_status;
+    console.log("tax_filing_status", tax_filing_status);
 
     // Income tracking variables
     let ordinary_income = 0;
@@ -208,27 +175,29 @@ export async function create_simulation_state(
     let after_tax_contribution = 0; // contribution to after tax account.
 
     // Process investments - scenario.investments is already processed in create_scenario
+    console.log("准备进入parse_investments");
     const [cash, non_retirement, pre_tax, after_tax] = parse_investments(
       scenario.investments
     );
-
+    console.log("parse_investments完成");
     // Organize events by type - scenario.eventSeries is already processed in create_scenario
     const [income_events, expense_events, investment_events, rebalance_events] =
       organize_events_by_type(scenario.event_series);
-
+    console.log("organize_events_by_type完成");
     let inflation_factor = scenario.inflation_assumption.sample();
+    console.log("inflation_factor", inflation_factor);
 
     // Create tax services
     const federal_tax_service = await create_federal_tax_service();
     const state_tax_service = await create_state_tax_service();
-
+    console.log("create_tax_service完成");
     // Create person details
     const user = create_person_details(
       scenario.user_birth_year,
       scenario.user_life_expectancy,
       () => current_year
     );
-
+    console.log("create_person_details完成");
     const spouse = is_married
       ? create_person_details(
           scenario.spouse_birth_year!,
@@ -236,7 +205,7 @@ export async function create_simulation_state(
           () => current_year
         )
       : undefined;
-
+    console.log("create_person_details完成");
     let early_withdrawal_penalty = 0;
     // Create the simulation state object
     const state: SimulationState = {
@@ -255,6 +224,14 @@ export async function create_simulation_state(
       incr_early_withdrawal_penalty: (amt: number) => {
         early_withdrawal_penalty += amt;
       },
+
+      process_events: () => {
+        // TODO: Process income events
+        // TODO: Process expense events
+        // TODO: Process investment events
+        // TODO: Process rebalance events
+      },
+
       // Income getters and setters
       get_tax_filing_status: () => tax_filing_status,
       get_financial_goal: () => scenario.financialGoal,
@@ -302,32 +279,8 @@ export async function create_simulation_state(
         rebalance: rebalance_events,
       },
 
-      process_events: function () {
-        const year = this.get_current_year();
-
-        // Process income events
-        for (const [_, event] of this.events_by_type.income) {
-          if (is_event_active(event, year)) {
-            const years_active = year - event.start;
-            const amount = calculate_event_amount(
-              event,
-              (event as any).initial_amount,
-              years_active,
-              this.inflation_factor
-            );
-
-            if ((event as any).social_security) {
-              this.incr_social_security_income(amount);
-            } else {
-              this.incr_ordinary_income(amount);
-            }
-          }
-        }
-
-        // TODO: Process expense events
-        // TODO: Process investment events
-        // TODO: Process rebalance events
-      },
+      mandatory_expenses: scenario.mandatory_expenses,
+      discretionary_expenses: scenario.discretionary_expenses,
 
       process_tax: () => {
         try {
@@ -407,7 +360,6 @@ export async function create_simulation_state(
           }
         }
       },
-
     };
 
     return state;

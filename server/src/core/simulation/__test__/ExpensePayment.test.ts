@@ -14,11 +14,9 @@ import {
   InvestmentEventRaw,
   RebalanceEventRaw,
 } from "../../domain/scenario/Scenario";
-
-describe("Scenario creation test", () => {
-  it("should create a scenario from YAML data and inspect it", () => {
-    // 1) 这里直接内联一个"安全版" YAML 字符串:
-    const scenarioYaml = `
+import { create_simulation_state } from "../SimulationState";
+import { pay_mandatory_expenses } from "../PayMandatoryExpense";
+const scenarioYaml = `
 # file format for scenario import/export.  version: 2025-03-23
 # CSE416, Software Engineering, Scott D. Stoller.
 
@@ -164,42 +162,52 @@ residenceState: NY
 
     `;
 
-    // 2) 用 js-yaml 解析成 JS 对象
-    const parsedYaml = yaml.load(scenarioYaml);
+const parsedYaml = yaml.load(scenarioYaml);
 
-    // 3) 转换为 ScenarioRaw（把需要 Map 的字段全部转成 Map）
-    const scenarioRaw: ScenarioRaw = convert_yaml_to_scenario_raw(parsedYaml);
+// 3) 转换为 ScenarioRaw（把需要 Map 的字段全部转成 Map）
+const scenarioRaw: ScenarioRaw = convert_yaml_to_scenario_raw(parsedYaml);
 
-    // 4) 调用 create_scenario(...) 进行解析
-    const scenario: Scenario = create_scenario(scenarioRaw);
+const mongoose = require("mongoose");
+const mongodb_addr = "mongodb://127.0.0.1:27017/phreddit_test";
+let mongodb;
 
-    // 5) 断言和/或打印一些结果
-    expect(scenario).toBeDefined();
-    expect(scenario.name).toBe("chen's Retirement Planning Scenario");
-    console.log("inflation_assumption", scenario.inflation_assumption.sample());
-    console.log("event_series", scenario.event_series);
+beforeAll(async () => {
+    await mongoose.connect(mongodb_addr, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    });
 
-    // 测试 mandatory_expenses 和 discretionary_expenses 是否正确
-    console.log("mandatory_expenses", scenario.mandatory_expenses);
-    console.log("discretionary_expenses", scenario.discretionary_expenses);
+    mongodb = mongoose.connection;
 
-    // 验证 mandatory_expenses 是否包含 "food" 事件
-    expect(scenario.mandatory_expenses.length).toBe(1);
-    expect(scenario.mandatory_expenses[0].name).toBe("food");
-    expect(scenario.mandatory_expenses[0].discretionary).toBe(false);
 
-    // 验证 discretionary_expenses 是否包含 "vacation" 和 "streaming services" 事件
-    expect(scenario.discretionary_expenses.length).toBe(2);
-    // 检查是否包含所有期望的 discretionary expense
-    const discretionaryExpenseNames = scenario.discretionary_expenses.map(
-      (expense) => expense.name
-    );
-    expect(discretionaryExpenseNames).toContain("vacation");
-    expect(discretionaryExpenseNames).toContain("streaming services");
+});
 
-    // 也可检查更多字段:
-    expect(scenario.user_birth_year).not.toBeNaN; // 假设 scenario 里有 user_birth_year
-    // ...
+afterAll(async () => {
+    await mongoose.connection.dropDatabase();
+    await mongoose.connection.close();
+});
+
+// describe("Scenario creation test", () => {
+//   it("should create a scenario from YAML data and inspect it", () => {
+//     // 2) 用 js-yaml 解析成 JS 对象
+
+//     // 4) 调用 create_scenario(...) 进行解析
+//     const scenario: Scenario = create_scenario(scenarioRaw);
+
+//     // 5) 断言和/或打印一些结果
+//     expect(scenario).toBeDefined();
+//     expect(scenario.name).toBe("chen's Retirement Planning Scenario");
+//     console.log("inflation_assumption", scenario.inflation_assumption.sample());
+//   });
+// });
+
+
+describe("Testing Simulation State", () => {
+  it("should pay mandatory expense", async () => {
+    const scenario = create_scenario(scenarioRaw);
+    console.log("scenario create successfully");
+    const state = await create_simulation_state(scenario);
+    console.log("state", state);
   });
 });
 

@@ -41,7 +41,7 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   // SEQUENTIAL THINKING STEP 1: 获取已预处理的强制性支出列表
   // 这些支出已经按当前年份进行了筛选，并已经应用了通货膨胀调整
   const currentYear = state.get_current_year();
-  const mandatoryExpenses = state.get_mandatory_expenses();
+  const mandatoryExpenses = state.mandatory_expenses;
 
   // totalMandatoryExpenseAmount 是所有强制性支出的总和
   let totalMandatoryExpenseAmount = 0;
