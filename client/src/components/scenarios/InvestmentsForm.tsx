@@ -76,7 +76,7 @@ export type InvestmentsConfig = {
   investments: Investment[];
 };
 
-interface InvestmentsFormProps {
+export interface InvestmentsFormProps {
   investmentsConfig: InvestmentsConfig;
   onChangeInvestmentsConfig: (config: InvestmentsConfig) => void;
   onBack: () => void;
@@ -85,7 +85,7 @@ interface InvestmentsFormProps {
 
 export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
   investmentsConfig,
-  onChangeInvestmentsConfig,
+  onChangeInvestmentsConfig: onChangeConfig,
   onBack,
   onContinue,
 }) => {
@@ -177,7 +177,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
       id: Date.now().toString(), // Use a timestamp as a simple ID
     };
 
-    onChangeInvestmentsConfig({
+    onChangeConfig({
       investments: [...investmentsConfig.investments, newInvestmentWithId],
     });
 
@@ -198,7 +198,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
   };
 
   const handle_remove_investment = (id: string) => {
-    onChangeInvestmentsConfig({
+    onChangeConfig({
       investments: investmentsConfig.investments.filter(
         (investment) => investment.id !== id
       ),

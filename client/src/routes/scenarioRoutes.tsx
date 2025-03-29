@@ -3,8 +3,16 @@ import { Route, Navigate, useNavigate } from "react-router-dom";
 import { ProtectedRoute } from "../common";
 import { Layout } from "../layouts";
 import MyScenariosPage from "../pages/scenarios/MyScenariosPage";
-import { NewScenarioPage } from "../pages/scenarios/NewScenarioPage";
-import { Box, Button, Heading, Text, VStack, HStack, useColorModeValue } from "@chakra-ui/react";
+import NewScenarioPage from "../pages/scenarios/NewScenarioPage";
+import {
+  Box,
+  Button,
+  Heading,
+  Text,
+  VStack,
+  HStack,
+  useColorModeValue,
+} from "@chakra-ui/react";
 import { FaPlus } from "react-icons/fa";
 
 // Scenarios List Component
@@ -37,7 +45,8 @@ const ScenariosList = () => {
         >
           <VStack spacing={4} align="stretch">
             <Text color="gray.600">
-              You haven't created any scenarios yet. Click the "New Scenario" button to get started.
+              You haven't created any scenarios yet. Click the "New Scenario"
+              button to get started.
             </Text>
           </VStack>
         </Box>

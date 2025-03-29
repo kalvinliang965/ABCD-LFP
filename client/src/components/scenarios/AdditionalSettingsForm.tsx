@@ -81,16 +81,16 @@ export type AdditionalSettingsConfig = {
   stateOfResidence: StateOfResidence;
 };
 
-interface AdditionalSettingsFormProps {
+export interface AdditionalSettingsFormProps {
   additionalSettings: AdditionalSettingsConfig;
-  onChangeAdditionalSettings: (config: AdditionalSettingsConfig) => void;
+  onChangeAdditionalSettings: (settings: AdditionalSettingsConfig) => void;
   onBack: () => void;
   onContinue: () => void;
 }
 
 export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
   additionalSettings,
-  onChangeAdditionalSettings,
+  onChangeAdditionalSettings: onChangeSettings,
   onBack,
   onContinue,
 }) => {
@@ -129,14 +129,14 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
         return;
     }
 
-    onChangeAdditionalSettings({
+    onChangeSettings({
       ...additionalSettings,
       inflationConfig: updatedConfig,
     });
   };
 
   const handle_change_financial_goal = (_: string, value: number) => {
-    onChangeAdditionalSettings({
+    onChangeSettings({
       ...additionalSettings,
       financialGoal: {
         value: Math.max(0, value), // Ensure non-negative
@@ -145,7 +145,7 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
   };
 
   const handle_change_state = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onChangeAdditionalSettings({
+    onChangeSettings({
       ...additionalSettings,
       stateOfResidence: e.target.value as StateOfResidence,
     });
@@ -170,7 +170,7 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
                 step={0.1}
                 value={inflationConfig.value}
                 onChange={(_, value) =>
-                  onChangeAdditionalSettings({
+                  onChangeSettings({
                     ...additionalSettings,
                     inflationConfig: {
                       ...inflationConfig,
@@ -205,7 +205,7 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
                   step={0.1}
                   value={inflationConfig.min}
                   onChange={(_, value) =>
-                    onChangeAdditionalSettings({
+                    onChangeSettings({
                       ...additionalSettings,
                       inflationConfig: {
                         ...inflationConfig,
@@ -236,7 +236,7 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
                   step={0.1}
                   value={inflationConfig.max}
                   onChange={(_, value) =>
-                    onChangeAdditionalSettings({
+                    onChangeSettings({
                       ...additionalSettings,
                       inflationConfig: {
                         ...inflationConfig,
@@ -272,7 +272,7 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
                   step={0.1}
                   value={inflationConfig.mean}
                   onChange={(_, value) =>
-                    onChangeAdditionalSettings({
+                    onChangeSettings({
                       ...additionalSettings,
                       inflationConfig: {
                         ...inflationConfig,
@@ -305,7 +305,7 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
                   step={0.1}
                   value={inflationConfig.standardDeviation}
                   onChange={(_, value) =>
-                    onChangeAdditionalSettings({
+                    onChangeSettings({
                       ...additionalSettings,
                       inflationConfig: {
                         ...inflationConfig,
