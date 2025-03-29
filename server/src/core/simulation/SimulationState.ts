@@ -10,7 +10,7 @@ import {
   create_state_tax_service,
 } from "../tax/StateTaxService";
 import { Event } from "../domain/event/Event";
-import { SpendingEvent } from "./ExpenseHelper";
+import { SpendingEvent, update_expense_amount } from "./ExpenseHelper";
 
 export type AccountMap = Map<string, Investment>;
 export type EventMap = Map<string, Event>;
@@ -109,6 +109,16 @@ function parse_investments(
     after_tax_account,
   ];
 }
+
+//更新所有Expense的amount
+function update_all_expenses(state: SimulationState): void {
+  for (const expense of state.discretionary_expenses) {
+    update_expense_amount(expense, state.get_current_year(), state.inflation_factor);
+  }
+}
+
+//更新mandatory和discretionary
+
 
 // Organize events by type into maps for easier access
 function organize_events_by_type(

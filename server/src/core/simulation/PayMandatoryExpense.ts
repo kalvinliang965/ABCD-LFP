@@ -41,8 +41,7 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   // SEQUENTIAL THINKING STEP 1: 获取已预处理的强制性支出列表
   // 这些支出已经按当前年份进行了筛选，并已经应用了通货膨胀调整
   const currentYear = state.get_current_year();
-  console.log("currentYear", currentYear);
-  const mandatoryExpenses = state.mandatory_expenses;
+  const mandatoryExpenses = state.mandatory_expenses; //这个得到的是没有更新amount的mandatoryExpenses
 
   // totalMandatoryExpenseAmount 是所有强制性支出的总和
   let totalMandatoryExpenseAmount = 0;
@@ -51,8 +50,7 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   for (const expense of mandatoryExpenses) {
     totalMandatoryExpenseAmount += calculate_detailed_expense_amount(
       expense,
-      currentYear,
-      state.inflation_factor
+      currentYear
     );
   }
 
@@ -64,7 +62,7 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   console.log("此时我们有cashValue", cashValue);
   const totalWithdrawalAmount = Math.max(
     0,
-    totalMandatoryExpenseAmount - cashValue
+    (totalMandatoryExpenseAmount - cashValue)
   );
 
   console.log("那么我们totalWithdrawalAmount需要", totalWithdrawalAmount);
@@ -81,12 +79,6 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
     const withdrawalResult = withdraw_from_investments(
       state,
       totalWithdrawalAmount
-    );
-
-    state.incr_capital_gains_income(withdrawalResult.capitalGain);
-    state.incr_ordinary_income(withdrawalResult.cur_year_income);
-    state.incr_early_withdrawal_penalty(
-      withdrawalResult.early_withdrawal_penalty
     );
     //在这种情况下，我们无论如何都会更新capital_gains_income和ordinary_income还有early_withdrawal_penalty| 但是否破产取决于unfunded是否为0
     return withdrawalResult.unfunded == 0;

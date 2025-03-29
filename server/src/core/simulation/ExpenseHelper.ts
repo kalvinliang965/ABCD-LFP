@@ -104,10 +104,46 @@ export function get_discretionary_expenses(events: Event[]): SpendingEvent[] {
   return discretionaryExpenses;
 }
 
+//这个方法更新出来的amount只会计算inflation_adjusted的值，不会计算change_type的值
+//!这个函数每年只会被调用一次，调用完后amount中存储的值是当前年份的值
+//正确了！
+export function update_expense_amount(
+  event: SpendingEvent,
+  currentYear: number,
+  inflationFactor: number
+): void {
+  let amount = event.inflation_adjusted
+    ? event.initial_amount * (1 + inflationFactor)
+    : event.initial_amount;
+
+  event.amount = amount;
+
+  //如果今年这个事件是active的，那么就更新amount
+  if (is_event_active(event, currentYear)) {
+    if (event.change_type === ChangeType.FIXED ) {
+      //!固定金额变化，如果需要通货膨胀调整也应用到变化金额
+      //! 当前并没有计算inflation factor对于增长金额的影响
+      let changeAmount = event.expected_annual_change.sample();
+      if (event.inflation_adjusted) {
+        changeAmount *= 1+inflationFactor;
+      }
+      event.amount = amount + changeAmount;
+    } else if (event.change_type === ChangeType.PERCENTAGE) {
+      //!百分比变化，如果需要通货膨胀调整也应用到变化金额
+      amount *= 1 + event.expected_annual_change.sample();
+      if (event.inflation_adjusted) {
+        amount *= 1 + inflationFactor;
+      }
+      event.amount = amount;
+    }
+  }
+}
+
 /**
  * 计算给定expense在当前年份的金额，考虑通货膨胀调整
  * 应该是正确的了，因为expect_annual_change已经只在乎增长的值而不是初始+增长
  * 这个function只会计算一个event的金额，不会计算所有event的金额
+ * !需要拆分成为update_expense_amount和calculate_detailed_expense_amount
  *
  * @param event The expense event
  * @param currentYear The current simulation year
@@ -117,45 +153,14 @@ export function get_discretionary_expenses(events: Event[]): SpendingEvent[] {
 export function calculate_detailed_expense_amount(
   event: SpendingEvent,
   currentYear: number,
-  inflationFactor: number
 ): number {
-  console.log("event", event);
+  let amount = event.amount;
 
-  let amount = event.inflation_adjusted
-    ? event.initial_amount * (1 + inflationFactor)
-    : event.initial_amount;
-
-  console.log("amount", amount);
-  // 检查事件是否活跃
-  console.log("is_event_active", is_event_active(event, currentYear));
   if (!is_event_active(event, currentYear)) {
-    // 如果事件不活跃，将计算的金额保存在event.amount中，但返回0
-    event.amount = amount;
-    event.remaining_amount = amount;
     return 0;
   }
 
-  //此时的事件应该是活跃的，所以需要计算每年的变化
-  if (event.change_type === ChangeType.FIXED) {
-    //!固定金额变化，如果需要通货膨胀调整也应用到变化金额
-    //! 当前并没有计算inflation factor对于增长金额的影响
-    let changeAmount = event.expected_annual_change.sample();
-    if (event.inflation_adjusted) {
-      changeAmount *= inflationFactor;
-    }
-    event.amount = amount + changeAmount;
-  } else if (event.change_type === ChangeType.PERCENTAGE) {
-    console.log("我们正在调用percentage变化");
-    //!百分比变化，如果需要通货膨胀调整也应用到变化金额
-    amount *= 1 + event.expected_annual_change.sample();
-    console.log("此时的amount是，但我们还没有考虑inflation factor", amount);
-    if (event.inflation_adjusted) {
-      amount *= 1 + inflationFactor;
-    }
-    event.amount = amount;
-  }
-
-  return amount;
+  return amount * event.user_fraction;
 }
 
 /**
@@ -198,16 +203,9 @@ export function withdraw_from_investments(
   amountNeeded: number
 ): {
   unfunded: number;
-  capitalGain: number;
-  cur_year_income: number;
-  early_withdrawal_penalty: number;
 } {
   let remainingAmount = amountNeeded;
-  let totalCapitalGain = 0;
-  let totalIncome = 0;
-  let early_withdrawal_penalty = 0;
 
-  console.log("我们正在调用withdraw_from_investments");
   // Go through the withdrawal strategy in order
   for (const investmentId of state.expense_withrawal_strategy || []) {
     if (remainingAmount <= 0) break;
@@ -235,14 +233,12 @@ export function withdraw_from_investments(
           accountMap = state.accounts.after_tax;
           break;
       }
-      console.log("accountMap", accountMap);
 
       const account = accountMap.get(investmentId);
+      console.log("account", account);
       if (account) {
         investment = account;
         accountType = type;
-        console.log("investment", investment);
-        console.log("accountType", accountType);
         break;
       }
     }
@@ -254,32 +250,51 @@ export function withdraw_from_investments(
     //这一部分是用来计算capital gain的
     const currentValue = investment.get_value();
     const purchasePrice = investment.get_cost_basis?.() || 0;
-    console.log("currentValue", currentValue);
-    console.log("purchasePrice", purchasePrice);
-
 
     // Calculate how much to withdraw from this investment
+    console.log("此时currentValue", currentValue);
+    console.log("此时remainingAmount", remainingAmount);
     const amountToWithdraw = Math.min(currentValue, remainingAmount);
-    if (amountToWithdraw <= 0) continue;
+    remainingAmount -= amountToWithdraw;
+    if (amountToWithdraw <= 0) continue; //这表示从这个账户下拿不出钱
+    console.log("我们需要取出amountToWithdraw", amountToWithdraw);
 
     // Calculate the fraction of the investment being sold
     const fraction = amountToWithdraw / currentValue;
+    console.log("计算我这个用户需要掏出fraction", fraction);
+
+    console.log("此时accountType", accountType);
+    //我们希望是non-retirement account
 
     // Handle tax implications based on the account type
     if (accountType === TaxStatus.NON_RETIREMENT) {
       // For non-retirement accounts, calculate capital gains
       //! capital gain cannot be negative
+
+      //此时的fraction * purchasePrice 是用户实际掏出的钱
+      console.log("此时fraction", fraction);
+      console.log("此时的currentValue 是", currentValue);
+      console.log("此时的purchasePrice 是", purchasePrice);
+      console.log(
+        "fraction * (currentValue - purchasePrice)",
+        fraction * (currentValue - purchasePrice)
+      );
+      //计算capital gain的公式是 sold fraction * （currentValue - purchasePrice）
       const capitalGain = Math.max(
-        amountToWithdraw - fraction * purchasePrice, //提取金额 - fraction * 成本价
+        fraction * (currentValue - purchasePrice), //提取金额 - fraction * 成本价
         0
       );
-      totalCapitalGain += capitalGain; // Add to running total of capital gains
-      //! 成本价不会因为卖出而改变
-      //! 3月25日更新investment的value 明早从这里看。
+
+      console.log("此时capitalGain", capitalGain);
+      console.log("此时amountToWithdraw", amountToWithdraw);
       investment.incr_value(-amountToWithdraw);
+      console.log("此时investment的value", investment.get_value());
+      state.incr_capital_gains_income(capitalGain);
     } else if (accountType === TaxStatus.PRE_TAX) {
-      // For pre-tax accounts, the entire withdrawal counts as ordinary income
-      totalIncome += amountToWithdraw; // Add to running total of income
+      console.log("此时accountType是pre-tax", accountType);
+      investment.incr_value(-amountToWithdraw);
+      state.incr_ordinary_income(amountToWithdraw);
+      console.log("此时investment的value", investment.get_value());
     }
 
     // Check for early withdrawal penalties (before age 59.5)
@@ -288,21 +303,22 @@ export function withdraw_from_investments(
         accountType === TaxStatus.AFTER_TAX) &&
       state.user.get_age() < 60
     ) {
+      console.log("此时用户年龄是", state.user.get_age());
       // Track early withdrawals
-      early_withdrawal_penalty += amountToWithdraw * 0.1;
+      state.incr_early_withdrawal_penalty(amountToWithdraw * 0.1);
+      investment.incr_value(-amountToWithdraw);
+      console.log("此时early withdrawal penalty", amountToWithdraw * 0.1);
+      console.log("此时investment的value", investment.get_value());
+      console.log(
+        "此时state的early withdrawal penalty",
+        state.get_early_withdrawal_penalty()
+      );
     }
-
-    // Withdraw the funds
-    investment.incr_value(-amountToWithdraw);
-    remainingAmount -= amountToWithdraw;
   }
 
   // Return information about the withdrawal
   // ?你有没有可能支付多余你需要的？
   return {
     unfunded: remainingAmount > 0 ? remainingAmount : 0,
-    capitalGain: totalCapitalGain,
-    cur_year_income: totalIncome,
-    early_withdrawal_penalty: early_withdrawal_penalty,
   };
 }

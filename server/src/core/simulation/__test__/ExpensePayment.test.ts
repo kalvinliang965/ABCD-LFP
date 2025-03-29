@@ -16,6 +16,8 @@ import {
 } from "../../domain/scenario/Scenario";
 import { create_simulation_state } from "../SimulationState";
 import { pay_mandatory_expenses } from "../PayMandatoryExpense";
+import { pay_discretionary_expenses } from "../PayDiscretionaryExpense";
+import { SpendingEvent, update_expense_amount } from "../ExpenseHelper";
 const scenarioYaml = `
 # file format for scenario import/export.  version: 2025-03-23
 # CSE416, Software Engineering, Scott D. Stoller.
@@ -117,7 +119,7 @@ eventSeries:
     type: expense
     initialAmount: 500
     changeAmtOrPct: amount
-    changeDistribution: {type: fixed, value: 0}
+    changeDistribution: {type: fixed, value: 30}
     inflationAdjusted: true
     userFraction: 1.0
     discretionary: true
@@ -128,8 +130,8 @@ eventSeries:
     type: expense
     initialAmount: 1200
     changeAmtOrPct: amount
-    changeDistribution: {type: fixed, value: 0}
-    inflationAdjusted: true
+    changeDistribution: {type: fixed, value: 20}
+    inflationAdjusted: false
     userFraction: 0.6
     discretionary: true
 
@@ -151,7 +153,7 @@ eventSeries:
 inflationAssumption: {type: fixed, value: 0.03}
 afterTaxContributionLimit: 7000
 spendingStrategy: ["vacation", "streaming services"]
-expenseWithdrawalStrategy: ["S&P 500 non-retirement", "tax-exempt bonds", "S&P 500 after-tax"]
+expenseWithdrawalStrategy: ["tax-exempt bonds", "S&P 500 after-tax","S&P 500 non-retirement"]
 RMDStrategy: ["S&P 500 pre-tax"]
 RothConversionOpt: true
 RothConversionStart: 2050
@@ -204,15 +206,31 @@ describe("Testing Simulation State", () => {
     const scenario = create_scenario(scenarioRaw);
     const state = await create_simulation_state(scenario);
 
-    console.log("mandatory_expenses", state.mandatory_expenses);
-    //查看mandatory_expenses的expected_annual_change
-    for (const expense of state.mandatory_expenses) {
-      console.log("expense", expense.expected_annual_change.sample());
-    }
     const result = pay_mandatory_expenses(state);
     console.log("result", result);
   });
 });
+
+// describe("Testing Simulation State", () => {
+//   it("should pay discretionary expense", async () => {
+//     const scenario = create_scenario(scenarioRaw);
+//     const state = await create_simulation_state(scenario);
+
+//     //update 所有的expense的amount
+//     for (const expense of scenario.event_series) {
+//       if (expense.type === "expense") {
+//         update_expense_amount(
+//           expense as SpendingEvent,
+//           state.get_current_year(),
+//           state.inflation_factor
+//         );
+//       }
+//     }
+
+//     const result = pay_discretionary_expenses(state);
+//     console.log("result", result);
+//   });
+// });
 
 // tests/objectToMap.ts
 

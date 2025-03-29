@@ -1,7 +1,8 @@
 import { create_simulation_state } from "../SimulationState";
 import { Scenario } from "../../domain/scenario/Scenario";
-import { TaxFilingStatus, TaxStatus } from "../../Enums";
+import { StateType, TaxFilingStatus, TaxStatus } from "../../Enums";
 import { Investment } from "../../domain/investment/Investment";
+import { SpendingEvent } from "../ExpenseHelper";
 
 const baseScenario: Scenario = {
   tax_filing_status: TaxFilingStatus.MARRIED,
@@ -12,6 +13,20 @@ const baseScenario: Scenario = {
   inflation_assumption: { sample: () => 0.03 },
   investments: [] as any,
   event_series: [],
+  //! chen added
+  mandatory_expenses: [] as SpendingEvent[],
+  discretionary_expenses: [] as SpendingEvent[],
+  after_tax_contribution_limit: 6000,
+  spending_strategy: [],
+  expense_withrawal_strategy: [],
+  rmd_strategy: [],
+  roth_conversion_opt: false,
+  roth_conversion_start: 2050,
+  roth_conversion_end: 2060,
+  roth_conversion_strategy: [],
+  financialGoal: 1000000,
+  residenceState: StateType.NY
+  //! chen added
 } as any as Scenario;
 
 describe("Simulation State Methods", () => {

@@ -86,13 +86,14 @@ function calculate_current_assets(state: SimulationState): {
 export function pay_discretionary_expenses(state: SimulationState): void {
   // SEQUENTIAL THINKING STEP 1: Get discretionary expenses for the current year
   const currentYear = state.get_current_year();
-  const discretionaryExpenses = state.get_discretionary_expenses();
+  const discretionaryExpenses = state.discretionary_expenses;
   let cashValue = state.cash.get_value();
 
   //检查是否存在discretionaryExpenses
   if (discretionaryExpenses.length === 0) {
     return;
   }
+  console.log("此时我们有这么多discretionaryExpenses", discretionaryExpenses);
 
   //获得当前的现金和投资的价值
   let {
@@ -101,14 +102,26 @@ export function pay_discretionary_expenses(state: SimulationState): void {
     after_tax_retirement_accounts_value,
   } = calculate_current_assets(state);
 
+  console.log(
+    "此时我们一共有这么多钱",
+    non_retirement_accounts_value +
+      pre_tax_retirement_accounts_value +
+      after_tax_retirement_accounts_value +
+      cashValue
+  );
+
   const financial_goal = state.get_financial_goal();
+  console.log("此时我们的financial goal是", financial_goal);
 
   //计算离打破financial goal还差多少钱
   let available_amount =
-    financial_goal -
-    (non_retirement_accounts_value +
-      pre_tax_retirement_accounts_value +
-      after_tax_retirement_accounts_value);
+    non_retirement_accounts_value +
+    pre_tax_retirement_accounts_value +
+    after_tax_retirement_accounts_value +
+    cashValue -
+    financial_goal;
+
+  console.log("此时我们离打破financial goal还差多少钱", available_amount);
 
   //如果无论如何都会打破financial goal，那么就什么都不做
   if (available_amount <= 0) {
@@ -120,9 +133,9 @@ export function pay_discretionary_expenses(state: SimulationState): void {
     // Calculate the expense amount for this year
     let expenseAmount = calculate_detailed_expense_amount(
       expense,
-      currentYear,
-      state.inflation_factor
+      currentYear
     );
+    console.log("此时我们需要的discretionary expense是", expenseAmount);
 
     if (expenseAmount <= 0) continue; // 如果完全不同掏钱的活动就跳过。
 
@@ -166,7 +179,7 @@ export function pay_discretionary_expenses(state: SimulationState): void {
     //那么expenseAmount = 0
     //表示我们刚好支付了当前的discretionary expense
     //! 3月25日，明早从这里看。
-    
+
     let cash_amount = Math.min(cashValue, expenseAmount);
     cashValue -= cash_amount;
     state.cash.incr_value(-cash_amount);
@@ -181,12 +194,6 @@ export function pay_discretionary_expenses(state: SimulationState): void {
     //也不存在unfunded的情况，因为已经检查过了partial pay的情况。
 
     const withdrawalResult = withdraw_from_investments(state, expenseAmount);
-
-    state.incr_capital_gains_income(withdrawalResult.capitalGain);
-    state.incr_ordinary_income(withdrawalResult.cur_year_income);
-    state.incr_early_withdrawal_penalty(
-      withdrawalResult.early_withdrawal_penalty
-    );
 
     //更新available_amount
     //获得当前的现金和投资的价值

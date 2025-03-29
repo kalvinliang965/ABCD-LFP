@@ -216,10 +216,6 @@ function get_sorted_discretionary_expenses(
 ): SpendingEvent[] {
 
   const unsorted_discretionary_expenses = get_discretionary_expenses(events);
-  console.log(
-    "unsorted_discretionary_expenses",
-    unsorted_discretionary_expenses
-  );
   return sort_expenses_by_strategy(unsorted_discretionary_expenses, strategy);
 }
 
