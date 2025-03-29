@@ -185,33 +185,9 @@ const Sidebar: React.FC = () => {
           >
             My Scenarios
           </NavItem>
-          <NavItem
-            icon={FaFileUpload}
-            to="/scenarios/import-export"
-            isActive={location.pathname === "/scenarios/import-export"}
-            sidebarOpen={sidebarOpen}
-          >
-            Import/Export
-          </NavItem>
-          <NavItem
-            icon={FaServer}
-            to="/scenarios/shared"
-            isActive={location.pathname === "/scenarios/shared"}
-            sidebarOpen={sidebarOpen}
-          >
-            Shared Scenarios
-          </NavItem>
         </NavGroup>
 
         <NavGroup title="Scenario Builder" sidebarOpen={sidebarOpen}>
-          <NavItem
-            icon={FaUser}
-            to="/builder/basic-info"
-            isActive={location.pathname.startsWith("/builder/basic-info")}
-            sidebarOpen={sidebarOpen}
-          >
-            Basic Info
-          </NavItem>
           <NavItem
             icon={FaMoneyBillWave}
             to="/builder/investments"
@@ -219,22 +195,6 @@ const Sidebar: React.FC = () => {
             sidebarOpen={sidebarOpen}
           >
             Investments
-          </NavItem>
-          <NavItem
-            icon={FaClipboardList}
-            to="/builder/events"
-            isActive={location.pathname.startsWith("/builder/events")}
-            sidebarOpen={sidebarOpen}
-          >
-            Event Series
-          </NavItem>
-          <NavItem
-            icon={FaCubes}
-            to="/builder/strategies"
-            isActive={location.pathname.startsWith("/builder/strategies")}
-            sidebarOpen={sidebarOpen}
-          >
-            Strategies
           </NavItem>
         </NavGroup>
 
