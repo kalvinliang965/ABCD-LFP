@@ -242,8 +242,12 @@ function NewScenarioPage() {
     setStep("rothConversionOptimizer");
   };
 
-  const handle_back_to_roth_conversion_optimizer = () => {
+  const handle_back_to_roth_conversion = () => {
     setStep("rothConversionOptimizer");
+  };
+
+  const handle_continue_from_roth_to_investments = () => {
+    setStep("investments");
   };
 
   const handle_finish_scenario = () => {
@@ -322,9 +326,19 @@ function NewScenarioPage() {
         isCouple={scenarioDetails.type === "couple"}
         userBirthYear={scenarioDetails.userBirthYear}
         spouseBirthYear={scenarioDetails.spouseBirthYear}
-        onContinue={handle_continue_to_investments}
+        onContinue={handle_continue_to_roth_conversion_optimizer}
         onBack={handle_back_to_details}
         onChangeLifeExpectancy={setLifeExpectancyConfig}
+      />
+    );
+  }
+
+  // Roth Conversion Optimizer Form
+  if (step === "rothConversionOptimizer") {
+    return (
+      <RothConversionOptimizerForm
+        onBack={handle_back_to_life_expectancy}
+        onContinue={handle_continue_from_roth_to_investments}
       />
     );
   }
@@ -336,7 +350,7 @@ function NewScenarioPage() {
         investmentsConfig={investmentsConfig}
         onChangeInvestmentsConfig={setInvestmentsConfig}
         onContinue={handle_continue_to_event_selection}
-        onBack={handle_back_to_life_expectancy}
+        onBack={handle_back_to_roth_conversion}
       />
     );
   }
@@ -372,11 +386,7 @@ function NewScenarioPage() {
                   >
                     Back
                   </Button>
-                  <Button
-                    colorScheme="blue"
-                    onClick={handleSaveAndContinue}
-                    
-                  >
+                  <Button colorScheme="blue" onClick={handleSaveAndContinue}>
                     Save & Continue
                   </Button>
                 </HStack>
@@ -543,16 +553,6 @@ function NewScenarioPage() {
           </Box>
         </Box>
       </Box>
-    );
-  }
-
-  // Roth Conversion Optimizer Form
-  if (step === "rothConversionOptimizer") {
-    return (
-      <RothConversionOptimizerForm
-        onBack={handle_back_to_roth_conversion_optimizer}
-        onFinish={handle_finish_scenario}
-      />
     );
   }
 
