@@ -11,6 +11,8 @@ import {
 } from "../tax/StateTaxService";
 import { Event } from "../domain/event/Event";
 import { SpendingEvent, update_expense_amount } from "./ExpenseHelper";
+import { create_yearly_records } from "./YearlyTaxRecords";
+import { symlinkSync } from "fs";
 
 export type AccountMap = Map<string, Investment>;
 export type EventMap = Map<string, Event>;
@@ -171,14 +173,12 @@ export async function create_simulation_state(
   try {
     const start_year: number = new Date().getFullYear();
     let current_year: number = start_year;
+    let previous_year: number = current_year - 1;
     const is_married = scenario.tax_filing_status === TaxFilingStatus.MARRIED;
     let tax_filing_status = scenario.tax_filing_status;
 
-    // Income tracking variables
-    let ordinary_income = 0;
-    let capital_gains_income = 0;
-    let social_security_income = 0;
-    let after_tax_contribution = 0; // contribution to after tax account.
+    // contian tax info of given year
+    const yearly_records = create_yearly_records()
 
     // Process investments - scenario.investments is already processed in create_scenario
     const [cash, non_retirement, pre_tax, after_tax] = parse_investments(
@@ -236,23 +236,71 @@ export async function create_simulation_state(
       // Income getters and setters
       get_tax_filing_status: () => tax_filing_status,
       get_financial_goal: () => scenario.financialGoal,
-      get_ordinary_income: () => ordinary_income,
-      get_capital_gains_income: () => capital_gains_income,
-      get_social_security_income: () => social_security_income,
-      get_after_tax_contribution: () => after_tax_contribution,
-      get_after_tax_contribution_limit: () =>
-        scenario.after_tax_contribution_limit,
+      // get current tax info
+      get_ordinary_income: () => {
+        const record = yearly_records.get_record(current_year);
+        if (!record) {
+          console.error(`Getting ordinary income but record at ${current_year} is not initialize`)
+          process.exit(1);
+        }
+        return record.get_ordinary_income();
+      },
+      get_capital_gains_income: () => {
+        const record = yearly_records.get_record(current_year);
+        if (!record) {
+          console.error(`Gretting capital gains income but record at ${current_year} is not initialize`);
+          process.exit(1);
+        }
+        return record.get_capital_gains_income();
+      },
+      get_social_security_income: () => {
+        const record = yearly_records.get_record(current_year);
+        if (!record) {
+          console.error(`Getting social security income but record at ${current_year} is not initialize`);
+          process.exit(1);
+        }
+        return record.get_social_security_income();
+      },
+      get_after_tax_contribution: () => {
+        const record = yearly_records.get_record(current_year);
+        if (!record) {
+          console.error(`Getting after tax contribution but record at ${current_year} is not initialize`);
+          process.exit(1);
+        }
+        return record.get_after_tax_contribution();
+      },
+      get_after_tax_contribution_limit: () => scenario.after_tax_contribution_limit,
       incr_ordinary_income: (amt: number) => {
-        ordinary_income += amt;
+        const record = yearly_records.get_record(current_year);
+        if (!record) {
+          console.error(`incrementing ordinary income but record at ${current_year} is not initialize`);
+          process.exit(1);
+        }
+        return record.incr_ordinary_income(amt);
       },
       incr_capital_gains_income: (amt: number) => {
-        capital_gains_income += amt;
+        const record = yearly_records.get_record(current_year);
+        if (!record) {
+          console.error(`incrementing security income but record at ${current_year} is not initialize`);
+          process.exit(1);
+        }
+        return record.incr_capital_gains_income(amt);
       },
       incr_social_security_income: (amt: number) => {
-        social_security_income += amt;
+        const record = yearly_records.get_record(current_year);
+        if (!record) {
+          console.error(`incrementing social security income but record at ${current_year} is not initialize`);
+          process.exit(1);
+        }
+        return record.incr_social_security_income(amt);
       },
       incr_after_tax_contribution: (amt: number) => {
-        after_tax_contribution += amt;
+        const record = yearly_records.get_record(current_year);
+        if (!record) {
+          console.error(`incrementing after tax contribution but record at ${current_year} is not initialize`);
+          process.exit(1);
+        }
+        return record.incr_after_tax_contribution(amt);
       },
 
       get_current_year: () => current_year,
@@ -283,82 +331,82 @@ export async function create_simulation_state(
       
 
       process_tax: () => {
-        try {
-          const standard_deduction =
-            federal_tax_service.find_deduction(tax_filing_status);
-          const taxable_income =
-            ordinary_income +
-            capital_gains_income -
-            0.15 * social_security_income -
-            standard_deduction;
-          const federal_taxable_income_tax =
-            taxable_income *
-            federal_tax_service.find_rate(
-              taxable_income,
-              IncomeType.TAXABLE_INCOME,
-              tax_filing_status
-            );
-          const state_taxable_income_tax =
-            taxable_income *
-            state_tax_service.find_rate(taxable_income, tax_filing_status);
-          const federal_capital_gains_tax =
-            capital_gains_income *
-            federal_tax_service.find_rate(
-              capital_gains_income,
-              IncomeType.CAPITAL_GAINS,
-              tax_filing_status
-            );
-          cash.incr_value(
-            taxable_income -
-              federal_capital_gains_tax -
-              federal_taxable_income_tax -
-              state_taxable_income_tax
-          );
-        } catch (error) {
-          throw new Error(
-            `Failed to process tax ${
-              error instanceof Error ? error.message : error
-            }`
-          );
-        }
+        // try {
+        //   const standard_deduction =
+        //     federal_tax_service.find_deduction(tax_filing_status);
+        //   const taxable_income =
+        //     ordinary_income +
+        //     capital_gains_income -
+        //     0.15 * social_security_income -
+        //     standard_deduction;
+        //   const federal_taxable_income_tax =
+        //     taxable_income *
+        //     federal_tax_service.find_rate(
+        //       taxable_income,
+        //       IncomeType.TAXABLE_INCOME,
+        //       tax_filing_status
+        //     );
+        //   const state_taxable_income_tax =
+        //     taxable_income *
+        //     state_tax_service.find_rate(taxable_income, tax_filing_status);
+        //   const federal_capital_gains_tax =
+        //     capital_gains_income *
+        //     federal_tax_service.find_rate(
+        //       capital_gains_income,
+        //       IncomeType.CAPITAL_GAINS,
+        //       tax_filing_status
+        //     );
+        //   cash.incr_value(
+        //     taxable_income -
+        //       federal_capital_gains_tax -
+        //       federal_taxable_income_tax -
+        //       state_taxable_income_tax
+        //   );
+        // } catch (error) {
+        //   throw new Error(
+        //     `Failed to process tax ${
+        //       error instanceof Error ? error.message : error
+        //     }`
+        //   );
+        // }
       },
 
       // Year setup and management
       setup_year: () => {
-        ordinary_income = 0;
-        capital_gains_income = 0;
-        social_security_income = 0;
-        after_tax_contribution = 0;
-        federal_tax_service.adjust_for_inflation(inflation_factor);
-        state_tax_service.adjust_for_inflation(inflation_factor);
+        // ordinary_income = 0;
+        // capital_gains_income = 0;
+        // social_security_income = 0;
+        // after_tax_contribution = 0;
+        // federal_tax_service.adjust_for_inflation(inflation_factor);
+        // state_tax_service.adjust_for_inflation(inflation_factor);
 
-        // 更新scenario中的支出列
+        // // 更新scenario中的支出列
 
-        // type check
-        for (const [id, investment] of non_retirement.entries()) {
-          if (investment.taxStatus != TaxStatus.NON_RETIREMENT) {
-            console.error(
-              `non retirment account contain invalid type ${investment.taxStatus}`
-            );
-            process.exit(1);
-          }
-        }
-        for (const [id, investment] of after_tax.entries()) {
-          if (investment.taxStatus != TaxStatus.AFTER_TAX) {
-            console.error(
-              `after tax account contain invalid type ${investment.taxStatus}`
-            );
-            process.exit(1);
-          }
-        }
-        for (const [id, investment] of pre_tax.entries()) {
-          if (investment.taxStatus != TaxStatus.PRE_TAX) {
-            console.error(
-              `pre tax account contain invalid type ${investment.taxStatus}`
-            );
-            process.exit(1);
-          }
-        }
+        // // type check
+        // for (const [id, investment] of non_retirement.entries()) {
+        //   if (investment.taxStatus != TaxStatus.NON_RETIREMENT) {
+        //     console.error(
+        //       `non retirment account contain invalid type ${investment.taxStatus}`
+        //     );
+        //     process.exit(1);
+        //   }
+        // }
+        // for (const [id, investment] of after_tax.entries()) {
+        //   if (investment.taxStatus != TaxStatus.AFTER_TAX) {
+        //     console.error(
+        //       `after tax account contain invalid type ${investment.taxStatus}`
+        //     );
+        //     process.exit(1);
+        //   }
+        // }
+        // for (const [id, investment] of pre_tax.entries()) {
+        //   if (investment.taxStatus != TaxStatus.PRE_TAX) {
+        //     console.error(
+        //       `pre tax account contain invalid type ${investment.taxStatus}`
+        //     );
+        //     process.exit(1);
+        //   }
+        // }
       },
     };
 
