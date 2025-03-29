@@ -38,6 +38,7 @@ import AdditionalSettingsForm, {
   FinancialGoalConfig,
   StateOfResidence,
 } from "../../components/scenarios/AdditionalSettingsForm";
+import RothConversionOptimizerForm from "../../components/roth_conversion_optimizer/RothConversionForm";
 
 // Omit the id from EventSeries and add it as optional
 type AddedEvent = Omit<EventSeries, "id"> & {
@@ -94,6 +95,7 @@ export function NewScenarioPage() {
     | "investments"
     | "eventSelection"
     | "additionalSettings"
+    | "rothConversionOptimizer"
   >("details");
   const [scenarioDetails, setScenarioDetails] = useState<ScenarioDetails>({
     name: "",
@@ -174,6 +176,10 @@ export function NewScenarioPage() {
     setStep("investments");
   };
 
+  const handle_back_to_investments = () => {
+    setStep("investments");
+  };
+
   const handle_back_to_life_expectancy = () => {
     setStep("lifeExpectancy");
   };
@@ -186,10 +192,14 @@ export function NewScenarioPage() {
     setStep("eventSelection");
   };
 
-  const handle_back_to_investments = () => {
-    setStep("investments");
-  };
+  const handle_continue_to_roth_conversion_optimizer = () => {
+    setStep("rothConversionOptimizer");
+  }
 
+  const handle_back_to_roth_conversion_optimizer = () => {
+    setStep("rothConversionOptimizer");
+  }
+  
   const handle_finish_scenario = () => {
     // Submit the entire scenario and navigate to scenarios page
     toast({
@@ -241,9 +251,17 @@ export function NewScenarioPage() {
         spouseBirthYear={scenarioDetails.spouseBirthYear}
         onChangeLifeExpectancy={setLifeExpectancyConfig}
         onBack={handle_back_to_details}
-        onContinue={handle_continue_to_investments}
+        onContinue={handle_continue_to_roth_conversion_optimizer}
       />
     );
+  }
+
+  if (step === "rothConversionOptimizer") {
+    return (<RothConversionOptimizerForm
+      onBack = {handle_back_to_life_expectancy}
+      onContinue = {handle_continue_to_investments}
+    >
+    </RothConversionOptimizerForm>)
   }
 
   // Investments Configuration Form
@@ -252,7 +270,7 @@ export function NewScenarioPage() {
       <InvestmentsForm
         investmentsConfig={investmentsConfig}
         onChangeInvestmentsConfig={setInvestmentsConfig}
-        onBack={handle_back_to_life_expectancy}
+        onBack={handle_back_to_roth_conversion_optimizer}
         onContinue={handle_continue_to_event_selection}
       />
     );
