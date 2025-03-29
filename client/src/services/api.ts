@@ -105,7 +105,9 @@ export const investmentApi = {
    */
   getAll: async (): Promise<Investment[]> => {
     try {
+      console.log("API_URL", API_URL);
       const response = await axios.get(`${API_URL}/investments`);
+      console.log("response.data", response.data);
       return response.data.map(mapToFrontendModel);
     } catch (error) {
       console.error("Error fetching investment types:", error);
