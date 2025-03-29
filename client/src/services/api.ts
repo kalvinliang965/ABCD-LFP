@@ -8,11 +8,12 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
  * Map frontend Investment model to backend InvestmentType model
  */
 export const mapToBackendModel = (investment: any) => {
+  console.log("正在尝试mapToBackendModel");
   return {
     name: investment.name,
     description: investment.description,
     expectedAnnualReturn: {
-      mode: investment.returnType === "normal" ? "normalDistribution" : "fixed",
+      mode: investment.returnType === "normal" ? "NORMAL" : "UNIFORM",
       value:
         investment.returnType === "fixed"
           ? investment.returnRate / 100
@@ -29,8 +30,7 @@ export const mapToBackendModel = (investment: any) => {
     },
     expenseRatio: investment.expenseRatio / 100, // Convert from percentage to decimal
     expectedAnnualIncome: {
-      mode:
-        investment.dividendType === "normal" ? "normalDistribution" : "fixed",
+      mode: investment.dividendType === "normal" ? "NORMAL" : "UNIFORM",
       value:
         investment.dividendType === "fixed"
           ? investment.dividendRate / 100
@@ -45,7 +45,7 @@ export const mapToBackendModel = (investment: any) => {
           : undefined,
       isPercentage: investment.dividendInputMode === "percentage",
     },
-    taxability: investment.taxability,
+    taxability: investment.taxability === "taxable" ? "TAXABLE" : "TAX_EXEMPT",
   };
 };
 
@@ -106,7 +106,7 @@ export const investmentApi = {
   getAll: async (): Promise<Investment[]> => {
     try {
       console.log("API_URL", API_URL);
-      const response = await axios.get(`${API_URL}/investments`);
+      const response = await axios.get(`${API_URL}/investmentTypes`);
       console.log("response.data", response.data);
       return response.data.map(mapToFrontendModel);
     } catch (error) {
@@ -122,7 +122,7 @@ export const investmentApi = {
    */
   getById: async (id: string): Promise<Investment> => {
     try {
-      const response = await axios.get(`${API_URL}/investments/${id}`);
+      const response = await axios.get(`${API_URL}/investmentTypes/${id}`);
       return mapToFrontendModel(response.data);
     } catch (error) {
       console.error(`Error fetching investment type with id ${id}:`, error);
@@ -137,8 +137,13 @@ export const investmentApi = {
    */
   create: async (investment: any): Promise<Investment> => {
     try {
+      console.log("正在尝试create investment type");
       const backendModel = mapToBackendModel(investment);
-      const response = await axios.post(`${API_URL}/investments`, backendModel);
+      console.log("backendModel", backendModel);
+      const response = await axios.post(
+        `${API_URL}/investmentTypes`,
+        backendModel
+      );
       return mapToFrontendModel(response.data);
     } catch (error) {
       console.error("Error creating investment type:", error);
