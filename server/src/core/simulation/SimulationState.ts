@@ -12,7 +12,6 @@ import {
 import { Event } from "../domain/event/Event";
 import { SpendingEvent, update_expense_amount } from "./ExpenseHelper";
 import { create_yearly_records } from "./YearlyTaxRecords";
-import { symlinkSync } from "fs";
 
 export type AccountMap = Map<string, Investment>;
 export type EventMap = Map<string, Event>;
