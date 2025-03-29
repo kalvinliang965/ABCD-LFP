@@ -68,13 +68,15 @@ export interface FederalTaxService {
     find_bracket(rate: number, income_type: IncomeType, status: TaxFilingStatus): TaxBracket;
     find_rate(income: number, income_type: IncomeType, status: TaxFilingStatus): number;
     find_deduction(status: TaxFilingStatus): number;
+    clone(): Promise<FederalTaxService>,
 }
 
-export async function create_federal_tax_service() : Promise<FederalTaxService> {
-    try {        
-        const taxable_income_bracket = await initialize_taxable_income_bracket();
-        const capital_gains_bracket = await initialize_capital_gains_bracket();
-        const standard_deductions = await initialize_standard_deductions_info();
+async function create_cloned_federal_service(
+    taxable_income_bracket: TaxBrackets,
+    capital_gains_bracket: TaxBrackets,
+    standard_deductions: StandardDeduction
+): Promise<FederalTaxService> {
+
         //console.log("Federal Tax data successfully initialize");
         const print_taxable_income_bracket = () =>  {
             console.log("TAXABLE INCOME BRACKETS!!!");
@@ -142,7 +144,20 @@ export async function create_federal_tax_service() : Promise<FederalTaxService> 
             find_bracket,
             find_rate,
             find_deduction,
+            clone: () => create_cloned_federal_service(
+                taxable_income_bracket,
+                capital_gains_bracket,
+                standard_deductions,
+            )
         };
+}
+
+export async function create_federal_tax_service() : Promise<FederalTaxService> {
+    try {        
+        const taxable_income_bracket = await initialize_taxable_income_bracket();
+        const capital_gains_bracket = await initialize_capital_gains_bracket();
+        const standard_deductions = await initialize_standard_deductions_info();
+        return await create_cloned_federal_service(taxable_income_bracket, capital_gains_bracket, standard_deductions);
     } catch (error) {
         console.error(`Error in initializing federal tax data: ${error}`);
         process.exit(1);

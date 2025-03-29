@@ -6,6 +6,7 @@ export interface StandardDeduction {
     to_string(): string,
     size(): number,
     find_deduction(status: TaxFilingStatus): number;
+    clone(): StandardDeduction;
 }
 
 export function create_standard_deductions(): StandardDeduction {
@@ -51,5 +52,16 @@ export function create_standard_deductions(): StandardDeduction {
         to_string,
         size,
         find_deduction,
+        clone: () => {
+            const cloned = create_standard_deductions();
+            const all_statuses = [TaxFilingStatus.SINGLE, TaxFilingStatus.MARRIED];
+            all_statuses.forEach(status => {
+                const amount = deductions.get(status);
+                if (amount !== undefined) {
+                    cloned.add_deduction(amount, status);
+                }
+            });
+            return cloned;
+        }
     }
 }

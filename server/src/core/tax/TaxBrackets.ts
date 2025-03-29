@@ -16,6 +16,7 @@ export interface TaxBrackets {
     find_highest_brackets: () => Array<{taxpayer_type: TaxFilingStatus, taxbracket: TaxBracket}>;
     find_bracket(rate: number, status: TaxFilingStatus): TaxBracket;
     get_rates(status: TaxFilingStatus): ReadonlyTaxBracketSet;
+    clone(): TaxBrackets;
 };
 
 
@@ -164,6 +165,26 @@ export function create_tax_brackets(): TaxBrackets {
         find_highest_brackets,
         find_bracket,
         get_rates,
-    } as const;
+        clone: (): TaxBrackets => {
+            const cloned = create_tax_brackets()
+            
+            const valid_statuses = [TaxFilingStatus.SINGLE, TaxFilingStatus.MARRIED];
+
+            valid_statuses.forEach(status => {
+                const bracketSet = brackets.get(status);
+                if (!bracketSet) return;
+
+                bracketSet.forEach(bracket => {
+                    cloned.add_rate(
+                        bracket.min,
+                        bracket.max,
+                        bracket.rate,
+                        status
+                    )
+                });
+            });
+            return cloned;
+        }
+    };
 };
 
