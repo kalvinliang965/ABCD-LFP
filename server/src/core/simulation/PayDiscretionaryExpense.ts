@@ -131,10 +131,8 @@ export function pay_discretionary_expenses(state: SimulationState): void {
   // SEQUENTIAL THINKING STEP 4: Process each expense in order
   for (const expense of discretionaryExpenses) {
     // Calculate the expense amount for this year
-    let expenseAmount = calculate_detailed_expense_amount(
-      expense,
-      currentYear
-    );
+    console.log("此时我们正在尝试支付的discretionary expense是", expense);
+    let expenseAmount = calculate_detailed_expense_amount(expense, currentYear);
     console.log("此时我们需要的discretionary expense是", expenseAmount);
 
     if (expenseAmount <= 0) continue; // 如果完全不同掏钱的活动就跳过。
@@ -146,6 +144,10 @@ export function pay_discretionary_expenses(state: SimulationState): void {
 
     //remain_amount 表示支付当前discretionary expense后，离打破financial goal还差多少钱,可以用于迭代下一个discretionary expense
     let remain_amount = available_amount - expenseAmount;
+    console.log(
+      "此时我们离打破financial goal还差多少钱 remain_amount",
+      remain_amount
+    );
 
     /**
      * 假设你离打破financial goal还差1000，但你需要支付的价格是1200.
@@ -158,6 +160,8 @@ export function pay_discretionary_expenses(state: SimulationState): void {
       expenseAmount = available_amount;
       remain_amount = 0;
     }
+
+    available_amount = remain_amount;
 
     //此算到此，的expenseAmount 有两种情况
     // 1. expenseAmount就是event的金额
@@ -178,13 +182,17 @@ export function pay_discretionary_expenses(state: SimulationState): void {
     //那么cash_amount = 1000
     //那么expenseAmount = 0
     //表示我们刚好支付了当前的discretionary expense
-    //! 3月25日，明早从这里看。
 
+    console.log("此时我们正在尝试支付的discretionary expense是", expense);
+    console.log("此时我们的cashValue是", cashValue);
     let cash_amount = Math.min(cashValue, expenseAmount);
+    console.log("此时我们从cash中扣除的金额是", cash_amount);
     cashValue -= cash_amount;
     state.cash.incr_value(-cash_amount);
-
+    console.log("此时我们的cashValue是", cashValue);
+    console.log("此时我们state中的cash是", state.cash.get_value());
     expenseAmount -= cash_amount;
+    console.log("此时剩余的expenseAmount是", expenseAmount);
 
     //这就表示，expenseAmount < 0的情况，cash可以完全支付当前的discretionary expense
     if (expenseAmount <= 0) continue;
@@ -193,21 +201,11 @@ export function pay_discretionary_expenses(state: SimulationState): void {
     //由于我们的if判断中保证了available_amount > 0，所以不会破坏财政计划，直接掏钱就好了。
     //也不存在unfunded的情况，因为已经检查过了partial pay的情况。
 
-    const withdrawalResult = withdraw_from_investments(state, expenseAmount);
+    const unfunded = withdraw_from_investments(state, expenseAmount);
+    console.log("此时我们这个event的unfunded是", unfunded.unfunded);
 
-    //更新available_amount
-    //获得当前的现金和投资的价值
-    let {
-      non_retirement_accounts_value,
-      pre_tax_retirement_accounts_value,
-      after_tax_retirement_accounts_value,
-    } = calculate_current_assets(state);
-
-    available_amount =
-      financial_goal -
-      (non_retirement_accounts_value +
-        pre_tax_retirement_accounts_value +
-        after_tax_retirement_accounts_value);
+    //更新当前这个event的amount
+    expense.remaining_amount = unfunded.unfunded;
 
     //todo: 未完成，需要思考。3月25日
     //如果支付当前discretionary expense需要的资金大于0，就表示我可以支付当前discretionary expense

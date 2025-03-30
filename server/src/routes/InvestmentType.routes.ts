@@ -76,6 +76,7 @@ router.get("/", async (_req: Request, res: Response) => {
  */
 router.get("/:id", async (req: Request, res: Response) => {
   try {
+    console.log("正在尝试调用这个方法", req.params.id);
     const investmentType = await InvestmentType.findById(req.params.id);
 
     if (!investmentType) {

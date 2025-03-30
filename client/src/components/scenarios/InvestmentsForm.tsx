@@ -38,8 +38,16 @@ import {
   useColorModeValue,
   Badge,
   Tooltip,
+  Grid,
+  GridItem,
+  SimpleGrid,
+  Container,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
 } from "@chakra-ui/react";
-import { DeleteIcon, AddIcon } from "@chakra-ui/icons";
+import { DeleteIcon, AddIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import { TrendingUp } from "lucide-react";
 import {
   FiChevronLeft,
@@ -48,6 +56,11 @@ import {
   FiList,
   FiPlusCircle,
   FiTrash2,
+  FiBriefcase,
+  FiActivity,
+  FiAward,
+  FiBarChart2,
+  FiInfo,
 } from "react-icons/fi";
 
 // Mock investment types (to be replaced with data from the database)
@@ -76,7 +89,7 @@ export type InvestmentsConfig = {
   investments: Investment[];
 };
 
-interface InvestmentsFormProps {
+export interface InvestmentsFormProps {
   investmentsConfig: InvestmentsConfig;
   onChangeInvestmentsConfig: (config: InvestmentsConfig) => void;
   onBack: () => void;
@@ -85,7 +98,7 @@ interface InvestmentsFormProps {
 
 export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
   investmentsConfig,
-  onChangeInvestmentsConfig,
+  onChangeInvestmentsConfig: onChangeConfig,
   onBack,
   onContinue,
 }) => {
@@ -101,14 +114,16 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
   }>({});
   const toast = useToast();
 
-  /* AI prompt : help me design a form to add investments to the financial scenario and I need to add a button to remove the investment */
+  // AI-generated code
+  // upgrade the UI for this page to make it looks better and more modern
+  const bg = useColorModeValue("gray.50", "gray.900");
   const cardBg = useColorModeValue("white", "gray.800");
-  const headerBg = useColorModeValue("blue.50", "blue.900");
-  const formBg = useColorModeValue("gray.50", "gray.700");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-  const tableBg = useColorModeValue("white", "gray.800");
-  const tableHeaderBg = useColorModeValue("gray.50", "gray.700");
   const hoverBg = useColorModeValue("gray.50", "gray.700");
+  const activeInvestmentBg = useColorModeValue("blue.50", "blue.900");
+  const statCardBg = useColorModeValue("white", "gray.800");
+  const statIconBg = useColorModeValue("blue.50", "blue.900");
+  const statTextColor = useColorModeValue("gray.600", "gray.400");
 
   // Filter out already selected investment types
   const available_investment_types = MOCK_INVESTMENT_TYPES.filter(
@@ -177,7 +192,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
       id: Date.now().toString(), // Use a timestamp as a simple ID
     };
 
-    onChangeInvestmentsConfig({
+    onChangeConfig({
       investments: [...investmentsConfig.investments, newInvestmentWithId],
     });
 
@@ -191,14 +206,21 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
 
     toast({
       title: "Investment added",
+      description: `Added ${newInvestmentWithId.investmentTypeName} investment`,
       status: "success",
       duration: 2000,
       isClosable: true,
+      position: "top-right",
+      variant: "subtle",
     });
   };
 
   const handle_remove_investment = (id: string) => {
-    onChangeInvestmentsConfig({
+    const investmentToRemove = investmentsConfig.investments.find(
+      (investment) => investment.id === id
+    );
+
+    onChangeConfig({
       investments: investmentsConfig.investments.filter(
         (investment) => investment.id !== id
       ),
@@ -206,9 +228,12 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
 
     toast({
       title: "Investment removed",
+      description: `Removed ${investmentToRemove?.investmentTypeName} investment`,
       status: "info",
       duration: 2000,
       isClosable: true,
+      position: "top-right",
+      variant: "subtle",
     });
   };
 
@@ -247,252 +272,590 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     }
   };
 
+  const get_investment_icon = (type: string) => {
+    switch (type) {
+      case "stock":
+        return FiBarChart2;
+      case "bond":
+        return FiAward;
+      case "real_estate":
+        return FiBriefcase;
+      case "cash":
+        return FiDollarSign;
+      case "gold":
+        return FiActivity;
+      case "crypto":
+        return FiActivity;
+      case "mutual_fund":
+        return FiBarChart2;
+      case "etf":
+        return FiBarChart2;
+      default:
+        return FiInfo;
+    }
+  };
+
+  // Calculate total investment value
+  const total_investment_value = investmentsConfig.investments.reduce(
+    (total, investment) => total + investment.value,
+    0
+  );
+
   return (
-    <Box minH="100vh" bg="gray.50" py={8}>
-      <Box maxW="4xl" mx="auto" px={4}>
+    <Box minH="100vh" bg={bg} py={8}>
+      <Container maxW="6xl" px={4}>
         <Card
-          rounded="lg"
+          rounded="xl"
           shadow="xl"
           overflow="hidden"
           borderWidth="1px"
           borderColor={borderColor}
           bg={cardBg}
+          mb={8}
         >
-          <CardHeader bg={headerBg} py={5} px={6}>
+          <CardHeader
+            bg={useColorModeValue("blue.50", "blue.900")}
+            py={6}
+            px={8}
+            borderBottomWidth="1px"
+            borderBottomColor={borderColor}
+          >
             <Flex justify="space-between" align="center">
-              <Heading
-                size="lg"
-                color="gray.800"
-                display="flex"
-                alignItems="center"
-              >
-                <Icon as={TrendingUp} mr={2} />
-                Investment Configuration
-              </Heading>
-              <HStack spacing={2}>
-                <Button
-                  variant="ghost"
-                  colorScheme="blue"
-                  onClick={onBack}
-                  leftIcon={<Icon as={FiChevronLeft} />}
-                >
-                  Back
-                </Button>
+              <HStack spacing={3}>
+                <Icon as={TrendingUp} boxSize={6} color="blue.500" />
+                <Heading size="lg" fontWeight="bold">
+                  Investment Portfolio
+                </Heading>
               </HStack>
+              <Button
+                variant="ghost"
+                colorScheme="blue"
+                onClick={onBack}
+                leftIcon={<Icon as={FiChevronLeft} />}
+                size="md"
+              >
+                Back
+              </Button>
             </Flex>
           </CardHeader>
 
-          <CardBody p={6}>
-            <Text color="gray.600" mb={6} fontSize="md">
-              Add your investments to your financial scenario. Each investment
-              type can only be used once. These investments will be used to
-              model your financial growth over time.
-            </Text>
-
-            {/* Current investments list */}
-            {investmentsConfig.investments.length > 0 ? (
+          <CardBody p={0}>
+            {/* Stats Overview */}
+            <SimpleGrid
+              columns={{ base: 1, md: 3 }}
+              spacing={0}
+              borderBottomWidth="1px"
+              borderBottomColor={borderColor}
+            >
               <Box
-                mb={8}
-                border="1px"
-                borderColor={borderColor}
-                borderRadius="md"
-                overflow="hidden"
+                p={6}
+                borderRightWidth={{ base: 0, md: "1px" }}
+                borderRightColor={borderColor}
+                borderBottomWidth={{ base: "1px", md: 0 }}
+                borderBottomColor={borderColor}
               >
-                <Flex
-                  bg={tableHeaderBg}
-                  p={4}
+                <HStack mb={2} spacing={3}>
+                  <Flex
+                    bg={statIconBg}
+                    p={2}
+                    borderRadius="md"
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <Icon as={FiBarChart2} color="blue.500" boxSize={5} />
+                  </Flex>
+                  <Text fontSize="sm" fontWeight="medium" color={statTextColor}>
+                    Total Portfolio Value
+                  </Text>
+                </HStack>
+                <Heading size="lg" fontWeight="bold" color="green.500">
+                  {format_currency(total_investment_value)}
+                </Heading>
+              </Box>
+
+              <Box
+                p={6}
+                borderRightWidth={{ base: 0, md: "1px" }}
+                borderRightColor={borderColor}
+                borderBottomWidth={{ base: "1px", md: 0 }}
+                borderBottomColor={borderColor}
+              >
+                <HStack mb={2} spacing={3}>
+                  <Flex
+                    bg={statIconBg}
+                    p={2}
+                    borderRadius="md"
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <Icon as={FiList} color="blue.500" boxSize={5} />
+                  </Flex>
+                  <Text fontSize="sm" fontWeight="medium" color={statTextColor}>
+                    Investment Types
+                  </Text>
+                </HStack>
+                <Heading size="lg" fontWeight="bold">
+                  {investmentsConfig.investments.length} /{" "}
+                  {MOCK_INVESTMENT_TYPES.length}
+                </Heading>
+              </Box>
+
+              <Box p={6}>
+                <HStack mb={2} spacing={3}>
+                  <Flex
+                    bg={statIconBg}
+                    p={2}
+                    borderRadius="md"
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <Icon as={FiPlusCircle} color="blue.500" boxSize={5} />
+                  </Flex>
+                  <Text fontSize="sm" fontWeight="medium" color={statTextColor}>
+                    Available Types
+                  </Text>
+                </HStack>
+                <Heading size="lg" fontWeight="bold">
+                  {available_investment_types.length}
+                </Heading>
+              </Box>
+            </SimpleGrid>
+
+            <Box p={8}>
+              <Text fontSize="lg" fontWeight="medium" mb={6}>
+                Configure your investment portfolio by adding different types of
+                investments. Each investment can only be added once.
+              </Text>
+
+              {/* Investment Cards */}
+              {investmentsConfig.investments.length > 0 ? (
+                <SimpleGrid
+                  columns={{ base: 1, md: 2, lg: 3 }}
+                  spacing={6}
+                  mb={10}
+                >
+                  {investmentsConfig.investments.map((investment) => (
+                    <Card
+                      key={investment.id}
+                      borderWidth="1px"
+                      borderColor={borderColor}
+                      borderRadius="lg"
+                      overflow="hidden"
+                      transition="all 0.2s"
+                      _hover={{
+                        transform: "translateY(-2px)",
+                        shadow: "md",
+                        borderColor: "blue.200",
+                      }}
+                    >
+                      <CardBody>
+                        <Flex
+                          justifyContent="space-between"
+                          alignItems="flex-start"
+                          mb={4}
+                        >
+                          <Flex
+                            bg={useColorModeValue(
+                              `${get_tax_status_color(
+                                investment.taxStatus
+                              )}.50`,
+                              `${get_tax_status_color(
+                                investment.taxStatus
+                              )}.900`
+                            )}
+                            p={3}
+                            borderRadius="lg"
+                            alignItems="center"
+                            justifyContent="center"
+                          >
+                            <Icon
+                              as={get_investment_icon(
+                                investment.investmentTypeId
+                              )}
+                              color={`${get_tax_status_color(
+                                investment.taxStatus
+                              )}.500`}
+                              boxSize={5}
+                            />
+                          </Flex>
+                          <IconButton
+                            aria-label="Remove investment"
+                            icon={<Icon as={FiTrash2} />}
+                            size="sm"
+                            colorScheme="red"
+                            variant="ghost"
+                            onClick={() =>
+                              handle_remove_investment(investment.id)
+                            }
+                          />
+                        </Flex>
+
+                        <Heading size="md" mb={1}>
+                          {investment.investmentTypeName}
+                        </Heading>
+                        <Text
+                          fontSize="2xl"
+                          fontWeight="bold"
+                          color="green.500"
+                          mb={3}
+                        >
+                          {format_currency(investment.value)}
+                        </Text>
+
+                        <Badge
+                          colorScheme={get_tax_status_color(
+                            investment.taxStatus
+                          )}
+                          px={2}
+                          py={1}
+                          borderRadius="md"
+                        >
+                          {get_tax_status_display(investment.taxStatus)}
+                        </Badge>
+                      </CardBody>
+                    </Card>
+                  ))}
+                </SimpleGrid>
+              ) : (
+                <Box
+                  mb={8}
+                  p={8}
+                  borderWidth="2px"
+                  borderStyle="dashed"
+                  borderColor={borderColor}
+                  borderRadius="lg"
+                  textAlign="center"
+                >
+                  <Icon as={FiList} boxSize={10} color="gray.400" mb={4} />
+                  <Heading size="md" mb={2} color="gray.500">
+                    No Investments Yet
+                  </Heading>
+                  <Text color="gray.500" maxW="md" mx="auto">
+                    Start building your investment portfolio by adding your
+                    first investment using the form below.
+                  </Text>
+                </Box>
+              )}
+
+              {/* Add investment form */}
+              <Card
+                borderWidth="1px"
+                borderColor={borderColor}
+                borderRadius="lg"
+                overflow="hidden"
+                shadow="sm"
+              >
+                <CardHeader
+                  bg={useColorModeValue("gray.50", "gray.700")}
                   borderBottomWidth="1px"
                   borderBottomColor={borderColor}
-                  alignItems="center"
+                  py={4}
+                  px={6}
                 >
-                  <Icon as={FiList} color="blue.500" mr={2} />
-                  <Heading size="md" color="gray.700">
-                    Your Investments
-                  </Heading>
-                </Flex>
-
-                <Table variant="simple" bg={tableBg}>
-                  <Thead bg={tableHeaderBg}>
-                    <Tr>
-                      <Th>Investment Type</Th>
-                      <Th>Value</Th>
-                      <Th>Tax Status</Th>
-                      <Th width="80px"></Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {investmentsConfig.investments.map((investment) => (
-                      <Tr key={investment.id} _hover={{ bg: hoverBg }}>
-                        <Td fontWeight="medium">
-                          {investment.investmentTypeName}
-                        </Td>
-                        <Td color="green.600" fontWeight="medium">
-                          {format_currency(investment.value)}
-                        </Td>
-                        <Td>
-                          <Badge
-                            colorScheme={get_tax_status_color(
-                              investment.taxStatus
-                            )}
-                            px={2}
-                            py={1}
-                            borderRadius="md"
-                          >
-                            {get_tax_status_display(investment.taxStatus)}
-                          </Badge>
-                        </Td>
-                        <Td>
-                          <Tooltip label="Remove investment">
-                            <IconButton
-                              aria-label="Remove investment"
-                              icon={<Icon as={FiTrash2} />}
-                              size="sm"
-                              colorScheme="red"
-                              variant="ghost"
-                              onClick={() =>
-                                handle_remove_investment(investment.id)
-                              }
-                            />
-                          </Tooltip>
-                        </Td>
-                      </Tr>
-                    ))}
-                  </Tbody>
-                </Table>
-              </Box>
-            ) : (
-              <Box
-                mb={8}
-                p={6}
-                borderWidth="1px"
-                borderStyle="dashed"
-                borderColor={borderColor}
-                borderRadius="md"
-                textAlign="center"
-              >
-                <Icon as={FiList} boxSize={8} color="gray.400" mb={2} />
-                <Text color="gray.500">
-                  No investments added yet. Use the form below to add your
-                  investments.
-                </Text>
-              </Box>
-            )}
-
-            {/* Add investment form */}
-            <Box
-              p={6}
-              bg={formBg}
-              borderRadius="md"
-              borderWidth="1px"
-              borderColor={borderColor}
-              mb={4}
-            >
-              <Heading size="md" mb={4} display="flex" alignItems="center">
-                <Icon as={FiPlusCircle} mr={2} color="blue.500" />
-                Add New Investment
-              </Heading>
-              <VStack spacing={4} align="stretch">
-                <FormControl isRequired isInvalid={!!errors.investmentType}>
-                  <FormLabel fontWeight="medium">Investment Type</FormLabel>
-                  <Select
-                    value={newInvestment.investmentTypeId}
-                    onChange={handle_change_investment_type}
-                    placeholder="Select investment type"
-                    borderRadius="md"
+                  <Flex alignItems="center">
+                    <Icon as={FiPlusCircle} mr={2} color="blue.500" />
+                    <Heading size="md">Add New Investment</Heading>
+                  </Flex>
+                </CardHeader>
+                <CardBody p={6}>
+                  <Grid
+                    templateColumns={{ base: "1fr", md: "1fr 1fr 1fr" }}
+                    gap={6}
                   >
-                    {available_investment_types.map((type) => (
-                      <option key={type.id} value={type.id}>
-                        {type.name}
-                      </option>
-                    ))}
-                  </Select>
-                  {errors.investmentType && (
-                    <FormErrorMessage>{errors.investmentType}</FormErrorMessage>
-                  )}
-                </FormControl>
-
-                <FormControl isRequired isInvalid={!!errors.value}>
-                  <FormLabel fontWeight="medium">Value</FormLabel>
-                  <InputGroup>
-                    <InputLeftElement pointerEvents="none">
-                      <Icon as={FiDollarSign} color="green.500" />
-                    </InputLeftElement>
-                    <NumberInput
-                      min={0}
-                      step={1000}
-                      value={newInvestment.value}
-                      onChange={handle_change_value}
-                      w="100%"
-                    >
-                      <NumberInputField pl={10} borderRadius="md" />
-                      <NumberInputStepper>
-                        <NumberIncrementStepper />
-                        <NumberDecrementStepper />
-                      </NumberInputStepper>
-                    </NumberInput>
-                  </InputGroup>
-                  {errors.value && (
-                    <FormErrorMessage>{errors.value}</FormErrorMessage>
-                  )}
-                </FormControl>
-
-                <FormControl isRequired>
-                  <FormLabel fontWeight="medium">Tax Status</FormLabel>
-                  <RadioGroup
-                    value={newInvestment.taxStatus}
-                    onChange={handle_change_tax_status}
-                  >
-                    <Stack
-                      direction={{ base: "column", md: "row" }}
-                      spacing={{ base: 2, md: 5 }}
-                    >
-                      <Radio
-                        value="non-retirement"
-                        colorScheme="blue"
-                        size="lg"
+                    <GridItem>
+                      <FormControl
+                        isRequired
+                        isInvalid={!!errors.investmentType}
                       >
-                        <Text fontSize="md">Non-Retirement</Text>
-                      </Radio>
-                      <Radio value="pre-tax" colorScheme="green" size="lg">
-                        <Text fontSize="md">Pre-Tax</Text>
-                      </Radio>
-                      <Radio value="after-tax" colorScheme="purple" size="lg">
-                        <Text fontSize="md">After-Tax</Text>
-                      </Radio>
-                    </Stack>
-                  </RadioGroup>
-                </FormControl>
+                        <FormLabel fontWeight="medium">
+                          Investment Type
+                        </FormLabel>
+                        <Select
+                          value={newInvestment.investmentTypeId}
+                          onChange={handle_change_investment_type}
+                          placeholder="Select investment type"
+                          borderRadius="md"
+                          size="lg"
+                          icon={<ChevronDownIcon />}
+                          disabled={available_investment_types.length === 0}
+                        >
+                          {available_investment_types.map((type) => (
+                            <option key={type.id} value={type.id}>
+                              {type.name}
+                            </option>
+                          ))}
+                        </Select>
+                        {errors.investmentType && (
+                          <FormErrorMessage>
+                            {errors.investmentType}
+                          </FormErrorMessage>
+                        )}
+                      </FormControl>
+                    </GridItem>
 
-                <Flex justifyContent="flex-end">
-                  <Button
-                    leftIcon={<AddIcon />}
-                    colorScheme="blue"
-                    onClick={handle_add_investment}
-                    size="md"
-                    mt={2}
-                  >
-                    Add Investment
-                  </Button>
-                </Flex>
-              </VStack>
+                    <GridItem>
+                      <FormControl isRequired isInvalid={!!errors.value}>
+                        <FormLabel fontWeight="medium">Value</FormLabel>
+                        <InputGroup size="lg">
+                          <InputLeftElement pointerEvents="none">
+                            <Icon as={FiDollarSign} color="green.500" />
+                          </InputLeftElement>
+                          <NumberInput
+                            min={0}
+                            step={1000}
+                            value={newInvestment.value}
+                            onChange={handle_change_value}
+                            w="100%"
+                          >
+                            <NumberInputField pl={10} borderRadius="md" />
+                            <NumberInputStepper>
+                              <NumberIncrementStepper />
+                              <NumberDecrementStepper />
+                            </NumberInputStepper>
+                          </NumberInput>
+                        </InputGroup>
+                        {errors.value && (
+                          <FormErrorMessage>{errors.value}</FormErrorMessage>
+                        )}
+                      </FormControl>
+                    </GridItem>
+
+                    <GridItem colSpan={{ base: 1, md: 3 }}>
+                      <FormControl isRequired>
+                        <FormLabel fontWeight="medium">Tax Status</FormLabel>
+                        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
+                          <Box
+                            as="button"
+                            type="button"
+                            p={4}
+                            borderWidth="2px"
+                            borderRadius="lg"
+                            borderColor={
+                              newInvestment.taxStatus === "non-retirement"
+                                ? "blue.500"
+                                : "gray.200"
+                            }
+                            bg={
+                              newInvestment.taxStatus === "non-retirement"
+                                ? "blue.50"
+                                : "transparent"
+                            }
+                            _hover={{ bg: "blue.50", borderColor: "blue.300" }}
+                            _dark={{
+                              borderColor:
+                                newInvestment.taxStatus === "non-retirement"
+                                  ? "blue.500"
+                                  : "gray.600",
+                              bg:
+                                newInvestment.taxStatus === "non-retirement"
+                                  ? "blue.900"
+                                  : "transparent",
+                              _hover: {
+                                bg: "blue.900",
+                                borderColor: "blue.700",
+                              },
+                            }}
+                            transition="all 0.2s"
+                            onClick={() =>
+                              handle_change_tax_status("non-retirement")
+                            }
+                          >
+                            <Flex direction="column" align="center">
+                              <Flex
+                                mb={3}
+                                bg={useColorModeValue("blue.100", "blue.800")}
+                                color={useColorModeValue(
+                                  "blue.600",
+                                  "blue.300"
+                                )}
+                                p={2}
+                                borderRadius="md"
+                              >
+                                <Icon as={FiDollarSign} boxSize={5} />
+                              </Flex>
+                              <Text fontWeight="bold" fontSize="md" mb={1}>
+                                Non-Retirement
+                              </Text>
+                              <Text fontSize="sm" color="gray.500">
+                                Standard taxable account
+                              </Text>
+                            </Flex>
+                          </Box>
+
+                          <Box
+                            as="button"
+                            type="button"
+                            p={4}
+                            borderWidth="2px"
+                            borderRadius="lg"
+                            borderColor={
+                              newInvestment.taxStatus === "pre-tax"
+                                ? "green.500"
+                                : "gray.200"
+                            }
+                            bg={
+                              newInvestment.taxStatus === "pre-tax"
+                                ? "green.50"
+                                : "transparent"
+                            }
+                            _hover={{
+                              bg: "green.50",
+                              borderColor: "green.300",
+                            }}
+                            _dark={{
+                              borderColor:
+                                newInvestment.taxStatus === "pre-tax"
+                                  ? "green.500"
+                                  : "gray.600",
+                              bg:
+                                newInvestment.taxStatus === "pre-tax"
+                                  ? "green.900"
+                                  : "transparent",
+                              _hover: {
+                                bg: "green.900",
+                                borderColor: "green.700",
+                              },
+                            }}
+                            transition="all 0.2s"
+                            onClick={() => handle_change_tax_status("pre-tax")}
+                          >
+                            <Flex direction="column" align="center">
+                              <Flex
+                                mb={3}
+                                bg={useColorModeValue("green.100", "green.800")}
+                                color={useColorModeValue(
+                                  "green.600",
+                                  "green.300"
+                                )}
+                                p={2}
+                                borderRadius="md"
+                              >
+                                <Icon as={FiAward} boxSize={5} />
+                              </Flex>
+                              <Text fontWeight="bold" fontSize="md" mb={1}>
+                                Pre-Tax
+                              </Text>
+                              <Text fontSize="sm" color="gray.500">
+                                Traditional 401(k), IRA
+                              </Text>
+                            </Flex>
+                          </Box>
+
+                          <Box
+                            as="button"
+                            type="button"
+                            p={4}
+                            borderWidth="2px"
+                            borderRadius="lg"
+                            borderColor={
+                              newInvestment.taxStatus === "after-tax"
+                                ? "purple.500"
+                                : "gray.200"
+                            }
+                            bg={
+                              newInvestment.taxStatus === "after-tax"
+                                ? "purple.50"
+                                : "transparent"
+                            }
+                            _hover={{
+                              bg: "purple.50",
+                              borderColor: "purple.300",
+                            }}
+                            _dark={{
+                              borderColor:
+                                newInvestment.taxStatus === "after-tax"
+                                  ? "purple.500"
+                                  : "gray.600",
+                              bg:
+                                newInvestment.taxStatus === "after-tax"
+                                  ? "purple.900"
+                                  : "transparent",
+                              _hover: {
+                                bg: "purple.900",
+                                borderColor: "purple.700",
+                              },
+                            }}
+                            transition="all 0.2s"
+                            onClick={() =>
+                              handle_change_tax_status("after-tax")
+                            }
+                          >
+                            <Flex direction="column" align="center">
+                              <Flex
+                                mb={3}
+                                bg={useColorModeValue(
+                                  "purple.100",
+                                  "purple.800"
+                                )}
+                                color={useColorModeValue(
+                                  "purple.600",
+                                  "purple.300"
+                                )}
+                                p={2}
+                                borderRadius="md"
+                              >
+                                <Icon as={FiBriefcase} boxSize={5} />
+                              </Flex>
+                              <Text fontWeight="bold" fontSize="md" mb={1}>
+                                After-Tax
+                              </Text>
+                              <Text fontSize="sm" color="gray.500">
+                                Roth 401(k), Roth IRA
+                              </Text>
+                            </Flex>
+                          </Box>
+                        </SimpleGrid>
+                      </FormControl>
+                    </GridItem>
+                  </Grid>
+
+                  <Flex justifyContent="flex-end" mt={8}>
+                    <Button
+                      leftIcon={<AddIcon />}
+                      colorScheme="blue"
+                      onClick={handle_add_investment}
+                      size="lg"
+                      disabled={available_investment_types.length === 0}
+                      px={8}
+                      fontWeight="bold"
+                    >
+                      Add Investment
+                    </Button>
+                  </Flex>
+                </CardBody>
+              </Card>
+
+              {investmentsConfig.investments.length ===
+                MOCK_INVESTMENT_TYPES.length && (
+                <Text
+                  color="orange.500"
+                  fontSize="sm"
+                  mt={4}
+                  textAlign="center"
+                >
+                  All investment types have been used. Remove an existing
+                  investment to add a different type.
+                </Text>
+              )}
             </Box>
-
-            {investmentsConfig.investments.length ===
-              MOCK_INVESTMENT_TYPES.length && (
-              <Text color="orange.500" fontSize="sm" mt={2}>
-                All investment types have been used. Remove an existing
-                investment to add a different type.
-              </Text>
-            )}
           </CardBody>
 
           <CardFooter
-            p={6}
+            py={6}
+            px={8}
             bg={useColorModeValue("gray.50", "gray.700")}
             borderTopWidth="1px"
             borderColor={borderColor}
           >
-            <Flex justifyContent="flex-end" width="100%">
+            <Flex
+              justifyContent="space-between"
+              width="100%"
+              alignItems="center"
+            >
+              <Text color="gray.500" fontSize="sm">
+                {investmentsConfig.investments.length} investment
+                {investmentsConfig.investments.length !== 1 ? "s" : ""} added
+              </Text>
               <Button
                 colorScheme="blue"
                 size="lg"
@@ -500,13 +863,14 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
                 isDisabled={investmentsConfig.investments.length === 0}
                 px={8}
                 rightIcon={<Icon as={FiChevronRight} />}
+                fontWeight="bold"
               >
                 Continue
               </Button>
             </Flex>
           </CardFooter>
         </Card>
-      </Box>
+      </Container>
     </Box>
   );
 };

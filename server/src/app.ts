@@ -11,7 +11,7 @@ import passport from "passport";
 import userRoutes from "./routes/userRoutes";
 import authRoutes from "./routes/authRoutes";
 import "./auth/passport"; // Import passport configuration
-
+import investmentTypeRoutes from "./routes/InvestmentType.routes";
 const port = api_config.PORT;
 const app = express();
 
@@ -25,6 +25,7 @@ app.use(passport.session());
 // Register routes
 app.use("/api/eventSeries", eventSeriesRoutes);
 app.use("/api/investments", investmentRoutes);
+app.use("/api/investmentTypes", investmentTypeRoutes);
 app.use("/api/users", userRoutes);
 app.use("/auth", authRoutes);
 
@@ -135,6 +136,6 @@ connect_database().catch((error) => {
 // // Call this function before or after scrapping_demo()
 // testRMDScraper();
 
- //scrapping_demo();
- //testProcessRMD();
+//scrapping_demo();
+//testProcessRMD();
 // scrapping_demo();

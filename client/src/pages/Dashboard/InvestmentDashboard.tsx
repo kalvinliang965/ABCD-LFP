@@ -134,6 +134,7 @@ const InvestmentDashboard: React.FC = () => {
   // State for investments data
   const [investments, setInvestments] = useState<Investment[]>([]);
 
+  //! chen checking, why DB is not connected
   // Fetch investments from API on component mount
   useEffect(() => {
     const fetchInvestments = async () => {

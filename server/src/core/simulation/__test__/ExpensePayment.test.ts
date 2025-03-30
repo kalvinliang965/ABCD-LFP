@@ -201,36 +201,36 @@ afterAll(async () => {
 //   });
 // });
 
-describe("Testing Simulation State", () => {
-  it("should pay mandatory expense", async () => {
-    const scenario = create_scenario(scenarioRaw);
-    const state = await create_simulation_state(scenario);
-
-    const result = pay_mandatory_expenses(state);
-    console.log("result", result);
-  });
-});
-
 // describe("Testing Simulation State", () => {
-//   it("should pay discretionary expense", async () => {
+//   it("should pay mandatory expense", async () => {
 //     const scenario = create_scenario(scenarioRaw);
 //     const state = await create_simulation_state(scenario);
 
-//     //update 所有的expense的amount
-//     for (const expense of scenario.event_series) {
-//       if (expense.type === "expense") {
-//         update_expense_amount(
-//           expense as SpendingEvent,
-//           state.get_current_year(),
-//           state.inflation_factor
-//         );
-//       }
-//     }
-
-//     const result = pay_discretionary_expenses(state);
+//     const result = pay_mandatory_expenses(state);
 //     console.log("result", result);
 //   });
 // });
+
+describe("Testing Simulation State", () => {
+  it("should pay discretionary expense", async () => {
+    const scenario = create_scenario(scenarioRaw);
+    const state = await create_simulation_state(scenario);
+
+    //update 所有的expense的amount
+    for (const expense of scenario.event_series) {
+      if (expense.type === "expense") {
+        update_expense_amount(
+          expense as SpendingEvent,
+          state.get_current_year(),
+          state.inflation_factor
+        );
+      }
+    }
+
+    const result = pay_discretionary_expenses(state);
+    console.log("result", result);
+  });
+});
 
 // tests/objectToMap.ts
 
