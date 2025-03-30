@@ -1,8 +1,11 @@
 import axios from "axios";
 import { Investment } from "../types/investment";
+import { config } from "../config";
 
 // API base URL
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+//! Need help!!!!!!
+const API_URL =
+  import.meta.env.VITE_API_URL || `http://localhost:${config.apiPrefix}/api`;
 
 /**
  * Map frontend Investment model to backend InvestmentType model
