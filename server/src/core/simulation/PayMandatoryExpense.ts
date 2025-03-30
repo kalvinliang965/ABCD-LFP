@@ -84,3 +84,44 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
     return withdrawalResult.unfunded == 0;
   }
 }
+
+      // process_tax: () => {
+        // try {
+        //   const standard_deduction =
+        //     federal_tax_service.find_deduction(tax_filing_status);
+        //   const taxable_income =
+        //     ordinary_income +
+        //     capital_gains_income -
+        //     0.15 * social_security_income -
+        //     standard_deduction;
+        //   const federal_taxable_income_tax =
+        //     taxable_income *
+        //     federal_tax_service.find_rate(
+        //       taxable_income,
+        //       IncomeType.TAXABLE_INCOME,
+        //       tax_filing_status
+        //     );
+        //   const state_taxable_income_tax =
+        //     taxable_income *
+        //     state_tax_service.find_rate(taxable_income, tax_filing_status);
+        //   const federal_capital_gains_tax =
+        //     capital_gains_income *
+        //     federal_tax_service.find_rate(
+        //       capital_gains_income,
+        //       IncomeType.CAPITAL_GAINS,
+        //       tax_filing_status
+        //     );
+        //   cash.incr_value(
+        //     taxable_income -
+        //       federal_capital_gains_tax -
+        //       federal_taxable_income_tax -
+        //       state_taxable_income_tax
+        //   );
+        // } catch (error) {
+        //   throw new Error(
+        //     `Failed to process tax ${
+        //       error instanceof Error ? error.message : error
+        //     }`
+        //   );
+        // }
+      // },
