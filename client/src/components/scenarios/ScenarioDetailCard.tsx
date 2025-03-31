@@ -10,6 +10,7 @@ import {
   Tooltip,
   Divider,
   useColorModeValue,
+  Heading,
 } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router-dom";
 import {
@@ -171,6 +172,28 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
             Last modified: {scenario.lastModified}
           </Text>
         </Flex>
+
+        {scenario.rmdStrategy && (
+          <Box mt={4}>
+            <Heading size="sm" mb={2}>RMD Settings</Heading>
+            <Text fontSize="sm">
+              <Text as="span" fontWeight="bold">Start Age:</Text> {scenario.rmdStartAge || 72}
+            </Text>
+            <Text fontSize="sm" mt={1}>
+              <Text as="span" fontWeight="bold">Withdrawal Priority:</Text>
+            </Text>
+            <VStack align="start" pl={4} mt={1} spacing={1}>
+              {Array.isArray(scenario.rmdStrategy) ? 
+                scenario.rmdStrategy.map((account: string, index: number) => (
+                  <Text key={account} fontSize="sm">
+                    {index + 1}. {account}
+                  </Text>
+                )) : 
+                <Text fontSize="sm">Strategy configured</Text>
+              }
+            </VStack>
+          </Box>
+        )}
       </VStack>
 
       <Box mt={4} textAlign="right">

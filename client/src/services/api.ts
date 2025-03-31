@@ -47,6 +47,13 @@ export const mapToBackendModel = (investment: any) => {
       isPercentage: investment.dividendInputMode === "percentage",
     },
     taxability: investment.taxability,
+    // add RMD settings
+    rmdStrategy: investment.rmdSettings?.enableRMD 
+      ? investment.rmdSettings.accountPriority 
+      : [],
+    rmdStartAge: investment.rmdSettings?.enableRMD 
+      ? investment.rmdSettings.startAge 
+      : 72,
   };
 };
 

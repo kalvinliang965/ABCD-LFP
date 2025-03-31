@@ -35,6 +35,7 @@ export interface Scenario {
   spendingStrategy?: SpendingStrategy;
   expenseWithdrawalStrategy?: WithdrawalStrategy;
   rmdStrategy?: WithdrawalStrategy;
+  rmdStartAge?: number;
   rothConversionStrategy?: WithdrawalStrategy;
   rothConversionSettings?: RothConversionSettings;
   sharingSettings?: SharingSettings;
