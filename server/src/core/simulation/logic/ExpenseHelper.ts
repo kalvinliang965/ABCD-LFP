@@ -19,11 +19,11 @@
  * }
  */
 
-import { SimulationState } from "./SimulationState";
-import { ExpenseEvent } from "../domain/event/ExpenseEvent";
-import { ChangeType, IncomeType, TaxStatus } from "../Enums";
-import { Investment } from "../domain/investment/Investment";
-import { Event } from "../domain/event/Event";
+import { SimulationState } from "../SimulationState";
+import { ExpenseEvent } from "../../domain/event/ExpenseEvent";
+import { ChangeType, IncomeType, TaxStatus } from "../../Enums";
+import { Investment } from "../../domain/investment/Investment";
+import { Event } from "../../domain/event/Event";
 
 // Result interface for expense calculation
 export interface SpendingEvent extends ExpenseEvent {

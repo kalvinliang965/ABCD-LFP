@@ -19,8 +19,15 @@ import {
   get_discretionary_expenses,
   get_mandatory_expenses,
   SpendingEvent,
-} from "../../simulation/ExpenseHelper";
-import { copyFileSync } from "fs";
+} from "../../simulation/logic/ExpenseHelper";
+import { ScenarioRaw } from "../raw/scenario_raw";
+import { InvestmentRaw } from "../raw/investment_raw";
+import {ExpenseEventRaw, IncomeEventRaw, InvestmentEventRaw, RebalanceEventRaw} from "../raw/event_raw/event_raw"
+import { TaxStatus } from "../../Enums";
+import { create_federal_tax_service, FederalTaxService } from "../../tax/FederalTaxService";
+import { create_state_tax_service, StateTaxService } from "../../tax/StateTaxService";
+
+export type AccountMap = Map<string, Investment>;
 
 function parse_state(state: string) {
   switch (state) {
@@ -219,82 +226,6 @@ function get_sorted_discretionary_expenses(
   return sort_expenses_by_strategy(unsorted_discretionary_expenses, strategy);
 }
 
-export type InvestmentRaw = {
-  investmentType: InvestmentTypeRaw;
-  value: number;
-  taxStatus: string; // "non-retirement", "pre-tax", "after-tax"
-  id: string;
-};
-
-export type InvestmentTypeRaw = {
-  name: string;
-  description: string;
-  returnAmtOrPct: string; // amount or percent
-  returnDistribution: Map<string, any>;
-  expenseRatio: number;
-  incomeAmtOrPct: string;
-  incomeDistribution: Map<string, any>;
-  taxability: boolean;
-};
-
-export type EventRaw = {
-  name: string;
-  start: Map<string, any>;
-  duration: Map<string, any>;
-  type: string;
-};
-
-export type IncomeEventRaw = EventRaw & {
-  initialAmount: number;
-  changeAmtOrPct: string;
-  changeDistribution: Map<string, any>;
-  inflationAdjusted: boolean;
-  userFraction: number;
-  socialSecurity: boolean;
-};
-
-export type ExpenseEventRaw = EventRaw & {
-  initialAmount: number;
-  changeAmtOrPct: string;
-  changeDistribution: Map<string, any>;
-  inflationAdjusted: boolean;
-  userFraction: number;
-  discretionary: boolean;
-};
-
-export type InvestmentEventRaw = EventRaw & {
-  assetAllocation: Map<string, number>;
-  assetAllocation2: Map<string, number>;
-  glidePath: boolean;
-  maxCash: number;
-};
-
-export type RebalanceEventRaw = EventRaw & {
-  assetAllocation: Map<string, number>;
-};
-
-export interface ScenarioRaw {
-  name: string;
-  martialStatus: string;
-  birthYears: Array<number>;
-  lifeExpectancy: Array<Map<string, any>>;
-  investments: Set<InvestmentRaw>;
-  eventSeries: Set<
-    IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw
-  >;
-  inflationAssumption: Map<string, number>;
-  afterTaxContributionLimit: number;
-  spendingStrategy: Array<string>;
-  expenseWithdrawalStrategy: Array<string>;
-  RMDStrategy: Array<string>;
-  RothConversionOpt: boolean;
-  RothConversionStart: number;
-  RothConversionEnd: number;
-  RothConversionStrategy: Array<string>;
-  financialGoal: number;
-  residenceState: string;
-}
-
 export interface Scenario {
   name: string;
   tax_filing_status: TaxFilingStatus;
@@ -318,9 +249,58 @@ export interface Scenario {
   roth_conversion_strategy: Array<string>;
   financialGoal: number;
   residenceState: StateType;
+  accounts: {
+    non_retirement: AccountMap,
+    pre_tax: AccountMap,
+    after_tax: AccountMap
+  };
+  cash: Investment;
+  federal_tax_service: FederalTaxService;
+  state_tax_service: StateTaxService;
 }
 
-export function create_scenario(scenario_raw: ScenarioRaw): Scenario {
+// Parse investments by tax status
+function parse_investments(
+  investments: Investment[]
+): [Investment, AccountMap, AccountMap, AccountMap] {
+  let cash_account = undefined;
+  const non_retirement_account = new Map<string, Investment>();
+  const pre_tax_account = new Map<string, Investment>();
+  const after_tax_account = new Map<string, Investment>();
+
+  for (const investment of investments) {
+    switch (investment.taxStatus) {
+      case TaxStatus.NON_RETIREMENT:
+        if (investment.id == "cash") {
+          cash_account = investment;
+        } else {
+          non_retirement_account.set(investment.id, investment);
+        }
+        break;
+      case TaxStatus.PRE_TAX:
+        pre_tax_account.set(investment.id, investment);
+        break;
+      case TaxStatus.AFTER_TAX:
+        after_tax_account.set(investment.id, investment);
+        break;
+      default:
+        throw new Error(`Invalid tax status: ${investment.taxStatus}`);
+    }
+  }
+
+  if (!cash_account) {
+    console.log("cash investment not found");
+    process.exit(1);
+  }
+
+  return [
+    cash_account,
+    non_retirement_account,
+    pre_tax_account,
+    after_tax_account,
+  ];
+}
+export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenario> {
   try {
     const taxfilingStatus: TaxFilingStatus = parse_martial_status(
       scenario_raw.martialStatus
@@ -361,7 +341,23 @@ export function create_scenario(scenario_raw: ScenarioRaw): Scenario {
     const financialGoal: number = scenario_raw.financialGoal;
     const residenceState: StateType = parse_state(scenario_raw.residenceState);
 
+    // Process investments - scenario.investments is already processed in create_scenario
+    const [cash, non_retirement, pre_tax, after_tax] = parse_investments(
+      investments
+    );
+
+    // Create tax services
+    const federal_tax_service = await create_federal_tax_service();
+    const state_tax_service = await create_state_tax_service();
     return {
+      federal_tax_service,
+      state_tax_service,
+      cash,
+      accounts: {
+        non_retirement,
+        pre_tax,
+        after_tax
+      },
       name: scenario_raw.name,
       tax_filing_status: taxfilingStatus,
       user_birth_year,

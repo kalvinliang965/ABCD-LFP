@@ -82,14 +82,14 @@ export interface FederalTaxService {
     find_bracket(rate: number, income_type: IncomeType, status: TaxFilingStatus): TaxBracket;
     find_rate(income: number, income_type: IncomeType, status: TaxFilingStatus): number;
     find_deduction(status: TaxFilingStatus): number;
-    clone(): Promise<FederalTaxService>,
+    clone(): FederalTaxService,
 }
 
-export async function create_federal_service_wo(
+export function create_federal_service_wo(
     taxable_income_bracket: TaxBrackets,
     capital_gains_bracket: TaxBrackets,
     standard_deductions: StandardDeduction
-): Promise<FederalTaxService> {
+): FederalTaxService {
 
         //console.log("Federal Tax data successfully initialize");
         const print_taxable_income_bracket = () =>  {
@@ -159,9 +159,9 @@ export async function create_federal_service_wo(
             find_rate,
             find_deduction,
             clone: () => create_federal_service_wo(
-                taxable_income_bracket,
-                capital_gains_bracket,
-                standard_deductions,
+                taxable_income_bracket.clone(),
+                capital_gains_bracket.clone(),
+                standard_deductions.clone(),
             )
         };
 }
@@ -171,7 +171,7 @@ export async function create_federal_tax_service() : Promise<FederalTaxService> 
         const taxable_income_bracket = await initialize_taxable_income_bracket();
         const capital_gains_bracket = await initialize_capital_gains_bracket();
         const standard_deductions = await initialize_standard_deductions_info();
-        return await create_federal_service_wo(taxable_income_bracket, capital_gains_bracket, standard_deductions);
+        return create_federal_service_wo(taxable_income_bracket, capital_gains_bracket, standard_deductions);
     } catch (error) {
         console.error(`Error in initializing federal tax data: ${error}`);
         process.exit(1);

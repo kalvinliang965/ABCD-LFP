@@ -1,5 +1,13 @@
-import { IncomeEventRaw } from "../scenario/Scenario";
+import { EventRaw } from "./event_raw";
 
+export type IncomeEventRaw = EventRaw & {
+  initialAmount: number;
+  changeAmtOrPct: string;
+  changeDistribution: Map<string, any>;
+  inflationAdjusted: boolean;
+  userFraction: number;
+  socialSecurity: boolean;
+};
 
 export const salary_income_one: IncomeEventRaw = create_income_event_raw(
     "salary",

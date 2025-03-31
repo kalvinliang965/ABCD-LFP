@@ -15,9 +15,9 @@ import {
   RebalanceEventRaw,
 } from "../../domain/scenario/Scenario";
 import { create_simulation_state } from "../SimulationState";
-import { pay_mandatory_expenses } from "../PayMandatoryExpense";
-import { pay_discretionary_expenses } from "../PayDiscretionaryExpense";
-import { SpendingEvent, update_expense_amount } from "../ExpenseHelper";
+import { pay_mandatory_expenses } from "../logic/PayMandatoryExpense";
+import { pay_discretionary_expenses } from "../logic/PayDiscretionaryExpense";
+import { SpendingEvent, update_expense_amount } from "../logic/ExpenseHelper";
 const scenarioYaml = `
 # file format for scenario import/export.  version: 2025-03-23
 # CSE416, Software Engineering, Scott D. Stoller.

@@ -1,12 +1,9 @@
 
-import update_investment from '../UpdateInvestment';
+import update_investment from '../logic/UpdateInvestment';
 import { ChangeType, TaxStatus } from '../../Enums';
 import { SimulationState } from '../SimulationState';
 import { create_investment } from '../../domain/investment/Investment';
-import { 
-    incr_300_init_300_investment_one, 
-    incr_300_init_300_investment_two,
-} from '../../domain/investment/investment_raw';
+import { incr_300_init_300_investment_one, incr_300_init_300_investment_two } from '../../domain/raw/investment_raw';
 import { Investment } from '../../domain/investment/Investment';
 import { TaxFilingStatus } from '../../Enums';
 

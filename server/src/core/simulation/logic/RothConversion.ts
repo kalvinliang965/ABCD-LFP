@@ -1,6 +1,6 @@
 // src/core/simulation/RothConversion.ts
-import { AccountMap, SimulationState } from "./SimulationState";
-import { IncomeType, TaxStatus } from "../Enums";
+import { AccountMap, SimulationState } from "../SimulationState";
+import { IncomeType, TaxStatus } from "../../Enums";
 
 function transfer_investment(
     roth_conversion_strategy: string[], 

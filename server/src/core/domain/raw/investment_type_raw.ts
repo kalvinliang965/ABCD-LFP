@@ -1,5 +1,14 @@
-import { InvestmentTypeRaw } from "../scenario/Scenario";
 
+export type InvestmentTypeRaw = {
+  name: string;
+  description: string;
+  returnAmtOrPct: string; // amount or percent
+  returnDistribution: Map<string, any>;
+  expenseRatio: number;
+  incomeAmtOrPct: string;
+  incomeDistribution: Map<string, any>;
+  taxability: boolean;
+};
 
 export const cash_investment_type_one = create_investment_type_raw(
     "cash",

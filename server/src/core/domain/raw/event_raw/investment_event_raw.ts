@@ -1,6 +1,12 @@
 
-import { InvestmentEventRaw } from "../scenario/Scenario";
+import { EventRaw } from "./event_raw";
 
+export type InvestmentEventRaw = EventRaw & {
+  assetAllocation: Map<string, number>;
+  assetAllocation2: Map<string, number>;
+  glidePath: boolean;
+  maxCash: number;
+};
 
 export const my_investments_investment_one: InvestmentEventRaw = create_invest_event_raw(
     "my investments",

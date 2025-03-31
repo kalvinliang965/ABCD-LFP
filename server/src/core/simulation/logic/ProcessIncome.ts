@@ -1,10 +1,10 @@
 // src/core/simulation/ProcessIncome.ts
 
-import { ChangeType } from "../Enums";
-import { SimulationState } from "./SimulationState";
-import { Event as DomainEvent } from "../domain/event/Event";
-import { Scenario } from "../domain/scenario/Scenario";
-import ValueGenerator from "../../utils/math/ValueGenerator";
+import { ChangeType } from "../../Enums";
+import { SimulationState } from "../SimulationState";
+import { Event as DomainEvent } from "../../domain/event/Event";
+import { Scenario } from "../../domain/scenario/Scenario";
+import ValueGenerator from "../../../utils/math/ValueGenerator";
 
 /**
  * Process income for all investments

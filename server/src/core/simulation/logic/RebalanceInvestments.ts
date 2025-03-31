@@ -1,8 +1,8 @@
 // src/core/simulation/RebalanceInvestments.ts
-import { SimulationState } from './SimulationState';
-import { Scenario } from '../domain/scenario/Scenario';
-import { Investment } from '../domain/investment/Investment';
-import { TaxStatus } from '../Enums';
+import { SimulationState } from '../SimulationState';
+import { Scenario } from '../../domain/scenario/Scenario';
+import { Investment } from '../../domain/investment/Investment';
+import { TaxStatus } from '../../Enums';
 
 //get current rebalance event for the given year
 function getCurrentRebalanceEvent(

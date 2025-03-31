@@ -1,9 +1,9 @@
-import { create_investment_type_raw } from "../investment_type_raw";
+import { create_investment_type_raw } from "../../raw/investment_type_raw";
 import { 
     cash_investment_type_one, 
     s_and_p_500_investment_type_one, 
     tax_exempt_bonds_investment_type_one 
-} from "../investment_type_raw";
+} from "../../raw/investment_type_raw";
 
 import { create_investment_type, parse_taxability, parse_distribution, parse_change_type } from "../InvestmentType";
 import { ChangeType } from "../../../Enums";

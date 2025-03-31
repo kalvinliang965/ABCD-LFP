@@ -1,6 +1,8 @@
 
-import { RebalanceEventRaw } from "../scenario/Scenario";
-
+import { EventRaw } from "./event_raw";
+export type RebalanceEventRaw = EventRaw & {
+  assetAllocation: Map<string, number>;
+};
 
 export const rebalance_one: RebalanceEventRaw = create_rebalance_event_raw(
     "my investments",

@@ -10,10 +10,10 @@ import {
   streaming_services_expense_one,
   food_expense_one,
   vacation_expense_one,
-} from "../../event/expense_event_raw_example";
-import { my_investments_investment_one } from "../../event/investment_event_raw_example";
-import { rebalance_one } from "../../event/rebalance_event_raw_example";
-import { salary_income_one } from "../../event/income_event_raw_example";
+} from "../../raw/event_raw/expense_event_raw";
+import { my_investments_investment_one } from "../../raw/event_raw/investment_event_raw";
+import { rebalance_one } from "../../raw/event_raw/rebalance_event_raw";
+import { salary_income_one } from "../../raw/event_raw/income_event_raw";
 import { InvestmentRaw, InvestmentTypeRaw } from "../../scenario/Scenario";
 
 describe("Scenario initialization test", () => {

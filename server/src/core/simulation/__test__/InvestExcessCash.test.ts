@@ -1,4 +1,4 @@
-import { investExcessCash } from '../InvestExcessCash';
+import { investExcessCash } from '../logic/InvestExcessCash';
 import { SimulationState } from '../SimulationState';
 import { Scenario } from '../../domain/scenario/Scenario';
 import { TaxStatus } from '../../Enums';
