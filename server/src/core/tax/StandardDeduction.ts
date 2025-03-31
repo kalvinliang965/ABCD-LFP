@@ -17,14 +17,14 @@ export function create_standard_deductions(): StandardDeduction {
     const add_deduction = (amt: number, status: TaxFilingStatus): void => {
         if (deductions.has(status)) {
             console.error("Already have deduction for this status", status);
-            return;
+            process.exit(1);
         }
         deductions.set(status, amt);
     }
 
     const adjust_for_inflation = (rate: number): void => {
         for (const [key, val] of deductions.entries()) {
-            deductions.set(key, val * (1 + rate));
+            deductions.set(key, Math.round(val * (1 + rate)));
         }        
     }
     

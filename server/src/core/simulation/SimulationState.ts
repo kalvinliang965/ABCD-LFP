@@ -41,7 +41,6 @@ export interface SimulationState {
   incr_capital_gains_income(amt: number): void;
   incr_social_security_income(amt: number): void;
   incr_after_tax_contribution(amt: number): void;
-  setup_year(): void;
   get_current_year(): number;
   get_financial_goal(): number;
   get_early_withdrawal_penalty(): number;
@@ -63,7 +62,6 @@ export interface SimulationState {
   spending_strategy: Array<string>;
   expense_withrawal_strategy: Array<string>;
   process_events(): void;
-  process_tax(): void;
   cash: Investment;
   mandatory_expenses: SpendingEvent[];
   discretionary_expenses: SpendingEvent[];
@@ -172,12 +170,14 @@ export async function create_simulation_state(
   try {
     const start_year: number = new Date().getFullYear();
     let current_year: number = start_year;
-    let previous_year: number = current_year - 1;
+    const previous_year: number = current_year - 1;
     const is_married = scenario.tax_filing_status === TaxFilingStatus.MARRIED;
     let tax_filing_status = scenario.tax_filing_status;
 
     // contian tax info of given year
     const yearly_records = create_yearly_records()
+    // "dummy node"
+    yearly_records.initialize_record(previous_year);
 
     // Process investments - scenario.investments is already processed in create_scenario
     const [cash, non_retirement, pre_tax, after_tax] = parse_investments(
@@ -226,10 +226,7 @@ export async function create_simulation_state(
       },
 
       process_events: () => {
-        // TODO: Process income events
-        // TODO: Process expense events
-        // TODO: Process investment events
-        // TODO: Process rebalance events
+      
       },
 
       // Income getters and setters
@@ -313,7 +310,6 @@ export async function create_simulation_state(
           tax_filing_status = TaxFilingStatus.SINGLE;
         }
       },
-
       // Account and event organization
       accounts: {
         non_retirement,
@@ -325,87 +321,6 @@ export async function create_simulation_state(
         expense: expense_events,
         invest: investment_events,
         rebalance: rebalance_events,
-      },
-
-      
-
-      process_tax: () => {
-        // try {
-        //   const standard_deduction =
-        //     federal_tax_service.find_deduction(tax_filing_status);
-        //   const taxable_income =
-        //     ordinary_income +
-        //     capital_gains_income -
-        //     0.15 * social_security_income -
-        //     standard_deduction;
-        //   const federal_taxable_income_tax =
-        //     taxable_income *
-        //     federal_tax_service.find_rate(
-        //       taxable_income,
-        //       IncomeType.TAXABLE_INCOME,
-        //       tax_filing_status
-        //     );
-        //   const state_taxable_income_tax =
-        //     taxable_income *
-        //     state_tax_service.find_rate(taxable_income, tax_filing_status);
-        //   const federal_capital_gains_tax =
-        //     capital_gains_income *
-        //     federal_tax_service.find_rate(
-        //       capital_gains_income,
-        //       IncomeType.CAPITAL_GAINS,
-        //       tax_filing_status
-        //     );
-        //   cash.incr_value(
-        //     taxable_income -
-        //       federal_capital_gains_tax -
-        //       federal_taxable_income_tax -
-        //       state_taxable_income_tax
-        //   );
-        // } catch (error) {
-        //   throw new Error(
-        //     `Failed to process tax ${
-        //       error instanceof Error ? error.message : error
-        //     }`
-        //   );
-        // }
-      },
-
-      // Year setup and management
-      setup_year: () => {
-        // ordinary_income = 0;
-        // capital_gains_income = 0;
-        // social_security_income = 0;
-        // after_tax_contribution = 0;
-        // federal_tax_service.adjust_for_inflation(inflation_factor);
-        // state_tax_service.adjust_for_inflation(inflation_factor);
-
-        // // 更新scenario中的支出列
-
-        // // type check
-        // for (const [id, investment] of non_retirement.entries()) {
-        //   if (investment.taxStatus != TaxStatus.NON_RETIREMENT) {
-        //     console.error(
-        //       `non retirment account contain invalid type ${investment.taxStatus}`
-        //     );
-        //     process.exit(1);
-        //   }
-        // }
-        // for (const [id, investment] of after_tax.entries()) {
-        //   if (investment.taxStatus != TaxStatus.AFTER_TAX) {
-        //     console.error(
-        //       `after tax account contain invalid type ${investment.taxStatus}`
-        //     );
-        //     process.exit(1);
-        //   }
-        // }
-        // for (const [id, investment] of pre_tax.entries()) {
-        //   if (investment.taxStatus != TaxStatus.PRE_TAX) {
-        //     console.error(
-        //       `pre tax account contain invalid type ${investment.taxStatus}`
-        //     );
-        //     process.exit(1);
-        //   }
-        // }
       },
     };
 
