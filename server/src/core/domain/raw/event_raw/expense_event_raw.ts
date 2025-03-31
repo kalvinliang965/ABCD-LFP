@@ -1,5 +1,14 @@
-import { ExpenseEventRaw } from "../scenario/Scenario";
 
+import { EventRaw } from "./event_raw";
+
+export type ExpenseEventRaw = EventRaw & {
+  initialAmount: number;
+  changeAmtOrPct: string;
+  changeDistribution: Map<string, any>;
+  inflationAdjusted: boolean;
+  userFraction: number;
+  discretionary: boolean;
+};
 
 export const food_expense_one = create_expense_event_raw(
     "food",

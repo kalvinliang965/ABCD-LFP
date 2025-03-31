@@ -1,33 +1,53 @@
-import { InvestmentEventRaw, Scenario, ScenarioRaw } from "./Scenario";
-import {
-  ExpenseEventRaw,
-  IncomeEventRaw,
-  InvestmentRaw,
-  RebalanceEventRaw,
-} from "./Scenario";
+import { InvestmentRaw } from "./investment_raw";
+import { IncomeEventRaw } from "./event_raw/income_event_raw";
+import { ExpenseEventRaw } from "./event_raw/expense_event_raw";
+import { InvestmentEventRaw } from "./event_raw/investment_event_raw";
+import { RebalanceEventRaw } from "./event_raw/rebalance_event_raw";
 import {
   cash_investment_one,
   s_and_p_investment_one,
   s_and_p_investment_three,
   s_and_p_investment_two,
   tax_exempt_bonds_investment_one,
-} from "../investment/investment_raw";
+} from "./investment_raw";
 
 import {
   streaming_services_expense_one,
   food_expense_one,
   vacation_expense_one,
-} from "../event/expense_event_raw_example";
+} from "./event_raw/expense_event_raw";
 
-import { my_investments_investment_one } from "../event/investment_event_raw_example";
-import { rebalance_one } from "../event/rebalance_event_raw_example";
-import { salary_income_one } from "../event/income_event_raw_example";
+import { my_investments_investment_one } from "./event_raw/investment_event_raw";
+import { rebalance_one } from "./event_raw/rebalance_event_raw";
+import { salary_income_one } from "./event_raw/income_event_raw";
 
 // a distribution is represented as a map with one of the following forms:
 // {type: fixed, value: <number>}
 // {type: normal, mean: <number>, stdev: <number>}
 // {type: uniform, lower: <number>, upper: <number>}
 // percentages are represented by their decimal value, e.g., 4% is represented as 0.04.
+
+export interface ScenarioRaw {
+  name: string;
+  martialStatus: string;
+  birthYears: Array<number>;
+  lifeExpectancy: Array<Map<string, any>>;
+  investments: Set<InvestmentRaw>;
+  eventSeries: Set<
+    IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw
+  >;
+  inflationAssumption: Map<string, number>;
+  afterTaxContributionLimit: number;
+  spendingStrategy: Array<string>;
+  expenseWithdrawalStrategy: Array<string>;
+  RMDStrategy: Array<string>;
+  RothConversionOpt: boolean;
+  RothConversionStart: number;
+  RothConversionEnd: number;
+  RothConversionStrategy: Array<string>;
+  financialGoal: number;
+  residenceState: string;
+}
 
 export const scenario_one = create_scenario_raw(
   "Retirement Planning Scenario",

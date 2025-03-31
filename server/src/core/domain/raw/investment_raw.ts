@@ -1,5 +1,6 @@
 
-import { InvestmentRaw, InvestmentTypeRaw } from "../scenario/Scenario";
+import { InvestmentTypeRaw } from "./investment_type_raw";
+
 import { 
     cash_investment_type_one, 
     s_and_p_500_investment_type_one, 
@@ -9,6 +10,14 @@ import {
     incr_600_investment_type_one,
     incr_600_investment_type_two,
 } from "./investment_type_raw";
+
+
+export type InvestmentRaw = {
+  investmentType: InvestmentTypeRaw;
+  value: number;
+  taxStatus: string; // "non-retirement", "pre-tax", "after-tax"
+  id: string;
+};
 
 export const incr_300_init_300_investment_one: InvestmentRaw = create_investment_raw(
     incr_300_investment_type_one,
