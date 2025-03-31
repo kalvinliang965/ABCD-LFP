@@ -1,18 +1,17 @@
 // src/core/simulation/UpdateInvestment.ts
 
-import { ChangeType, TaxStatus } from "../Enums";
-import { SimulationState } from "./SimulationState";
-import { AccountMap } from "./SimulationState";
-
+import { ChangeType, TaxStatus } from "../../Enums";
+import { SimulationState } from "../SimulationState";
+import { AccountMap } from "../../domain/AccountManager";
 
 export default function update_investment(simulation_state: SimulationState) {
     
     // we could just iterate the non-retirment account list
     // but here i just wanna double check for invalid account type
     const account_maps: Array<AccountMap> = [
-        simulation_state.accounts.after_tax,
-        simulation_state.accounts.non_retirement,
-        simulation_state.accounts.pre_tax
+        simulation_state.account_manager.after_tax,
+        simulation_state.account_manager.non_retirement,
+        simulation_state.account_manager.pre_tax
     ];
     
     for (const account_map of account_maps) {

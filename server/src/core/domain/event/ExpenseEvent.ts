@@ -1,6 +1,7 @@
 import { RandomGenerator } from "../../../utils/math/ValueGenerator";
 import { ChangeType } from "../../Enums";
-import { ExpenseEventRaw } from "../scenario/Scenario";
+import { ExpenseEventRaw } from "../raw/event_raw/expense_event_raw";
+
 import {
   Event,
   parse_duration,
@@ -15,6 +16,7 @@ export interface ExpenseEvent extends Event {
   inflation_adjusted: boolean;
   user_fraction: number;
   discretionary: boolean;
+  clone(): ExpenseEvent;
 }
 
 function parse_user_fraction(user_fraction: number) {
@@ -48,6 +50,7 @@ function create_expense_event(raw_data: ExpenseEventRaw): ExpenseEvent {
       inflation_adjusted: raw_data.inflationAdjusted,
       user_fraction,
       discretionary: raw_data.discretionary,
+      clone: () => create_expense_event(raw_data),
     };
   } catch (error) {
     throw new Error(`Failed to initialize ExpenseEvent: ${error}`);

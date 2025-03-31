@@ -1,7 +1,6 @@
 
 import process_roth_conversion from '../logic/RothConversion';
 import { SimulationState } from '../SimulationState';
-import { AccountMap } from '../../domain/scenario/Scenario';
 import { TaxStatus, TaxFilingStatus, IncomeType, ChangeType } from '../../Enums';
 import { create_investment, Investment } from '../../domain/investment/Investment';
 import { InvestmentType } from '../../domain/investment/InvestmentType';
@@ -77,8 +76,8 @@ describe('Roth Conversion Process', () => {
     test('transfer to itself', () => {
       const state = createBaseState();
       process_roth_conversion(state);
-      const source = state.accounts.pre_tax;
-      const target = state.accounts.after_tax;
+      const source = state.account_manager.pre_tax;
+      const target = state.account_manager.after_tax;
       
       const sourceInv = source.get('pre_tax_1')!;
       const targetInv = target.get('pre_tax_1')!;
@@ -125,7 +124,7 @@ describe('Roth Conversion Process', () => {
       state.roth_conversion_strategy = [];
       
       process_roth_conversion(state);
-      expect(state.accounts.after_tax.size).toBe(0  );
+      expect(state.account_manager.after_tax.size).toBe(0  );
     });
     test('account not exist', () => {
         const state = createBaseState();

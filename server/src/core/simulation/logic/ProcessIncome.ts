@@ -24,7 +24,7 @@ export default async function process_income(
   
   // Process income from investments
   // Non-retirement accounts
-  for (const [id, investment] of state.accounts.non_retirement) {
+  for (const [id, investment] of state.account_manager.non_retirement) {
     const income = calculate_investment_income(investment);
     if (income > 0) {
       total_income_for_year += income;
@@ -46,7 +46,7 @@ export default async function process_income(
   }
   
   // Pre-tax retirement accounts
-  for (const [id, investment] of state.accounts.pre_tax) {
+  for (const [id, investment] of state.account_manager.pre_tax) {
     const income = calculate_investment_income(investment);
     if (income > 0) {
       total_income_for_year += income;

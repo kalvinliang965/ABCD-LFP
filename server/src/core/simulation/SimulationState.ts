@@ -12,7 +12,7 @@ import {
 import { Event } from "../domain/event/Event";
 import { SpendingEvent, update_expense_amount } from "./logic/ExpenseHelper";
 import { create_yearly_records } from "./YearlyTaxRecords";
-
+import { AccountManager } from "../domain/AccountManager";
 export type EventMap = Map<string, Event>;
 
 export interface PersonDetails {
@@ -20,8 +20,6 @@ export interface PersonDetails {
   year_of_death: number;
   is_alive(): boolean;
 }
-
-import { AccountMap } from "../domain/scenario/Scenario";
 
 export interface SimulationState {
   events: Array<Event>;
@@ -49,11 +47,7 @@ export interface SimulationState {
   federal_tax_service: FederalTaxService;
   state_tax_service: StateTaxService;
   advance_year(): void;
-  accounts: {
-    non_retirement: AccountMap;
-    pre_tax: AccountMap;
-    after_tax: AccountMap;
-  };
+  account_manager: AccountManager,
   events_by_type: {
     income: EventMap;
     expense: EventMap;
@@ -265,7 +259,7 @@ export async function create_simulation_state(
       federal_tax_service: scenario.federal_tax_service.clone(),
       state_tax_service: scenario.state_tax_service.clone(),
       // Account and event organization
-      accounts: scenario.accounts,
+      account_manager: scenario.account_manager.clone(),
       events_by_type: {
         income: income_events,
         expense: expense_events,

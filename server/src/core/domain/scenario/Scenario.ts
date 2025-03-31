@@ -26,8 +26,9 @@ import {ExpenseEventRaw, IncomeEventRaw, InvestmentEventRaw, RebalanceEventRaw} 
 import { TaxStatus } from "../../Enums";
 import { create_federal_tax_service, FederalTaxService } from "../../tax/FederalTaxService";
 import { create_state_tax_service, StateTaxService } from "../../tax/StateTaxService";
+import { AccountManager, create_account_manager } from "../AccountManager";
+import { AccountMap } from "../AccountManager";
 
-export type AccountMap = Map<string, Investment>;
 
 function parse_state(state: string) {
   switch (state) {
@@ -249,11 +250,7 @@ export interface Scenario {
   roth_conversion_strategy: Array<string>;
   financialGoal: number;
   residenceState: StateType;
-  accounts: {
-    non_retirement: AccountMap,
-    pre_tax: AccountMap,
-    after_tax: AccountMap
-  };
+  account_manager: AccountManager
   cash: Investment;
   federal_tax_service: FederalTaxService;
   state_tax_service: StateTaxService;
@@ -353,11 +350,11 @@ export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenar
       federal_tax_service,
       state_tax_service,
       cash,
-      accounts: {
+      account_manager: create_account_manager(
         non_retirement,
         pre_tax,
         after_tax
-      },
+      ),
       name: scenario_raw.name,
       tax_filing_status: taxfilingStatus,
       user_birth_year,

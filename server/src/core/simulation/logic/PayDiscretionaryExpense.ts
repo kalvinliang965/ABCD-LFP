@@ -57,15 +57,15 @@ function calculate_current_assets(state: SimulationState): {
   let pre_tax_retirement_accounts_value = 0;
   let after_tax_retirement_accounts_value = 0;
 
-  for (const [_, investment] of state.accounts.non_retirement) {
+  for (const [_, investment] of state.account_manager.non_retirement) {
     non_retirement_accounts_value += investment.get_value();
   }
 
-  for (const [_, investment] of state.accounts.pre_tax) {
+  for (const [_, investment] of state.account_manager.pre_tax) {
     pre_tax_retirement_accounts_value += investment.get_value();
   }
 
-  for (const [_, investment] of state.accounts.after_tax) {
+  for (const [_, investment] of state.account_manager.after_tax) {
     after_tax_retirement_accounts_value += investment.get_value();
   }
 

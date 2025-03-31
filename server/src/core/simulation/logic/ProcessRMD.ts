@@ -16,7 +16,7 @@ async function get_distribution_period(age: number): Promise<number> {
  * Find a cash account in the non-retirement accounts
  */
 function find_cash_account(state: SimulationState & Partial<Scenario>): Investment | undefined {
-  for (const [id, investment] of state.accounts.non_retirement) {
+  for (const [id, investment] of state.account_manager.non_retirement) {
     // Look for an account named "cash" (case insensitive)
     if (id.toLowerCase() === "cash") {
       return investment;
@@ -47,7 +47,7 @@ export default async function process_rmds(
   let totalPreTaxBalance = 0;
   
   // Calculate total balance in pre-tax accounts
-  for (const [_, account] of state.accounts.pre_tax) {
+  for (const [_, account] of state.account_manager.pre_tax) {
     totalPreTaxBalance += (account as any).value;
   }
   
@@ -76,7 +76,7 @@ export default async function process_rmds(
   if (!cashAccount) {
     console.warn("No cash account found for RMD distributions, creating one");
     cashAccount = { value: 0 } as any; // Simplified version using type assertion
-    state.accounts.non_retirement.set('cash', cashAccount as Investment);
+    state.account_manager.non_retirement.set('cash', cashAccount as Investment);
   }
   
   // Calculate RMD amount for each account proportionally
@@ -85,7 +85,7 @@ export default async function process_rmds(
   
   // First, calculate the total value of accounts in the RMD strategy
   for (const accountId of state.rmd_strategy || []) {
-    const account = state.accounts.pre_tax.get(accountId);
+    const account = state.account_manager.pre_tax.get(accountId);
     if (account) {
       totalRmdAccountsValue += (account as any).value;
     }
@@ -93,7 +93,7 @@ export default async function process_rmds(
   //show add a rmd_strategy to the InvestmentType ????
   // Then calculate proportional RMD for each account
   for (const accountId of state.rmd_strategy || []) {
-    const account = state.accounts.pre_tax.get(accountId);
+    const account = state.account_manager.pre_tax.get(accountId);
     if (!account) continue;
     
     const accountValue = (account as any).value;
@@ -106,7 +106,7 @@ export default async function process_rmds(
   for (const [accountId, withdrawAmount] of accountRmds.entries()) {
     if (withdrawAmount <= 0) continue;
     
-    const account = state.accounts.pre_tax.get(accountId);
+    const account = state.account_manager.pre_tax.get(accountId);
     if (!account) continue;
     
     // Update account balance

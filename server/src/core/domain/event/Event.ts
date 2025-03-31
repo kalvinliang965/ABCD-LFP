@@ -1,6 +1,6 @@
 import ValueGenerator, { RandomGenerator } from "../../../utils/math/ValueGenerator";
 import { ChangeType, DistributionType, StatisticType } from "../../Enums";
-import { EventRaw } from "../scenario/Scenario";
+import { EventRaw } from "../raw/event_raw/event_raw";
 
 // Map to store the event start years during processing
 let _event_start_years = new Map<string, number>();
@@ -199,6 +199,7 @@ interface Event {
   start: number;
   duration: number;
   type: string;
+  clone(): Event;
 }
 
 export {

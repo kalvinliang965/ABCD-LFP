@@ -1,8 +1,9 @@
-import { RebalanceEventRaw } from "../scenario/Scenario";
+import { RebalanceEventRaw } from "../raw/event_raw/rebalance_event_raw";
 import { Event, parse_duration, parse_start_year } from "./Event";
 
 interface RebalanceEvent extends Event {
   asset_allocation: Map<string, number>;
+  clone(): RebalanceEvent;
 }
 
 function create_rebalance_event(raw_data: RebalanceEventRaw): RebalanceEvent {
@@ -16,6 +17,7 @@ function create_rebalance_event(raw_data: RebalanceEventRaw): RebalanceEvent {
       duration,
       type: raw_data.type,
       asset_allocation: raw_data.assetAllocation,
+      clone: () => create_rebalance_event(raw_data),
     };
   } catch (error) {
     throw new Error(`Failed to initialize RebalanceEvent: ${error}`);

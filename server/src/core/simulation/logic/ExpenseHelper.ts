@@ -224,13 +224,13 @@ export function withdraw_from_investments(
       let accountMap: Map<string, Investment>;
       switch (type) {
         case TaxStatus.NON_RETIREMENT:
-          accountMap = state.accounts.non_retirement;
+          accountMap = state.account_manager.non_retirement;
           break;
         case TaxStatus.PRE_TAX:
-          accountMap = state.accounts.pre_tax;
+          accountMap = state.account_manager.pre_tax;
           break;
         case TaxStatus.AFTER_TAX:
-          accountMap = state.accounts.after_tax;
+          accountMap = state.account_manager.after_tax;
           break;
       }
 

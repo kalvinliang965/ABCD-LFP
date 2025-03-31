@@ -7,7 +7,7 @@ import {
 import ValueGenerator, {
   RandomGenerator,
 } from "../../../utils/math/ValueGenerator";
-import { InvestmentTypeRaw } from "../scenario/Scenario";
+import { InvestmentTypeRaw } from "../raw/investment_type_raw";
 
 export interface InvestmentType {
   name: string;
