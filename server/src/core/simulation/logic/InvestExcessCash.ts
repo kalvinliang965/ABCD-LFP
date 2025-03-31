@@ -105,8 +105,9 @@ export function investExcessCash(
 	
 	// Allocate the excess cash among the selected investments
 	for (const [investmentId, percentage] of allocation.entries()) {
-		if (percentage <= 0 || percentage > 100) {
-			// TODO	
+		if (percentage <= 0 || percentage > 1) {
+			console.log("Incorrect percentage");
+			process.exit(1);
 		}
 		//find the investment in allowed accounts
 		const investment = findInvestmentInAccount(state, investmentId, allowedAccounts);
