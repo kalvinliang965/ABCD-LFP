@@ -10,7 +10,7 @@ import {
   create_state_tax_service,
 } from "../tax/StateTaxService";
 import { Event } from "../domain/event/Event";
-import { SpendingEvent, update_expense_amount } from "./ExpenseHelper";
+import { SpendingEvent, update_expense_amount } from "./logic/ExpenseHelper";
 import { create_yearly_records } from "./YearlyTaxRecords";
 
 export type AccountMap = Map<string, Investment>;

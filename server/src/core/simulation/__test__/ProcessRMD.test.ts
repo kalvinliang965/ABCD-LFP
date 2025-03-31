@@ -1,4 +1,4 @@
-import process_rmds from '../ProcessRMD';
+import process_rmds from '../logic/ProcessRMD';
 import { SimulationState } from '../SimulationState';
 import { TaxStatus } from '../../Enums';
 import * as RMDScraper from '../../../services/RMDScraper';

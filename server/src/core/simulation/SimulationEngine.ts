@@ -2,7 +2,7 @@
 import { SimulationState, create_simulation_state } from './SimulationState';
 import { SimulationResult, create_simulation_result } from './SimulationResult';
 import { Scenario } from '../domain/scenario/Scenario';
-import process_roth_conversion from './RothConversion';
+import process_roth_conversion from './logic/RothConversion';
 import update_investment from './UpdateInvestment';
 
 export class SimulationEngine {

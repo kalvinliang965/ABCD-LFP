@@ -1,8 +1,8 @@
 // src/core/simulations/InvestExcessCash
 
-import { SimulationState } from './SimulationState';
-import { Scenario } from '../domain/scenario/Scenario';
-import { Investment } from '../domain/investment/Investment';
+import { SimulationState } from '../SimulationState';
+import { Scenario } from '../../domain/scenario/Scenario';
+import { Investment } from '../../domain/investment/Investment';
 
 //get current invest event for the given year
 function getCurrentInvestEvent(

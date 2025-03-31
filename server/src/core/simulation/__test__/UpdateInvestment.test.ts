@@ -1,5 +1,5 @@
 
-import update_investment from '../UpdateInvestment';
+import update_investment from '../logic/UpdateInvestment';
 import { ChangeType, TaxStatus } from '../../Enums';
 import { SimulationState } from '../SimulationState';
 import { create_investment } from '../../domain/investment/Investment';

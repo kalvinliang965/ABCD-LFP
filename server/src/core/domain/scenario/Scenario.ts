@@ -19,7 +19,7 @@ import {
   get_discretionary_expenses,
   get_mandatory_expenses,
   SpendingEvent,
-} from "../../simulation/ExpenseHelper";
+} from "../../simulation/logic/ExpenseHelper";
 import { copyFileSync } from "fs";
 
 function parse_state(state: string) {

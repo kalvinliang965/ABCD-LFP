@@ -23,7 +23,7 @@
  * }
  */
 
-import { SimulationState } from "./SimulationState";
+import { SimulationState } from "../SimulationState";
 import {
   withdraw_from_investments,
   calculate_detailed_expense_amount,

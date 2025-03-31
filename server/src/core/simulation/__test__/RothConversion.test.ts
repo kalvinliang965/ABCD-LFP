@@ -1,5 +1,5 @@
 
-import process_roth_conversion from '../RothConversion';
+import process_roth_conversion from '../logic/RothConversion';
 import { SimulationState, AccountMap } from '../SimulationState';
 import { TaxStatus, TaxFilingStatus, IncomeType, ChangeType } from '../../Enums';
 import { create_investment, Investment } from '../../domain/investment/Investment';

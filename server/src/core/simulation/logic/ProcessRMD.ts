@@ -1,9 +1,9 @@
-import { SimulationState } from "./SimulationState";
-import { Scenario } from "../domain/scenario/Scenario";
+import { SimulationState } from "../SimulationState";
+import { Scenario } from "../../domain/scenario/Scenario";
 //import { TaxStatus } from "../Enums";
-import { Investment } from "../domain/investment/Investment";
-import { getRMDFactorForAge } from "../../services/RMDScraper";
-import { rmd_urls, rmd_config } from "../../config/rmd";
+import { Investment } from "../../domain/investment/Investment";
+import { getRMDFactorForAge } from "../../../services/RMDScraper";
+import { rmd_urls, rmd_config } from "../../../config/rmd";
 
 /**
  * Get the RMD distribution period for a given age
