@@ -85,7 +85,7 @@ export interface FederalTaxService {
     clone(): Promise<FederalTaxService>,
 }
 
-async function create_cloned_federal_service(
+export async function create_federal_service_wo(
     taxable_income_bracket: TaxBrackets,
     capital_gains_bracket: TaxBrackets,
     standard_deductions: StandardDeduction
@@ -116,9 +116,9 @@ async function create_cloned_federal_service(
             try {
                 switch(income_type) {
                     case IncomeType.CAPITAL_GAINS:
-                        return taxable_income_bracket.find_bracket(rate, status);
-                    case IncomeType.TAXABLE_INCOME:
                         return capital_gains_bracket.find_bracket(rate, status);
+                    case IncomeType.TAXABLE_INCOME:
+                        return taxable_income_bracket.find_bracket(rate, status);
 
                     default:
                         throw new Error(`Failed to find bracket due to invalid income type ${income_type}`);
@@ -158,7 +158,7 @@ async function create_cloned_federal_service(
             find_bracket,
             find_rate,
             find_deduction,
-            clone: () => create_cloned_federal_service(
+            clone: () => create_federal_service_wo(
                 taxable_income_bracket,
                 capital_gains_bracket,
                 standard_deductions,
@@ -171,7 +171,7 @@ export async function create_federal_tax_service() : Promise<FederalTaxService> 
         const taxable_income_bracket = await initialize_taxable_income_bracket();
         const capital_gains_bracket = await initialize_capital_gains_bracket();
         const standard_deductions = await initialize_standard_deductions_info();
-        return await create_cloned_federal_service(taxable_income_bracket, capital_gains_bracket, standard_deductions);
+        return await create_federal_service_wo(taxable_income_bracket, capital_gains_bracket, standard_deductions);
     } catch (error) {
         console.error(`Error in initializing federal tax data: ${error}`);
         process.exit(1);
