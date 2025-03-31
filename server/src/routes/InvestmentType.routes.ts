@@ -1,9 +1,9 @@
 import express, { Request, Response } from "express";
-import InvestmentType, {
-  IInvestmentType,
-} from "../db/models/InvestmentType.model";
+import InvestmentType from "../db/models/InvestmentType.model";
 
 const router = express.Router();
+
+const defaultUserId = "66f4f2a6f032392868a3eba3";
 
 /**
  * @route   POST /api/investments
@@ -12,15 +12,15 @@ const router = express.Router();
  */
 router.post("/", async (req: Request, res: Response) => {
   try {
+    //const currentUser = req.user._id;
+
     const investmentTypeData = req.body;
+    //TODO: 需要修改，现在默认是admin的id
+    investmentTypeData.userId = defaultUserId;
 
-    // Create new investment type
-    const newInvestmentType = new InvestmentType(investmentTypeData);
+    const doc = await InvestmentType.create(investmentTypeData);
 
-    // Save to database
-    const savedInvestmentType = await newInvestmentType.save();
-
-    res.status(201).json(savedInvestmentType);
+    res.status(201).json(doc);
   } catch (error) {
     console.error("Error creating investment type:", error);
 
@@ -58,7 +58,11 @@ router.post("/", async (req: Request, res: Response) => {
  */
 router.get("/", async (_req: Request, res: Response) => {
   try {
-    const investmentTypes = await InvestmentType.find().sort({ name: 1 });
+    //TODO: 需要修改，现在默认是admin的id
+    const investmentTypes = await InvestmentType.find({
+      userId: defaultUserId,
+    }).sort({ name: 1 });
+
     res.status(200).json(investmentTypes);
   } catch (error) {
     console.error("Error fetching investment types:", error);
@@ -76,8 +80,10 @@ router.get("/", async (_req: Request, res: Response) => {
  */
 router.get("/:id", async (req: Request, res: Response) => {
   try {
-    console.log("正在尝试调用这个方法", req.params.id);
-    const investmentType = await InvestmentType.findById(req.params.id);
+    //TODO: 需要修改，现在默认是admin的id
+    const investmentType = await InvestmentType.findById(req.params.id, {
+      userId: defaultUserId,
+    });
 
     if (!investmentType) {
       return res.status(404).json({
