@@ -18,7 +18,6 @@ import { InvestmentTypeRaw } from "../../domain/raw/investment_type_raw";
 import { InvestmentRaw } from "../../domain/raw/investment_raw";
 const scenarioYaml = `
 # file format for scenario import/export.  version: 2025-03-23
-import { create_scenario } from "../../domain/scenario/Scenario";
 # CSE416, Software Engineering, Scott D. Stoller.
 
 # a distribution is represented as a map with one of the following forms:
@@ -167,10 +166,10 @@ const parsedYaml = yaml.load(scenarioYaml);
 
 // 3) 转换为 ScenarioRaw（把需要 Map 的字段全部转成 Map）
 const scenarioRaw: ScenarioRaw = convert_yaml_to_scenario_raw(parsedYaml);
-console.log("scenarioRaw", scenarioRaw);
+
 
 const mongoose = require("mongoose");
-const mongodb_addr = "mongodb://127.0.0.1:27017/Chen_test";
+const mongodb_addr = "mongodb://127.0.0.1:27017/test";
 let mongodb;
 
 beforeAll(async () => {
@@ -213,14 +212,8 @@ afterAll(async () => {
 
 describe("Testing Simulation State", () => {
   it("should pay discretionary expense", async () => {
-
-    
-
-
-
-
-
     const scenario = await create_scenario(scenarioRaw);
+    console.log("scenario", scenario);
     const state = await create_simulation_state(scenario);
 
     //update 所有的expense的amount
