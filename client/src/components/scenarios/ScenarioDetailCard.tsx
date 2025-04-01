@@ -194,6 +194,68 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
             </VStack>
           </Box>
         )}
+
+        {scenario.spendingStrategy && (
+          <Box mt={4}>
+            <Heading size="sm" mb={2}>Spending Strategy</Heading>
+            <Text fontSize="sm">
+              <Text as="span" fontWeight="bold">Type:</Text> {
+                scenario.spendingStrategy.type === "prioritized" 
+                  ? "Prioritized" 
+                  : "Proportional"
+              }
+            </Text>
+            
+            {scenario.spendingStrategy.type === "prioritized" && 
+             scenario.spendingStrategy.expensePriority && 
+             scenario.spendingStrategy.expensePriority.length > 0 && (
+              <>
+                <Text fontSize="sm" mt={1}>
+                  <Text as="span" fontWeight="bold">Expense Priority:</Text>
+                </Text>
+                <VStack align="start" pl={4} mt={1} spacing={1}>
+                  {scenario.spendingStrategy.expensePriority.map((expense: string, index: number) => (
+                    <Text key={expense} fontSize="sm">
+                      {index + 1}. {expense}
+                    </Text>
+                  ))}
+                </VStack>
+              </>
+            )}
+          </Box>
+        )}
+
+        {scenario.expenseWithdrawalStrategy && (
+          <Box mt={4}>
+            <Heading size="sm" mb={2}>Withdrawal Strategy</Heading>
+            <Text fontSize="sm">
+              <Text as="span" fontWeight="bold">Type:</Text> {
+                scenario.expenseWithdrawalStrategy.type === "prioritized" 
+                  ? "Prioritized" 
+                  : scenario.expenseWithdrawalStrategy.type === "proportional"
+                    ? "Proportional"
+                    : "Tax-Efficient"
+              }
+            </Text>
+            
+            {scenario.expenseWithdrawalStrategy.type === "prioritized" && 
+             scenario.expenseWithdrawalStrategy.investmentOrder && 
+             scenario.expenseWithdrawalStrategy.investmentOrder.length > 0 && (
+              <>
+                <Text fontSize="sm" mt={1}>
+                  <Text as="span" fontWeight="bold">Account Priority:</Text>
+                </Text>
+                <VStack align="start" pl={4} mt={1} spacing={1}>
+                  {scenario.expenseWithdrawalStrategy.investmentOrder.map((account: string, index: number) => (
+                    <Text key={account} fontSize="sm">
+                      {index + 1}. {account}
+                    </Text>
+                  ))}
+                </VStack>
+              </>
+            )}
+          </Box>
+        )}
       </VStack>
 
       <Box mt={4} textAlign="right">

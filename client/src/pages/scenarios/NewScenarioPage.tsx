@@ -45,7 +45,9 @@ import ScenarioTypeSelector, {
 } from "../../components/scenarios/ScenarioTypeSelector";
 import YamlImportForm from "../../components/scenarios/YamlImportForm";
 import RMDSettingsForm, { RMDSettings } from "../../components/scenarios/RMDSettingsForm";
-import { InvestmentTaxStatus } from "../../types/scenario";
+import SpendingStrategyForm, { SpendingStrategy } from "../../components/scenarios/SpendingStrategyForm";
+import WithdrawalStrategyForm, { WithdrawalStrategy } from "../../components/scenarios/WithdrawalStrategyForm";
+//import { InvestmentTaxStatus } from "../../types/scenario";
 
 // Omit the id from EventSeries and add it as optional
 type AddedEvent = Omit<EventSeries, "id"> & {
@@ -108,6 +110,8 @@ function NewScenarioPage() {
     | "rothConversionOptimizer"
     | "yamlImport"
     | "rmdSettings"
+    | "spendingStrategy"
+    | "withdrawalStrategy"
   >("typeSelection");
 
   // Add useEffect to track step changes
@@ -146,7 +150,19 @@ function NewScenarioPage() {
   const toast = useToast();
   const [rmdSettings, setRmdSettings] = useState<RMDSettings>({
     enableRMD: true,
-    startAge: 72,
+    startAge: 72,//default start age
+    accountPriority: [],
+    availableAccounts: []
+  });
+  const [spendingStrategy, setSpendingStrategy] = useState<SpendingStrategy>({
+    enableCustomStrategy: true,
+    strategyType: "prioritized",
+    expensePriority: [],
+    availableExpenses: []
+  });
+  const [withdrawalStrategy, setWithdrawalStrategy] = useState<WithdrawalStrategy>({
+    enableCustomStrategy: true,
+    strategyType: "prioritized",
     accountPriority: [],
     availableAccounts: []
   });
@@ -216,8 +232,8 @@ function NewScenarioPage() {
   };
 
   const handleSaveAndContinue = () => {
-    // Navigate to the additional settings step instead of directly to scenarios
-    setStep("additionalSettings");
+    // Navigate to spending strategy instead of directly to additional settings
+    handle_continue_to_spending_strategy();
   };
 
   const handle_continue_to_life_expectancy = () => {
@@ -277,7 +293,45 @@ function NewScenarioPage() {
   };
 
   const handle_continue_from_rmd = () => {
-    setStep("eventSelection");
+    handle_continue_to_withdrawal_strategy();
+  };
+
+  const handle_continue_to_spending_strategy = () => {
+    // Get discretionary expenses from added events
+    const discretionaryExpenses = addedEvents
+      .filter(event => 
+        event.type === "expense" && 
+        event.isDiscretionary === true
+      )
+      .map(event => event.name);
+      
+    setSpendingStrategy({
+      ...spendingStrategy,
+      availableExpenses: discretionaryExpenses
+    });
+    
+    setStep("spendingStrategy");
+  };
+
+  const handle_continue_from_spending_strategy = () => {
+    setStep("additionalSettings");
+  };
+
+  const handle_continue_to_withdrawal_strategy = () => {
+    // Get all investment accounts
+    const allAccounts = investmentsConfig.investments
+      .map(inv => inv.investmentTypeId || `Investment ${inv.id || Math.random().toString(36).substr(2, 9)}`);
+      
+    setWithdrawalStrategy({
+      ...withdrawalStrategy,
+      availableAccounts: allAccounts
+    });
+    
+    setStep("withdrawalStrategy");
+  };
+
+  const handle_continue_from_withdrawal_strategy = () => {
+    setStep("spendingStrategy");
   };
 
   const handle_finish_scenario = () => {
@@ -291,6 +345,18 @@ function NewScenarioPage() {
       // Add RMD settings
       rmdStrategy: rmdSettings.enableRMD ? rmdSettings.accountPriority : [],
       rmdStartAge: rmdSettings.enableRMD ? rmdSettings.startAge : 72,
+      
+      // Add withdrawal strategy
+      expenseWithdrawalStrategy: withdrawalStrategy.enableCustomStrategy ? {
+        type: withdrawalStrategy.strategyType,
+        investmentOrder: withdrawalStrategy.accountPriority
+      } : null,
+      
+      // Add spending strategy
+      spendingStrategy: spendingStrategy.enableCustomStrategy ? {
+        type: spendingStrategy.strategyType,
+        expensePriority: spendingStrategy.expensePriority
+      } : null,
     };
     
     // Submit the scenario
@@ -321,6 +387,10 @@ function NewScenarioPage() {
   };
 
   const handle_back_to_rmd_settings = () => {
+    setStep("rmdSettings");
+  };
+
+  const handle_back_to_rmd = () => {
     setStep("rmdSettings");
   };
 
@@ -407,7 +477,7 @@ function NewScenarioPage() {
       <AdditionalSettingsForm
         additionalSettings={additionalSettings}
         onChangeAdditionalSettings={setAdditionalSettings}
-        onBack={handle_back_to_event_selection}
+        onBack={() => setStep("spendingStrategy")}
         onContinue={handle_finish_scenario}
       />
     );
@@ -421,6 +491,30 @@ function NewScenarioPage() {
         onChangeRMDSettings={setRmdSettings}
         onContinue={handle_continue_from_rmd}
         onBack={handle_back_to_investments}
+      />
+    );
+  }
+
+  // Spending Strategy Form
+  if (step === "spendingStrategy") {
+    return (
+      <SpendingStrategyForm
+        spendingStrategy={spendingStrategy}
+        onChangeSpendingStrategy={setSpendingStrategy}
+        onContinue={handle_continue_from_spending_strategy}
+        onBack={() => setStep("withdrawalStrategy")}
+      />
+    );
+  }
+
+  // Withdrawal Strategy Form
+  if (step === "withdrawalStrategy") {
+    return (
+      <WithdrawalStrategyForm
+        withdrawalStrategy={withdrawalStrategy}
+        onChangeWithdrawalStrategy={setWithdrawalStrategy}
+        onContinue={handle_continue_from_withdrawal_strategy}
+        onBack={handle_back_to_rmd}
       />
     );
   }
