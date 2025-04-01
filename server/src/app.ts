@@ -136,6 +136,6 @@ connect_database().catch((error) => {
 // // Call this function before or after scrapping_demo()
 // testRMDScraper();
 
-//scrapping_demo();
+scrapping_demo();
 //testProcessRMD();
 // scrapping_demo();
