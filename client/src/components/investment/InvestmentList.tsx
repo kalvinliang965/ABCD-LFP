@@ -9,16 +9,16 @@ import InvestmentCard from "./InvestmentCard";
 import AddInvestmentCard from "./AddInvestmentCard";
 import InvestmentDetailModal from "./InvestmentDetailModal";
 import {
-  type Investment,
-  type InvestmentListProps,
-} from "../../types/investment";
+  type InvestmentType,
+  type InvestmentTypeListProps,
+} from "../../types/investmentTypes";
 
-const InvestmentList: React.FC<InvestmentListProps> = ({
-  investments,
-  onOpenInvestmentModal,
+const InvestmentList: React.FC<InvestmentTypeListProps> = ({
+  investmentTypes,
+  onOpenInvestmentTypeModal,
 }) => {
-  const [selectedInvestment, setSelectedInvestment] =
-    useState<Investment | null>(null);
+  const [selectedInvestmentType, setSelectedInvestmentType] =
+    useState<InvestmentType | null>(null);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -37,14 +37,14 @@ const InvestmentList: React.FC<InvestmentListProps> = ({
     lg: 6,
   });
 
-  const handleInvestmentClick = (investment: Investment) => {
-    setSelectedInvestment(investment);
+  const handleInvestmentTypeClick = (investmentType: InvestmentType) => {
+    setSelectedInvestmentType(investmentType);
     onOpen();
   };
 
   const handleCloseModal = () => {
     onClose();
-    setTimeout(() => setSelectedInvestment(null), 300);
+    setTimeout(() => setSelectedInvestmentType(null), 300);
   };
 
   return (
@@ -55,21 +55,21 @@ const InvestmentList: React.FC<InvestmentListProps> = ({
         width="100%"
         autoRows="1fr"
       >
-        {investments.map((investment) => (
+        {investmentTypes.map((investmentType) => (
           <InvestmentCard
-            key={investment.id}
-            investment={investment}
-            onClick={() => handleInvestmentClick(investment)}
+            key={investmentType._id}
+            investmentType={investmentType}
+            onClick={() => handleInvestmentTypeClick(investmentType)}
           />
         ))}
 
-        <AddInvestmentCard onClick={onOpenInvestmentModal} />
+        <AddInvestmentCard onClick={onOpenInvestmentTypeModal} />
       </SimpleGrid>
 
       <InvestmentDetailModal
         isOpen={isOpen}
         onClose={handleCloseModal}
-        investment={selectedInvestment}
+        investmentType={selectedInvestmentType}
       />
     </Box>
   );
