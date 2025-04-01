@@ -10,10 +10,9 @@ import {
   create_state_tax_service,
 } from "../tax/StateTaxService";
 import { Event } from "../domain/event/Event";
-import { SpendingEvent, update_expense_amount } from "./ExpenseHelper";
+import { SpendingEvent, update_expense_amount } from "./logic/ExpenseHelper";
 import { create_yearly_records } from "./YearlyTaxRecords";
-
-export type AccountMap = Map<string, Investment>;
+import { AccountManager } from "../domain/AccountManager";
 export type EventMap = Map<string, Event>;
 
 export interface PersonDetails {
@@ -48,11 +47,7 @@ export interface SimulationState {
   federal_tax_service: FederalTaxService;
   state_tax_service: StateTaxService;
   advance_year(): void;
-  accounts: {
-    non_retirement: AccountMap;
-    pre_tax: AccountMap;
-    after_tax: AccountMap;
-  };
+  account_manager: AccountManager,
   events_by_type: {
     income: EventMap;
     expense: EventMap;
@@ -67,47 +62,6 @@ export interface SimulationState {
   discretionary_expenses: SpendingEvent[];
 }
 
-// Parse investments by tax status
-function parse_investments(
-  investments: Investment[]
-): [Investment, AccountMap, AccountMap, AccountMap] {
-  let cash_account = undefined;
-  const non_retirement_account = new Map<string, Investment>();
-  const pre_tax_account = new Map<string, Investment>();
-  const after_tax_account = new Map<string, Investment>();
-
-  for (const investment of investments) {
-    switch (investment.taxStatus) {
-      case TaxStatus.NON_RETIREMENT:
-        if (investment.id == "cash") {
-          cash_account = investment;
-        } else {
-          non_retirement_account.set(investment.id, investment);
-        }
-        break;
-      case TaxStatus.PRE_TAX:
-        pre_tax_account.set(investment.id, investment);
-        break;
-      case TaxStatus.AFTER_TAX:
-        after_tax_account.set(investment.id, investment);
-        break;
-      default:
-        throw new Error(`Invalid tax status: ${investment.taxStatus}`);
-    }
-  }
-
-  if (!cash_account) {
-    console.log("cash investment not found");
-    process.exit(1);
-  }
-
-  return [
-    cash_account,
-    non_retirement_account,
-    pre_tax_account,
-    after_tax_account,
-  ];
-}
 
 //更新所有Expense的amount
 function update_all_expenses(state: SimulationState): void {
@@ -179,18 +133,11 @@ export async function create_simulation_state(
     // "dummy node"
     yearly_records.initialize_record(previous_year);
 
-    // Process investments - scenario.investments is already processed in create_scenario
-    const [cash, non_retirement, pre_tax, after_tax] = parse_investments(
-      scenario.investments
-    );
     // Organize events by type - scenario.eventSeries is already processed in create_scenario
     const [income_events, expense_events, investment_events, rebalance_events] =
       organize_events_by_type(scenario.event_series);
     let inflation_factor = scenario.inflation_assumption.sample();
 
-    // Create tax services
-    const federal_tax_service = await create_federal_tax_service();
-    const state_tax_service = await create_state_tax_service();
     // Create person details
     const user = create_person_details(
       scenario.user_birth_year,
@@ -207,7 +154,7 @@ export async function create_simulation_state(
     let early_withdrawal_penalty = 0;
     // Create the simulation state object
     const state: SimulationState = {
-      cash,
+      cash: scenario.cash,
       events: scenario.event_series,
       inflation_factor,
       roth_conversion_opt: scenario.roth_conversion_opt,
@@ -300,8 +247,6 @@ export async function create_simulation_state(
       },
 
       get_current_year: () => current_year,
-      federal_tax_service,
-      state_tax_service,
       advance_year: () => {
         current_year++;
         inflation_factor *= 1 + scenario.inflation_assumption.sample();
@@ -310,12 +255,11 @@ export async function create_simulation_state(
           tax_filing_status = TaxFilingStatus.SINGLE;
         }
       },
+      // clone to prevent refetching from database
+      federal_tax_service: scenario.federal_tax_service.clone(),
+      state_tax_service: scenario.state_tax_service.clone(),
       // Account and event organization
-      accounts: {
-        non_retirement,
-        pre_tax,
-        after_tax,
-      },
+      account_manager: scenario.account_manager.clone(),
       events_by_type: {
         income: income_events,
         expense: expense_events,

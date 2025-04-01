@@ -1,6 +1,6 @@
 // Simple manual test for ProcessIncome
 
-import process_income from '../core/simulation/ProcessIncome';
+import process_income from '../core/simulation/logic/ProcessIncome';
 import { ChangeType } from '../core/Enums';
 
 

@@ -1,5 +1,5 @@
 // rnorm.test.ts
-import normal from "@stdlib/random-base-normal";
+import normal from "stdlib/random-base-normal";
 
 describe("normal distribution single sample", () => {
   it("should generate a single normal random number", () => {

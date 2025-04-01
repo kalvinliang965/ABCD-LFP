@@ -1,6 +1,7 @@
 // src/core/simulation/RothConversion.ts
-import { AccountMap, SimulationState } from "./SimulationState";
-import { IncomeType, TaxStatus } from "../Enums";
+import { SimulationState } from "../SimulationState";
+import { IncomeType, TaxStatus } from "../../Enums";
+import { AccountMap } from "../../domain/AccountManager";
 
 function transfer_investment(
     roth_conversion_strategy: string[], 
@@ -57,8 +58,8 @@ function process_roth_conversion(simulation_state: SimulationState) {
         transfer_investment(
             simulation_state.roth_conversion_strategy,
             transfer_amt,
-            simulation_state.accounts.pre_tax,
-            simulation_state.accounts.after_tax
+            simulation_state.account_manager.pre_tax,
+            simulation_state.account_manager.after_tax
         );
         simulation_state.incr_ordinary_income(transfer_amt);
     }

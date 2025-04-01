@@ -1,6 +1,7 @@
 import { RandomGenerator } from "../../../utils/math/ValueGenerator";
 import { ChangeType } from "../../Enums";
-import { IncomeEventRaw } from "../scenario/Scenario";
+import { IncomeEventRaw } from "../raw/event_raw/income_event_raw";
+
 import {
   Event,
   parse_duration,
@@ -15,6 +16,7 @@ interface IncomeEvent extends Event {
   inflation_adjusted: boolean;
   user_fraction: number;
   social_security: boolean;
+  clone(): IncomeEvent;
 }
 
 function parse_user_fraction(user_fraction: number) {
@@ -44,6 +46,7 @@ function create_income_event(raw_data: IncomeEventRaw): IncomeEvent {
       inflation_adjusted: raw_data.inflationAdjusted,
       user_fraction,
       social_security: raw_data.socialSecurity,
+      clone: () => create_income_event(raw_data)
     };
   } catch (error) {
     throw new Error(`Failed to initialize IncomeEvent: ${error}`);

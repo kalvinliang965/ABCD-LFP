@@ -1,4 +1,4 @@
-import { rebalanceInvestments } from '../RebalanceInvestments';
+import { rebalanceInvestments } from '../logic/RebalanceInvestments';
 import { SimulationState } from '../SimulationState';
 import { Scenario } from '../../domain/scenario/Scenario';
 import { TaxStatus } from '../../Enums';

@@ -1,4 +1,4 @@
-import process_income from '../ProcessIncome';
+import process_income from '../logic/ProcessIncome';
 import { SimulationState } from '../SimulationState';
 import { TaxStatus } from '../../Enums';
 

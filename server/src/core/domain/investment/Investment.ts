@@ -1,7 +1,6 @@
-import { InvestmentRaw } from "../scenario/Scenario";
 import { create_investment_type, InvestmentType } from "./InvestmentType";
 import { ChangeType, Taxability, TaxStatus } from "../../Enums";
-
+import { InvestmentRaw } from "../raw/investment_raw";
 /**
  * Public information about an investment
  */

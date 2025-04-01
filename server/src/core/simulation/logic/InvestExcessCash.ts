@@ -1,8 +1,8 @@
 // src/core/simulations/InvestExcessCash
 
-import { SimulationState } from './SimulationState';
-import { Scenario } from '../domain/scenario/Scenario';
-import { Investment } from '../domain/investment/Investment';
+import { SimulationState } from '../SimulationState';
+import { Scenario } from '../../domain/scenario/Scenario';
+import { Investment } from '../../domain/investment/Investment';
 
 //get current invest event for the given year
 function getCurrentInvestEvent(
@@ -33,12 +33,17 @@ function findInvestmentInAccount(
 	allowedAccounts: string[]
 ): Investment | undefined {
 	for (const accountType of allowedAccounts) {
-		//ensure accountType is a valid key of state.accounts
-		if (accountType in state.accounts) {
-			const account = state.accounts[accountType as keyof typeof state.accounts];
-			if (account.has(investmentId)) {
-				return account.get(investmentId);
-			}
+		let accountMap;
+		if (accountType == 'non_retirement')
+			accountMap = state.account_manager.non_retirement;
+		else if (accountType == "after_tax")
+			accountMap = state.account_manager.after_tax;
+		else {
+			console.error("Invalid account type", accountType);
+			process.exit(1);
+		}
+		if (accountMap.has(investmentId)) { 
+			return accountMap.get(investmentId);
 		}
 	}
 	return undefined;
@@ -100,6 +105,10 @@ export function investExcessCash(
 	
 	// Allocate the excess cash among the selected investments
 	for (const [investmentId, percentage] of allocation.entries()) {
+		if (percentage <= 0 || percentage > 1) {
+			console.log("Incorrect percentage");
+			process.exit(1);
+		}
 		//find the investment in allowed accounts
 		const investment = findInvestmentInAccount(state, investmentId, allowedAccounts);
 		

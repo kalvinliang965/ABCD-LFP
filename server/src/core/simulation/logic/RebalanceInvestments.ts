@@ -1,8 +1,8 @@
 // src/core/simulation/RebalanceInvestments.ts
-import { SimulationState } from './SimulationState';
-import { Scenario } from '../domain/scenario/Scenario';
-import { Investment } from '../domain/investment/Investment';
-import { TaxStatus } from '../Enums';
+import { SimulationState } from '../SimulationState';
+import { Scenario } from '../../domain/scenario/Scenario';
+import { Investment } from '../../domain/investment/Investment';
+import { TaxStatus } from '../../Enums';
 
 //get current rebalance event for the given year
 function getCurrentRebalanceEvent(
@@ -35,8 +35,8 @@ function findInvestment(
   for (const accountType of [
     'non_retirement', 'pre_tax', 'after_tax'
   ] as const) {
-    if (state.accounts[accountType].has(investmentId)) {
-      return state.accounts[accountType].get(investmentId);
+    if (state.account_manager[accountType].has(investmentId)) {
+      return state.account_manager[accountType].get(investmentId);
     }
   }
   return undefined;

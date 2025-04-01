@@ -28,14 +28,14 @@ Details are similar to the details of paying non-discretionary expenses.
  * TODO: need investgate! 
  */
 
-import { SimulationState } from "./SimulationState";
+import { SimulationState } from "../SimulationState";
 import {
   SpendingEvent,
   withdraw_from_investments,
   calculate_detailed_expense_amount,
   sort_expenses_by_strategy,
 } from "./ExpenseHelper";
-import { TaxStatus } from "../Enums";
+import { TaxStatus } from "../../Enums";
 
 /**
  * 思考： 如果我是simulation的话，我在simulation开始就支付上一年的税款，这样不就保证了我剩下的现金一定是干净的了么？
@@ -57,15 +57,15 @@ function calculate_current_assets(state: SimulationState): {
   let pre_tax_retirement_accounts_value = 0;
   let after_tax_retirement_accounts_value = 0;
 
-  for (const [_, investment] of state.accounts.non_retirement) {
+  for (const [_, investment] of state.account_manager.non_retirement) {
     non_retirement_accounts_value += investment.get_value();
   }
 
-  for (const [_, investment] of state.accounts.pre_tax) {
+  for (const [_, investment] of state.account_manager.pre_tax) {
     pre_tax_retirement_accounts_value += investment.get_value();
   }
 
-  for (const [_, investment] of state.accounts.after_tax) {
+  for (const [_, investment] of state.account_manager.after_tax) {
     after_tax_retirement_accounts_value += investment.get_value();
   }
 

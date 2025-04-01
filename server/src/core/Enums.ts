@@ -45,4 +45,3 @@ export enum TaxStatus {
     PRE_TAX = "PRE_TAX",
     AFTER_TAX = "AFTER_TAX",
 }
-    

@@ -19,24 +19,27 @@ describe("FederalTaxService", () => {
             find_bracket: jest.fn(),
             find_rate: jest.fn(),
             adjust_for_inflation: jest.fn(),
-            to_string: () => "Mock Taxable income Bracket"
+            to_string: () => "Mock Taxable income Bracket",
+            clone: jest.fn(),
         } as unknown as TaxBrackets;
 
         const mock_capital_gains_bracket = {
             find_bracket: jest.fn(),
             find_rate: jest.fn(),
             adjust_for_inflation: jest.fn(),
-            to_string: () => "Mock capital gains Bracket"
+            to_string: () => "Mock capital gains Bracket",
+            clone: jest.fn(),
         } as unknown as TaxBrackets;
 
         const mockStandardDeduction = {
             add_deduction: jest.fn(),
             find_deduction: jest.fn(),
             adjust_for_inflation: jest.fn(),
-            to_string: () => "Mock Standard Deduction"
+            to_string: () => "Mock Standard Deduction",
+            clone: jest.fn(),
         } as unknown as StandardDeduction;
         beforeEach(async() => {
-            service = await create_federal_service_wo(mock_taxable_income_bracket, mock_capital_gains_bracket, mockStandardDeduction);
+            service = create_federal_service_wo(mock_taxable_income_bracket, mock_capital_gains_bracket, mockStandardDeduction);
         })
         describe("Core Functionality", () => {
             it("should adjust all components for inflation", () => {
@@ -75,9 +78,10 @@ describe("FederalTaxService", () => {
 
         describe("Edge Cases", () => {
             it("should clone service with independent instances", async () => {
-              const clone = await service.clone();
-              clone.adjust_for_inflation(0.03);
-              expect(mock_taxable_income_bracket.adjust_for_inflation).toHaveBeenCalledTimes(1);
+                const clone = service.clone();
+                expect(mock_taxable_income_bracket.clone).toHaveBeenCalled();
+                expect(mock_capital_gains_bracket.clone).toHaveBeenCalled();
+                expect(mockStandardDeduction.clone).toHaveBeenCalled();
             });
 
         });
