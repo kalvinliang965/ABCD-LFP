@@ -1,4 +1,5 @@
 export type InvestmentTypeRaw = {
+  id?: string;
   name: string;
   description: string;
   returnAmtOrPct: string; // amount or percent

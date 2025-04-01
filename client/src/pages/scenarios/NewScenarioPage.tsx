@@ -33,6 +33,7 @@ import InvestmentsForm, {
   Investment,
   TaxStatus,
 } from "../../components/scenarios/InvestmentsForm";
+import { InvestmentTypesForm } from "../../components/scenarios/InvestmentTypesForm";
 import AdditionalSettingsForm, {
   AdditionalSettingsConfig,
   InflationConfig,
@@ -44,9 +45,15 @@ import ScenarioTypeSelector, {
   ScenarioCreationType,
 } from "../../components/scenarios/ScenarioTypeSelector";
 import YamlImportForm from "../../components/scenarios/YamlImportForm";
-import RMDSettingsForm, { RMDSettings } from "../../components/scenarios/RMDSettingsForm";
-import SpendingStrategyForm, { SpendingStrategy } from "../../components/scenarios/SpendingStrategyForm";
-import WithdrawalStrategyForm, { WithdrawalStrategy } from "../../components/scenarios/WithdrawalStrategyForm";
+import RMDSettingsForm, {
+  RMDSettings,
+} from "../../components/scenarios/RMDSettingsForm";
+import SpendingStrategyForm, {
+  SpendingStrategy,
+} from "../../components/scenarios/SpendingStrategyForm";
+import WithdrawalStrategyForm, {
+  WithdrawalStrategy,
+} from "../../components/scenarios/WithdrawalStrategyForm";
 //import { InvestmentTaxStatus } from "../../types/scenario";
 
 // Omit the id from EventSeries and add it as optional
@@ -104,6 +111,7 @@ function NewScenarioPage() {
     | "typeSelection"
     | "details"
     | "lifeExpectancy"
+    | "investmentTypes"
     | "investments"
     | "eventSelection"
     | "additionalSettings"
@@ -150,22 +158,23 @@ function NewScenarioPage() {
   const toast = useToast();
   const [rmdSettings, setRmdSettings] = useState<RMDSettings>({
     enableRMD: true,
-    startAge: 72,//default start age
+    startAge: 72, //default start age
     accountPriority: [],
-    availableAccounts: []
+    availableAccounts: [],
   });
   const [spendingStrategy, setSpendingStrategy] = useState<SpendingStrategy>({
     enableCustomStrategy: true,
     strategyType: "prioritized",
     expensePriority: [],
-    availableExpenses: []
+    availableExpenses: [],
   });
-  const [withdrawalStrategy, setWithdrawalStrategy] = useState<WithdrawalStrategy>({
-    enableCustomStrategy: true,
-    strategyType: "prioritized",
-    accountPriority: [],
-    availableAccounts: []
-  });
+  const [withdrawalStrategy, setWithdrawalStrategy] =
+    useState<WithdrawalStrategy>({
+      enableCustomStrategy: true,
+      strategyType: "prioritized",
+      accountPriority: [],
+      availableAccounts: [],
+    });
 
   const handle_scenario_type_select = (type: ScenarioCreationType) => {
     console.log(
@@ -245,7 +254,7 @@ function NewScenarioPage() {
   };
 
   const handle_continue_to_investments = () => {
-    setStep("investments");
+    setStep("investmentTypes");
   };
 
   const handle_back_to_investments = () => {
@@ -279,16 +288,19 @@ function NewScenarioPage() {
   const handle_continue_to_rmd_settings = () => {
     // Update available accounts based on investments
     const preTaxAccounts = investmentsConfig.investments
-      .filter(inv => inv.taxStatus === "PRE_TAX_RETIREMENT" as TaxStatus)
-      .map(inv => {
-        return inv.investmentTypeId || `Investment ${inv.id || Math.random().toString(36).substr(2, 9)}`;
+      .filter((inv) => inv.taxStatus === ("PRE_TAX_RETIREMENT" as TaxStatus))
+      .map((inv) => {
+        return (
+          inv.investmentTypeId ||
+          `Investment ${inv.id || Math.random().toString(36).substr(2, 9)}`
+        );
       });
-      
+
     setRmdSettings({
       ...rmdSettings,
-      availableAccounts: preTaxAccounts
+      availableAccounts: preTaxAccounts,
     });
-    
+
     setStep("rmdSettings");
   };
 
@@ -299,17 +311,16 @@ function NewScenarioPage() {
   const handle_continue_to_spending_strategy = () => {
     // Get discretionary expenses from added events
     const discretionaryExpenses = addedEvents
-      .filter(event => 
-        event.type === "expense" && 
-        event.isDiscretionary === true
+      .filter(
+        (event) => event.type === "expense" && event.isDiscretionary === true
       )
-      .map(event => event.name);
-      
+      .map((event) => event.name);
+
     setSpendingStrategy({
       ...spendingStrategy,
-      availableExpenses: discretionaryExpenses
+      availableExpenses: discretionaryExpenses,
     });
-    
+
     setStep("spendingStrategy");
   };
 
@@ -319,14 +330,17 @@ function NewScenarioPage() {
 
   const handle_continue_to_withdrawal_strategy = () => {
     // Get all investment accounts
-    const allAccounts = investmentsConfig.investments
-      .map(inv => inv.investmentTypeId || `Investment ${inv.id || Math.random().toString(36).substr(2, 9)}`);
-      
+    const allAccounts = investmentsConfig.investments.map(
+      (inv) =>
+        inv.investmentTypeId ||
+        `Investment ${inv.id || Math.random().toString(36).substr(2, 9)}`
+    );
+
     setWithdrawalStrategy({
       ...withdrawalStrategy,
-      availableAccounts: allAccounts
+      availableAccounts: allAccounts,
     });
-    
+
     setStep("withdrawalStrategy");
   };
 
@@ -345,24 +359,28 @@ function NewScenarioPage() {
       name: scenarioDetails.name,
       type: scenarioDetails.type,
       // ...other properties
-      
+
       // Add RMD settings
       rmdStrategy: rmdSettings.enableRMD ? rmdSettings.accountPriority : [],
       rmdStartAge: rmdSettings.enableRMD ? rmdSettings.startAge : 72,
-      
+
       // Add withdrawal strategy
-      expenseWithdrawalStrategy: withdrawalStrategy.enableCustomStrategy ? {
-        type: withdrawalStrategy.strategyType,
-        investmentOrder: withdrawalStrategy.accountPriority
-      } : null,
-      
+      expenseWithdrawalStrategy: withdrawalStrategy.enableCustomStrategy
+        ? {
+            type: withdrawalStrategy.strategyType,
+            investmentOrder: withdrawalStrategy.accountPriority,
+          }
+        : null,
+
       // Add spending strategy
-      spendingStrategy: spendingStrategy.enableCustomStrategy ? {
-        type: spendingStrategy.strategyType,
-        expensePriority: spendingStrategy.expensePriority
-      } : null,
+      spendingStrategy: spendingStrategy.enableCustomStrategy
+        ? {
+            type: spendingStrategy.strategyType,
+            expensePriority: spendingStrategy.expensePriority,
+          }
+        : null,
     };
-    
+
     // Submit the scenario
     toast({
       title: "Scenario Created",
@@ -396,6 +414,16 @@ function NewScenarioPage() {
 
   const handle_back_to_rmd = () => {
     setStep("rmdSettings");
+  };
+
+  // Add handler to continue from investment types to investments
+  const handle_continue_to_investment_portfolio = () => {
+    setStep("investments");
+  };
+
+  // Add handler to go back to investment types
+  const handle_back_to_investment_types = () => {
+    setStep("investmentTypes");
   };
 
   // Selection between creating from scratch or importing YAML
@@ -463,15 +491,29 @@ function NewScenarioPage() {
     );
   }
 
+  // Investment Types Form
+  if (step === "investmentTypes") {
+    return (
+      <Box position="relative" zIndex={10} width="100%" height="100%">
+        <InvestmentTypesForm
+          onBack={handle_back_to_life_expectancy}
+          onContinue={handle_continue_to_investment_portfolio}
+        />
+      </Box>
+    );
+  }
+
   // Investments Configuration Form
   if (step === "investments") {
     return (
-      <InvestmentsForm
-        investmentsConfig={investmentsConfig}
-        onChangeInvestmentsConfig={setInvestmentsConfig}
-        onContinue={handle_continue_to_rmd_settings}
-        onBack={handle_back_to_roth_conversion}
-      />
+      <Box position="relative" zIndex={10} width="100%" height="100%">
+        <InvestmentsForm
+          investmentsConfig={investmentsConfig}
+          onChangeInvestmentsConfig={setInvestmentsConfig}
+          onContinue={handle_continue_to_event_selection}
+          onBack={handle_back_to_investment_types}
+        />
+      </Box>
     );
   }
 
