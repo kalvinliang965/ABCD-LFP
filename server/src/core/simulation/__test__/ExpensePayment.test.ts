@@ -170,7 +170,7 @@ const parsedYaml = yaml.load(scenarioYaml);
 const scenarioRaw: ScenarioRaw = convert_yaml_to_scenario_raw(parsedYaml);
 
 const mongoose = require("mongoose");
-const mongodb_addr = "mongodb://127.0.0.1:27017/phreddit_test";
+const mongodb_addr = "mongodb://127.0.0.1:27017/Chen_test";
 let mongodb;
 
 beforeAll(async () => {

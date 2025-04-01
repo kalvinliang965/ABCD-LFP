@@ -1,91 +1,52 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { Taxability, DistributionType } from "../../core/Enums";
-
-// Interface for distribution modes
-interface IDistribution {
-  mode: DistributionType.NORMAL | DistributionType.UNIFORM;
-  value?: number; // For fixed mode
-  mean?: number; // For normalDistribution mode
-  stdDev?: number; // For normalDistribution mode
-  isPercentage: boolean; // Whether the value is a percentage or absolute amount
-}
-
-// Interface for InvestmentType document
-export interface IInvestmentType extends Document {
-  name: string;
-  description?: string;
-  expectedAnnualReturn: IDistribution;
-  expenseRatio: number;
-  expectedAnnualIncome: IDistribution;
-  taxability: Taxability.TAXABLE | Taxability.TAX_EXEMPT;
+import { InvestmentTypeRaw } from "../../core/domain/scenario/Scenario";
+export interface InvestmentTypeToDB extends Document, InvestmentTypeRaw {
+  userId: Schema.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
 
-// Distribution Schema
-const DistributionSchema = new Schema<IDistribution>(
-  {
-    mode: {
-      type: String,
-      enum: [DistributionType.UNIFORM, DistributionType.NORMAL],
-      required: true,
-    },
-    value: {
-      type: Number,
-      required: function (this: IDistribution) {
-        return this.mode === DistributionType.UNIFORM;
-      },
-    },
-    mean: {
-      type: Number,
-      required: function (this: IDistribution) {
-        return this.mode === DistributionType.NORMAL;
-      },
-    },
-    stdDev: {
-      type: Number,
-      required: function (this: IDistribution) {
-        return this.mode === DistributionType.NORMAL;
-      },
-    },
-    isPercentage: {
-      type: Boolean,
-      required: true,
-      default: true,
-    },
-  },
-  { _id: false }
-);
-
 // Investment Type Schema
-const InvestmentTypeSchema = new Schema<IInvestmentType>(
+const InvestmentTypeSchema = new Schema<InvestmentTypeToDB>(
   {
     name: {
       type: String,
       required: true,
-      trim: true,
-      unique: true,
     },
     description: {
       type: String,
       trim: true,
+      default: "",
     },
-    expectedAnnualReturn: {
-      type: DistributionSchema,
+    returnAmtOrPct: {
+      type: String,
+      enum: ["amount", "percentage"],
+      required: true,
+    },
+    returnDistribution: {
+      type: Map,
       required: true,
     },
     expenseRatio: {
       type: Number,
       required: true,
-      min: 0,
     },
-    expectedAnnualIncome: {
-      type: DistributionSchema,
+    incomeAmtOrPct: {
+      type: String,
+      enum: ["amount", "percentage"],
+      required: true,
+    },
+    incomeDistribution: {
+      type: Map,
       required: true,
     },
     taxability: {
-      type: String,
-      enum: [Taxability.TAX_EXEMPT, Taxability.TAXABLE],
+      type: Boolean,
+      required: true,
+    },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
   },
@@ -94,8 +55,11 @@ const InvestmentTypeSchema = new Schema<IInvestmentType>(
   }
 );
 
+//保证同一个user的investmentType name是唯一的
+InvestmentTypeSchema.index({ userId: 1, name: 1 }, { unique: true });
+
 // Create and export the model
-const InvestmentType = mongoose.model<IInvestmentType>(
+const InvestmentType = mongoose.model<InvestmentTypeToDB>(
   "InvestmentType",
   InvestmentTypeSchema
 );

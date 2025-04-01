@@ -1,23 +1,24 @@
 import React from "react";
-import { type InvestmentCardProps } from "../../types/investment";
+import { type InvestmentCardProps } from "../../types/investmentTypes";
 import Card from "../common/Card";
 
+
 const InvestmentCard: React.FC<InvestmentCardProps> = ({
-  investment,
+  investmentType,
   onClick,
 }) => {
   return (
     <Card
-      title={investment.name}
-      subtitle={`Updated: ${investment.lastUpdated || investment.date}`}
-      description={investment.description}
+      title={investmentType.name}
+      subtitle={`Updated: ${investmentType.updatedAt || investmentType.createdAt}`}
+      description={investmentType.description}
       onClick={onClick}
       leftBadge={{
-        text: investment.taxability === "taxable" ? "Taxable" : "Tax-exempt",
-        colorScheme: investment.taxability === "taxable" ? "red" : "green",
+        text: investmentType.taxability ? "Taxable" : "Tax-exempt",
+        colorScheme: investmentType.taxability ? "red" : "green",
       }}
       rightBadge={{
-        text: String(investment.returnType),
+        text: String(investmentType.returnDistribution.get("type")),
         variant: "outline",
       }}
     />

@@ -7,23 +7,42 @@ import {
   Badge,
   useColorModeValue,
 } from "@chakra-ui/react";
-import {
-  ReturnType,
-  ValueInputMode,
-  type InvestmentDetailModalProps,
-} from "../../types/investment";
+import { type InvestmentTypeDetailModalProps } from "../../types/investmentTypes";
 import { DetailModal, StatDisplay } from "../common";
+import { DistributionType } from "../../types/Enum";
+import { ValueInputMode } from "./AddInvestmentTypeModal";
 
-const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
+// AI-generated code
+// Get value from a Map with type safety and default value
+const getMapValue = <T,>(
+  map: Map<string, any> | undefined,
+  key: string,
+  defaultValue: T
+): T => {
+  if (!map || !map.has(key)) return defaultValue;
+  return (map.get(key) as T) || defaultValue;
+};
+
+// AI-generated code
+// Format date safely
+const formatDate = (date: string | Date | undefined): string => {
+  if (!date) return "N/A";
+  if (date instanceof Date) {
+    return date.toLocaleDateString();
+  }
+  return String(date);
+};
+
+const InvestmentDetailModal: React.FC<InvestmentTypeDetailModalProps> = ({
   isOpen,
   onClose,
-  investment,
+  investmentType,
 }) => {
   // Color mode values
   const textColor = useColorModeValue("gray.600", "gray.300");
   const cardBgColor = useColorModeValue("gray.50", "gray.700");
 
-  if (!investment) {
+  if (!investmentType) {
     return null;
   }
 
@@ -40,21 +59,48 @@ const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
       typeof value === "string"
         ? parseFloat(value.replace(/[^\d.-]/g, ""))
         : value;
+    if (isNaN(numericValue)) return "N/A";
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
     }).format(numericValue);
   };
 
+  // Get return distribution properties with safer type handling
+  const returnDistribution =
+    investmentType.returnDistribution || new Map<string, any>();
+  const returnType = getMapValue<string>(
+    returnDistribution,
+    "type",
+    DistributionType.FIXED
+  );
+  const returnRate = getMapValue<number>(returnDistribution, "mean", 0);
+  const returnRateStdDev = getMapValue<number>(returnDistribution, "stdev", 0);
+
+  // Get income distribution properties with safer type handling
+  const incomeDistribution =
+    investmentType.incomeDistribution || new Map<string, any>();
+  const dividendType = getMapValue<string>(
+    incomeDistribution,
+    "type",
+    DistributionType.FIXED
+  );
+  const dividendRate = getMapValue<number>(incomeDistribution, "mean", 0);
+  const dividendRateStdDev = getMapValue<number>(
+    incomeDistribution,
+    "stdev",
+    0
+  );
+
   // Render return information
   const renderReturnInfo = () => {
     let returnText;
     let returnDescription;
     const isFixedAmount =
-      investment.returnInputMode === ValueInputMode.FIXED_AMOUNT;
+      investmentType.returnAmtOrPct === ValueInputMode.AMOUNT;
 
-    switch (investment.returnType) {
-      case ReturnType.FIXED:
+    switch (returnType) {
+      case DistributionType.FIXED:
         returnText = isFixedAmount
           ? "Fixed Return Amount"
           : "Fixed Return Rate";
@@ -62,7 +108,7 @@ const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
           ? "A fixed amount added to the investment value annually."
           : "A fixed percentage return on the investment value annually.";
         break;
-      case ReturnType.NORMAL:
+      case DistributionType.NORMAL:
         returnText = isFixedAmount
           ? "Average Return Amount (Normal Distribution)"
           : "Average Return Rate (Normal Distribution)";
@@ -79,24 +125,20 @@ const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
 
     // Determine the value display
     let returnValue = "N/A";
-    if (investment.returnType === ReturnType.FIXED) {
-      if (isFixedAmount && investment.returnRate !== undefined) {
-        returnValue = formatCurrency(investment.returnRate);
-      } else if (!isFixedAmount && investment.returnRate !== undefined) {
-        returnValue = formatPercent(investment.returnRate);
+    if (returnType === DistributionType.FIXED) {
+      if (isFixedAmount && returnRate !== undefined) {
+        returnValue = formatCurrency(returnRate);
+      } else if (!isFixedAmount && returnRate !== undefined) {
+        returnValue = formatPercent(returnRate);
       }
-    } else if (investment.returnType === ReturnType.NORMAL) {
-      if (isFixedAmount && investment.returnRate !== undefined) {
-        returnValue = `${formatCurrency(investment.returnRate)} ± ${
-          investment.returnRateStdDev
-            ? formatCurrency(investment.returnRateStdDev)
-            : "N/A"
+    } else if (returnType === DistributionType.NORMAL) {
+      if (isFixedAmount && returnRate !== undefined) {
+        returnValue = `${formatCurrency(returnRate)} ± ${
+          returnRateStdDev ? formatCurrency(returnRateStdDev) : "N/A"
         }`;
-      } else if (!isFixedAmount && investment.returnRate !== undefined) {
-        returnValue = `${formatPercent(investment.returnRate)} ± ${
-          investment.returnRateStdDev
-            ? formatPercent(investment.returnRateStdDev)
-            : "N/A"
+      } else if (!isFixedAmount && returnRate !== undefined) {
+        returnValue = `${formatPercent(returnRate)} ± ${
+          returnRateStdDev ? formatPercent(returnRateStdDev) : "N/A"
         }`;
       }
     }
@@ -112,7 +154,7 @@ const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
 
   // Render dividend information
   const renderDividendInfo = () => {
-    if (!investment.dividendType && !investment.dividendRate) {
+    if (!dividendType || dividendRate === 0) {
       return (
         <StatDisplay
           label="Dividend Rate"
@@ -125,10 +167,10 @@ const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
     let dividendText;
     let dividendDescription;
     const isFixedAmount =
-      investment.dividendInputMode === ValueInputMode.FIXED_AMOUNT;
+      investmentType.incomeAmtOrPct === ValueInputMode.AMOUNT;
 
-    switch (investment.dividendType) {
-      case ReturnType.FIXED:
+    switch (dividendType) {
+      case DistributionType.FIXED:
         dividendText = isFixedAmount
           ? "Fixed Dividend Amount"
           : "Fixed Dividend Rate";
@@ -136,7 +178,7 @@ const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
           ? "A fixed amount of dividend income paid annually."
           : "A fixed percentage of dividend income paid annually.";
         break;
-      case ReturnType.NORMAL:
+      case DistributionType.NORMAL:
         dividendText = isFixedAmount
           ? "Average Dividend Amount (Normal Distribution)"
           : "Average Dividend Rate (Normal Distribution)";
@@ -153,24 +195,20 @@ const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
 
     // Determine the value display
     let dividendValue = "N/A";
-    if (investment.dividendType === ReturnType.FIXED) {
-      if (isFixedAmount && investment.dividendRate !== undefined) {
-        dividendValue = formatCurrency(investment.dividendRate);
-      } else if (!isFixedAmount && investment.dividendRate !== undefined) {
-        dividendValue = formatPercent(investment.dividendRate);
+    if (dividendType === DistributionType.FIXED) {
+      if (isFixedAmount && dividendRate !== undefined) {
+        dividendValue = formatCurrency(dividendRate);
+      } else if (!isFixedAmount && dividendRate !== undefined) {
+        dividendValue = formatPercent(dividendRate);
       }
-    } else if (investment.dividendType === ReturnType.NORMAL) {
-      if (isFixedAmount && investment.dividendRate !== undefined) {
-        dividendValue = `${formatCurrency(investment.dividendRate)} ± ${
-          investment.dividendRateStdDev
-            ? formatCurrency(investment.dividendRateStdDev)
-            : "N/A"
+    } else if (dividendType === DistributionType.NORMAL) {
+      if (isFixedAmount && dividendRate !== undefined) {
+        dividendValue = `${formatCurrency(dividendRate)} ± ${
+          dividendRateStdDev ? formatCurrency(dividendRateStdDev) : "N/A"
         }`;
-      } else if (!isFixedAmount && investment.dividendRate !== undefined) {
-        dividendValue = `${formatPercent(investment.dividendRate)} ± ${
-          investment.dividendRateStdDev
-            ? formatPercent(investment.dividendRateStdDev)
-            : "N/A"
+      } else if (!isFixedAmount && dividendRate !== undefined) {
+        dividendValue = `${formatPercent(dividendRate)} ± ${
+          dividendRateStdDev ? formatPercent(dividendRateStdDev) : "N/A"
         }`;
       }
     }
@@ -186,7 +224,7 @@ const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
 
   // Render expense ratio
   const renderExpenseRatio = () => {
-    const expenseRatio = investment.expenseRatio;
+    const expenseRatio = investmentType.expenseRatio;
 
     if (expenseRatio === undefined || expenseRatio === 0) {
       return (
@@ -211,13 +249,14 @@ const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
     <>
       {/* Description */}
       <Box mb={5}>
-        <Text color={textColor}>{investment.description}</Text>
+        <Text color={textColor}>{investmentType.description}</Text>
       </Box>
 
       {/* Last updated */}
       <Box mb={5}>
         <Text fontSize="sm" color={textColor}>
-          Last Updated: {investment.lastUpdated || investment.date}
+          Last Updated:{" "}
+          {formatDate(investmentType.updatedAt || investmentType.createdAt)}
         </Text>
       </Box>
 
@@ -266,19 +305,17 @@ const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
           <Flex justify="space-between" align="center">
             <Text fontWeight="medium">Tax Status:</Text>
             <Badge
-              colorScheme={
-                investment.taxability === "taxable" ? "red" : "green"
-              }
+              colorScheme={investmentType.taxability ? "red" : "green"}
               px={2}
               py={1}
               borderRadius="md"
             >
-              {investment.taxability === "taxable" ? "Taxable" : "Tax-Exempt"}
+              {investmentType.taxability ? "Taxable" : "Tax-Exempt"}
             </Badge>
           </Flex>
 
           <Text fontSize="sm" color={textColor}>
-            {investment.taxability === "taxable"
+            {investmentType.taxability
               ? "Gains and income from this investment are subject to taxation. Consider holding in tax-advantaged accounts where appropriate."
               : "Gains and income from this investment are exempt from federal taxes. Typically best held in taxable accounts rather than tax-advantaged retirement accounts."}
           </Text>
@@ -288,7 +325,7 @@ const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
   );
 
   return (
-    <DetailModal isOpen={isOpen} onClose={onClose} title={investment.name}>
+    <DetailModal isOpen={isOpen} onClose={onClose} title={investmentType.name}>
       {renderContent()}
     </DetailModal>
   );
