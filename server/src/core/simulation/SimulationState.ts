@@ -1,13 +1,12 @@
 import { Investment } from "../domain/investment/Investment";
 import { Scenario } from "../domain/scenario/Scenario";
-import { TaxFilingStatus, TaxStatus, ChangeType, IncomeType } from "../Enums";
+import { TaxFilingStatus} from "../Enums";
 import {
   FederalTaxService,
   create_federal_tax_service,
 } from "../tax/FederalTaxService";
 import {
   StateTaxService,
-  create_state_tax_service,
 } from "../tax/StateTaxService";
 import { Event } from "../domain/event/Event";
 import { SpendingEvent, update_expense_amount } from "./logic/ExpenseHelper";
