@@ -35,6 +35,7 @@ export interface Scenario {
   spendingStrategy?: SpendingStrategy;
   expenseWithdrawalStrategy?: WithdrawalStrategy;
   rmdStrategy?: WithdrawalStrategy;
+  rmdStartAge?: number;
   rothConversionStrategy?: WithdrawalStrategy;
   rothConversionSettings?: RothConversionSettings;
   sharingSettings?: SharingSettings;
@@ -129,11 +130,13 @@ export interface EventSeries {
 }
 
 export interface SpendingStrategy {
-  expenseOrder: string[]; // IDs of discretionary expenses in order of priority
+  type: "prioritized" | "proportional";
+  expensePriority?: string[];
 }
 
 export interface WithdrawalStrategy {
-  investmentOrder: string[]; // IDs of investments in order of withdrawal
+  type: "prioritized" | "proportional" | "tax-efficient";
+  investmentOrder?: string[]; // IDs of investments in order of withdrawal
 }
 
 export interface RothConversionSettings {
