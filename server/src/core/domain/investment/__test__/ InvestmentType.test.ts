@@ -7,7 +7,7 @@ import {
 
 import { create_investment_type, parse_taxability, parse_distribution, parse_change_type } from "../InvestmentType";
 import { ChangeType } from "../../../Enums";
-import { InvestmentTypeRaw } from "../../scenario/Scenario";
+import { InvestmentTypeRaw } from "../../raw/investment_type_raw";
 import { StatisticType } from "../../../Enums";
 import { Taxability } from "../../../Enums";
 import ValueGenerator from "../../../../utils/math/ValueGenerator";

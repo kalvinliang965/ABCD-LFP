@@ -3,23 +3,22 @@ import fs from "fs";
 import yaml from "js-yaml";
 import {
   ScenarioRaw,
-  create_scenario,
-  Scenario,
-} from "../../domain/scenario/Scenario";
-import {
-  InvestmentRaw,
-  InvestmentTypeRaw,
-  IncomeEventRaw,
-  ExpenseEventRaw,
-  InvestmentEventRaw,
-  RebalanceEventRaw,
-} from "../../domain/scenario/Scenario";
+} from "../../domain/raw/scenario_raw";
+
+import { create_scenario } from "../../domain/scenario/Scenario";
+import { IncomeEventRaw } from "../../domain/raw/event_raw/income_event_raw";
+import { InvestmentEventRaw } from "../../domain/raw/event_raw/investment_event_raw";
+import { ExpenseEventRaw } from "../../domain/raw/event_raw/expense_event_raw";
+import { RebalanceEventRaw } from "../../domain/raw/event_raw/rebalance_event_raw";
 import { create_simulation_state } from "../SimulationState";
 import { pay_mandatory_expenses } from "../logic/PayMandatoryExpense";
 import { pay_discretionary_expenses } from "../logic/PayDiscretionaryExpense";
 import { SpendingEvent, update_expense_amount } from "../logic/ExpenseHelper";
+import { InvestmentTypeRaw } from "../../domain/raw/investment_type_raw";
+import { InvestmentRaw } from "../../domain/raw/investment_raw";
 const scenarioYaml = `
 # file format for scenario import/export.  version: 2025-03-23
+import { create_scenario } from "../../domain/scenario/Scenario";
 # CSE416, Software Engineering, Scott D. Stoller.
 
 # a distribution is represented as a map with one of the following forms:
@@ -168,6 +167,7 @@ const parsedYaml = yaml.load(scenarioYaml);
 
 // 3) 转换为 ScenarioRaw（把需要 Map 的字段全部转成 Map）
 const scenarioRaw: ScenarioRaw = convert_yaml_to_scenario_raw(parsedYaml);
+console.log("scenarioRaw", scenarioRaw);
 
 const mongoose = require("mongoose");
 const mongodb_addr = "mongodb://127.0.0.1:27017/Chen_test";
@@ -213,7 +213,14 @@ afterAll(async () => {
 
 describe("Testing Simulation State", () => {
   it("should pay discretionary expense", async () => {
-    const scenario = create_scenario(scenarioRaw);
+
+    
+
+
+
+
+
+    const scenario = await create_scenario(scenarioRaw);
     const state = await create_simulation_state(scenario);
 
     //update 所有的expense的amount
@@ -239,6 +246,8 @@ export function objectToMap(obj: Record<string, any>): Map<string, any> {
 }
 
 export function convert_yaml_to_scenario_raw(parsedYaml: any): ScenarioRaw {
+
+  
   // (1) 处理lifeExpectancy
   const lifeExpectancy = parsedYaml.lifeExpectancy.map((item: any) =>
     objectToMap(item)
