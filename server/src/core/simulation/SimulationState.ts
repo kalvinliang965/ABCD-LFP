@@ -10,11 +10,8 @@ import {
   create_state_tax_service,
 } from "../tax/StateTaxService";
 import { Event } from "../domain/event/Event";
-import {
-  get_mandatory_expenses,
-  get_discretionary_expenses,
-  SpendingEvent,
-} from "./ExpenseHelper";
+import { SpendingEvent, update_expense_amount } from "./ExpenseHelper";
+import { create_yearly_records } from "./YearlyTaxRecords";
 
 export type AccountMap = Map<string, Investment>;
 export type EventMap = Map<string, Event>;
@@ -44,12 +41,8 @@ export interface SimulationState {
   incr_capital_gains_income(amt: number): void;
   incr_social_security_income(amt: number): void;
   incr_after_tax_contribution(amt: number): void;
-  setup_year(): void;
   get_current_year(): number;
   get_financial_goal(): number;
-  //! Chen added, but not sure should be here or not
-  get_discretionary_expenses(): SpendingEvent[];
-  get_mandatory_expenses(): SpendingEvent[];
   get_early_withdrawal_penalty(): number;
   incr_early_withdrawal_penalty(amt: number): void;
   federal_tax_service: FederalTaxService;
@@ -69,44 +62,9 @@ export interface SimulationState {
   spending_strategy: Array<string>;
   expense_withrawal_strategy: Array<string>;
   process_events(): void;
-  get_active_events(): Event[];
-  process_tax(): void;
   cash: Investment;
-}
-
-// Helper Functions
-
-// Check if an event is active in the current year
-function is_event_active(event: Event, current_year: number): boolean {
-  return (
-    current_year >= event.start && current_year < event.start + event.duration
-  );
-}
-
-// Calculate the current amount for an event based on its initial amount, changes, and inflation
-function calculate_event_amount(
-  event: any,
-  initial_amount: number,
-  years_active: number,
-  inflation_factor: number
-): number {
-  let amount = initial_amount;
-
-  // Apply annual changes for each year the event has been active
-  for (let i = 0; i < years_active; i++) {
-    if (event.change_type === ChangeType.FIXED) {
-      amount += event.expected_annual_change;
-    } else if (event.change_type === ChangeType.PERCENTAGE) {
-      amount *= 1 + event.expected_annual_change;
-    }
-  }
-
-  // Apply inflation adjustment if needed
-  if (event.inflation_adjusted) {
-    amount *= inflation_factor;
-  }
-
-  return amount;
+  mandatory_expenses: SpendingEvent[];
+  discretionary_expenses: SpendingEvent[];
 }
 
 // Parse investments by tax status
@@ -150,6 +108,16 @@ function parse_investments(
     after_tax_account,
   ];
 }
+
+//更新所有Expense的amount
+function update_all_expenses(state: SimulationState): void {
+  for (const expense of state.discretionary_expenses) {
+    update_expense_amount(expense, state.get_current_year(), state.inflation_factor);
+  }
+}
+
+//更新mandatory和discretionary
+
 
 // Organize events by type into maps for easier access
 function organize_events_by_type(
@@ -202,37 +170,33 @@ export async function create_simulation_state(
   try {
     const start_year: number = new Date().getFullYear();
     let current_year: number = start_year;
+    const previous_year: number = current_year - 1;
     const is_married = scenario.tax_filing_status === TaxFilingStatus.MARRIED;
     let tax_filing_status = scenario.tax_filing_status;
 
-    // Income tracking variables
-    let ordinary_income = 0;
-    let capital_gains_income = 0;
-    let social_security_income = 0;
-    let after_tax_contribution = 0; // contribution to after tax account.
+    // contian tax info of given year
+    const yearly_records = create_yearly_records()
+    // "dummy node"
+    yearly_records.initialize_record(previous_year);
 
     // Process investments - scenario.investments is already processed in create_scenario
     const [cash, non_retirement, pre_tax, after_tax] = parse_investments(
       scenario.investments
     );
-
     // Organize events by type - scenario.eventSeries is already processed in create_scenario
     const [income_events, expense_events, investment_events, rebalance_events] =
       organize_events_by_type(scenario.event_series);
-
     let inflation_factor = scenario.inflation_assumption.sample();
 
     // Create tax services
     const federal_tax_service = await create_federal_tax_service();
     const state_tax_service = await create_state_tax_service();
-
     // Create person details
     const user = create_person_details(
       scenario.user_birth_year,
       scenario.user_life_expectancy,
       () => current_year
     );
-
     const spouse = is_married
       ? create_person_details(
           scenario.spouse_birth_year!,
@@ -240,7 +204,6 @@ export async function create_simulation_state(
           () => current_year
         )
       : undefined;
-
     let early_withdrawal_penalty = 0;
     // Create the simulation state object
     const state: SimulationState = {
@@ -252,6 +215,8 @@ export async function create_simulation_state(
       roth_conversion_end: scenario.roth_conversion_end,
       spending_strategy: scenario.spending_strategy,
       expense_withrawal_strategy: scenario.expense_withrawal_strategy,
+      mandatory_expenses: scenario.mandatory_expenses,
+      discretionary_expenses: scenario.discretionary_expenses,
       roth_conversion_strategy: scenario.roth_conversion_strategy,
       user,
       spouse,
@@ -259,26 +224,79 @@ export async function create_simulation_state(
       incr_early_withdrawal_penalty: (amt: number) => {
         early_withdrawal_penalty += amt;
       },
+
+      process_events: () => {
+      
+      },
+
       // Income getters and setters
       get_tax_filing_status: () => tax_filing_status,
       get_financial_goal: () => scenario.financialGoal,
-      get_ordinary_income: () => ordinary_income,
-      get_capital_gains_income: () => capital_gains_income,
-      get_social_security_income: () => social_security_income,
-      get_after_tax_contribution: () => after_tax_contribution,
-      get_after_tax_contribution_limit: () =>
-        scenario.after_tax_contribution_limit,
+      // get current tax info
+      get_ordinary_income: () => {
+        const record = yearly_records.get_record(current_year);
+        if (!record) {
+          console.error(`Getting ordinary income but record at ${current_year} is not initialize`)
+          process.exit(1);
+        }
+        return record.get_ordinary_income();
+      },
+      get_capital_gains_income: () => {
+        const record = yearly_records.get_record(current_year);
+        if (!record) {
+          console.error(`Gretting capital gains income but record at ${current_year} is not initialize`);
+          process.exit(1);
+        }
+        return record.get_capital_gains_income();
+      },
+      get_social_security_income: () => {
+        const record = yearly_records.get_record(current_year);
+        if (!record) {
+          console.error(`Getting social security income but record at ${current_year} is not initialize`);
+          process.exit(1);
+        }
+        return record.get_social_security_income();
+      },
+      get_after_tax_contribution: () => {
+        const record = yearly_records.get_record(current_year);
+        if (!record) {
+          console.error(`Getting after tax contribution but record at ${current_year} is not initialize`);
+          process.exit(1);
+        }
+        return record.get_after_tax_contribution();
+      },
+      get_after_tax_contribution_limit: () => scenario.after_tax_contribution_limit,
       incr_ordinary_income: (amt: number) => {
-        ordinary_income += amt;
+        const record = yearly_records.get_record(current_year);
+        if (!record) {
+          console.error(`incrementing ordinary income but record at ${current_year} is not initialize`);
+          process.exit(1);
+        }
+        return record.incr_ordinary_income(amt);
       },
       incr_capital_gains_income: (amt: number) => {
-        capital_gains_income += amt;
+        const record = yearly_records.get_record(current_year);
+        if (!record) {
+          console.error(`incrementing security income but record at ${current_year} is not initialize`);
+          process.exit(1);
+        }
+        return record.incr_capital_gains_income(amt);
       },
       incr_social_security_income: (amt: number) => {
-        social_security_income += amt;
+        const record = yearly_records.get_record(current_year);
+        if (!record) {
+          console.error(`incrementing social security income but record at ${current_year} is not initialize`);
+          process.exit(1);
+        }
+        return record.incr_social_security_income(amt);
       },
       incr_after_tax_contribution: (amt: number) => {
-        after_tax_contribution += amt;
+        const record = yearly_records.get_record(current_year);
+        if (!record) {
+          console.error(`incrementing after tax contribution but record at ${current_year} is not initialize`);
+          process.exit(1);
+        }
+        return record.incr_after_tax_contribution(amt);
       },
 
       get_current_year: () => current_year,
@@ -292,7 +310,6 @@ export async function create_simulation_state(
           tax_filing_status = TaxFilingStatus.SINGLE;
         }
       },
-
       // Account and event organization
       accounts: {
         non_retirement,
@@ -305,130 +322,6 @@ export async function create_simulation_state(
         invest: investment_events,
         rebalance: rebalance_events,
       },
-
-      // Event processing methods
-      get_active_events: function () {
-        return this.events.filter((e) =>
-          is_event_active(e, this.get_current_year())
-        );
-      },
-
-      process_events: function () {
-        const year = this.get_current_year();
-
-        // Process income events
-        for (const [_, event] of this.events_by_type.income) {
-          if (is_event_active(event, year)) {
-            const years_active = year - event.start;
-            const amount = calculate_event_amount(
-              event,
-              (event as any).initial_amount,
-              years_active,
-              this.inflation_factor
-            );
-
-            if ((event as any).social_security) {
-              this.incr_social_security_income(amount);
-            } else {
-              this.incr_ordinary_income(amount);
-            }
-          }
-        }
-
-        // TODO: Process expense events
-        // TODO: Process investment events
-        // TODO: Process rebalance events
-      },
-
-      process_tax: () => {
-        try {
-          const standard_deduction =
-            federal_tax_service.find_deduction(tax_filing_status);
-          const taxable_income =
-            ordinary_income +
-            capital_gains_income -
-            0.15 * social_security_income -
-            standard_deduction;
-          const federal_taxable_income_tax =
-            taxable_income *
-            federal_tax_service.find_rate(
-              taxable_income,
-              IncomeType.TAXABLE_INCOME,
-              tax_filing_status
-            );
-          const state_taxable_income_tax =
-            taxable_income *
-            state_tax_service.find_rate(taxable_income, tax_filing_status);
-          const federal_capital_gains_tax =
-            capital_gains_income *
-            federal_tax_service.find_rate(
-              capital_gains_income,
-              IncomeType.CAPITAL_GAINS,
-              tax_filing_status
-            );
-          cash.incr_value(
-            taxable_income -
-              federal_capital_gains_tax -
-              federal_taxable_income_tax -
-              state_taxable_income_tax
-          );
-        } catch (error) {
-          throw new Error(
-            `Failed to process tax ${
-              error instanceof Error ? error.message : error
-            }`
-          );
-        }
-      },
-
-      // Year setup and management
-      setup_year: () => {
-        ordinary_income = 0;
-        capital_gains_income = 0;
-        social_security_income = 0;
-        after_tax_contribution = 0;
-        federal_tax_service.adjust_for_inflation(inflation_factor);
-        state_tax_service.adjust_for_inflation(inflation_factor);
-
-        // 更新scenario中的支出列
-        //! Chen added, but not sure should be here or not
-        if (scenario.discretionary_expenses !== undefined) {
-          scenario.discretionary_expenses = get_discretionary_expenses(state);
-        }
-        if (scenario.mandatory_expenses !== undefined) {
-          scenario.mandatory_expenses = get_mandatory_expenses(state);
-        }
-
-        // type check
-        for (const [id, investment] of non_retirement.entries()) {
-          if (investment.taxStatus != TaxStatus.NON_RETIREMENT) {
-            console.error(
-              `non retirment account contain invalid type ${investment.taxStatus}`
-            );
-            process.exit(1);
-          }
-        }
-        for (const [id, investment] of after_tax.entries()) {
-          if (investment.taxStatus != TaxStatus.AFTER_TAX) {
-            console.error(
-              `after tax account contain invalid type ${investment.taxStatus}`
-            );
-            process.exit(1);
-          }
-        }
-        for (const [id, investment] of pre_tax.entries()) {
-          if (investment.taxStatus != TaxStatus.PRE_TAX) {
-            console.error(
-              `pre tax account contain invalid type ${investment.taxStatus}`
-            );
-            process.exit(1);
-          }
-        }
-      },
-
-      //! Chen added, but not sure should be here or not
-      get_discretionary_expenses: () => get_discretionary_expenses(state),
-      get_mandatory_expenses: () => get_mandatory_expenses(state),
     };
 
     return state;

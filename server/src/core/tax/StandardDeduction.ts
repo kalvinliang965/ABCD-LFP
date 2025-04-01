@@ -6,6 +6,7 @@ export interface StandardDeduction {
     to_string(): string,
     size(): number,
     find_deduction(status: TaxFilingStatus): number;
+    clone(): StandardDeduction;
 }
 
 export function create_standard_deductions(): StandardDeduction {
@@ -16,14 +17,14 @@ export function create_standard_deductions(): StandardDeduction {
     const add_deduction = (amt: number, status: TaxFilingStatus): void => {
         if (deductions.has(status)) {
             console.error("Already have deduction for this status", status);
-            return;
+            process.exit(1);
         }
         deductions.set(status, amt);
     }
 
     const adjust_for_inflation = (rate: number): void => {
         for (const [key, val] of deductions.entries()) {
-            deductions.set(key, val * (1 + rate));
+            deductions.set(key, Math.round(val * (1 + rate)));
         }        
     }
     
@@ -51,5 +52,16 @@ export function create_standard_deductions(): StandardDeduction {
         to_string,
         size,
         find_deduction,
+        clone: () => {
+            const cloned = create_standard_deductions();
+            const all_statuses = [TaxFilingStatus.SINGLE, TaxFilingStatus.MARRIED];
+            all_statuses.forEach(status => {
+                const amount = deductions.get(status);
+                if (amount !== undefined) {
+                    cloned.add_deduction(amount, status);
+                }
+            });
+            return cloned;
+        }
     }
 }

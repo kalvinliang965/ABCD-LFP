@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  EventSeriesType, 
-  DistributionConfig, 
-  StartYearConfig, 
-  SeriesReference, 
+import React, { useState, useEffect } from "react";
+import {
+  EventSeriesType,
+  DistributionConfig,
+  StartYearConfig,
+  SeriesReference,
   AmountChangeType,
-  EventSeries 
-} from '../../types/eventSeries';
+  EventSeries,
+} from "../../types/eventSeries";
 import {
   Box,
   FormControl,
@@ -29,9 +29,9 @@ import {
   Stack,
   Alert,
   AlertIcon,
-} from '@chakra-ui/react';
-import { css } from '@emotion/react';
-import axios from 'axios';
+} from "@chakra-ui/react";
+import { css } from "@emotion/react";
+import axios from "axios";
 
 //use the existing EventSeries type for the API response
 type AddedEvent = EventSeries & {
@@ -40,89 +40,109 @@ type AddedEvent = EventSeries & {
   updatedAt: string;
 };
 
-interface EventSeriesFormProps {
-  initialType: EventSeriesType;
-  onBack: () => void;
-  onEventAdded?: (event: Omit<EventSeries, 'id'>) => void;
+export interface EventSeriesFormProps {
+  initialType?: EventSeriesType; // Keep for backward compatibility
+  eventSeriesType?: EventSeriesType; // New prop name used in NewScenarioPage
+  onBack?: () => void;
+  onEventAdded?: (event: any) => void; // Use any to match what's expected in NewScenarioPage
+  isCompactMode?: boolean;
 }
 
 const distributionTypes = [
-  { value: 'fixed', label: 'Fixed Value' },
-  { value: 'uniform', label: 'Uniform Distribution' },
-  { value: 'normal', label: 'Normal Distribution' },
-  { value: 'startWith', label: 'Same Year as Event Series' },
-  { value: 'startAfter', label: 'After Event Series Ends' }
+  { value: "fixed", label: "Fixed Value" },
+  { value: "uniform", label: "Uniform Distribution" },
+  { value: "normal", label: "Normal Distribution" },
+  { value: "startWith", label: "Same Year as Event Series" },
+  { value: "startAfter", label: "After Event Series Ends" },
 ];
 
 const durationDistributionTypes = [
-  { value: 'fixed', label: 'Fixed Value' },
-  { value: 'uniform', label: 'Uniform Distribution' },
-  { value: 'normal', label: 'Normal Distribution' }
+  { value: "fixed", label: "Fixed Value" },
+  { value: "uniform", label: "Uniform Distribution" },
+  { value: "normal", label: "Normal Distribution" },
 ];
 
 interface Investment {
   _id: string;
   investmentType: string;
   value: number;
-  taxStatus: 'non-retirement' | 'pre-tax' | 'after-tax';
+  taxStatus: "non-retirement" | "pre-tax" | "after-tax";
   id: string;
 }
 
 const startYearTypes = [
-  { value: 'fixed', label: 'Fixed Year' },
-  { value: 'uniform', label: 'Uniform Distribution' },
-  { value: 'normal', label: 'Normal Distribution' },
-  { value: 'startWith', label: 'Same as Existing Event' },
-  { value: 'startAfter', label: 'After Existing Event Ends' }
+  { value: "fixed", label: "Fixed Year" },
+  { value: "uniform", label: "Uniform Distribution" },
+  { value: "normal", label: "Normal Distribution" },
+  { value: "startWith", label: "Same as Existing Event" },
+  { value: "startAfter", label: "After Existing Event Ends" },
 ];
 
-export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeriesFormProps) {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
+export function EventSeriesForm({
+  initialType,
+  eventSeriesType,
+  onBack,
+  onEventAdded,
+  isCompactMode = false,
+}: EventSeriesFormProps) {
+  // Use eventSeriesType if provided, otherwise fall back to initialType
+  const eventType = eventSeriesType || initialType;
+
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState("");
   const [inflationAdjusted, setInflationAdjusted] = useState(false);
   const [isDiscretionary, setIsDiscretionary] = useState(false);
   const [isSocialSecurity, setIsSocialSecurity] = useState(false);
   const [userPercentage, setUserPercentage] = useState(100);
   const [spousePercentage, setSpousePercentage] = useState(0);
-  const [maxCash, setMaxCash] = useState('');
+  const [maxCash, setMaxCash] = useState("");
   const [startYear, setStartYear] = useState<StartYearConfig>({
-    type: 'fixed',
-    value: new Date().getFullYear()
+    type: "fixed",
+    value: new Date().getFullYear(),
   });
   const [duration, setDuration] = useState<DistributionConfig>({
-    type: 'fixed',
-    value: 1
+    type: "fixed",
+    value: 1,
   });
   const [assetAllocation, setAssetAllocation] = useState<{
-    type: 'fixed' | 'glidePath';
-    investments: { investment: string; initialPercentage: number; finalPercentage?: number }[];
+    type: "fixed" | "glidePath";
+    investments: {
+      investment: string;
+      initialPercentage: number;
+      finalPercentage?: number;
+    }[];
   }>({
-    type: 'fixed',
-    investments: []
+    type: "fixed",
+    investments: [],
   });
   const [annualChange, setAnnualChange] = useState<AmountChangeType>({
-    type: 'fixed',
-    value: undefined
+    type: "fixed",
+    value: undefined,
   });
   const [errors, setErrors] = useState<string[]>([]);
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [loadingInvestments, setLoadingInvestments] = useState(true);
   const [existingEvents, setExistingEvents] = useState<{ name: string }[]>([]);
-  const [selectedTaxStatus, setSelectedTaxStatus] = useState<'non-retirement' | 'pre-tax' | 'after-tax' | ''>('');
+  const [selectedTaxStatus, setSelectedTaxStatus] = useState<
+    "non-retirement" | "pre-tax" | "after-tax" | ""
+  >("");
 
   useEffect(() => {
     const fetchInvestments = async () => {
       try {
-        const response = await axios.get<Investment[]>('http://localhost:3000/api/investments', {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json'
+        const response = await axios.get<Investment[]>(
+          "http://localhost:3000/api/investments",
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "application/json",
+            },
           }
-        });
+        );
         setInvestments(response.data);
       } catch (error) {
-        console.error('Failed to fetch investments:', error);
+        console.error("Failed to fetch investments:", error);
       } finally {
         setLoadingInvestments(false);
       }
@@ -133,13 +153,13 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
 
   useEffect(() => {
     if (investments.length > 0) {
-      setAssetAllocation(prev => ({
+      setAssetAllocation((prev) => ({
         ...prev,
-        investments: investments.map(inv => ({
+        investments: investments.map((inv) => ({
           investment: inv.id,
           initialPercentage: 0,
-          finalPercentage: prev.type === 'glidePath' ? 0 : undefined
-        }))
+          finalPercentage: prev.type === "glidePath" ? 0 : undefined,
+        })),
       }));
     }
   }, [investments]);
@@ -147,38 +167,41 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
   useEffect(() => {
     const fetchExistingEvents = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/eventSeries', {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json'
+        const response = await axios.get(
+          "http://localhost:3000/api/eventSeries",
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "application/json",
+            },
           }
-        });
+        );
         setExistingEvents(response.data);
       } catch (error) {
-        console.error('Failed to fetch existing events:', error);
+        console.error("Failed to fetch existing events:", error);
       }
     };
 
     fetchExistingEvents();
   }, []);
 
-  const handleStartYearTypeChange = (value: StartYearConfig['type']) => {
+  const handleStartYearTypeChange = (value: StartYearConfig["type"]) => {
     let newConfig: StartYearConfig;
     switch (value) {
-      case 'fixed':
-        newConfig = { type: 'fixed', value: new Date().getFullYear() };
+      case "fixed":
+        newConfig = { type: "fixed", value: new Date().getFullYear() };
         break;
-      case 'uniform':
-        newConfig = { type: 'uniform', min: 2024, max: 2030 };
+      case "uniform":
+        newConfig = { type: "uniform", min: 2024, max: 2030 };
         break;
-      case 'normal':
-        newConfig = { type: 'normal', mean: 2024, stdDev: 2 };
+      case "normal":
+        newConfig = { type: "normal", mean: 2024, stdDev: 2 };
         break;
-      case 'startWith':
-        newConfig = { type: 'startWith', eventSeries: '' };
+      case "startWith":
+        newConfig = { type: "startWith", eventSeries: "" };
         break;
-      case 'startAfter':
-        newConfig = { type: 'startAfter', eventSeries: '' };
+      case "startAfter":
+        newConfig = { type: "startAfter", eventSeries: "" };
         break;
       default:
         return;
@@ -192,15 +215,18 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
     isStartYear: boolean = false
   ) => {
     switch (config.type) {
-      case 'fixed':
+      case "fixed":
         return (
           <FormControl isRequired>
-            <FormLabel>{isStartYear ? 'Start Year' : 'Duration (Years)'}</FormLabel>
+            <FormLabel>
+              {isStartYear ? "Start Year" : "Duration (Years)"}
+            </FormLabel>
             <NumberInput
-              value={config.value || ''}
+              value={config.value || ""}
               onChange={(valueString) => {
-                const value = valueString === '' ? undefined : parseInt(valueString);
-                onChange({ type: 'fixed', value });
+                const value =
+                  valueString === "" ? undefined : parseInt(valueString);
+                onChange({ type: "fixed", value });
               }}
               min={isStartYear ? 1900 : 1}
               max={isStartYear ? 2100 : 100}
@@ -209,15 +235,16 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
             </NumberInput>
           </FormControl>
         );
-      case 'uniform':
+      case "uniform":
         return (
           <VStack spacing={4}>
             <FormControl isRequired>
-              <FormLabel>Minimum {isStartYear ? 'Year' : 'Duration'}</FormLabel>
+              <FormLabel>Minimum {isStartYear ? "Year" : "Duration"}</FormLabel>
               <NumberInput
-                value={config.min || ''}
+                value={config.min || ""}
                 onChange={(valueString) => {
-                  const value = valueString === '' ? undefined : parseInt(valueString);
+                  const value =
+                    valueString === "" ? undefined : parseInt(valueString);
                   onChange({ ...config, min: value });
                 }}
                 min={isStartYear ? 1900 : 1}
@@ -226,11 +253,12 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
               </NumberInput>
             </FormControl>
             <FormControl isRequired>
-              <FormLabel>Maximum {isStartYear ? 'Year' : 'Duration'}</FormLabel>
+              <FormLabel>Maximum {isStartYear ? "Year" : "Duration"}</FormLabel>
               <NumberInput
-                value={config.max || ''}
+                value={config.max || ""}
                 onChange={(valueString) => {
-                  const value = valueString === '' ? undefined : parseInt(valueString);
+                  const value =
+                    valueString === "" ? undefined : parseInt(valueString);
                   onChange({ ...config, max: value });
                 }}
                 min={isStartYear ? 1900 : 1}
@@ -240,15 +268,16 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
             </FormControl>
           </VStack>
         );
-      case 'normal':
+      case "normal":
         return (
           <VStack spacing={4}>
             <FormControl isRequired>
-              <FormLabel>Mean {isStartYear ? 'Year' : 'Duration'}</FormLabel>
+              <FormLabel>Mean {isStartYear ? "Year" : "Duration"}</FormLabel>
               <NumberInput
-                value={config.mean || ''}
+                value={config.mean || ""}
                 onChange={(valueString) => {
-                  const value = valueString === '' ? undefined : parseInt(valueString);
+                  const value =
+                    valueString === "" ? undefined : parseInt(valueString);
                   onChange({ ...config, mean: value });
                 }}
                 min={isStartYear ? 1900 : 1}
@@ -259,9 +288,10 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
             <FormControl isRequired>
               <FormLabel>Standard Deviation</FormLabel>
               <NumberInput
-                value={config.stdDev || ''}
+                value={config.stdDev || ""}
                 onChange={(valueString) => {
-                  const value = valueString === '' ? undefined : parseInt(valueString);
+                  const value =
+                    valueString === "" ? undefined : parseInt(valueString);
                   onChange({ ...config, stdDev: value });
                 }}
                 min={0}
@@ -271,18 +301,20 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
             </FormControl>
           </VStack>
         );
-      case 'startWith':
-      case 'startAfter':
+      case "startWith":
+      case "startAfter":
         if (!isStartYear) return null;
         return (
           <FormControl isRequired>
             <FormLabel>Reference Event Series</FormLabel>
             <Select
-              value={(config as StartYearConfig).eventSeries || ''}
-              onChange={(e) => onChange({ type: config.type, eventSeries: e.target.value })}
+              value={(config as StartYearConfig).eventSeries || ""}
+              onChange={(e) =>
+                onChange({ type: config.type, eventSeries: e.target.value })
+              }
             >
               <option value="">Select event series...</option>
-              {existingEvents.map(event => (
+              {existingEvents.map((event) => (
                 <option key={event.name} value={event.name}>
                   {event.name}
                 </option>
@@ -297,15 +329,16 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
 
   const renderStartYearFields = () => {
     switch (startYear.type) {
-      case 'fixed':
+      case "fixed":
         return (
           <FormControl isRequired>
             <FormLabel>Start Year</FormLabel>
             <NumberInput
-              value={startYear.value || ''}
+              value={startYear.value || ""}
               onChange={(valueString) => {
-                const value = valueString === '' ? undefined : parseInt(valueString);
-                setStartYear({ type: 'fixed', value });
+                const value =
+                  valueString === "" ? undefined : parseInt(valueString);
+                setStartYear({ type: "fixed", value });
               }}
               min={1900}
               max={2100}
@@ -314,15 +347,16 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
             </NumberInput>
           </FormControl>
         );
-      case 'uniform':
+      case "uniform":
         return (
           <VStack spacing={4}>
             <FormControl isRequired>
               <FormLabel>Minimum Year</FormLabel>
               <NumberInput
-                value={startYear.min || ''}
+                value={startYear.min || ""}
                 onChange={(valueString) => {
-                  const value = valueString === '' ? undefined : parseInt(valueString);
+                  const value =
+                    valueString === "" ? undefined : parseInt(valueString);
                   setStartYear({ ...startYear, min: value });
                 }}
                 min={1900}
@@ -333,9 +367,10 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
             <FormControl isRequired>
               <FormLabel>Maximum Year</FormLabel>
               <NumberInput
-                value={startYear.max || ''}
+                value={startYear.max || ""}
                 onChange={(valueString) => {
-                  const value = valueString === '' ? undefined : parseInt(valueString);
+                  const value =
+                    valueString === "" ? undefined : parseInt(valueString);
                   setStartYear({ ...startYear, max: value });
                 }}
                 min={1900}
@@ -345,15 +380,16 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
             </FormControl>
           </VStack>
         );
-      case 'normal':
+      case "normal":
         return (
           <VStack spacing={4}>
             <FormControl isRequired>
               <FormLabel>Mean Year</FormLabel>
               <NumberInput
-                value={startYear.mean || ''}
+                value={startYear.mean || ""}
                 onChange={(valueString) => {
-                  const value = valueString === '' ? undefined : parseInt(valueString);
+                  const value =
+                    valueString === "" ? undefined : parseInt(valueString);
                   setStartYear({ ...startYear, mean: value });
                 }}
                 min={1900}
@@ -364,9 +400,10 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
             <FormControl isRequired>
               <FormLabel>Standard Deviation</FormLabel>
               <NumberInput
-                value={startYear.stdDev || ''}
+                value={startYear.stdDev || ""}
                 onChange={(valueString) => {
-                  const value = valueString === '' ? undefined : parseInt(valueString);
+                  const value =
+                    valueString === "" ? undefined : parseInt(valueString);
                   setStartYear({ ...startYear, stdDev: value });
                 }}
                 min={1}
@@ -376,17 +413,19 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
             </FormControl>
           </VStack>
         );
-      case 'startWith':
-      case 'startAfter':
+      case "startWith":
+      case "startAfter":
         return (
           <FormControl isRequired>
             <FormLabel>Select Event Series</FormLabel>
             <Select
-              value={startYear.eventSeries || ''}
-              onChange={(e) => setStartYear({ ...startYear, eventSeries: e.target.value })}
+              value={startYear.eventSeries || ""}
+              onChange={(e) =>
+                setStartYear({ ...startYear, eventSeries: e.target.value })
+              }
             >
               <option value="">Select an event series</option>
-              {existingEvents.map(event => (
+              {existingEvents.map((event) => (
                 <option key={event.name} value={event.name}>
                   {event.name}
                 </option>
@@ -424,10 +463,14 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
           <FormLabel>Start Year Type</FormLabel>
           <Select
             value={startYear.type}
-            onChange={(e) => handleStartYearTypeChange(e.target.value as StartYearConfig['type'])}
+            onChange={(e) =>
+              handleStartYearTypeChange(
+                e.target.value as StartYearConfig["type"]
+              )
+            }
             required
           >
-                  {startYearTypes.map((type) => (
+            {startYearTypes.map((type) => (
               <option key={type.value} value={type.value}>
                 {type.label}
               </option>
@@ -444,21 +487,21 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
           <Select
             value={duration.type}
             onChange={(e) => {
-              const type = e.target.value as DistributionConfig['type'];
+              const type = e.target.value as DistributionConfig["type"];
               switch (type) {
-                case 'fixed':
-                  setDuration({ type: 'fixed', value: 1 });
+                case "fixed":
+                  setDuration({ type: "fixed", value: 1 });
                   break;
-                case 'uniform':
-                  setDuration({ type: 'uniform', min: 1, max: 5 });
+                case "uniform":
+                  setDuration({ type: "uniform", min: 1, max: 5 });
                   break;
-                case 'normal':
-                  setDuration({ type: 'normal', mean: 3, stdDev: 1 });
+                case "normal":
+                  setDuration({ type: "normal", mean: 3, stdDev: 1 });
                   break;
               }
             }}
           >
-                  {durationDistributionTypes.map((type) => (
+            {durationDistributionTypes.map((type) => (
               <option key={type.value} value={type.value}>
                 {type.label}
               </option>
@@ -469,7 +512,7 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
         {renderDistributionFields(duration, (values) => {
           const newDuration = {
             ...duration,
-            ...values
+            ...values,
           } as DistributionConfig;
           setDuration(newDuration);
         })}
@@ -482,18 +525,24 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
     return Math.abs(sum - 100) < 0.01; //allow for small floating point differences
   };
 
-  const renderAllocationInputs = (values: number[], onChange: (index: number, value: number) => void) => {
+  const renderAllocationInputs = (
+    values: number[],
+    onChange: (index: number, value: number) => void
+  ) => {
     // Filter investments based on event type and selected tax status
     let filteredInvestments = [...investments];
-    
-    if (initialType === 'invest') {
+
+    if (eventType === "invest") {
       // For invest events, only show non-retirement and after-tax investments
-      filteredInvestments = investments.filter(inv => 
-        inv.taxStatus === 'non-retirement' || inv.taxStatus === 'after-tax'
+      filteredInvestments = investments.filter(
+        (inv) =>
+          inv.taxStatus === "non-retirement" || inv.taxStatus === "after-tax"
       );
-    } else if (initialType === 'rebalance' && selectedTaxStatus) {
+    } else if (eventType === "rebalance" && selectedTaxStatus) {
       // For rebalance events, only show investments with the selected tax status
-      filteredInvestments = investments.filter(inv => inv.taxStatus === selectedTaxStatus);
+      filteredInvestments = investments.filter(
+        (inv) => inv.taxStatus === selectedTaxStatus
+      );
     }
 
     return (
@@ -501,7 +550,7 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
         {filteredInvestments.length === 0 ? (
           <Alert status="warning">
             <AlertIcon />
-            {initialType === 'invest' 
+            {eventType === "invest"
               ? "No suitable investments available. For invest events, only non-retirement and after-tax investments can be used."
               : `No investments with '${selectedTaxStatus}' tax status available. Please add investments with this tax status first.`}
           </Alert>
@@ -509,13 +558,19 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
           <>
             {filteredInvestments.map((inv, index) => {
               // Get the corresponding index in the original investments array
-              const originalIndex = investments.findIndex(originalInv => originalInv.id === inv.id);
+              const originalIndex = investments.findIndex(
+                (originalInv) => originalInv.id === inv.id
+              );
               return (
                 <FormControl key={inv.id} isRequired>
-                  <FormLabel>{inv.investmentType} ({inv.taxStatus}) (%)</FormLabel>
+                  <FormLabel>
+                    {inv.investmentType} ({inv.taxStatus}) (%)
+                  </FormLabel>
                   <NumberInput
                     value={values[originalIndex] || 0}
-                    onChange={(value) => onChange(originalIndex, parseFloat(value) || 0)}
+                    onChange={(value) =>
+                      onChange(originalIndex, parseFloat(value) || 0)
+                    }
                     min={0}
                     max={100}
                     precision={2}
@@ -525,8 +580,13 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
                 </FormControl>
               );
             })}
-            <Text color={validateAllocationPercentages(values) ? "green.500" : "red.500"}>
-              Total: {values.reduce((acc, val) => acc + (val || 0), 0).toFixed(2)}%
+            <Text
+              color={
+                validateAllocationPercentages(values) ? "green.500" : "red.500"
+              }
+            >
+              Total:{" "}
+              {values.reduce((acc, val) => acc + (val || 0), 0).toFixed(2)}%
               {!validateAllocationPercentages(values) && " (must equal 100%)"}
             </Text>
           </>
@@ -536,7 +596,8 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
   };
 
   const handlePercentageChange = (isUser: boolean, value: string) => {
-    const numValue = value === '' ? 0 : Math.min(100, Math.max(0, parseInt(value) || 0));
+    const numValue =
+      value === "" ? 0 : Math.min(100, Math.max(0, parseInt(value) || 0));
     if (isUser) {
       setUserPercentage(numValue);
       setSpousePercentage(100 - numValue);
@@ -547,8 +608,8 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
   };
 
   const renderEventTypeForm = () => {
-    switch (initialType) {
-      case 'income':
+    switch (eventType) {
+      case "income":
         return (
           <VStack spacing={6} align="stretch">
             {renderCommonFields()}
@@ -578,20 +639,31 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
               <Select
                 value={annualChange.type}
                 onChange={(e) => {
-                  const type = e.target.value as AmountChangeType['type'];
+                  const type = e.target.value as AmountChangeType["type"];
                   switch (type) {
-                case 'fixed':
-                      setAnnualChange({ type: 'fixed', value: undefined });
+                    case "fixed":
+                      setAnnualChange({ type: "fixed", value: undefined });
                       break;
-                    case 'fixedPercent':
-                      setAnnualChange({ type: 'fixedPercent', value: undefined });
-                  break;
-                case 'uniform':
-                      setAnnualChange({ type: 'uniform', min: undefined, max: undefined });
-                  break;
-                case 'normal':
-                      setAnnualChange({ type: 'normal', mean: undefined, stdDev: undefined });
-                  break;
+                    case "fixedPercent":
+                      setAnnualChange({
+                        type: "fixedPercent",
+                        value: undefined,
+                      });
+                      break;
+                    case "uniform":
+                      setAnnualChange({
+                        type: "uniform",
+                        min: undefined,
+                        max: undefined,
+                      });
+                      break;
+                    case "normal":
+                      setAnnualChange({
+                        type: "normal",
+                        mean: undefined,
+                        stdDev: undefined,
+                      });
+                      break;
                   }
                 }}
               >
@@ -602,40 +674,55 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
               </Select>
             </FormControl>
 
-            {annualChange.type === 'fixed' && (
+            {annualChange.type === "fixed" && (
               <FormControl isRequired>
                 <FormLabel>Annual Change ($)</FormLabel>
                 <Input
                   type="number"
-                  value={annualChange.value ?? ''}
-                  onChange={(e) => setAnnualChange({ type: 'fixed', value: parseInt(e.target.value) })}
+                  value={annualChange.value ?? ""}
+                  onChange={(e) =>
+                    setAnnualChange({
+                      type: "fixed",
+                      value: parseInt(e.target.value),
+                    })
+                  }
                   min="0"
                   step="1"
                 />
               </FormControl>
             )}
 
-            {annualChange.type === 'fixedPercent' && (
+            {annualChange.type === "fixedPercent" && (
               <FormControl isRequired>
                 <FormLabel>Annual Change (%)</FormLabel>
                 <Input
                   type="number"
-                  value={annualChange.value ?? ''}
-                  onChange={(e) => setAnnualChange({ type: 'fixedPercent', value: parseInt(e.target.value) })}
+                  value={annualChange.value ?? ""}
+                  onChange={(e) =>
+                    setAnnualChange({
+                      type: "fixedPercent",
+                      value: parseInt(e.target.value),
+                    })
+                  }
                   min="0"
                   step="1"
                 />
               </FormControl>
             )}
 
-            {annualChange.type === 'uniform' && (
+            {annualChange.type === "uniform" && (
               <Stack spacing={4}>
                 <FormControl isRequired>
                   <FormLabel>Minimum Change ($)</FormLabel>
                   <Input
                     type="number"
-                    value={annualChange.min ?? ''}
-                    onChange={(e) => setAnnualChange({ ...annualChange, min: parseInt(e.target.value) })}
+                    value={annualChange.min ?? ""}
+                    onChange={(e) =>
+                      setAnnualChange({
+                        ...annualChange,
+                        min: parseInt(e.target.value),
+                      })
+                    }
                     min="0"
                     step="1"
                   />
@@ -644,8 +731,13 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
                   <FormLabel>Maximum Change ($)</FormLabel>
                   <Input
                     type="number"
-                    value={annualChange.max ?? ''}
-                    onChange={(e) => setAnnualChange({ ...annualChange, max: parseInt(e.target.value) })}
+                    value={annualChange.max ?? ""}
+                    onChange={(e) =>
+                      setAnnualChange({
+                        ...annualChange,
+                        max: parseInt(e.target.value),
+                      })
+                    }
                     min="0"
                     step="1"
                   />
@@ -653,14 +745,19 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
               </Stack>
             )}
 
-            {annualChange.type === 'normal' && (
+            {annualChange.type === "normal" && (
               <Stack spacing={4}>
                 <FormControl isRequired>
                   <FormLabel>Mean Change ($)</FormLabel>
                   <Input
-                  type="number"
-                    value={annualChange.mean ?? ''}
-                    onChange={(e) => setAnnualChange({ ...annualChange, mean: parseInt(e.target.value) })}
+                    type="number"
+                    value={annualChange.mean ?? ""}
+                    onChange={(e) =>
+                      setAnnualChange({
+                        ...annualChange,
+                        mean: parseInt(e.target.value),
+                      })
+                    }
                     min="0"
                     step="1"
                   />
@@ -668,9 +765,14 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
                 <FormControl isRequired>
                   <FormLabel>Standard Deviation ($)</FormLabel>
                   <Input
-                  type="number"
-                    value={annualChange.stdDev ?? ''}
-                    onChange={(e) => setAnnualChange({ ...annualChange, stdDev: parseInt(e.target.value) })}
+                    type="number"
+                    value={annualChange.stdDev ?? ""}
+                    onChange={(e) =>
+                      setAnnualChange({
+                        ...annualChange,
+                        stdDev: parseInt(e.target.value),
+                      })
+                    }
                     min="0"
                     step="1"
                   />
@@ -679,7 +781,11 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
             )}
 
             <Box p={4} bg="indigo.50" borderRadius="lg" width="100%">
-              <FormControl display="flex" alignItems="center" justifyContent="space-between">
+              <FormControl
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+              >
                 <FormLabel mb={0}>Inflation Adjusted</FormLabel>
                 <Switch
                   isChecked={inflationAdjusted}
@@ -688,9 +794,13 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
               </FormControl>
             </Box>
 
-            {initialType === 'income' && (
+            {eventType === "income" && (
               <Box p={4} bg="indigo.50" borderRadius="lg" width="100%">
-                <FormControl display="flex" alignItems="center" justifyContent="space-between">
+                <FormControl
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
                   <FormLabel mb={0}>Social Security Income</FormLabel>
                   <Switch
                     isChecked={isSocialSecurity}
@@ -721,7 +831,7 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
                 <FormControl isRequired>
                   <FormLabel>Spouse Percentage</FormLabel>
                   <NumberInput
-                  value={spousePercentage}
+                    value={spousePercentage}
                     onChange={(value) => handlePercentageChange(false, value)}
                     min={0}
                     max={100}
@@ -731,18 +841,23 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
                   </NumberInput>
                 </FormControl>
               </HStack>
-              <Text 
-                mt={2} 
+              <Text
+                mt={2}
                 fontSize="sm"
-                color={userPercentage + spousePercentage === 100 ? "green.500" : "red.500"}
+                color={
+                  userPercentage + spousePercentage === 100
+                    ? "green.500"
+                    : "red.500"
+                }
               >
                 Total: {userPercentage + spousePercentage}%
-                {userPercentage + spousePercentage !== 100 && " (must equal 100%)"}
+                {userPercentage + spousePercentage !== 100 &&
+                  " (must equal 100%)"}
               </Text>
             </Box>
           </VStack>
         );
-      case 'expense':
+      case "expense":
         return (
           <VStack spacing={6} align="stretch">
             {renderCommonFields()}
@@ -771,20 +886,31 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
               <FormLabel>Annual Change Type</FormLabel>
               <Select
                 value={annualChange.type}
-                  onChange={(e) => {
-                  const type = e.target.value as AmountChangeType['type'];
+                onChange={(e) => {
+                  const type = e.target.value as AmountChangeType["type"];
                   switch (type) {
-                    case 'fixed':
-                      setAnnualChange({ type: 'fixed', value: undefined });
+                    case "fixed":
+                      setAnnualChange({ type: "fixed", value: undefined });
                       break;
-                    case 'fixedPercent':
-                      setAnnualChange({ type: 'fixedPercent', value: undefined });
+                    case "fixedPercent":
+                      setAnnualChange({
+                        type: "fixedPercent",
+                        value: undefined,
+                      });
                       break;
-                    case 'uniform':
-                      setAnnualChange({ type: 'uniform', min: undefined, max: undefined });
+                    case "uniform":
+                      setAnnualChange({
+                        type: "uniform",
+                        min: undefined,
+                        max: undefined,
+                      });
                       break;
-                    case 'normal':
-                      setAnnualChange({ type: 'normal', mean: undefined, stdDev: undefined });
+                    case "normal":
+                      setAnnualChange({
+                        type: "normal",
+                        mean: undefined,
+                        stdDev: undefined,
+                      });
                       break;
                   }
                 }}
@@ -796,40 +922,55 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
               </Select>
             </FormControl>
 
-            {annualChange.type === 'fixed' && (
+            {annualChange.type === "fixed" && (
               <FormControl isRequired>
                 <FormLabel>Annual Change ($)</FormLabel>
                 <Input
                   type="number"
-                  value={annualChange.value ?? ''}
-                  onChange={(e) => setAnnualChange({ type: 'fixed', value: parseInt(e.target.value) })}
+                  value={annualChange.value ?? ""}
+                  onChange={(e) =>
+                    setAnnualChange({
+                      type: "fixed",
+                      value: parseInt(e.target.value),
+                    })
+                  }
                   min="0"
                   step="1"
                 />
               </FormControl>
             )}
 
-            {annualChange.type === 'fixedPercent' && (
+            {annualChange.type === "fixedPercent" && (
               <FormControl isRequired>
                 <FormLabel>Annual Change (%)</FormLabel>
                 <Input
                   type="number"
-                  value={annualChange.value ?? ''}
-                  onChange={(e) => setAnnualChange({ type: 'fixedPercent', value: parseInt(e.target.value) })}
+                  value={annualChange.value ?? ""}
+                  onChange={(e) =>
+                    setAnnualChange({
+                      type: "fixedPercent",
+                      value: parseInt(e.target.value),
+                    })
+                  }
                   min="0"
                   step="1"
                 />
               </FormControl>
             )}
 
-            {annualChange.type === 'uniform' && (
+            {annualChange.type === "uniform" && (
               <Stack spacing={4}>
                 <FormControl isRequired>
                   <FormLabel>Minimum Change ($)</FormLabel>
                   <Input
                     type="number"
-                    value={annualChange.min ?? ''}
-                    onChange={(e) => setAnnualChange({ ...annualChange, min: parseInt(e.target.value) })}
+                    value={annualChange.min ?? ""}
+                    onChange={(e) =>
+                      setAnnualChange({
+                        ...annualChange,
+                        min: parseInt(e.target.value),
+                      })
+                    }
                     min="0"
                     step="1"
                   />
@@ -838,8 +979,13 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
                   <FormLabel>Maximum Change ($)</FormLabel>
                   <Input
                     type="number"
-                    value={annualChange.max ?? ''}
-                    onChange={(e) => setAnnualChange({ ...annualChange, max: parseInt(e.target.value) })}
+                    value={annualChange.max ?? ""}
+                    onChange={(e) =>
+                      setAnnualChange({
+                        ...annualChange,
+                        max: parseInt(e.target.value),
+                      })
+                    }
                     min="0"
                     step="1"
                   />
@@ -847,14 +993,19 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
               </Stack>
             )}
 
-            {annualChange.type === 'normal' && (
+            {annualChange.type === "normal" && (
               <Stack spacing={4}>
                 <FormControl isRequired>
                   <FormLabel>Mean Change ($)</FormLabel>
                   <Input
-                  type="number"
-                    value={annualChange.mean ?? ''}
-                    onChange={(e) => setAnnualChange({ ...annualChange, mean: parseInt(e.target.value) })}
+                    type="number"
+                    value={annualChange.mean ?? ""}
+                    onChange={(e) =>
+                      setAnnualChange({
+                        ...annualChange,
+                        mean: parseInt(e.target.value),
+                      })
+                    }
                     min="0"
                     step="1"
                   />
@@ -862,9 +1013,14 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
                 <FormControl isRequired>
                   <FormLabel>Standard Deviation ($)</FormLabel>
                   <Input
-                  type="number"
-                    value={annualChange.stdDev ?? ''}
-                    onChange={(e) => setAnnualChange({ ...annualChange, stdDev: parseInt(e.target.value) })}
+                    type="number"
+                    value={annualChange.stdDev ?? ""}
+                    onChange={(e) =>
+                      setAnnualChange({
+                        ...annualChange,
+                        stdDev: parseInt(e.target.value),
+                      })
+                    }
                     min="0"
                     step="1"
                   />
@@ -873,7 +1029,11 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
             )}
 
             <Box p={4} bg="indigo.50" borderRadius="lg" width="100%">
-              <FormControl display="flex" alignItems="center" justifyContent="space-between">
+              <FormControl
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+              >
                 <FormLabel mb={0}>Inflation Adjusted</FormLabel>
                 <Switch
                   isChecked={inflationAdjusted}
@@ -882,9 +1042,13 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
               </FormControl>
             </Box>
 
-            {initialType === 'expense' && (
+            {eventType === "expense" && (
               <Box p={4} bg="indigo.50" borderRadius="lg" width="100%">
-                <FormControl display="flex" alignItems="center" justifyContent="space-between">
+                <FormControl
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
                   <FormLabel mb={0}>Discretionary</FormLabel>
                   <Switch
                     isChecked={isDiscretionary}
@@ -925,30 +1089,35 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
                   </NumberInput>
                 </FormControl>
               </HStack>
-              <Text 
-                mt={2} 
+              <Text
+                mt={2}
                 fontSize="sm"
-                color={userPercentage + spousePercentage === 100 ? "green.500" : "red.500"}
+                color={
+                  userPercentage + spousePercentage === 100
+                    ? "green.500"
+                    : "red.500"
+                }
               >
                 Total: {userPercentage + spousePercentage}%
-                {userPercentage + spousePercentage !== 100 && " (must equal 100%)"}
+                {userPercentage + spousePercentage !== 100 &&
+                  " (must equal 100%)"}
               </Text>
             </Box>
           </VStack>
         );
-      case 'invest':
-      case 'rebalance':
+      case "invest":
+      case "rebalance":
         return (
           <VStack spacing={6} align="stretch">
             {renderCommonFields()}
 
-              {initialType === 'invest' && (
+            {eventType === "invest" && (
               <FormControl isRequired>
                 <FormLabel>Maximum Cash Holdings ($)</FormLabel>
                 <Input
-                      type="number"
-                      value={maxCash}
-                      onChange={(e) => setMaxCash(e.target.value)}
+                  type="number"
+                  value={maxCash}
+                  onChange={(e) => setMaxCash(e.target.value)}
                   placeholder="0"
                   min="0"
                   step="1"
@@ -956,20 +1125,25 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
               </FormControl>
             )}
 
-            {initialType === 'rebalance' && (
+            {eventType === "rebalance" && (
               <FormControl isRequired>
                 <FormLabel>Account Tax Status</FormLabel>
                 <Select
                   value={selectedTaxStatus}
                   onChange={(e) => {
-                    setSelectedTaxStatus(e.target.value as 'non-retirement' | 'pre-tax' | 'after-tax');
+                    setSelectedTaxStatus(
+                      e.target.value as
+                        | "non-retirement"
+                        | "pre-tax"
+                        | "after-tax"
+                    );
                     // Reset asset allocation when tax status changes
                     setAssetAllocation({
-                      type: 'fixed',
-                      investments: investments.map(inv => ({
+                      type: "fixed",
+                      investments: investments.map((inv) => ({
                         investment: inv.id,
-                        initialPercentage: 0
-                      }))
+                        initialPercentage: 0,
+                      })),
                     });
                   }}
                   placeholder="Select account type"
@@ -987,9 +1161,11 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
               </Box>
             ) : investments.length === 0 ? (
               <Box p={4} bg="gray.50" borderRadius="lg">
-                <Text>No investments available. Please add some investments first.</Text>
+                <Text>
+                  No investments available. Please add some investments first.
+                </Text>
               </Box>
-            ) : initialType === 'rebalance' && !selectedTaxStatus ? (
+            ) : eventType === "rebalance" && !selectedTaxStatus ? (
               <Box p={4} bg="gray.50" borderRadius="lg">
                 <Text>Please select an account tax status first.</Text>
               </Box>
@@ -1001,14 +1177,14 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
                     <Select
                       value={assetAllocation.type}
                       onChange={(e) => {
-                        const type = e.target.value as 'fixed' | 'glidePath';
+                        const type = e.target.value as "fixed" | "glidePath";
                         setAssetAllocation({
                           type,
-                          investments: investments.map(inv => ({
+                          investments: investments.map((inv) => ({
                             investment: inv.id,
                             initialPercentage: 0,
-                            ...(type === 'glidePath' && { finalPercentage: 0 })
-                          }))
+                            ...(type === "glidePath" && { finalPercentage: 0 }),
+                          })),
                         });
                       }}
                     >
@@ -1017,54 +1193,72 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
                     </Select>
                   </FormControl>
 
-                  {assetAllocation.type === 'fixed' ? (
+                  {assetAllocation.type === "fixed" ? (
                     <Box>
-                      <Text fontSize="lg" mb={4}>Fixed Asset Allocation</Text>
+                      <Text fontSize="lg" mb={4}>
+                        Fixed Asset Allocation
+                      </Text>
                       {renderAllocationInputs(
-                        assetAllocation.investments.map(inv => inv.initialPercentage),
+                        assetAllocation.investments.map(
+                          (inv) => inv.initialPercentage
+                        ),
                         (index, value) => {
-                          const newInvestments = [...assetAllocation.investments];
+                          const newInvestments = [
+                            ...assetAllocation.investments,
+                          ];
                           newInvestments[index] = {
                             ...newInvestments[index],
-                            initialPercentage: value
+                            initialPercentage: value,
                           };
                           setAssetAllocation({
                             ...assetAllocation,
-                            investments: newInvestments
+                            investments: newInvestments,
                           });
                         }
                       )}
                     </Box>
                   ) : (
                     <Box>
-                      <Text fontSize="lg" mb={4}>Initial Asset Allocation</Text>
+                      <Text fontSize="lg" mb={4}>
+                        Initial Asset Allocation
+                      </Text>
                       {renderAllocationInputs(
-                        assetAllocation.investments.map(inv => inv.initialPercentage),
+                        assetAllocation.investments.map(
+                          (inv) => inv.initialPercentage
+                        ),
                         (index, value) => {
-                          const newInvestments = [...assetAllocation.investments];
+                          const newInvestments = [
+                            ...assetAllocation.investments,
+                          ];
                           newInvestments[index] = {
                             ...newInvestments[index],
-                            initialPercentage: value
+                            initialPercentage: value,
                           };
                           setAssetAllocation({
                             ...assetAllocation,
-                            investments: newInvestments
+                            investments: newInvestments,
                           });
                         }
                       )}
-                      
-                      <Text fontSize="lg" mt={6} mb={4}>Final Asset Allocation</Text>
+
+                      <Text fontSize="lg" mt={6} mb={4}>
+                        Final Asset Allocation
+                      </Text>
                       {renderAllocationInputs(
-                        assetAllocation.investments.map(inv => inv.finalPercentage || 0),
+                        assetAllocation.investments.map(
+                          (inv) => inv.finalPercentage || 0
+                        ),
                         (index, value) => {
-                          const newInvestments = [...assetAllocation.investments];
+                          const newInvestments = [
+                            ...assetAllocation.investments,
+                          ];
                           newInvestments[index] = {
                             ...newInvestments[index],
-                            finalPercentage: value
+                            finalPercentage: value,
                           };
                           setAssetAllocation({
                             ...assetAllocation,
-                            investments: newInvestments
+                            investments: newInvestments,
                           });
                         }
                       )}
@@ -1087,65 +1281,93 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
       newErrors.push("Please enter a name");
     }
 
-    if ((initialType === 'income' || initialType === 'expense') && 
-        (!amount || isNaN(Number(amount)) || Number(amount) <= 0)) {
+    if (
+      (eventType === "income" || eventType === "expense") &&
+      (!amount || isNaN(Number(amount)) || Number(amount) <= 0)
+    ) {
       newErrors.push("Please enter a valid amount greater than 0");
     }
 
-    if (startYear.type === 'fixed' && (!startYear.value || isNaN(Number(startYear.value)))) {
+    if (
+      startYear.type === "fixed" &&
+      (!startYear.value || isNaN(Number(startYear.value)))
+    ) {
       newErrors.push("Please enter a valid start year");
     }
 
-    if (duration.type === 'fixed' && (!duration.value || isNaN(Number(duration.value)))) {
+    if (
+      duration.type === "fixed" &&
+      (!duration.value || isNaN(Number(duration.value)))
+    ) {
       newErrors.push("Please enter a valid duration");
     }
 
-    if (initialType === 'rebalance' && !selectedTaxStatus) {
+    if (eventType === "rebalance" && !selectedTaxStatus) {
       newErrors.push("Please select an account tax status");
     }
 
     // Check if suitable investments are available for invest/rebalance events
-    if (initialType === 'invest' || initialType === 'rebalance') {
+    if (eventType === "invest" || eventType === "rebalance") {
       let availableInvestments: Investment[] = [];
-      
-      if (initialType === 'invest') {
+
+      if (eventType === "invest") {
         // For invest events, check for non-retirement and after-tax investments
-        availableInvestments = investments.filter(inv => 
-          inv.taxStatus === 'non-retirement' || inv.taxStatus === 'after-tax'
+        availableInvestments = investments.filter(
+          (inv) =>
+            inv.taxStatus === "non-retirement" || inv.taxStatus === "after-tax"
         );
         if (availableInvestments.length === 0) {
-          newErrors.push("No suitable investments available. For invest events, only non-retirement and after-tax investments can be used. Please add some investments first.");
+          newErrors.push(
+            "No suitable investments available. For invest events, only non-retirement and after-tax investments can be used. Please add some investments first."
+          );
           setErrors(newErrors);
           return false;
         }
-      } else if (initialType === 'rebalance' && selectedTaxStatus) {
+      } else if (eventType === "rebalance" && selectedTaxStatus) {
         // For rebalance events, check for investments with the selected tax status
-        availableInvestments = investments.filter(inv => inv.taxStatus === selectedTaxStatus);
+        availableInvestments = investments.filter(
+          (inv) => inv.taxStatus === selectedTaxStatus
+        );
         if (availableInvestments.length === 0) {
-          newErrors.push(`No investments with '${selectedTaxStatus}' tax status available. Please add investments with this tax status first.`);
+          newErrors.push(
+            `No investments with '${selectedTaxStatus}' tax status available. Please add investments with this tax status first.`
+          );
           setErrors(newErrors);
           return false;
         }
       }
 
       // If investments are available, check percentages
-      if (availableInvestments.length > 0 && assetAllocation.investments.length > 0) {
-        const initialPercentages = assetAllocation.investments.map(inv => inv.initialPercentage);
+      if (
+        availableInvestments.length > 0 &&
+        assetAllocation.investments.length > 0
+      ) {
+        const initialPercentages = assetAllocation.investments.map(
+          (inv) => inv.initialPercentage
+        );
         if (!validateAllocationPercentages(initialPercentages)) {
-          newErrors.push("Initial asset allocation percentages must sum to 100%");
+          newErrors.push(
+            "Initial asset allocation percentages must sum to 100%"
+          );
         }
 
-        if (assetAllocation.type === 'glidePath') {
-          const finalPercentages = assetAllocation.investments.map(inv => inv.finalPercentage || 0);
+        if (assetAllocation.type === "glidePath") {
+          const finalPercentages = assetAllocation.investments.map(
+            (inv) => inv.finalPercentage || 0
+          );
           if (!validateAllocationPercentages(finalPercentages)) {
-            newErrors.push("Final asset allocation percentages must sum to 100%");
+            newErrors.push(
+              "Final asset allocation percentages must sum to 100%"
+            );
           }
         }
       }
     }
 
-    if ((initialType === 'income' || initialType === 'expense') && 
-        (userPercentage + spousePercentage !== 100)) {
+    if (
+      (eventType === "income" || eventType === "expense") &&
+      userPercentage + spousePercentage !== 100
+    ) {
       newErrors.push("User and spouse percentages must sum to 100%");
     }
 
@@ -1155,98 +1377,152 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validateForm()) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     try {
-      // Filter investments based on event type
+      setErrors([]);
+
+      // Filter asset allocation to only include relevant investments based on event type
       let filteredAssetAllocation = { ...assetAllocation };
-      
-      if (initialType === 'invest') {
+
+      if (eventType === "invest") {
         // For invest events, only include non-retirement and after-tax investments
-        const allowedInvestments = investments.filter(inv => 
-          inv.taxStatus === 'non-retirement' || inv.taxStatus === 'after-tax'
-        ).map(inv => inv.id);
-        
-        filteredAssetAllocation.investments = assetAllocation.investments.filter(inv => 
-          allowedInvestments.includes(inv.investment)
-        );
-      } else if (initialType === 'rebalance' && selectedTaxStatus) {
+        const allowedInvestments = investments
+          .filter(
+            (inv) =>
+              inv.taxStatus === "non-retirement" ||
+              inv.taxStatus === "after-tax"
+          )
+          .map((inv) => inv.id);
+
+        filteredAssetAllocation.investments =
+          assetAllocation.investments.filter((inv) =>
+            allowedInvestments.includes(inv.investment)
+          );
+      } else if (eventType === "rebalance" && selectedTaxStatus) {
         // For rebalance events, only include investments with the selected tax status
-        const allowedInvestments = investments.filter(inv => 
-          inv.taxStatus === selectedTaxStatus
-        ).map(inv => inv.id);
-        
-        filteredAssetAllocation.investments = assetAllocation.investments.filter(inv => 
-          allowedInvestments.includes(inv.investment)
-        );
-      }
-      
-      // Calculate the total percentage after filtering
-      const totalPercentage = filteredAssetAllocation.investments.reduce(
-        (sum, inv) => sum + inv.initialPercentage, 
-        0
-      );
-      
-      // If the total is not 100% after filtering, show an error
-      if (Math.abs(totalPercentage - 100) > 0.01 && 
-          (initialType === 'invest' || initialType === 'rebalance') && 
-          filteredAssetAllocation.investments.length > 0) {
-        setErrors(['Asset allocation percentages must sum to 100%. Please adjust your allocation.']);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
+        const allowedInvestments = investments
+          .filter((inv) => inv.taxStatus === selectedTaxStatus)
+          .map((inv) => inv.id);
+
+        filteredAssetAllocation.investments =
+          assetAllocation.investments.filter((inv) =>
+            allowedInvestments.includes(inv.investment)
+          );
       }
 
       const eventData = {
-        type: initialType,
+        type: eventType,
         name,
         description,
         startYear,
         duration,
-        ...(initialType === 'income' || initialType === 'expense' ? {
-          initialAmount: Number(amount) || 0,
-          annualChange,
-          inflationAdjust: inflationAdjusted,
-          userPercentage,
-          spousePercentage
-        } : {}),
-        ...(initialType === 'income' ? {
-          isSocialSecurity
-        } : {}),
-        ...(initialType === 'expense' ? {
-          isDiscretionary
-        } : {}),
-        ...((initialType === 'invest' || initialType === 'rebalance') ? {
-          maxCash: initialType === 'invest' ? Number(maxCash) || 0 : undefined,
-          selectedTaxStatus: initialType === 'rebalance' ? selectedTaxStatus : undefined,
-          assetAllocation: {
-            type: filteredAssetAllocation.type,
-            investments: filteredAssetAllocation.investments.map(inv => ({
-              investment: inv.investment,
-              initialPercentage: inv.initialPercentage,
-              finalPercentage: filteredAssetAllocation.type === 'glidePath' ? inv.finalPercentage : undefined
-            }))
-          }
-        } : {})
+        ...(eventType === "income" || eventType === "expense"
+          ? {
+              initialAmount: Number(amount) || 0,
+              annualChange,
+              inflationAdjusted,
+              userPercentage,
+              spousePercentage,
+            }
+          : {}),
+        ...(eventType === "income"
+          ? {
+              isSocialSecurity,
+            }
+          : {}),
+        ...(eventType === "expense"
+          ? {
+              isDiscretionary,
+            }
+          : {}),
+        ...(eventType === "invest" || eventType === "rebalance"
+          ? {
+              maxCash:
+                eventType === "invest" ? Number(maxCash) || 0 : undefined,
+              selectedTaxStatus:
+                eventType === "rebalance" ? selectedTaxStatus : undefined,
+              assetAllocation: {
+                type: filteredAssetAllocation.type,
+                investments: filteredAssetAllocation.investments.map((inv) => ({
+                  investment: inv.investment,
+                  initialPercentage: inv.initialPercentage || 0,
+                  ...(filteredAssetAllocation.type === "glidePath"
+                    ? { finalPercentage: inv.finalPercentage || 0 }
+                    : {}),
+                })),
+              },
+            }
+          : {}),
       };
 
-      const { data } = await axios.post<AddedEvent>('http://localhost:3000/api/eventSeries', eventData, {
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'application/json'
+      // If we're in compact mode, just call the callback directly without API call
+      if (isCompactMode && onEventAdded) {
+        onEventAdded({
+          ...eventData,
+          _id: `temp-${Date.now()}`, // Generate a temporary ID
+        });
+
+        // Reset form for adding more events
+        resetForm();
+        return;
+      }
+
+      // Otherwise proceed with API call
+      const response = await axios.post<AddedEvent>(
+        "http://localhost:3000/api/eventSeries",
+        eventData,
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
-      });
-      
+      );
+
       if (onEventAdded) {
-        onEventAdded(data);
+        onEventAdded(response.data);
+      }
+
+      // Reset the form
+      resetForm();
+
+      // If not in compact mode, go back
+      if (!isCompactMode && onBack) {
+        onBack();
       }
     } catch (error) {
-      console.error('Failed to save event:', error);
-      setErrors(['Failed to save event series. Please try again.']);
+      console.error("Failed to add event series:", error);
+      setErrors(["Failed to add event series. Please try again."]);
     }
+  };
+
+  // Add a reset form function
+  const resetForm = () => {
+    setName("");
+    setDescription("");
+    setAmount("");
+    setInflationAdjusted(false);
+    setIsDiscretionary(false);
+    setIsSocialSecurity(false);
+    setUserPercentage(100);
+    setSpousePercentage(0);
+    setMaxCash("");
+    setStartYear({
+      type: "fixed",
+      value: new Date().getFullYear(),
+    });
+    setDuration({
+      type: "fixed",
+      value: 1,
+    });
+    setAnnualChange({
+      type: "fixed",
+      value: undefined,
+    });
+    setErrors([]);
   };
 
   return (
@@ -1262,16 +1538,13 @@ export function EventSeriesForm({ initialType, onBack, onEventAdded }: EventSeri
             </VStack>
           </Alert>
         )}
-        
-      {renderEventTypeForm()}
+
+        {renderEventTypeForm()}
         <HStack spacing={4} justify="flex-end">
           <Button variant="ghost" onClick={onBack}>
             Cancel
           </Button>
-          <Button 
-          type="submit"
-            colorScheme="blue"
-          >
+          <Button type="submit" colorScheme="blue">
             Save
           </Button>
         </HStack>

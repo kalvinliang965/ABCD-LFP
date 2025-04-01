@@ -216,9 +216,20 @@ async function parse_capital_gains(
                 if (upper_rate < lower_rate) {
                     throw new Error(`Sentence read is invalid: ${p.text()}`);
                 }
-                const bracket_tuple_list = taxBrackets.find_highest_brackets();
-                bracket_tuple_list.forEach(async (tuple) => {
+                const bracket_tuple_list = [
+                    {
+                        taxpayer_type: TaxFilingStatus.SINGLE,
+                        taxbracket: taxBrackets.find_highest_bracket(TaxFilingStatus.SINGLE)
+                    }, {
+                        taxpayer_type: TaxFilingStatus.MARRIED,
+                        taxbracket: taxBrackets.find_highest_bracket(TaxFilingStatus.MARRIED)
+                }]; 
+                for (const tuple of bracket_tuple_list) {
                     const {taxpayer_type, taxbracket} = tuple;
+                    if (!taxbracket) {
+                        console.error("Finding highest rate bracket when it is empty");
+                        process.exit(1)
+                    }
                     const { max, rate} = taxbracket;
                     if (rate >= upper_rate) {
                         console.error(`Invalid highest rate: ${upper_rate} <= ${rate}`);
@@ -226,7 +237,7 @@ async function parse_capital_gains(
                     }
                     taxBrackets.add_rate(max + 1, Infinity, upper_rate, taxpayer_type);
                     if (save_to_database) await save_bracket(max + 1, Infinity, upper_rate, IncomeType.CAPITAL_GAINS, taxpayer_type);
-                })
+                }
             }
         });
         return taxBrackets;

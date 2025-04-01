@@ -26,8 +26,11 @@ function parse_user_fraction(user_fraction: number) {
 
 function create_expense_event(raw_data: ExpenseEventRaw): ExpenseEvent {
   try {
+    //打印正在处理的event的name
+
     const start = parse_start_year(raw_data.start);
     const duration = parse_duration(raw_data.duration);
+
     const [change_type, expected_annual_change] = parse_expected_annual_change(
       raw_data.changeAmtOrPct,
       raw_data.changeDistribution

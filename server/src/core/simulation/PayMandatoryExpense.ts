@@ -41,7 +41,7 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   // SEQUENTIAL THINKING STEP 1: 获取已预处理的强制性支出列表
   // 这些支出已经按当前年份进行了筛选，并已经应用了通货膨胀调整
   const currentYear = state.get_current_year();
-  const mandatoryExpenses = state.get_mandatory_expenses();
+  const mandatoryExpenses = state.mandatory_expenses; //这个得到的是没有更新amount的mandatoryExpenses
 
   // totalMandatoryExpenseAmount 是所有强制性支出的总和
   let totalMandatoryExpenseAmount = 0;
@@ -50,18 +50,22 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   for (const expense of mandatoryExpenses) {
     totalMandatoryExpenseAmount += calculate_detailed_expense_amount(
       expense,
-      currentYear,
-      state.inflation_factor
+      currentYear
     );
   }
+
+  console.log("totalMandatoryExpenseAmount", totalMandatoryExpenseAmount);
 
   // SEQUENTIAL THINKING STEP 5: Check if additional withdrawals are needed
   //因为cash已经算好了 - tax后的价格，所以我们按道理来说不应该再去计算tax，直接用cashValue - totalMandatoryExpenseAmount
   const cashValue = state.cash.get_value();
+  console.log("此时我们有cashValue", cashValue);
   const totalWithdrawalAmount = Math.max(
     0,
-    totalMandatoryExpenseAmount - cashValue
+    (totalMandatoryExpenseAmount - cashValue)
   );
+
+  console.log("那么我们totalWithdrawalAmount需要", totalWithdrawalAmount);
   //如果我们的cash可以cover所有强制性支出，那么我们就不需要再进行任何操作
   //更新cash的value
   if (totalWithdrawalAmount == 0) {
@@ -71,17 +75,53 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
     // 我们的钱不够cover，所以需要从其他地方获取资金
     //同时我们要清空cash的value
     state.cash.incr_value(-cashValue);
+    console.log("我们清空了cash的value", state.cash.get_value());
     const withdrawalResult = withdraw_from_investments(
       state,
       totalWithdrawalAmount
-    );
-
-    state.incr_capital_gains_income(withdrawalResult.capitalGain);
-    state.incr_ordinary_income(withdrawalResult.cur_year_income);
-    state.incr_early_withdrawal_penalty(
-      withdrawalResult.early_withdrawal_penalty
     );
     //在这种情况下，我们无论如何都会更新capital_gains_income和ordinary_income还有early_withdrawal_penalty| 但是否破产取决于unfunded是否为0
     return withdrawalResult.unfunded == 0;
   }
 }
+
+      // process_tax: () => {
+        // try {
+        //   const standard_deduction =
+        //     federal_tax_service.find_deduction(tax_filing_status);
+        //   const taxable_income =
+        //     ordinary_income +
+        //     capital_gains_income -
+        //     0.15 * social_security_income -
+        //     standard_deduction;
+        //   const federal_taxable_income_tax =
+        //     taxable_income *
+        //     federal_tax_service.find_rate(
+        //       taxable_income,
+        //       IncomeType.TAXABLE_INCOME,
+        //       tax_filing_status
+        //     );
+        //   const state_taxable_income_tax =
+        //     taxable_income *
+        //     state_tax_service.find_rate(taxable_income, tax_filing_status);
+        //   const federal_capital_gains_tax =
+        //     capital_gains_income *
+        //     federal_tax_service.find_rate(
+        //       capital_gains_income,
+        //       IncomeType.CAPITAL_GAINS,
+        //       tax_filing_status
+        //     );
+        //   cash.incr_value(
+        //     taxable_income -
+        //       federal_capital_gains_tax -
+        //       federal_taxable_income_tax -
+        //       state_taxable_income_tax
+        //   );
+        // } catch (error) {
+        //   throw new Error(
+        //     `Failed to process tax ${
+        //       error instanceof Error ? error.message : error
+        //     }`
+        //   );
+        // }
+      // },

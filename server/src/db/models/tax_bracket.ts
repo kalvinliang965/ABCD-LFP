@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document} from "mongoose";
 import { TaxFilingStatus, IncomeType } from "../../core/Enums";
 
-interface ITaxBracket extends Document {
+export interface ITaxBracket extends Document {
     min: number;
     max: number;
     rate: number;
@@ -34,6 +34,6 @@ const TaxBracketSchema = new Schema<ITaxBracket>({
     }
 });
 
-const TaxBracket = mongoose.model<ITaxBracket>("TaxBracket", TaxBracketSchema);
+export const TaxBracket = mongoose.model<ITaxBracket>("TaxBracket", TaxBracketSchema);
 
 export default TaxBracket;

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Heading,
@@ -39,11 +39,17 @@ import AdditionalSettingsForm, {
   StateOfResidence,
 } from "../../components/scenarios/AdditionalSettingsForm";
 import RothConversionOptimizerForm from "../../components/roth_conversion_optimizer/RothConversionForm";
+import ScenarioTypeSelector, {
+  ScenarioCreationType,
+} from "../../components/scenarios/ScenarioTypeSelector";
+import YamlImportForm from "../../components/scenarios/YamlImportForm";
 
 // Omit the id from EventSeries and add it as optional
 type AddedEvent = Omit<EventSeries, "id"> & {
   id?: string;
   _id?: string;
+  amount?: number;
+  frequency?: string;
 };
 
 const eventTypeOptions = [
@@ -85,18 +91,26 @@ const eventTypeOptions = [
   },
 ];
 
-export function NewScenarioPage() {
+function NewScenarioPage() {
   const { selectedType, setSelectedType } = useEventSeries();
   const navigate = useNavigate();
   const [addedEvents, setAddedEvents] = useState<AddedEvent[]>([]);
   const [step, setStep] = useState<
+    | "typeSelection"
     | "details"
     | "lifeExpectancy"
     | "investments"
     | "eventSelection"
     | "additionalSettings"
     | "rothConversionOptimizer"
-  >("details");
+    | "yamlImport"
+  >("typeSelection");
+
+  // Add useEffect to track step changes
+  useEffect(() => {
+    console.log("NewScenarioPage: Step changed to:", step);
+  }, [step]);
+
   const [scenarioDetails, setScenarioDetails] = useState<ScenarioDetails>({
     name: "",
     type: "individual",
@@ -126,6 +140,38 @@ export function NewScenarioPage() {
       stateOfResidence: "NY", // Default to NY
     });
   const toast = useToast();
+
+  const handle_scenario_type_select = (type: ScenarioCreationType) => {
+    console.log(
+      "NewScenarioPage: handle_scenario_type_select called with:",
+      type
+    );
+    if (type === ScenarioCreationType.FROM_SCRATCH) {
+      console.log("NewScenarioPage: Changing step to 'details'");
+      setStep("details");
+    } else {
+      console.log("NewScenarioPage: Changing step to 'yamlImport'");
+      setStep("yamlImport");
+    }
+    console.log("NewScenarioPage: Current step after setState:", step); // This will still show the old value due to React's state update timing
+  };
+
+  const handle_yaml_import_complete = (data: any) => {
+    // Here you would process the imported data
+    // For now, we'll just show a success message and redirect
+    toast({
+      title: "Import Successful",
+      description: `Scenario "${data.data.name}" imported successfully`,
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+    navigate("/scenarios");
+  };
+
+  const handle_back_to_type_selection = () => {
+    setStep("typeSelection");
+  };
 
   const handleEventAdded = async (event: AddedEvent) => {
     try {
@@ -194,12 +240,16 @@ export function NewScenarioPage() {
 
   const handle_continue_to_roth_conversion_optimizer = () => {
     setStep("rothConversionOptimizer");
-  }
+  };
 
-  const handle_back_to_roth_conversion_optimizer = () => {
+  const handle_back_to_roth_conversion = () => {
     setStep("rothConversionOptimizer");
-  }
-  
+  };
+
+  const handle_continue_from_roth_to_investments = () => {
+    setStep("investments");
+  };
+
   const handle_finish_scenario = () => {
     // Submit the entire scenario and navigate to scenarios page
     toast({
@@ -228,16 +278,43 @@ export function NewScenarioPage() {
     }
   };
 
+  // Selection between creating from scratch or importing YAML
+  if (step === "typeSelection") {
+    console.log("NewScenarioPage: Rendering ScenarioTypeSelector");
+    return (
+      <Box position="relative" zIndex={10} width="100%" height="100%">
+        <ScenarioTypeSelector onTypeSelect={handle_scenario_type_select} />
+      </Box>
+    );
+  }
+
+  // YAML Import Form
+  if (step === "yamlImport") {
+    console.log("NewScenarioPage: Rendering YamlImportForm");
+    return (
+      <Box position="relative" zIndex={10} width="100%" height="100%">
+        <YamlImportForm
+          onImportComplete={handle_yaml_import_complete}
+          onBack={handle_back_to_type_selection}
+        />
+      </Box>
+    );
+  }
+
   // Scenario Details Form
   if (step === "details") {
+    console.log("NewScenarioPage: Rendering ScenarioDetailsForm");
     return (
-      <ScenarioDetailsForm
-        scenarioDetails={scenarioDetails}
-        onChangeScenarioType={handle_change_scenario_type}
-        onChangeScenarioDetails={setScenarioDetails}
-        onContinue={handle_continue_to_life_expectancy}
-        onSkip={handle_continue_to_life_expectancy}
-      />
+      <Box position="relative" zIndex={10} width="100%" height="100%">
+        <ScenarioDetailsForm
+          scenarioDetails={scenarioDetails}
+          onChangeScenarioType={handle_change_scenario_type}
+          onChangeScenarioDetails={setScenarioDetails}
+          onContinue={handle_continue_to_life_expectancy}
+          onSkip={handle_continue_to_life_expectancy}
+          onBack={handle_back_to_type_selection}
+        />
+      </Box>
     );
   }
 
@@ -249,19 +326,21 @@ export function NewScenarioPage() {
         isCouple={scenarioDetails.type === "couple"}
         userBirthYear={scenarioDetails.userBirthYear}
         spouseBirthYear={scenarioDetails.spouseBirthYear}
-        onChangeLifeExpectancy={setLifeExpectancyConfig}
-        onBack={handle_back_to_details}
         onContinue={handle_continue_to_roth_conversion_optimizer}
+        onBack={handle_back_to_details}
+        onChangeLifeExpectancy={setLifeExpectancyConfig}
       />
     );
   }
 
+  // Roth Conversion Optimizer Form
   if (step === "rothConversionOptimizer") {
-    return (<RothConversionOptimizerForm
-      onBack = {handle_back_to_life_expectancy}
-      onContinue = {handle_continue_to_investments}
-    >
-    </RothConversionOptimizerForm>)
+    return (
+      <RothConversionOptimizerForm
+        onBack={handle_back_to_life_expectancy}
+        onContinue={handle_continue_from_roth_to_investments}
+      />
+    );
   }
 
   // Investments Configuration Form
@@ -270,8 +349,8 @@ export function NewScenarioPage() {
       <InvestmentsForm
         investmentsConfig={investmentsConfig}
         onChangeInvestmentsConfig={setInvestmentsConfig}
-        onBack={handle_back_to_roth_conversion_optimizer}
         onContinue={handle_continue_to_event_selection}
+        onBack={handle_back_to_roth_conversion}
       />
     );
   }
@@ -307,11 +386,7 @@ export function NewScenarioPage() {
                   >
                     Back
                   </Button>
-                  <Button
-                    colorScheme="blue"
-                    onClick={handleSaveAndContinue}
-                    isDisabled={addedEvents.length === 0}
-                  >
+                  <Button colorScheme="blue" onClick={handleSaveAndContinue}>
                     Save & Continue
                   </Button>
                 </HStack>
@@ -481,16 +556,8 @@ export function NewScenarioPage() {
     );
   }
 
-  // Default to details step as fallback
-  return (
-    <ScenarioDetailsForm
-      scenarioDetails={scenarioDetails}
-      onChangeScenarioType={handle_change_scenario_type}
-      onChangeScenarioDetails={setScenarioDetails}
-      onContinue={handle_continue_to_life_expectancy}
-      onSkip={handle_continue_to_life_expectancy}
-    />
-  );
+  // Default fallback (shouldn't reach here)
+  return <Text>Loading...</Text>;
 }
 
 export default NewScenarioPage;
