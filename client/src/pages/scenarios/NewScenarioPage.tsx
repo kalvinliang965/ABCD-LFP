@@ -331,6 +331,10 @@ function NewScenarioPage() {
   };
 
   const handle_continue_from_withdrawal_strategy = () => {
+    setStep("eventSelection");
+  };
+
+  const handle_continue_from_event_selection = () => {
     setStep("spendingStrategy");
   };
 
@@ -502,7 +506,7 @@ function NewScenarioPage() {
         spendingStrategy={spendingStrategy}
         onChangeSpendingStrategy={setSpendingStrategy}
         onContinue={handle_continue_from_spending_strategy}
-        onBack={() => setStep("withdrawalStrategy")}
+        onBack={() => setStep("eventSelection")}
       />
     );
   }
