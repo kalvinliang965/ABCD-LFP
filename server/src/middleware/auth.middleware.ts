@@ -9,11 +9,30 @@ interface DecodedToken {
   exp: number;
 }
 
+interface User {
+  _id: string;
+  id?: string;
+  email: string;
+  name: string;
+}
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: User;
+    }
+  }
+}
+
 export const protect = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    let token;
+    // Check if user is authenticated via session (for Google OAuth)
+    if (req.user) {
+      return next();
+    }
     
-    // Check for token in headers
+    // Check for JWT token in headers
+    let token;
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
     }
@@ -36,12 +55,7 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
     }
     
     // Add user to request
-    // @ts-ignore - Add user to request
-    req.user = {
-      id: user._id,
-      email: user.email,
-      name: user.name
-    };
+    req.user = user;
     
     next();
   } catch (error) {

@@ -7,6 +7,19 @@ interface User {
   name: string;
   email: string;
   googleId: string;
+  scenarios: Array<{
+    _id: string;
+    name: string;
+    description?: string;
+    createdAt: Date;
+    sharedWith: Array<any>;
+  }>;
+  yamlFiles: Array<{
+    _id: string;
+    name: string;
+    content: string;
+    createdAt: Date;
+  }>;
 }
 
 interface AuthContextType {

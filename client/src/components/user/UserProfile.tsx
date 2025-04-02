@@ -125,6 +125,7 @@ const UserProfile: React.FC = () => {
         yamlFiles: profileData.yamlFiles || [],
         scenarios: profileData.scenarios || []
       });
+      console.log(profileData);
     } catch (error) {
       console.error('Error fetching user profile:', error);
       toast({

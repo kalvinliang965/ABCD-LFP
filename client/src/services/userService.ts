@@ -68,13 +68,36 @@ export const userService = {
   
   // Get user profile
   getProfile: async () => {
-    const response = await authAxios.get('/api/users/profile');
-    return response.data;
+    try {
+      // Get token from localStorage or cookies
+      const token = localStorage.getItem('token');
+      
+      // If using session-based auth with cookies, just use withCredentials
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      throw error;
+    }
   },
   
   // Update user profile
-  updateProfile: async (userData: { name?: string; email?: string; profilePicture?: string }) => {
-    const response = await authAxios.put('/api/users/profile', userData);
-    return response.data;
+  updateProfile: async (userData: any) => {
+    try {
+      const response = await axios.put(`${import.meta.env.VITE_API_URL}/api/users/profile`, userData, {
+        withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      throw error;
+    }
   }
 }; 
