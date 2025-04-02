@@ -1,7 +1,23 @@
 import express from "express";
 import User from "../db/models/User";
+import { 
+  getUserProfile, 
+  updateUserProfile, 
+  registerUser, 
+  loginUser 
+} from '../controllers/user.controller';
+import { protect } from '../middleware/auth.middleware';
+import mongoose from 'mongoose';
 
 const router = express.Router();
+
+// Public routes
+router.post('/register', registerUser);
+router.post('/login', loginUser);
+
+// Protected routes
+router.get('/profile', protect, getUserProfile);
+router.put('/profile', protect, updateUserProfile);
 
 // Get current user
 router.get("/api/current_user", (req, res) => {
@@ -154,7 +170,7 @@ router.delete("/api/yaml/:id", async (req, res) => {
 
     // Find the index of the YAML file
     const yamlFileIndex = user.yamlFiles.findIndex(
-      (file) => file._id.toString() === fileId
+      (file: { _id: mongoose.Types.ObjectId | string }) => file._id.toString() === fileId
     );
 
     if (yamlFileIndex !== -1) {

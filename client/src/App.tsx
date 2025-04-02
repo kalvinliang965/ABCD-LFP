@@ -1,9 +1,11 @@
-import React from "react";
-import { BrowserRouter as Router } from "react-router-dom";
-import { ChakraProvider, extendTheme, ColorModeScript } from "@chakra-ui/react";
+import React, { useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import { ChakraProvider, extendTheme, ColorModeScript, Text } from "@chakra-ui/react";
 import { EventSeriesProvider } from "./contexts/EventSeriesContext";
-
-// Import routes
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import PrivateRoute from './components/common/PrivateRoute';
+import Login from './pages/Login';
+import { Flex, Spinner } from '@chakra-ui/react';
 import AppRoutes from "./routes";
 
 // Custom theme with color mode config
@@ -61,12 +63,45 @@ function App() {
   return (
     <ChakraProvider theme={theme}>
       <ColorModeScript initialColorMode={theme.config.initialColorMode} />
-      <Router>
-        <EventSeriesProvider>
-          <AppRoutes />
-        </EventSeriesProvider>
-      </Router>
+      <AuthProvider>
+        <Router>
+          <EventSeriesProvider>
+            <Routes>
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="*" element={<AppRoutes />} />
+            </Routes>
+          </EventSeriesProvider>
+        </Router>
+      </AuthProvider>
     </ChakraProvider>
+  );
+}
+
+export function AuthCallback() {
+  const { checkAuthStatus } = useAuth();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const handleCallback = async () => {
+      try {
+        await checkAuthStatus();
+        // Add console log to debug
+        console.log("Auth status checked, redirecting to dashboard");
+        navigate('/dashboard');
+      } catch (error) {
+        console.error("Error during auth callback:", error);
+        navigate('/login');
+      }
+    };
+    
+    handleCallback();
+  }, [checkAuthStatus, navigate]);
+  
+  return (
+    <Flex justify="center" align="center" height="100vh">
+      <Spinner size="xl" />
+      <Text ml={4}>Authenticating...</Text>
+    </Flex>
   );
 }
 

@@ -12,11 +12,23 @@ import userRoutes from "./routes/userRoutes";
 import authRoutes from "./routes/authRoutes";
 import "./auth/passport"; // Import passport configuration
 import investmentTypeRoutes from "./routes/InvestmentType.routes";
+import session from 'express-session';
 const port = api_config.PORT;
 const app = express();
 
 // Register middleware
 registerGlobalMiddleWare(app);
+
+// Add session middleware before passport
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-session-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+  }
+}));
 
 // Initialize Passport
 app.use(passport.initialize());
