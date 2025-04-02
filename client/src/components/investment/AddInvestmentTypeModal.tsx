@@ -124,11 +124,11 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
     name: "",
     description: "",
     returnType: DistributionType.FIXED,
-    returnRate: "0",
+    returnRate: "",
     returnInputMode: ValueInputMode.PERCENT,
-    expenseRatio: "0",
+    expenseRatio: "",
     dividendType: DistributionType.FIXED,
-    dividendRate: "0",
+    dividendRate: "",
     dividendInputMode: ValueInputMode.PERCENT,
     taxability: true,
   };
@@ -232,7 +232,7 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
       returnRateStdDev:
         value === DistributionType.FIXED
           ? undefined
-          : formData.returnRateStdDev || "0",
+          : formData.returnRateStdDev || "",
     });
   };
 
@@ -248,7 +248,7 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
       dividendRateStdDev:
         value === DistributionType.FIXED
           ? undefined
-          : formData.dividendRateStdDev || "0",
+          : formData.dividendRateStdDev || "",
     });
   };
 
@@ -596,6 +596,7 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
               borderColor={borderColor}
               _hover={{ borderColor: highlightColor }}
               _focus={{ borderColor: highlightColor, boxShadow: "outline" }}
+              placeholder="enter a number here(could be negative)"
             />
             <Text fontSize="sm" color="gray.500" mt={2}>
               {getReturnRateDescription()}
@@ -619,6 +620,7 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
                 borderColor={borderColor}
                 _hover={{ borderColor: highlightColor }}
                 _focus={{ borderColor: highlightColor, boxShadow: "outline" }}
+                placeholder="input the standard deviation here"
               />
               <Text fontSize="sm" color="gray.500" mt={2}>
                 Measures the volatility or variation in returns
@@ -645,6 +647,7 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
               borderColor={borderColor}
               _hover={{ borderColor: highlightColor }}
               _focus={{ borderColor: highlightColor, boxShadow: "outline" }}
+              placeholder="e.g., 0.5 for 0.5%"
             />
             <Text fontSize="sm" color="gray.500" mt={2}>
               Annual percentage deducted from the investment to cover management
@@ -752,6 +755,7 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
               borderColor={borderColor}
               _hover={{ borderColor: highlightColor }}
               _focus={{ borderColor: highlightColor, boxShadow: "outline" }}
+              placeholder="enter a number here(could be negative)"
             />
             <Text fontSize="sm" color="gray.500" mt={2}>
               {getDividendRateDescription()}
@@ -775,6 +779,7 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
                 borderColor={borderColor}
                 _hover={{ borderColor: highlightColor }}
                 _focus={{ borderColor: highlightColor, boxShadow: "outline" }}
+                placeholder="input the standard deviation here"
               />
               <Text fontSize="sm" color="gray.500" mt={2}>
                 Measures the volatility or variation in dividends
