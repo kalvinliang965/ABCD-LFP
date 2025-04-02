@@ -128,6 +128,8 @@ export function create_scenario_raw(
   financialGoal: number,
   residenceState: string
 ): ScenarioRaw {
+  
+  
   return {
     name,
     martialStatus,

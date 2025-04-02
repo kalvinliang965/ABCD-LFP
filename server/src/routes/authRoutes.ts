@@ -14,12 +14,13 @@ router.get(
 router.get(
   "/google/callback",
   passport.authenticate("google", {
-    failureRedirect: `${client_confg.CLIENT_URL}/login`,
+    failureRedirect: `${process.env.CLIENT_URL}/login`,
     session: true,
   }),
   (req, res) => {
-    // Successful authentication, redirect to dashboard on the frontend
-    res.redirect(`${client_confg.CLIENT_URL}/dashboard`);
+    // Successful authentication, redirect to frontend callback
+    console.log("Google auth successful, redirecting to frontend");
+    res.redirect(`${process.env.CLIENT_URL}/auth/callback`);
   }
 );
 
@@ -27,20 +28,18 @@ router.get(
 router.get("/logout", (req, res) => {
   req.logout((err) => {
     if (err) {
-      console.error("Error during logout:", err);
-      return res.status(500).json({ error: "Failed to logout" });
+      return res.status(500).json({ error: "Logout failed" });
     }
-    res.redirect(`${client_confg.CLIENT_URL}/login`);
+    res.status(200).json({ message: "Logged out successfully" });
   });
 });
 
 // Check if user is authenticated
 router.get("/current-user", (req, res) => {
-  if (req.user) {
-    res.json(req.user);
-  } else {
-    res.status(401).json({ error: "Not authenticated" });
+  if (!req.user) {
+    return res.status(401).json({ error: "Not authenticated" });
   }
+  res.json(req.user);
 });
 
 export default router; 

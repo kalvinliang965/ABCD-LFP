@@ -1,7 +1,24 @@
 import express from "express";
 import User from "../db/models/User";
+import { 
+  getUserProfile, 
+  updateUserProfile, 
+  registerUser, 
+  loginUser 
+} from '../controllers/user.controller';
+import { protect } from '../middleware/auth.middleware';
+import mongoose from 'mongoose';
+import { Request, Response } from 'express';
 
 const router = express.Router();
+
+// Public routes
+router.post('/register', registerUser);
+router.post('/login', loginUser);
+
+// Protected routes
+router.get('/profile', protect, getUserProfile);
+router.put('/profile', protect, updateUserProfile);
 
 // Get current user
 router.get("/api/current_user", (req, res) => {
@@ -154,7 +171,7 @@ router.delete("/api/yaml/:id", async (req, res) => {
 
     // Find the index of the YAML file
     const yamlFileIndex = user.yamlFiles.findIndex(
-      (file) => file._id.toString() === fileId
+      (file: { _id: mongoose.Types.ObjectId | string }) => file._id.toString() === fileId
     );
 
     if (yamlFileIndex !== -1) {
@@ -169,6 +186,34 @@ router.delete("/api/yaml/:id", async (req, res) => {
     res
       .status(500)
       .json({ success: false, message: "Error deleting YAML file." });
+  }
+});
+
+// Add YAML file
+router.post('/yaml', protect, async (req: Request, res: Response) => {
+  try {
+    const { name, content } = req.body;
+    // @ts-ignore
+    const userId = req.user?.id || req.user?._id;
+    
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Not authenticated" });
+    }
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    
+    // Add the new YAML file
+    user.yamlFiles.push({ name, content, createdAt: new Date() });
+    await user.save();
+    
+    // Return the newly added YAML file
+    const newFile = user.yamlFiles[user.yamlFiles.length - 1];
+    res.status(201).json(newFile);
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error adding YAML file" });
   }
 });
 

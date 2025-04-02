@@ -3,6 +3,7 @@ import fs from "fs";
 import yaml from "js-yaml";
 import { ScenarioRaw } from "../../../domain/raw/scenario_raw";
 import {
+<<<<<<< HEAD:server/src/core/simulation/logic/__test__/ExpensePayment.test.ts
   create_scenario,
 } from "../../../domain/scenario/Scenario";
 import {
@@ -17,6 +18,22 @@ import { create_simulation_state } from "../../SimulationState";
 import { pay_mandatory_expenses } from "../PayMandatoryExpense";
 import { pay_discretionary_expenses } from "../PayDiscretionaryExpense";
 import { SpendingEvent, update_expense_amount } from "../ExpenseHelper";
+=======
+  ScenarioRaw,
+} from "../../domain/raw/scenario_raw";
+
+import { create_scenario } from "../../domain/scenario/Scenario";
+import { IncomeEventRaw } from "../../domain/raw/event_raw/income_event_raw";
+import { InvestmentEventRaw } from "../../domain/raw/event_raw/investment_event_raw";
+import { ExpenseEventRaw } from "../../domain/raw/event_raw/expense_event_raw";
+import { RebalanceEventRaw } from "../../domain/raw/event_raw/rebalance_event_raw";
+import { create_simulation_state } from "../SimulationState";
+import { pay_mandatory_expenses } from "../logic/PayMandatoryExpense";
+import { pay_discretionary_expenses } from "../logic/PayDiscretionaryExpense";
+import { SpendingEvent, update_expense_amount } from "../logic/ExpenseHelper";
+import { InvestmentTypeRaw } from "../../domain/raw/investment_type_raw";
+import { InvestmentRaw } from "../../domain/raw/investment_raw";
+>>>>>>> b26e48ca7b7de6c6fa9cab41791a09e835f24e96:server/src/core/simulation/__test__/ExpensePayment.test.ts
 const scenarioYaml = `
 # file format for scenario import/export.  version: 2025-03-23
 # CSE416, Software Engineering, Scott D. Stoller.
@@ -168,8 +185,9 @@ const parsedYaml = yaml.load(scenarioYaml);
 // 3) 转换为 ScenarioRaw（把需要 Map 的字段全部转成 Map）
 const scenarioRaw: ScenarioRaw = convert_yaml_to_scenario_raw(parsedYaml);
 
+
 const mongoose = require("mongoose");
-const mongodb_addr = "mongodb://127.0.0.1:27017/Chen_test";
+const mongodb_addr = "mongodb://127.0.0.1:27017/test";
 let mongodb;
 
 beforeAll(async () => {
@@ -212,7 +230,8 @@ afterAll(async () => {
 
 describe("Testing Simulation State", () => {
   it("should pay discretionary expense", async () => {
-    const scenario = create_scenario(scenarioRaw);
+    const scenario = await create_scenario(scenarioRaw);
+    console.log("scenario", scenario);
     const state = await create_simulation_state(scenario);
 
     //update 所有的expense的amount
@@ -238,6 +257,8 @@ export function objectToMap(obj: Record<string, any>): Map<string, any> {
 }
 
 export function convert_yaml_to_scenario_raw(parsedYaml: any): ScenarioRaw {
+
+  
   // (1) 处理lifeExpectancy
   const lifeExpectancy = parsedYaml.lifeExpectancy.map((item: any) =>
     objectToMap(item)
