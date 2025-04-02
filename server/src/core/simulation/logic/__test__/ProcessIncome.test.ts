@@ -1,6 +1,6 @@
-import process_income from '../logic/ProcessIncome';
-import { SimulationState } from '../SimulationState';
-import { TaxStatus } from '../../Enums';
+import process_income from '../ProcessIncome';
+import { SimulationState } from '../../SimulationState';
+import { TaxStatus } from '../../../Enums';
 
 //how to run this test
 // cd server 

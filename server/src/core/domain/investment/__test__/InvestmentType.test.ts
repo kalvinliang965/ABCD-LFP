@@ -5,17 +5,14 @@ import {
     tax_exempt_bonds_investment_type_one 
 } from "../../raw/investment_type_raw";
 
-import { create_investment_type, parse_taxability, parse_distribution, parse_change_type } from "../InvestmentType";
+import { create_investment_type, parse_distribution, parse_change_type } from "../InvestmentType";
 import { ChangeType } from "../../../Enums";
-import { InvestmentTypeRaw } from "../../scenario/Scenario";
+import { InvestmentTypeRaw } from "../../raw/investment_type_raw";
 import { StatisticType } from "../../../Enums";
-import { Taxability } from "../../../Enums";
-import ValueGenerator from "../../../../utils/math/ValueGenerator";
 
 describe("investment type raw initialization", () => {
   describe("create_investment_type_raw function test", () => {
-    test("should_create_investment_type_with_correct_properties", () => {
-      // Arrange
+    it("should_create_investment_type_with_correct_properties", () => {
       const name = "Test Investment";
       const description = "Test Description";
       const returnAmtOrPct = "percent";
@@ -32,7 +29,6 @@ describe("investment type raw initialization", () => {
       ]);
       const taxability = true;
 
-      // Act
       const result = create_investment_type_raw(
         name,
         description,
@@ -57,9 +53,8 @@ describe("investment type raw initialization", () => {
     });
   });
 
-  describe("predefined investment types test", () => {
-    test("should_verify_cash_investment_type_properties", () => {
-      // Assert
+  describe("predefined investment type raw test", () => {
+    it("should_verify_cash_investment_type_properties", () => {
       expect(cash_investment_type_one).toBeDefined();
       expect(cash_investment_type_one.name).toBe("cash");
       expect(cash_investment_type_one.description).toBe("cash");
@@ -77,7 +72,7 @@ describe("investment type raw initialization", () => {
       expect(cash_investment_type_one.taxability).toBe(true);
     });
 
-    test("should_verify_s_and_p_500_investment_type_properties", () => {
+    it("should_verify_s_and_p_500_investment_type_properties", () => {
       // Assert
       expect(s_and_p_500_investment_type_one).toBeDefined();
       expect(s_and_p_500_investment_type_one.name).toBe("S&P 500");
@@ -108,7 +103,7 @@ describe("investment type raw initialization", () => {
       expect(s_and_p_500_investment_type_one.taxability).toBe(true);
     });
 
-    test("should_verify_tax_exempt_bonds_investment_type_properties", () => {
+    it("should_verify_tax_exempt_bonds_investment_type_properties", () => {
       // Assert
       expect(tax_exempt_bonds_investment_type_one).toBeDefined();
       expect(tax_exempt_bonds_investment_type_one.name).toBe(
@@ -184,18 +179,9 @@ describe("Investment Type Factory", () => {
       });
     });
 
-    describe("parse_taxability", () => {
-      test("should parse true to TAXABLE", () => {
-        expect(parse_taxability(true)).toBe(Taxability.TAXABLE);
-      });
-
-      test("should parse false to TAX_EXEMPT", () => {
-        expect(parse_taxability(false)).toBe(Taxability.TAX_EXEMPT);
-      });
-    });
   });
 
-  // 测试主函数
+
   describe("create_investment_type", () => {
     const baseRaw: InvestmentTypeRaw = {
       name: "Test",
@@ -208,7 +194,7 @@ describe("Investment Type Factory", () => {
       taxability: true
     };
 
-    test("should create valid investment type", () => {
+    it("should create valid investment type", () => {
       const result = create_investment_type(baseRaw);
       expect(result).toMatchObject({
         name: "Test",
@@ -216,12 +202,12 @@ describe("Investment Type Factory", () => {
         return_change_type: ChangeType.PERCENTAGE,
         expense_ratio: 0.001,
         income_change_type: ChangeType.FIXED,
-        taxability: Taxability.TAXABLE
+        taxability: true
       });
-      expect(result.expect_annual_return._params).toEqual(
+      expect(result._expected_annual_return._params).toEqual(
         new Map([[StatisticType.VALUE, 0.05]])
       );
-      expect(result.expect_annual_income._params).toEqual(
+      expect(result._expected_annual_income._params).toEqual(
         new Map([
           [StatisticType.MEAN, 1000],
           [StatisticType.STDEV, 200]
@@ -229,34 +215,86 @@ describe("Investment Type Factory", () => {
       );
     });
 
-    test("should handle error in return distribution parsing", () => {
+    it("should handle error in return distribution parsing", () => {
       const invalidRaw = { ...baseRaw, returnDistribution: new Map([["type", "invalid"]]) };
       expect(() => create_investment_type(invalidRaw)).toThrow("Failed to initialize InvestmentType");
     });
 
-    test("should handle error in income distribution parsing", () => {
+    it("should handle error in income distribution parsing", () => {
       const invalidRaw = { ...baseRaw, incomeDistribution: new Map([["type", "invalid"]]) };
       expect(() => create_investment_type(invalidRaw)).toThrow("Failed to initialize InvestmentType");
     });
 
-    test("should handle error in return change type parsing", () => {
+    it("should handle error in return change type parsing", () => {
       const invalidRaw = { ...baseRaw, returnAmtOrPct: "invalid" };
       expect(() => create_investment_type(invalidRaw)).toThrow("Failed to initialize InvestmentType");
     });
 
-    test("should handle error in income change type parsing", () => {
+    it("should handle error in income change type parsing", () => {
       const invalidRaw = { ...baseRaw, incomeAmtOrPct: "invalid" };
       expect(() => create_investment_type(invalidRaw)).toThrow("Failed to initialize InvestmentType");
     });
+
+    it("should be able to be cloned properly", () => {
+      const investment_type = create_investment_type(baseRaw);
+      const cloned_investment_type = investment_type.clone();
+    
+      // Verify initial equality
+      expect(cloned_investment_type.name).toBe(investment_type.name);
+      expect(cloned_investment_type.description).toBe(investment_type.description);
+      expect(cloned_investment_type._expected_annual_return.equal(investment_type._expected_annual_return)).toBe(true);
+      expect(cloned_investment_type.return_change_type).toBe(investment_type.return_change_type);
+      expect(cloned_investment_type._expected_annual_income.equal(investment_type._expected_annual_income)).toBe(true);
+      expect(cloned_investment_type.income_change_type).toBe(investment_type.income_change_type);
+      expect(cloned_investment_type.taxability).toBe(investment_type.taxability);
+      expect(cloned_investment_type.expense_ratio).toBe(investment_type.expense_ratio);
+    
+      // Modify cloned properties
+      const originalName = investment_type.name;
+      const originalDescription = investment_type.description;
+      const originalReturnChangeType = investment_type.return_change_type;
+      const originalIncomeChangeType = investment_type.income_change_type;
+      const originalTaxability = investment_type.taxability;
+      const originalExpenseRatio = investment_type.expense_ratio;
+    
+      // Modify all cloned properties
+      cloned_investment_type.name = "changed name";
+      cloned_investment_type.description = "changed description";
+      cloned_investment_type.return_change_type = cloned_investment_type.return_change_type === ChangeType.PERCENTAGE 
+        ? ChangeType.FIXED 
+        : ChangeType.PERCENTAGE;
+      cloned_investment_type.income_change_type = cloned_investment_type.income_change_type === ChangeType.PERCENTAGE
+        ? ChangeType.FIXED
+        : ChangeType.PERCENTAGE;
+      cloned_investment_type.taxability = !cloned_investment_type.taxability;
+      cloned_investment_type.expense_ratio += 0.1;
+      // Verify original remains unchanged
+      expect(investment_type.name).toBe(originalName);
+      expect(investment_type.description).toBe(originalDescription);
+      expect(investment_type.return_change_type).toBe(originalReturnChangeType);
+      expect(investment_type.income_change_type).toBe(originalIncomeChangeType);
+      expect(investment_type.taxability).toBe(originalTaxability);
+      expect(investment_type.expense_ratio).toBe(originalExpenseRatio);
+    
+      // Verify complex objects are truly cloned (not reference-equal)
+      expect(cloned_investment_type._expected_annual_return.equal(investment_type._expected_annual_return)).toBe(true);
+      expect(cloned_investment_type._expected_annual_income.equal(investment_type._expected_annual_income)).toBe(true);
+    });
+
+    // Test annual income/return sampling
+    test("should sample annual values correctly", () => {
+      const investment_type = create_investment_type(baseRaw);
+      expect(typeof investment_type._expected_annual_income.sample()).toBe("number");
+      expect(typeof investment_type._expected_annual_return.sample()).toBe("number");
+    });
   });
 
-  // 测试预定义类型
+
   describe("Predefined Investment Types", () => {
     const verifyCommonProperties = (type: any) => {
       expect(type.return_change_type).toBeDefined();
       expect(type.income_change_type).toBeDefined();
       
-      // 改为检查对象结构
       expect(type.expect_annual_return).toEqual(
         expect.objectContaining({
           sample: expect.any(Function),
@@ -271,22 +309,22 @@ describe("Investment Type Factory", () => {
       verifyCommonProperties(result);
       
       expect(result.return_change_type).toBe(ChangeType.FIXED);
-      expect(result.expect_annual_return._params.get(StatisticType.VALUE)).toBe(0);
-      expect(result.taxability).toBe(Taxability.TAXABLE);
+      expect(result._expected_annual_return._params.get(StatisticType.VALUE)).toBe(0);
+      expect(result.taxability).toBe(true);
     });
 
     test("s_and_p_500_investment_type_one", () => {
       const result = create_investment_type(s_and_p_500_investment_type_one);
       verifyCommonProperties(result);
       expect(result.return_change_type).toBe(ChangeType.PERCENTAGE);
-      expect(result.taxability).toBe(Taxability.TAXABLE);
+      expect(result.taxability).toBe(true);
     });
 
     test("tax_exempt_bonds_investment_type_one", () => {
       const result = create_investment_type(tax_exempt_bonds_investment_type_one);
       verifyCommonProperties(result);
       expect(result.income_change_type).toBe(ChangeType.PERCENTAGE);
-      expect(result.taxability).toBe(Taxability.TAX_EXEMPT);
+      expect(result.taxability).toBe(false);
     });
   });
 });

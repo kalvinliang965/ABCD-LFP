@@ -1,7 +1,7 @@
-import { rebalanceInvestments } from '../logic/RebalanceInvestments';
-import { SimulationState } from '../SimulationState';
-import { Scenario } from '../../domain/scenario/Scenario';
-import { TaxStatus } from '../../Enums';
+import { rebalanceInvestments } from '../RebalanceInvestments';
+import { SimulationState } from '../../SimulationState';
+import { Scenario } from '../../../domain/scenario/Scenario';
+import { TaxStatus } from '../../../Enums';
 
 interface RebalanceEvent {
   start: number;
@@ -92,8 +92,8 @@ describe('rebalanceInvestments', () => {
     const targetA = totalValue * 0.5;
     const targetB = totalValue * 0.5;
 
-    expect(mockState.accounts.after_tax.get('Stock A')!.get_value()).toBeCloseTo(targetA);
-    expect(mockState.accounts.after_tax.get('Stock B')!.get_value()).toBeCloseTo(targetB);
+    expect(mockState.account_manager.after_tax.get('Stock A')!.get_value()).toBeCloseTo(targetA);
+    expect(mockState.account_manager.after_tax.get('Stock B')!.get_value()).toBeCloseTo(targetB);
   });
 
   it('computes capital gains correctly when selling', () => {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+//import { API_URL } from "../../services/api"; 
 import {
   Box,
   Heading,
@@ -38,6 +39,8 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { FaUser, FaFileUpload, FaShareAlt, FaEdit, FaTrash, FaFileAlt, FaArrowLeft } from "react-icons/fa";
+import { useAuth } from "../../contexts/AuthContext";
+import { userService } from '../../services/userService';
 
 // Interface for user data
 interface UserData {
@@ -53,29 +56,39 @@ interface UserData {
 interface Scenario {
   _id: string;
   name: string;
-  data: any;
-  sharedWith: { _id: string; name: string; email: string }[];
-  permissions: string;
+  description?: string;
+  createdAt: Date;
+  sharedWith: Array<any>;
+  data?: any;
+  permissions?: string;
 }
 
 // Interface for YAML file data
 interface YamlFile {
   _id: string;
-  filename: string;
+  name: string;
   content: string;
+  createdAt: Date;
 }
-
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3346';
 // API base URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = API_URL;
 
 const UserProfile: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToast();
+  const { user, updateUser } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
-  // State to store user data
-  const [user, setUser] = useState<UserData | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  // Replace mock data with state that will be populated from backend
+  const [userData, setUserData] = useState({
+    name: '',
+    email: '',
+    profilePicture: '',
+    yamlFiles: [] as YamlFile[],
+    scenarios: [] as Scenario[]
+  });
   
   // Modal states
   const { isOpen: isEditProfileOpen, onOpen: onEditProfileOpen, onClose: onEditProfileClose } = useDisclosure();
@@ -100,125 +113,125 @@ const UserProfile: React.FC = () => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const textColor = useColorModeValue("gray.600", "gray.400");
 
-  // Fetch user data from backend
-  const fetchUserData = async () => {
+  // Define fetchUserProfile outside useEffect so it can be called elsewhere
+  const fetchUserProfile = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/current_user`, { withCredentials: true });
-      setUser(response.data);
-      setError(null);
-    } catch (err: any) {
-      console.error("Error fetching user data:", err);
-      setError(err.response?.data?.error || "Failed to load user data");
+      const profileData = await userService.getProfile();
       
-      // If we're in development mode, fall back to mock data
-      if (import.meta.env.MODE === 'development') {
-        // Use mock data as fallback in development
-        setUser({
-          name: "Haifeng Wu",
-          email: "haifeng.wu@stonybrook.edu",
-          googleId: "123456789",
-          scenarios: [
-            {
-              _id: "scen1",
-              name: "Retirement Plan 2030",
-              data: { income: 85000, savings: 15000, retirementAge: 65 },
-              sharedWith: [
-                { _id: "user1", name: "Jane Smith", email: "jane.smith@example.com" }
-              ],
-              permissions: "read"
-            },
-            {
-              _id: "scen2",
-              name: "College Fund",
-              data: { targetAmount: 120000, yearsToSave: 18, monthlyContribution: 350 },
-              sharedWith: [],
-              permissions: "read"
-            }
-          ],
-          yamlFiles: [
-            {
-              _id: "yaml1",
-              filename: "california_tax_rates.yaml",
-              content: "tax_brackets:\n  - rate: 0.01\n    threshold: 0\n  - rate: 0.02\n    threshold: 9325"
-            }
-          ]
-        });
-        toast({
-          title: "Using mock data",
-          description: "Backend connection failed. Using mock data for development.",
-          status: "warning",
-          duration: 5000,
-          isClosable: true,
-        });
-      }
+      setUserData({
+        name: profileData.name || '',
+        email: profileData.email || '',
+        profilePicture: profileData.profilePicture || '',
+        yamlFiles: profileData.yamlFiles || [],
+        scenarios: profileData.scenarios || []
+      });
+      console.log(profileData);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load user profile',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Then in your useEffect
   useEffect(() => {
-    fetchUserData();
-  }, []);
+    if (user) {
+      fetchUserProfile();
+    }
+  }, [user, toast]);
 
   // Handle return to dashboard
   const handleReturnToDashboard = () => {
     navigate('/dashboard');
   };
 
-  // Handle edit profile
-  const handleEditProfile = async () => {
-    if (user) {
-      try {
-        const response = await axios.post(`${API_BASE_URL}/api/user/update`, {
-          userId: user.googleId,
-          name: editName
-        }, { withCredentials: true });
-        
-        setUser(response.data);
-        onEditProfileClose();
-        
-        toast({
-          title: "Profile updated",
-          description: "Your profile has been successfully updated.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      } catch (err: any) {
-        console.error("Error updating profile:", err);
-        toast({
-          title: "Update failed",
-          description: err.response?.data?.message || "Failed to update profile",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+  // Update the handleSubmit function to use the editName value
+  const handleSubmit = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Use the editName value from the modal
+      const updatedProfile = await userService.updateProfile({
+        name: editName,  // Use editName instead of userData.name
+        email: userData.email,
+        profilePicture: userData.profilePicture
+      });
+      
+      // Update local state with response data
+      setUserData({
+        name: updatedProfile.name,
+        email: updatedProfile.email,
+        profilePicture: updatedProfile.profilePicture,
+        yamlFiles: updatedProfile.yamlFiles,
+        scenarios: updatedProfile.scenarios
+      });
+      
+      // Update auth context if needed
+      if (updateUser) {
+        updateUser(updatedProfile);
       }
+      
+      // Close the modal
+      onEditProfileClose();
+      
+      toast({
+        title: 'Profile updated',
+        description: 'Your profile has been successfully updated',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update profile',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Handle upload YAML
   const handleUploadYaml = async () => {
-    if (user && yamlFileName && yamlContent) {
+    if (yamlFileName && yamlContent) {
       try {
-        const response = await axios.post(`${API_BASE_URL}/api/yaml`, {
-          userId: user.googleId,
-          filename: yamlFileName,
-          content: yamlContent
-        }, { withCredentials: true });
+        setIsLoading(true);
+        //await axios.put(`${import.meta.env.VITE_API_URL}/api/users/profile`
         
-        // Update the user state with the new YAML files list
-        if (response.data.yamlFiles) {
-          setUser({
-            ...user,
-            yamlFiles: response.data.yamlFiles
+        // Use axios to post to your backend API
+        const response = await axios.post(
+          `${import.meta.env.VITE_API_URL}/api/yaml`, // Changed from /api/users/yaml to /api/yaml
+          {
+            name: yamlFileName,
+            content: yamlContent
+          },
+          { withCredentials: true }
+        );
+        
+        // Update the local state with the new YAML file
+        if (response.data) {
+          setUserData({
+            ...userData,
+            yamlFiles: [...userData.yamlFiles, response.data]
           });
-        } else {
-          // If the response doesn't include the updated list, fetch user data again
-          fetchUserData();
+          
+          // Or fetch the updated user data
+          fetchUserProfile();
         }
         
+        // Reset form and close modal
         setYamlFileName("");
         setYamlContent("");
         onUploadYamlClose();
@@ -230,16 +243,26 @@ const UserProfile: React.FC = () => {
           duration: 3000,
           isClosable: true,
         });
-      } catch (err: any) {
-        console.error("Error uploading YAML:", err);
+      } catch (error) {
+        console.error("Error uploading YAML:", error);
         toast({
           title: "Upload failed",
-          description: err.response?.data?.message || "Failed to upload YAML file",
+          description: "Failed to upload YAML file",
           status: "error",
           duration: 3000,
           isClosable: true,
         });
+      } finally {
+        setIsLoading(false);
       }
+    } else {
+      toast({
+        title: "Missing information",
+        description: "Please provide both a file name and content",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -253,9 +276,9 @@ const UserProfile: React.FC = () => {
         });
         
         // Update the local state
-        setUser({
-          ...user,
-          yamlFiles: user.yamlFiles.filter(file => file._id !== fileId)
+        setUserData({
+          ...userData,
+          yamlFiles: userData.yamlFiles.filter(file => file._id !== fileId)
         });
         
         toast({
@@ -290,7 +313,7 @@ const UserProfile: React.FC = () => {
         }, { withCredentials: true });
         
         // Fetch updated user data to get the latest scenario sharing info
-        fetchUserData();
+        fetchUserProfile();
         
         setShareEmail("");
         setSharePermission("read");
@@ -343,18 +366,6 @@ const UserProfile: React.FC = () => {
   }
 
   // Show error if there was a problem fetching data
-  if (error && !user) {
-    return (
-      <Box p={5} textAlign="center" color="red.500">
-        <Text fontSize="xl">Error: {error}</Text>
-        <Button mt={4} colorScheme="blue" onClick={fetchUserData}>
-          Try Again
-        </Button>
-      </Box>
-    );
-  }
-
-  // If no user data is available
   if (!user) {
     return (
       <Box p={5} textAlign="center">
@@ -453,7 +464,7 @@ const UserProfile: React.FC = () => {
                             size="sm"
                             colorScheme="blue"
                             variant="ghost"
-                            onClick={() => openShareModal(scenario)}
+                            onClick={() => openShareModal(scenario as Scenario)}
                           />
                           <IconButton
                             aria-label="Edit scenario"
@@ -468,9 +479,7 @@ const UserProfile: React.FC = () => {
                     </CardHeader>
                     <CardBody pt={0}>
                       <Text fontSize="sm" color={textColor} mb={3}>
-                        {scenario.data && Object.keys(scenario.data).length > 0 
-                          ? `Contains ${Object.keys(scenario.data).length} data points`
-                          : "No data available"}
+                        {scenario.description || "No description available"}
                       </Text>
                       
                       {scenario.sharedWith && scenario.sharedWith.length > 0 && (
@@ -503,7 +512,7 @@ const UserProfile: React.FC = () => {
                   <Card key={file._id} bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor}>
                     <CardHeader>
                       <Flex justify="space-between" align="center">
-                        <Heading size="sm">{file.filename}</Heading>
+                        <Heading size="sm">{file.name}</Heading>
                         <HStack>
                           <Tooltip label="View Content">
                             <IconButton
@@ -571,7 +580,7 @@ const UserProfile: React.FC = () => {
             <Button variant="ghost" mr={3} onClick={onEditProfileClose}>
               Cancel
             </Button>
-            <Button colorScheme="blue" onClick={handleEditProfile}>
+            <Button colorScheme="blue" onClick={handleSubmit}>
               Save
             </Button>
           </ModalFooter>

@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { InvestmentTypeRaw } from "../../core/domain/scenario/Scenario";
+import { InvestmentTypeRaw } from "../../core/domain/raw/investment_type_raw";
 export interface InvestmentTypeToDB extends Document, InvestmentTypeRaw {
   userId: Schema.Types.ObjectId;
   createdAt: Date;

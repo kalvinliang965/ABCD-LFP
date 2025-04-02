@@ -1,14 +1,15 @@
 import { DistributionType, StatisticType } from "../../core/Enums";
 import normal from "@stdlib/random-base-normal";
 
-export interface RandomGenerator {
+export interface ValueGenerator {
   sample: () => number;
   _params: Map<StatisticType, number>;
+  equal: (that: ValueGenerator) => boolean;
 }
-function ValueGenerator(
+export function create_value_generator(
   distribution_type: DistributionType,
   params: Map<StatisticType, number>
-): RandomGenerator {
+): ValueGenerator {
   const sample = (): number => {
     switch (distribution_type) {
       case DistributionType.FIXED:
@@ -31,7 +32,6 @@ function ValueGenerator(
           );
         }
         return normal(mean, standard_deviation);
-
       case DistributionType.UNIFORM:
         const lowerbound = params.get(StatisticType.LOWER);
         if (typeof lowerbound !== "number") {
@@ -53,7 +53,22 @@ function ValueGenerator(
   return {
     sample,
     _params: params, // for debug
+    equal: (that: ValueGenerator): boolean => {
+      if(params.size !== that._params.size) return false;
+      for (const [key, value] of params) {
+        const that_value = that._params.get(key);
+        if (typeof value === "number"&& typeof that_value == "number" &&
+          isNaN(value) && isNaN(that_value)  
+        ) {
+          continue;
+        }
+        if (that_value !== value) {
+          return false;
+        }
+      }
+      return true
+    }
   };
 }
 
-export default ValueGenerator;
+export default create_value_generator;
