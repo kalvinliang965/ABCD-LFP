@@ -20,6 +20,7 @@ import {
 import { my_investments_investment_one } from "./event_raw/investment_event_raw";
 import { rebalance_one } from "./event_raw/rebalance_event_raw";
 import { salary_income_one } from "./event_raw/income_event_raw";
+import { cash_investment_type_one, InvestmentTypeRaw, s_and_p_500_investment_type_one, tax_exempt_bonds_investment_type_one } from "./investment_type_raw";
 
 // a distribution is represented as a map with one of the following forms:
 // {type: fixed, value: <number>}
@@ -32,6 +33,7 @@ export interface ScenarioRaw {
   martialStatus: string;
   birthYears: Array<number>;
   lifeExpectancy: Array<Map<string, any>>;
+  investmentTypes: Set<InvestmentTypeRaw>
   investments: Set<InvestmentRaw>;
   eventSeries: Set<
     IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw
@@ -64,6 +66,11 @@ export const scenario_one = create_scenario_raw(
       ["stdev", 3],
     ]),
   ], // a list with length 1 or 2, depending on maritalStatus.
+  new Set<InvestmentTypeRaw>([
+    cash_investment_type_one,
+    s_and_p_500_investment_type_one,
+    tax_exempt_bonds_investment_type_one,
+  ]),
   // investment id is a unique identifier.  without it, we would need to use a pair (investment type, tax status) to identify an investment.
   new Set<InvestmentRaw>([
     cash_investment_one,
@@ -104,6 +111,7 @@ export function create_scenario_raw(
   martialStatus: string,
   birthYears: Array<number>,
   lifeExpectancy: Array<Map<string, any>>,
+  investmentTypes: Set<InvestmentTypeRaw>,
   investments: Set<InvestmentRaw>,
   eventSeries: Set<
     IncomeEventRaw | InvestmentEventRaw | ExpenseEventRaw | RebalanceEventRaw
@@ -125,6 +133,7 @@ export function create_scenario_raw(
     martialStatus,
     birthYears,
     lifeExpectancy,
+    investmentTypes,
     investments,
     eventSeries,
     inflationAssumption,

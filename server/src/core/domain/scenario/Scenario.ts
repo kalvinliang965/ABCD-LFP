@@ -1,7 +1,8 @@
 // src/core/domain/Scenario.ts
 // we will use this function to read data read from front end and call other function to parse the data
-import ValueGenerator, {
-  RandomGenerator,
+import {
+  create_value_generator,
+  ValueGenerator,
 } from "../../../utils/math/ValueGenerator";
 import {
   DistributionType,
@@ -28,6 +29,7 @@ import { create_federal_tax_service, FederalTaxService } from "../../tax/Federal
 import { create_state_tax_service, StateTaxService } from "../../tax/StateTaxService";
 import { AccountManager, create_account_manager } from "../AccountManager";
 import { AccountMap } from "../AccountManager";
+import { create_investment_type_manager, InvestmentTypeManager } from "../InvestmentTypeManager";
 
 
 function parse_state(state: string) {
@@ -85,7 +87,7 @@ function parse_life_expectancy(
             `life expectancy value field does not exist for fixed type: ${params}`
           );
         }
-        return ValueGenerator(
+        return create_value_generator(
           DistributionType.FIXED,
           new Map([[StatisticType.VALUE, value]])
         ).sample();
@@ -102,7 +104,7 @@ function parse_life_expectancy(
             `life expectancy stdev field does not exist for normal type: ${params}`
           );
         }
-        return ValueGenerator(
+        return create_value_generator(
           DistributionType.NORMAL,
           new Map([
             [StatisticType.MEAN, mean],
@@ -127,16 +129,16 @@ function parse_life_expectancy(
 
 function parse_inflation_assumption(
   inflationAssumption: Map<string, any>
-): RandomGenerator {
+): ValueGenerator {
   try {
     switch (inflationAssumption.get("type")) {
       case "fixed":
-        return ValueGenerator(
+        return create_value_generator(
           DistributionType.FIXED,
           new Map([[StatisticType.VALUE, inflationAssumption.get("value")]])
         );
       case "normal":
-        return ValueGenerator(
+        return create_value_generator(
           DistributionType.NORMAL,
           new Map([
             [StatisticType.MEAN, inflationAssumption.get("mean")],
@@ -144,7 +146,7 @@ function parse_inflation_assumption(
           ])
         );
       case "uniform":
-        return ValueGenerator(
+        return create_value_generator(
           DistributionType.UNIFORM,
           new Map([
             [StatisticType.LOWER, inflationAssumption.get("lower")],
@@ -234,12 +236,13 @@ export interface Scenario {
   spouse_birth_year?: number;
   user_life_expectancy: number;
   spouse_life_expectancy?: number;
+  investment_type_manager: InvestmentTypeManager;
   investments: Array<Investment>;
   //! chen changed the type from any to Event[]
   event_series: Array<Event>;
   mandatory_expenses: Array<SpendingEvent>;
   discretionary_expenses: Array<SpendingEvent>;
-  inflation_assumption: RandomGenerator;
+  inflation_assumption: ValueGenerator;
   after_tax_contribution_limit: number;
   spending_strategy: Array<string>;
   expense_withrawal_strategy: Array<string>;
@@ -321,7 +324,7 @@ export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenar
       scenario_raw.spendingStrategy
     );
 
-    const inflation_assumption: RandomGenerator = parse_inflation_assumption(
+    const inflation_assumption: ValueGenerator = parse_inflation_assumption(
       scenario_raw.inflationAssumption
     );
     const after_tax_contribution_limit: number =
@@ -343,9 +346,20 @@ export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenar
       investments
     );
 
+    const investment_type_manager = create_investment_type_manager(scenario_raw.investmentTypes);
+
     // Create tax services
     const federal_tax_service = await create_federal_tax_service();
     const state_tax_service = await create_state_tax_service();
+
+    // Sanity check
+    for (const investment of investments) {
+      if (!investment_type_manager.has(investment.investment_type)) {
+        console.log(`investment type ${investment.investment_type} does not exist`);
+        process.exit(1);
+      }
+    }
+
     return {
       federal_tax_service,
       state_tax_service,
@@ -355,6 +369,7 @@ export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenar
         pre_tax,
         after_tax
       ),
+      investment_type_manager,
       name: scenario_raw.name,
       tax_filing_status: taxfilingStatus,
       user_birth_year,

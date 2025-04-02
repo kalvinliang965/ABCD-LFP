@@ -1,4 +1,4 @@
-import ValueGenerator, { RandomGenerator } from "../../../utils/math/ValueGenerator";
+import ValueGenerator, { ValueGenerator } from "../../../utils/math/ValueGenerator";
 import { ChangeType, DistributionType, StatisticType } from "../../Enums";
 import { EventRaw } from "../raw/event_raw/event_raw";
 
@@ -145,7 +145,7 @@ function parse_duration(duration: Map<string, any>): number {
 function parse_expected_annual_change(
   changeAmtOrPct: string,
   changeDistribution: Map<string, any>
-): [ChangeType, RandomGenerator] {
+): [ChangeType, ValueGenerator] {
   function parse_change_amt__or_pct(): ChangeType {
     switch (changeAmtOrPct) {
       case "amount":
@@ -187,7 +187,7 @@ function parse_expected_annual_change(
 
   try {
     const change_type: ChangeType = parse_change_amt__or_pct();
-    const change_distribution: RandomGenerator = parse_change_distribution();
+    const change_distribution: ValueGenerator = parse_change_distribution();
     return [change_type, change_distribution];
   } catch (error) {
     throw error;

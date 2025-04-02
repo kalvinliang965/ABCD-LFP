@@ -1,10 +1,10 @@
 
-import process_roth_conversion from '../logic/RothConversion';
-import { SimulationState } from '../SimulationState';
-import { TaxStatus, TaxFilingStatus, IncomeType, ChangeType } from '../../Enums';
-import { create_investment, Investment } from '../../domain/investment/Investment';
-import { InvestmentType } from '../../domain/investment/InvestmentType';
-import { incr_300_init_300_investment_one, incr_600_init_600_investment_one } from '../../domain/raw/investment_raw';
+import process_roth_conversion from '../RothConversion';
+import { SimulationState } from '../../SimulationState';
+import { TaxStatus, TaxFilingStatus, IncomeType, ChangeType } from '../../../Enums';
+import { create_investment, Investment } from '../../../domain/investment/Investment';
+import { InvestmentType } from '../../../domain/investment/InvestmentType';
+import { incr_300_init_300_investment_one, incr_600_init_600_investment_one } from '../../../domain/raw/investment_raw';
 
 const pre_tax_1 = create_investment(incr_300_init_300_investment_one);
 const pre_tax_2 = create_investment(incr_600_init_600_investment_one);

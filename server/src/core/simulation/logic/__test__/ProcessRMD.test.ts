@@ -1,7 +1,7 @@
-import process_rmds from '../logic/ProcessRMD';
-import { SimulationState } from '../SimulationState';
-import { TaxStatus } from '../../Enums';
-import * as RMDScraper from '../../../services/RMDScraper';
+import process_rmds from '../ProcessRMD';
+import { SimulationState } from '../../SimulationState';
+import { TaxStatus } from '../../../Enums';
+import * as RMDScraper from '../../../../services/RMDScraper';
 
 //how to run this test
 // cd server 

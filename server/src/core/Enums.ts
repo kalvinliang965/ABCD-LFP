@@ -20,12 +20,6 @@ export enum ChangeType {
     PERCENTAGE = "PERCENTAGE",
 }
 
-export enum Taxability {
-    TAXABLE = "TAXABLE",
-    TAX_EXEMPT = "TAX_EXEMPT",
-}
-
-
 export enum StatisticType {
     MEAN = "MEAN",
     STDEV = "STDEV",

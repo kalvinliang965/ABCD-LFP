@@ -1,7 +1,7 @@
-import { rebalanceInvestments } from '../logic/RebalanceInvestments';
-import { SimulationState } from '../SimulationState';
-import { Scenario } from '../../domain/scenario/Scenario';
-import { TaxStatus } from '../../Enums';
+import { rebalanceInvestments } from '../RebalanceInvestments';
+import { SimulationState } from '../../SimulationState';
+import { Scenario } from '../../../domain/scenario/Scenario';
+import { TaxStatus } from '../../../Enums';
 
 interface RebalanceEvent {
   start: number;

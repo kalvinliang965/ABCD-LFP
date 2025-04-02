@@ -1,23 +1,22 @@
 // tests/scenarioCreation.test.ts
 import fs from "fs";
 import yaml from "js-yaml";
+import { ScenarioRaw } from "../../../domain/raw/scenario_raw";
 import {
-  ScenarioRaw,
   create_scenario,
-  Scenario,
-} from "../../domain/scenario/Scenario";
+} from "../../../domain/scenario/Scenario";
 import {
-  InvestmentRaw,
-  InvestmentTypeRaw,
   IncomeEventRaw,
   ExpenseEventRaw,
   InvestmentEventRaw,
   RebalanceEventRaw,
-} from "../../domain/scenario/Scenario";
-import { create_simulation_state } from "../SimulationState";
-import { pay_mandatory_expenses } from "../logic/PayMandatoryExpense";
-import { pay_discretionary_expenses } from "../logic/PayDiscretionaryExpense";
-import { SpendingEvent, update_expense_amount } from "../logic/ExpenseHelper";
+} from "../../../domain/raw/event_raw/event_raw";
+import { InvestmentRaw } from "../../../domain/raw/investment_raw";
+import { InvestmentTypeRaw } from "../../../domain/raw/investment_type_raw";
+import { create_simulation_state } from "../../SimulationState";
+import { pay_mandatory_expenses } from "../PayMandatoryExpense";
+import { pay_discretionary_expenses } from "../PayDiscretionaryExpense";
+import { SpendingEvent, update_expense_amount } from "../ExpenseHelper";
 const scenarioYaml = `
 # file format for scenario import/export.  version: 2025-03-23
 # CSE416, Software Engineering, Scott D. Stoller.
