@@ -1,7 +1,7 @@
-import { investExcessCash } from '../logic/InvestExcessCash';
-import { SimulationState } from '../SimulationState';
-import { Scenario } from '../../domain/scenario/Scenario';
-import { TaxStatus } from '../../Enums';
+import { investExcessCash } from '../InvestExcessCash';
+import { SimulationState } from '../../SimulationState';
+import { Scenario } from '../../../domain/scenario/Scenario';
+import { TaxStatus } from '../../../Enums';
 
 interface InvestEvent {
   start: number;
@@ -86,8 +86,8 @@ describe('investExcessCash', () => {
   it('invests excess cash according to fixed allocation', () => {
     investExcessCash(mockState, mockScenario);
 
-    const investedA = mockState.accounts.non_retirement.get('Stock A')!.get_value();
-    const investedB = mockState.accounts.after_tax.get('Stock B')!.get_value();
+    const investedA = mockState.account_manager.non_retirement.get('Stock A')!.get_value();
+    const investedB = mockState.account_manager.after_tax.get('Stock B')!.get_value();
     const expectedExcess = 10000 - 1000;
 
     expect(investedA).toBeCloseTo(1000 + expectedExcess * 0.6);
@@ -108,8 +108,8 @@ describe('investExcessCash', () => {
     const expectedA = (60 / 100) * (10000 - 1000);
     const expectedB = (40 / 100) * (10000 - 1000);
 
-    expect(mockState.accounts.non_retirement.get('Stock A')!.get_value()).toBeCloseTo(1000 + expectedA);
-    expect(mockState.accounts.after_tax.get('Stock B')!.get_value()).toBeCloseTo(1000 + expectedB);
+    expect(mockState.account_manager.non_retirement.get('Stock A')!.get_value()).toBeCloseTo(1000 + expectedA);
+    expect(mockState.account_manager.after_tax.get('Stock B')!.get_value()).toBeCloseTo(1000 + expectedB);
   });
 
   it('skips investment if allocation does not sum to 100', () => {
@@ -121,8 +121,8 @@ describe('investExcessCash', () => {
 
     investExcessCash(mockState, mockScenario);
 
-    expect(mockState.accounts.non_retirement.get('Stock A')!.get_value()).toBe(1000);
-    expect(mockState.accounts.after_tax.get('Stock B')!.get_value()).toBe(1000);
+    expect(mockState.account_manager.non_retirement.get('Stock A')!.get_value()).toBe(1000);
+    expect(mockState.account_manager.after_tax.get('Stock B')!.get_value()).toBe(1000);
     expect(mockState.cash.get_value()).toBe(10000);
     expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('Allocation percentages sum'));
 

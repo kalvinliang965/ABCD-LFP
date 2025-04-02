@@ -1,8 +1,8 @@
-import { create_simulation_state } from "../SimulationState";
-import { Scenario } from "../../domain/scenario/Scenario";
-import { StateType, TaxFilingStatus, TaxStatus } from "../../Enums";
-import { Investment } from "../../domain/investment/Investment";
-import { SpendingEvent } from "../logic/ExpenseHelper";
+import { create_simulation_state } from "../../SimulationState";
+import { Scenario } from "../../../domain/scenario/Scenario";
+import { StateType, TaxFilingStatus, TaxStatus } from "../../../Enums";
+import { Investment } from "../../../domain/investment/Investment";
+import { SpendingEvent } from "../ExpenseHelper";
 
 const baseScenario: Scenario = {
   tax_filing_status: TaxFilingStatus.MARRIED,

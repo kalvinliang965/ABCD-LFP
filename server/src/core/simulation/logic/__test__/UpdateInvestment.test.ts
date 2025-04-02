@@ -1,11 +1,11 @@
 
-import update_investment from '../logic/UpdateInvestment';
-import { ChangeType, TaxStatus } from '../../Enums';
-import { SimulationState } from '../SimulationState';
-import { create_investment } from '../../domain/investment/Investment';
-import { incr_300_init_300_investment_one, incr_300_init_300_investment_two } from '../../domain/raw/investment_raw';
-import { Investment } from '../../domain/investment/Investment';
-import { TaxFilingStatus } from '../../Enums';
+import update_investment from '../UpdateInvestment';
+import { ChangeType, TaxStatus } from '../../../Enums';
+import { SimulationState } from '../../SimulationState';
+import { create_investment } from '../../../domain/investment/Investment';
+import { incr_300_init_300_investment_one, incr_300_init_300_investment_two } from '../../../domain/raw/investment_raw';
+import { Investment } from '../../../domain/investment/Investment';
+import { TaxFilingStatus } from '../../../Enums';
 
 const non_retirement_300_non_tax_exempt = create_investment(incr_300_init_300_investment_one);
 non_retirement_300_non_tax_exempt.taxStatus = TaxStatus.NON_RETIREMENT;

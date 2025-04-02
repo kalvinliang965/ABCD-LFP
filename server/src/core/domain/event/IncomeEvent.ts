@@ -1,4 +1,4 @@
-import { RandomGenerator } from "../../../utils/math/ValueGenerator";
+import { ValueGenerator } from "../../../utils/math/ValueGenerator";
 import { ChangeType } from "../../Enums";
 import { IncomeEventRaw } from "../raw/event_raw/income_event_raw";
 
@@ -12,7 +12,7 @@ import {
 interface IncomeEvent extends Event {
   initial_amount: number;
   change_type: ChangeType;
-  expected_annual_change: RandomGenerator;
+  expected_annual_change: ValueGenerator;
   inflation_adjusted: boolean;
   user_fraction: number;
   social_security: boolean;

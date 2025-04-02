@@ -11,7 +11,7 @@ import { create_investment_type } from "../InvestmentType";
 
 describe("create_investment", () => {
     const baseRawData: InvestmentRaw = {
-      investmentType: cash_investment_type_one,
+      investmentType: cash_investment_type_one.name,
       value: 1000,
       taxStatus: "non-retirement",
       id: "test-investment"
@@ -80,22 +80,5 @@ describe("create_investment", () => {
     });
   
   
-    // Test tax exempt status
-    test("should reflect tax exempt status from investment type", () => {
-      const taxExemptType = { ...cash_investment_type_one, taxability: false };
-      const investment = create_investment({
-        investmentType: taxExemptType,
-        value: 0,
-        taxStatus: "non-retirement",
-        id: "mock"
-      });
-      expect(investment.is_tax_exempt()).toBe(true);
-    });
   
-    // Test annual income/return sampling
-    test("should sample annual values correctly", () => {
-      const investment: Investment = create_investment(baseRawData);
-      expect(typeof investment.get_annual_income()).toBe("number");
-      expect(typeof investment.get_annual_return()).toBe("number");
-    });
   });

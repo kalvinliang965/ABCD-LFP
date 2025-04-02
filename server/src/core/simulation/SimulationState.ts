@@ -12,6 +12,7 @@ import { Event } from "../domain/event/Event";
 import { SpendingEvent, update_expense_amount } from "./logic/ExpenseHelper";
 import { create_yearly_records } from "./YearlyTaxRecords";
 import { AccountManager } from "../domain/AccountManager";
+import { InvestmentTypeManager } from "../domain/InvestmentTypeManager";
 export type EventMap = Map<string, Event>;
 
 export interface PersonDetails {
@@ -59,6 +60,7 @@ export interface SimulationState {
   cash: Investment;
   mandatory_expenses: SpendingEvent[];
   discretionary_expenses: SpendingEvent[];
+  investment_type_manager: InvestmentTypeManager
 }
 
 
@@ -152,6 +154,13 @@ export async function create_simulation_state(
       : undefined;
     let early_withdrawal_penalty = 0;
     // Create the simulation state object
+    // clone to prevent refetching from database
+    const investment_type_manager = scenario.investment_type_manager.clone();
+    const federal_tax_service = scenario.federal_tax_service.clone();
+    const state_tax_service = scenario.state_tax_service.clone();
+    // Account and event organization
+    const account_manager = scenario.account_manager.clone();
+
     const state: SimulationState = {
       cash: scenario.cash,
       events: scenario.event_series,
@@ -249,22 +258,23 @@ export async function create_simulation_state(
       advance_year: () => {
         current_year++;
         inflation_factor *= 1 + scenario.inflation_assumption.sample();
-
+        federal_tax_service.adjust_for_inflation(inflation_factor);
+        state_tax_service.adjust_for_inflation(inflation_factor);
+        investment_type_manager.resample_all();
         if (!spouse?.is_alive) {
           tax_filing_status = TaxFilingStatus.SINGLE;
         }
-      },
-      // clone to prevent refetching from database
-      federal_tax_service: scenario.federal_tax_service.clone(),
-      state_tax_service: scenario.state_tax_service.clone(),
-      // Account and event organization
-      account_manager: scenario.account_manager.clone(),
+      }, 
       events_by_type: {
         income: income_events,
         expense: expense_events,
         invest: investment_events,
         rebalance: rebalance_events,
       },
+      investment_type_manager,
+      federal_tax_service,
+      state_tax_service,
+      account_manager,
     };
 
     return state;

@@ -1,4 +1,4 @@
-import ValueGenerator, { RandomGenerator } from "../../../utils/math/ValueGenerator";
+import  {create_value_generator,  ValueGenerator } from "../../../utils/math/ValueGenerator";
 import { ChangeType, DistributionType, StatisticType } from "../../Enums";
 import { EventRaw } from "../raw/event_raw/event_raw";
 
@@ -59,12 +59,12 @@ function process_event_dependencies(events: EventRaw[]): Map<string, number> {
 function parse_start_year(start: Map<string, any>): number {
   switch (start.get("type")) {
     case "fixed":
-      return ValueGenerator(
+      return create_value_generator(
         DistributionType.FIXED,
         new Map([[StatisticType.VALUE, start.get("value")]])
       ).sample();
     case "uniform":
-      return ValueGenerator(
+      return create_value_generator(
         DistributionType.UNIFORM,
         new Map([
           [StatisticType.LOWER, start.get("lower")],
@@ -72,7 +72,7 @@ function parse_start_year(start: Map<string, any>): number {
         ])
       ).sample();
     case "normal":
-      return ValueGenerator(
+      return create_value_generator(
         DistributionType.NORMAL,
         new Map([
           [StatisticType.MEAN, start.get("mean")],
@@ -117,12 +117,12 @@ function parse_start_year(start: Map<string, any>): number {
 function parse_duration(duration: Map<string, any>): number {
   switch (duration.get("type")) {
     case "fixed":
-      return ValueGenerator(
+      return create_value_generator(
         DistributionType.FIXED,
         new Map([[StatisticType.VALUE, duration.get("value")]])
       ).sample();
     case "uniform":
-      return ValueGenerator(
+      return create_value_generator(
         DistributionType.UNIFORM,
         new Map([
           [StatisticType.LOWER, duration.get("lower")],
@@ -130,7 +130,7 @@ function parse_duration(duration: Map<string, any>): number {
         ])
       ).sample();
     case "normal":
-      return ValueGenerator(
+      return create_value_generator(
         DistributionType.NORMAL,
         new Map([
           [StatisticType.MEAN, duration.get("mean")],
@@ -145,7 +145,7 @@ function parse_duration(duration: Map<string, any>): number {
 function parse_expected_annual_change(
   changeAmtOrPct: string,
   changeDistribution: Map<string, any>
-): [ChangeType, RandomGenerator] {
+): [ChangeType, ValueGenerator] {
   function parse_change_amt__or_pct(): ChangeType {
     switch (changeAmtOrPct) {
       case "amount":
@@ -160,12 +160,12 @@ function parse_expected_annual_change(
   function parse_change_distribution() {
     switch (changeDistribution.get("type")) {
       case "fixed":
-        return ValueGenerator(
+        return create_value_generator(
           DistributionType.FIXED,
           new Map([[StatisticType.VALUE, changeDistribution.get("value")]])
         );
       case "uniform":
-        return ValueGenerator(
+        return create_value_generator(
           DistributionType.UNIFORM,
           new Map([
             [StatisticType.LOWER, changeDistribution.get("lower")],
@@ -173,7 +173,7 @@ function parse_expected_annual_change(
           ])
         );
       case "normal":
-        return ValueGenerator(
+        return create_value_generator(
           DistributionType.NORMAL,
           new Map([
             [StatisticType.MEAN, changeDistribution.get("mean")],
@@ -187,7 +187,7 @@ function parse_expected_annual_change(
 
   try {
     const change_type: ChangeType = parse_change_amt__or_pct();
-    const change_distribution: RandomGenerator = parse_change_distribution();
+    const change_distribution: ValueGenerator = parse_change_distribution();
     return [change_type, change_distribution];
   } catch (error) {
     throw error;
