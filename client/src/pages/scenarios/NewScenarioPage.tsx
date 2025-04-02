@@ -303,6 +303,7 @@ function NewScenarioPage() {
     setStep("rmdSettings");
   };
 
+  //?????? 你在干嘛？？？？？ 那我为什么不直接叫continue_to_withdrawal_strategy？？？？？？？？？？？？？？？？？？？？？？
   const handle_continue_from_rmd = () => {
     handle_continue_to_withdrawal_strategy();
   };
@@ -352,7 +353,7 @@ function NewScenarioPage() {
   };
   //! 这部分是海风写的，不要动。
 
-  //*
+  //* 这是我们最后最重要的代码
   const handle_finish_scenario = () => {
     // Create the final scenario object
     const finalScenario = {
@@ -573,7 +574,7 @@ function NewScenarioPage() {
                   <Button
                     variant="ghost"
                     colorScheme="blue"
-                    onClick={handle_back_to_rmd_settings}
+                    onClick={handle_continue_from_rmd}
                   >
                     Back
                   </Button>
