@@ -92,8 +92,8 @@ describe('rebalanceInvestments', () => {
     const targetA = totalValue * 0.5;
     const targetB = totalValue * 0.5;
 
-    expect(mockState.accounts.after_tax.get('Stock A')!.get_value()).toBeCloseTo(targetA);
-    expect(mockState.accounts.after_tax.get('Stock B')!.get_value()).toBeCloseTo(targetB);
+    expect(mockState.account_manager.after_tax.get('Stock A')!.get_value()).toBeCloseTo(targetA);
+    expect(mockState.account_manager.after_tax.get('Stock B')!.get_value()).toBeCloseTo(targetB);
   });
 
   it('computes capital gains correctly when selling', () => {
