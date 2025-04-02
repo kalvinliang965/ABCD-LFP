@@ -1,21 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Box,
-  Heading,
-  Text,
-  SimpleGrid,
-  Button,
-  Flex,
-  Icon,
-  HStack,
-  VStack,
-  IconButton,
-  useToast,
-} from "@chakra-ui/react";
-import { Building2, Wallet, TrendingUp, BarChart } from "lucide-react";
-import { DeleteIcon } from "@chakra-ui/icons";
-import { EventSeriesForm } from "../../components/event_series/EventSeriesForm";
-import { EventSeriesType, EventSeries } from "../../types/eventSeries";
+import { Box, Text, useToast } from "@chakra-ui/react";
 import { useEventSeries } from "../../contexts/EventSeriesContext";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -50,53 +34,9 @@ import WithdrawalStrategyForm, {
   WithdrawalStrategy,
 } from "../../components/scenarios/WithdrawalStrategyForm";
 //import { InvestmentTaxStatus } from "../../types/scenario";
-
-// Omit the id from EventSeries and add it as optional
-type AddedEvent = Omit<EventSeries, "id"> & {
-  id?: string;
-  _id?: string;
-  amount?: number;
-  frequency?: string;
-};
-
-const eventTypeOptions = [
-  {
-    id: "income",
-    name: "Income",
-    description: "Regular or one-time income sources",
-    icon: Building2,
-    header: "Sources of Income",
-    subheader:
-      "Do your best to think of every source of income you expect to have throughout your life. Use the Income widget below to add different kinds of income streams. Some may happen one time, others may occur annually or monthly, and may increase or decrease over time.",
-  },
-  {
-    id: "expense",
-    name: "Expense",
-    description: "Regular or one-time expenses",
-    icon: Wallet,
-    header: "Expenses",
-    subheader:
-      "Add your expected expenses throughout your life. Consider both regular recurring expenses and one-time costs. Remember to account for changes in expenses over time.",
-  },
-  {
-    id: "invest",
-    name: "Investment Strategy",
-    description: "Define how to invest excess cash",
-    icon: TrendingUp,
-    header: "Investment Strategy",
-    subheader:
-      "Define how your excess cash should be invested. Set your asset allocation and maximum cash holdings to automate your investment strategy.",
-  },
-  {
-    id: "rebalance",
-    name: "Rebalancing Strategy",
-    description: "Define how to rebalance investments",
-    icon: BarChart,
-    header: "Rebalancing Strategy",
-    subheader:
-      "Specify how your investment portfolio should be rebalanced over time. Set target allocations and conditions for maintaining your desired investment mix.",
-  },
-];
+import EventSeriesSection, {
+  AddedEvent,
+} from "../../components/event_series/EventSeriesSection";
 
 //! Roth Conversion Optimizer should be at the end of the investment
 
@@ -218,39 +158,22 @@ function NewScenarioPage() {
     setStep("typeSelection");
   };
 
-  //! 这部分是kate写的，不要动。
-  const handleEventAdded = async (event: AddedEvent) => {
-    try {
-      if (!event || !event._id) {
-        throw new Error("Invalid event data");
-      }
-
-      // Update the local state with the event from the server
-      setAddedEvents((prev) => [event, ...prev]);
-      setSelectedType(null);
-    } catch (error) {
-      console.error("Error handling event:", error);
+  const handleEventAdded = (event: AddedEvent) => {
+    if (!event) {
+      console.error("Invalid event data");
+      return;
     }
+    //generate a temporary id
+    const newEvent = { ...event, id: event.id || `temp-${Date.now()}` };
+    setAddedEvents((prev) => [newEvent, ...prev]);
+    setSelectedType(null);
   };
 
-  const handleDeleteEvent = async (id: string) => {
-    try {
-      await axios.delete(`http://localhost:3000/api/eventSeries/${id}`, {
-        withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      // Update the local state to remove the deleted event
-      setAddedEvents((prev) =>
-        prev.filter((event) => (event.id || event._id) !== id)
-      );
-    } catch (error) {
-      console.error("Failed to delete event:", error);
-    }
+  const handleDeleteEvent = async (id: string): Promise<void> => {
+    setAddedEvents((prev) =>
+      prev.filter((event) => (event.id || event._id) !== id)
+    );
   };
-  //! kate的部分到这里
 
   //! 海风写的，不要动
   const handleSaveAndContinue = () => {
@@ -267,16 +190,16 @@ function NewScenarioPage() {
     setStep("Scenario_name&type");
   };
 
-  const handle_to_investment_types = () => {
-    setStep("investmentTypes");
-  };
-
   const handle_to_investments = () => {
     setStep("investments");
   };
 
   const handle_to_event_selection = () => {
     setStep("eventSelection");
+  };
+
+  const handle_to_investment_types = () => {
+    setStep("investmentTypes");
   };
 
   const handle_to_roth_conversion_optimizer = () => {
@@ -312,7 +235,7 @@ function NewScenarioPage() {
     // Get discretionary expenses from added events
     const discretionaryExpenses = addedEvents
       .filter(
-        (event) => event.type === "expense" && event.isDiscretionary === true
+        (event) => event.type === "expense" && event.discretionary === true
       )
       .map((event) => event.name);
 
@@ -393,6 +316,8 @@ function NewScenarioPage() {
     });
     navigate("/scenarios");
   };
+  // }catch (error) {
+  //     console.error("Failed to create scenario:", error)}};
 
   const handle_change_scenario_type = (value: string) => {
     setScenarioDetails((prev) => ({
@@ -560,191 +485,15 @@ function NewScenarioPage() {
   }
 
   // Event Series Selection
-  if (step === "eventSelection" && !selectedType) {
+  if (step === "eventSelection") {
     return (
-      <Box minH="100vh" bg="gray.50">
-        <Box maxW="4xl" mx="auto" py={12} px={4}>
-          <Box bg="white" rounded="lg" shadow="lg" overflow="hidden">
-            <Box p={6}>
-              <Flex justify="space-between" align="center" mb={6}>
-                <Heading size="lg" color="gray.900">
-                  New Event Series
-                </Heading>
-                <HStack spacing={2}>
-                  <Button
-                    variant="ghost"
-                    colorScheme="blue"
-                    onClick={handle_continue_from_rmd}
-                  >
-                    Back
-                  </Button>
-                  <Button colorScheme="blue" onClick={handleSaveAndContinue}>
-                    Save & Continue
-                  </Button>
-                </HStack>
-              </Flex>
-
-              {addedEvents.length > 0 && (
-                <VStack spacing={4} mb={8} align="stretch">
-                  <Heading size="md" color="gray.700">
-                    Added Events
-                  </Heading>
-                  <Box bg="gray.50" p={4} borderRadius="md">
-                    {addedEvents.map((event) => (
-                      <Flex
-                        key={event.id || event._id}
-                        p={4}
-                        bg="white"
-                        borderRadius="md"
-                        shadow="sm"
-                        mb={2}
-                        justify="space-between"
-                        align="center"
-                      >
-                        <Box>
-                          <Text fontWeight="medium">{event.name}</Text>
-                          <Text fontSize="sm" color="gray.600">
-                            ${event.initialAmount} • Starting{" "}
-                            {event.startYear.type === "fixed"
-                              ? event.startYear.value
-                              : "Variable"}{" "}
-                            •{" "}
-                            {event.duration.type === "fixed"
-                              ? event.duration.value
-                              : "Variable"}{" "}
-                            years
-                          </Text>
-                        </Box>
-                        <HStack>
-                          <Text
-                            px={2}
-                            py={1}
-                            borderRadius="md"
-                            fontSize="sm"
-                            bg={
-                              event.type === "income"
-                                ? "green.100"
-                                : event.type === "expense"
-                                ? "red.100"
-                                : "blue.100"
-                            }
-                            color={
-                              event.type === "income"
-                                ? "green.700"
-                                : event.type === "expense"
-                                ? "red.700"
-                                : "blue.700"
-                            }
-                          >
-                            {event.type.charAt(0).toUpperCase() +
-                              event.type.slice(1)}
-                          </Text>
-                          <IconButton
-                            aria-label="Delete event"
-                            icon={<DeleteIcon />}
-                            size="sm"
-                            variant="ghost"
-                            colorScheme="red"
-                            onClick={() =>
-                              handleDeleteEvent(event.id || event._id || "")
-                            }
-                          />
-                        </HStack>
-                      </Flex>
-                    ))}
-                  </Box>
-                </VStack>
-              )}
-
-              <Text color="gray.600" mb={6}>
-                Select the type of event series you want to add to your
-                financial plan.
-              </Text>
-
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                {eventTypeOptions.map((option) => {
-                  const IconComponent = option.icon;
-                  return (
-                    <Box
-                      key={option.id}
-                      as="button"
-                      onClick={() =>
-                        setSelectedType(option.id as EventSeriesType)
-                      }
-                      bg="white"
-                      p={6}
-                      borderRadius="lg"
-                      border="1px solid"
-                      borderColor="gray.200"
-                      _hover={{ borderColor: "blue.500", bg: "blue.50" }}
-                      transition="all 0.2s"
-                      height="100%"
-                      textAlign="left"
-                      display="flex"
-                      flexDirection="column"
-                      alignItems="flex-start"
-                    >
-                      <Icon
-                        as={IconComponent}
-                        w={8}
-                        h={8}
-                        color="blue.500"
-                        mb={4}
-                      />
-                      <Text
-                        fontSize="xl"
-                        fontWeight="semibold"
-                        color="gray.900"
-                        mb={2}
-                      >
-                        {option.name}
-                      </Text>
-                      <Text color="gray.600">{option.description}</Text>
-                    </Box>
-                  );
-                })}
-              </SimpleGrid>
-            </Box>
-          </Box>
-        </Box>
-      </Box>
-    );
-  }
-
-  // Event Series Form when a type is selected
-  if (step === "eventSelection" && selectedType) {
-    const typeInfo = eventTypeOptions.find((opt) => opt.id === selectedType)!;
-
-    return (
-      <Box minH="100vh" bg="gray.50">
-        <Box maxW="4xl" mx="auto" py={12} px={4}>
-          <Box bg="white" rounded="lg" shadow="lg" overflow="hidden">
-            <Box p={6}>
-              <Button
-                onClick={() => setSelectedType(null)}
-                variant="ghost"
-                colorScheme="blue"
-                mb={6}
-                leftIcon={<Text>←</Text>}
-              >
-                Back to event types
-              </Button>
-
-              <Heading size="xl" color="gray.900">
-                {typeInfo.header}
-              </Heading>
-              <Text mt={2} mb={6} color="gray.600">
-                {typeInfo.subheader}
-              </Text>
-              <EventSeriesForm
-                initialType={selectedType}
-                onBack={() => setSelectedType(null)}
-                onEventAdded={handleEventAdded}
-              />
-            </Box>
-          </Box>
-        </Box>
-      </Box>
+      <EventSeriesSection
+        addedEvents={addedEvents}
+        handleDeleteEvent={handleDeleteEvent}
+        handleSaveAndContinue={handleSaveAndContinue}
+        handleBackToInvestments={handle_continue_to_withdrawal_strategy}
+        handleEventAdded={handleEventAdded}
+      />
     );
   }
 
