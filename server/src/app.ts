@@ -41,6 +41,36 @@ app.use("/api/investmentTypes", investmentTypeRoutes);
 app.use("/api/users", userRoutes);
 app.use("/auth", authRoutes);
 
+// Add a specific route for YAML files
+app.post('/api/yaml', async (req, res) => {
+  try {
+    const { name, content } = req.body;
+    // @ts-ignore
+    const userId = req.user?.id || req.user?._id;
+    
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Not authenticated" });
+    }
+    
+    const User = require('./db/models/User').default;
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    
+    // Add the new YAML file
+    user.yamlFiles.push({ name, content, createdAt: new Date() });
+    await user.save();
+    
+    // Return the newly added YAML file
+    const newFile = user.yamlFiles[user.yamlFiles.length - 1];
+    res.status(201).json(newFile);
+  } catch (error) {
+    console.error('Error adding YAML file:', error);
+    res.status(500).json({ success: false, message: "Error adding YAML file" });
+  }
+});
+
 //this part is for the login, check it after finishing other backend
 // Initialize Passport (add this after registerGlobalMiddleWare)
 // app.use(passport.initialize());

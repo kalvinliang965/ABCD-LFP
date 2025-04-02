@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+//import { API_URL } from "../../services/api"; 
 import {
   Box,
   Heading,
@@ -69,9 +70,9 @@ interface YamlFile {
   content: string;
   createdAt: Date;
 }
-
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3346';
 // API base URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = API_URL;
 
 const UserProfile: React.FC = () => {
   const navigate = useNavigate();
@@ -152,14 +153,14 @@ const UserProfile: React.FC = () => {
     navigate('/dashboard');
   };
 
-  // Update your handleSubmit function to save to backend
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  // Update the handleSubmit function to use the editName value
+  const handleSubmit = async () => {
     try {
       setIsLoading(true);
+      
+      // Use the editName value from the modal
       const updatedProfile = await userService.updateProfile({
-        name: userData.name,
+        name: editName,  // Use editName instead of userData.name
         email: userData.email,
         profilePicture: userData.profilePicture
       });
@@ -178,7 +179,9 @@ const UserProfile: React.FC = () => {
         updateUser(updatedProfile);
       }
       
-      setIsEditing(false);
+      // Close the modal
+      onEditProfileClose();
+      
       toast({
         title: 'Profile updated',
         description: 'Your profile has been successfully updated',
@@ -202,25 +205,33 @@ const UserProfile: React.FC = () => {
 
   // Handle upload YAML
   const handleUploadYaml = async () => {
-    if (user && yamlFileName && yamlContent) {
+    if (yamlFileName && yamlContent) {
       try {
-        const response = await axios.post(`${API_BASE_URL}/api/yaml`, {
-          userId: user.googleId,
-          filename: yamlFileName,
-          content: yamlContent
-        }, { withCredentials: true });
+        setIsLoading(true);
+        //await axios.put(`${import.meta.env.VITE_API_URL}/api/users/profile`
         
-        // Update the user state with the new YAML files list
-        if (response.data.yamlFiles) {
+        // Use axios to post to your backend API
+        const response = await axios.post(
+          `${import.meta.env.VITE_API_URL}/api/yaml`, // Changed from /api/users/yaml to /api/yaml
+          {
+            name: yamlFileName,
+            content: yamlContent
+          },
+          { withCredentials: true }
+        );
+        
+        // Update the local state with the new YAML file
+        if (response.data) {
           setUserData({
             ...userData,
-            yamlFiles: response.data.yamlFiles
+            yamlFiles: [...userData.yamlFiles, response.data]
           });
-        } else {
-          // If the response doesn't include the updated list, fetch user data again
+          
+          // Or fetch the updated user data
           fetchUserProfile();
         }
         
+        // Reset form and close modal
         setYamlFileName("");
         setYamlContent("");
         onUploadYamlClose();
@@ -232,16 +243,26 @@ const UserProfile: React.FC = () => {
           duration: 3000,
           isClosable: true,
         });
-      } catch (err: any) {
-        console.error("Error uploading YAML:", err);
+      } catch (error) {
+        console.error("Error uploading YAML:", error);
         toast({
           title: "Upload failed",
-          description: err.response?.data?.message || "Failed to upload YAML file",
+          description: "Failed to upload YAML file",
           status: "error",
           duration: 3000,
           isClosable: true,
         });
+      } finally {
+        setIsLoading(false);
       }
+    } else {
+      toast({
+        title: "Missing information",
+        description: "Please provide both a file name and content",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
