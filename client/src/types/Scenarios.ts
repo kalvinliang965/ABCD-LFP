@@ -1,4 +1,5 @@
 export type InvestmentTypeRaw = {
+  //!chen 我并不觉得ID在这里是必须的，可以通过名称来匹配。
   id?: string;
   name: string;
   description: string;

@@ -8,7 +8,6 @@ import {
   Flex,
   Icon,
   HStack,
-  Tooltip,
   VStack,
   IconButton,
   useToast,
@@ -26,7 +25,6 @@ import ScenarioDetailsForm, {
 } from "../../components/scenarios/ScenarioDetailsForm";
 import LifeExpectancyForm, {
   LifeExpectancyConfig,
-  ExpectancyType,
 } from "../../components/scenarios/LifeExpectancyForm";
 import InvestmentsForm, {
   InvestmentsConfig,
@@ -36,9 +34,6 @@ import InvestmentsForm, {
 import { InvestmentTypesForm } from "../../components/scenarios/InvestmentTypesForm";
 import AdditionalSettingsForm, {
   AdditionalSettingsConfig,
-  InflationConfig,
-  FinancialGoalConfig,
-  StateOfResidence,
 } from "../../components/scenarios/AdditionalSettingsForm";
 import RothConversionOptimizerForm from "../../components/roth_conversion_optimizer/RothConversionForm";
 import ScenarioTypeSelector, {
@@ -103,23 +98,28 @@ const eventTypeOptions = [
   },
 ];
 
+//! Roth Conversion Optimizer should be at the end of the investment
+
 function NewScenarioPage() {
+  //! belong to Kate, don't touch
   const { selectedType, setSelectedType } = useEventSeries();
   const navigate = useNavigate();
   const [addedEvents, setAddedEvents] = useState<AddedEvent[]>([]);
+
+  //! the correct order of the steps
   const [step, setStep] = useState<
-    | "typeSelection"
-    | "details"
-    | "lifeExpectancy"
-    | "investmentTypes"
-    | "investments"
-    | "eventSelection"
-    | "additionalSettings"
-    | "rothConversionOptimizer"
-    | "yamlImport"
-    | "rmdSettings"
-    | "spendingStrategy"
-    | "withdrawalStrategy"
+    | "typeSelection" // for user to select how they wanna create the scenario
+    | "Scenario_name&type" // for user to input the scenario name and user's age and use is single or couple
+    | "lifeExpectancy" // for user to input their life expectancy for both if couple
+    | "investmentTypes" // for user to input the investment types
+    | "investments" // for user to input the investment details
+    | "rothConversionOptimizer" // for user to input the roth conversion optimizer
+    | "eventSelection" // for user to select the event series
+    | "rmdSettings" // for user to input the rmd settings
+    | "spendingStrategy" // for user to input the spending strategy
+    | "withdrawalStrategy" // for user to input the withdrawal strategy
+    | "additionalSettings" // for user to input the additional settings
+    | "yamlImport" // for user to import the yaml file
   >("typeSelection");
 
   // Add useEffect to track step changes
@@ -130,9 +130,10 @@ function NewScenarioPage() {
   const [scenarioDetails, setScenarioDetails] = useState<ScenarioDetails>({
     name: "",
     type: "individual",
-    userBirthYear: new Date().getFullYear() - 30,
+    userBirthYear: new Date().getFullYear() - 20, //! 这里会帮助用户填写一个默认的值，这个值是当前的日期-20年
   });
   const [lifeExpectancyConfig, setLifeExpectancyConfig] =
+    //这个部分是couple的默认值
     useState<LifeExpectancyConfig>({
       userExpectancyType: "fixed",
       userFixedAge: 85,
@@ -148,14 +149,16 @@ function NewScenarioPage() {
     useState<AdditionalSettingsConfig>({
       inflationConfig: {
         type: "fixed",
-        value: 2.5, // Default 2.5% inflation
+        value: 2.5, //! 这边2.5是默认值 也就是用户什么都不输入就这这个值
       },
       financialGoal: {
-        value: 0, // Default to 0 (just meeting expenses)
+        value: 0, //! 这边0是默认值 也就是用户什么都不输入就这这个值
       },
-      stateOfResidence: "NY", // Default to NY
+      stateOfResidence: "NY", // ! state of residence 当前只有三个值，NY, NJ, CT。之后需要拓展时需要修改。
     });
+
   const toast = useToast();
+  //! 这个部分是海风写的，不要我来查看。
   const [rmdSettings, setRmdSettings] = useState<RMDSettings>({
     enableRMD: true,
     startAge: 72, //default start age
@@ -175,15 +178,19 @@ function NewScenarioPage() {
       accountPriority: [],
       availableAccounts: [],
     });
+  //! 一直到这里。
 
+  // *这边需要看谁叫了这个function，传入的type可以检查一下。
+  // *这边的ScenarioCreationType只有两个值，FROM_SCRATCH和IMPORT_YAML。
+  //! 如果用户选择的是IMPORT_YAML，那么直接跳转到yamlImport这个步骤。
   const handle_scenario_type_select = (type: ScenarioCreationType) => {
     console.log(
       "NewScenarioPage: handle_scenario_type_select called with:",
       type
     );
     if (type === ScenarioCreationType.FROM_SCRATCH) {
-      console.log("NewScenarioPage: Changing step to 'details'");
-      setStep("details");
+      console.log("NewScenarioPage: Changing step to 'Scenario_name&type'");
+      setStep("Scenario_name&type");
     } else {
       console.log("NewScenarioPage: Changing step to 'yamlImport'");
       setStep("yamlImport");
@@ -191,9 +198,11 @@ function NewScenarioPage() {
     console.log("NewScenarioPage: Current step after setState:", step); // This will still show the old value due to React's state update timing
   };
 
+  //! 这边需要检查一下，如果用户选择的是IMPORT_YAML，那么应该直接跳转到yamlImport这个步骤。
   const handle_yaml_import_complete = (data: any) => {
     // Here you would process the imported data
     // For now, we'll just show a success message and redirect
+    //! 这里面需要写一个function，来处理导入的数据。那么就直接发给后端。让后端来生成ID然后存入数据库。
     toast({
       title: "Import Successful",
       description: `Scenario "${data.data.name}" imported successfully`,
@@ -204,10 +213,12 @@ function NewScenarioPage() {
     navigate("/scenarios");
   };
 
-  const handle_back_to_type_selection = () => {
+  //! 从这里开始把所有的back和continue都改成to，然后调用同一个function。
+  const handle_to_type_selection = () => {
     setStep("typeSelection");
   };
 
+  //! 这部分是kate写的，不要动。
   const handleEventAdded = async (event: AddedEvent) => {
     try {
       if (!event || !event._id) {
@@ -239,52 +250,40 @@ function NewScenarioPage() {
       console.error("Failed to delete event:", error);
     }
   };
+  //! kate的部分到这里
 
+  //! 海风写的，不要动
   const handleSaveAndContinue = () => {
     // Navigate to spending strategy instead of directly to additional settings
     handle_continue_to_spending_strategy();
   };
+  //! 到这里都是海风写的，不要动。
 
-  const handle_continue_to_life_expectancy = () => {
+  const handle_to_life_expectancy = () => {
     setStep("lifeExpectancy");
   };
 
-  const handle_back_to_details = () => {
-    setStep("details");
+  const handle_to_Scenario_name_type = () => {
+    setStep("Scenario_name&type");
   };
 
-  const handle_continue_to_investments = () => {
+  const handle_to_investment_types = () => {
     setStep("investmentTypes");
   };
 
-  const handle_back_to_investments = () => {
+  const handle_to_investments = () => {
     setStep("investments");
   };
 
-  const handle_back_to_life_expectancy = () => {
-    setStep("lifeExpectancy");
-  };
-
-  const handle_continue_to_event_selection = () => {
+  const handle_to_event_selection = () => {
     setStep("eventSelection");
   };
 
-  const handle_back_to_event_selection = () => {
-    setStep("eventSelection");
-  };
-
-  const handle_continue_to_roth_conversion_optimizer = () => {
+  const handle_to_roth_conversion_optimizer = () => {
     setStep("rothConversionOptimizer");
   };
 
-  const handle_back_to_roth_conversion = () => {
-    setStep("rothConversionOptimizer");
-  };
-
-  const handle_continue_from_roth_to_investments = () => {
-    setStep("investments");
-  };
-
+  //! 海风写的，不要动。
   const handle_continue_to_rmd_settings = () => {
     // Update available accounts based on investments
     const preTaxAccounts = investmentsConfig.investments
@@ -324,7 +323,7 @@ function NewScenarioPage() {
     setStep("spendingStrategy");
   };
 
-  const handle_continue_from_spending_strategy = () => {
+  const handle_to_additional_settings = () => {
     setStep("additionalSettings");
   };
 
@@ -348,10 +347,12 @@ function NewScenarioPage() {
     setStep("eventSelection");
   };
 
-  const handle_continue_from_event_selection = () => {
+  const handle_to_spending_strategy = () => {
     setStep("spendingStrategy");
   };
+  //! 这部分是海风写的，不要动。
 
+  //*
   const handle_finish_scenario = () => {
     // Create the final scenario object
     const finalScenario = {
@@ -408,6 +409,7 @@ function NewScenarioPage() {
     }
   };
 
+  //! 这部分是海风写的，不要动。（why 有俩？？？？全是setStep（“rmdSettings”））
   const handle_back_to_rmd_settings = () => {
     setStep("rmdSettings");
   };
@@ -415,16 +417,7 @@ function NewScenarioPage() {
   const handle_back_to_rmd = () => {
     setStep("rmdSettings");
   };
-
-  // Add handler to continue from investment types to investments
-  const handle_continue_to_investment_portfolio = () => {
-    setStep("investments");
-  };
-
-  // Add handler to go back to investment types
-  const handle_back_to_investment_types = () => {
-    setStep("investmentTypes");
-  };
+  //! 这部分是海风写的，不要动。
 
   // Selection between creating from scratch or importing YAML
   if (step === "typeSelection") {
@@ -443,14 +436,14 @@ function NewScenarioPage() {
       <Box position="relative" zIndex={10} width="100%" height="100%">
         <YamlImportForm
           onImportComplete={handle_yaml_import_complete}
-          onBack={handle_back_to_type_selection}
+          onBack={handle_to_type_selection}
         />
       </Box>
     );
   }
 
   // Scenario Details Form
-  if (step === "details") {
+  if (step === "Scenario_name&type") {
     console.log("NewScenarioPage: Rendering ScenarioDetailsForm");
     return (
       <Box position="relative" zIndex={10} width="100%" height="100%">
@@ -458,9 +451,8 @@ function NewScenarioPage() {
           scenarioDetails={scenarioDetails}
           onChangeScenarioType={handle_change_scenario_type}
           onChangeScenarioDetails={setScenarioDetails}
-          onContinue={handle_continue_to_life_expectancy}
-          onSkip={handle_continue_to_life_expectancy}
-          onBack={handle_back_to_type_selection}
+          onContinue={handle_to_life_expectancy}
+          onBack={handle_to_type_selection}
         />
       </Box>
     );
@@ -474,44 +466,45 @@ function NewScenarioPage() {
         isCouple={scenarioDetails.type === "couple"}
         userBirthYear={scenarioDetails.userBirthYear}
         spouseBirthYear={scenarioDetails.spouseBirthYear}
-        onContinue={handle_continue_to_roth_conversion_optimizer}
-        onBack={handle_back_to_details}
+        onContinue={handle_to_investment_types}
+        onBack={handle_to_Scenario_name_type}
         onChangeLifeExpectancy={setLifeExpectancyConfig}
       />
     );
   }
 
-  // Roth Conversion Optimizer Form
   if (step === "rothConversionOptimizer") {
     return (
       <RothConversionOptimizerForm
-        onBack={handle_back_to_life_expectancy}
-        onContinue={handle_continue_from_roth_to_investments}
+        onBack={handle_to_spending_strategy}
+        onContinue={handle_to_additional_settings}
       />
     );
   }
 
   // Investment Types Form
+  //! AI modified this to be the first step
   if (step === "investmentTypes") {
     return (
       <Box position="relative" zIndex={10} width="100%" height="100%">
         <InvestmentTypesForm
-          onBack={handle_back_to_life_expectancy}
-          onContinue={handle_continue_to_investment_portfolio}
+          onBack={handle_to_life_expectancy}
+          onContinue={handle_to_investments}
         />
       </Box>
     );
   }
 
   // Investments Configuration Form
+  //! AI modified this to be the second step
   if (step === "investments") {
     return (
       <Box position="relative" zIndex={10} width="100%" height="100%">
         <InvestmentsForm
           investmentsConfig={investmentsConfig}
           onChangeInvestmentsConfig={setInvestmentsConfig}
-          onContinue={handle_continue_to_event_selection}
-          onBack={handle_back_to_investment_types}
+          onContinue={handle_continue_to_rmd_settings}
+          onBack={handle_to_investment_types}
         />
       </Box>
     );
@@ -523,7 +516,7 @@ function NewScenarioPage() {
       <AdditionalSettingsForm
         additionalSettings={additionalSettings}
         onChangeAdditionalSettings={setAdditionalSettings}
-        onBack={() => setStep("spendingStrategy")}
+        onBack={handle_to_roth_conversion_optimizer}
         onContinue={handle_finish_scenario}
       />
     );
@@ -536,7 +529,7 @@ function NewScenarioPage() {
         rmdSettings={rmdSettings}
         onChangeRMDSettings={setRmdSettings}
         onContinue={handle_continue_from_rmd}
-        onBack={handle_back_to_investments}
+        onBack={handle_to_investments}
       />
     );
   }
@@ -547,7 +540,7 @@ function NewScenarioPage() {
       <SpendingStrategyForm
         spendingStrategy={spendingStrategy}
         onChangeSpendingStrategy={setSpendingStrategy}
-        onContinue={handle_continue_from_spending_strategy}
+        onContinue={handle_to_roth_conversion_optimizer}
         onBack={() => setStep("eventSelection")}
       />
     );
