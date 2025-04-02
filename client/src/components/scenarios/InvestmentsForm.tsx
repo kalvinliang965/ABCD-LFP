@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Heading,
@@ -62,18 +62,8 @@ import {
   FiBarChart2,
   FiInfo,
 } from "react-icons/fi";
-
-// Mock investment types (to be replaced with data from the database)
-const MOCK_INVESTMENT_TYPES = [
-  { id: "stock", name: "Stocks" },
-  { id: "bond", name: "Bonds" },
-  { id: "real_estate", name: "Real Estate" },
-  { id: "cash", name: "Cash" },
-  { id: "gold", name: "Gold" },
-  { id: "crypto", name: "Cryptocurrency" },
-  { id: "mutual_fund", name: "Mutual Fund" },
-  { id: "etf", name: "ETF" },
-];
+import { investmentTypeStorage } from "../../services/investmentTypeStorage";
+import { InvestmentTypeRaw } from "../../types/Scenarios";
 
 export type TaxStatus = "non-retirement" | "pre-tax" | "after-tax";
 
@@ -102,6 +92,9 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
   onBack,
   onContinue,
 }) => {
+  const [investmentTypes, set_investment_types] = useState<InvestmentTypeRaw[]>(
+    []
+  );
   const [newInvestment, set_new_investment] = useState<Omit<Investment, "id">>({
     investmentTypeId: "",
     investmentTypeName: "",
@@ -113,6 +106,16 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     value?: string;
   }>({});
   const toast = useToast();
+
+  // Load investment types on component mount
+  useEffect(() => {
+    load_investment_types();
+  }, []);
+
+  const load_investment_types = () => {
+    const types = investmentTypeStorage.get_all();
+    set_investment_types(types);
+  };
 
   // AI-generated code
   // upgrade the UI for this page to make it looks better and more modern
@@ -126,7 +129,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
   const statTextColor = useColorModeValue("gray.600", "gray.400");
 
   // Filter out already selected investment types
-  const available_investment_types = MOCK_INVESTMENT_TYPES.filter(
+  const available_investment_types = investmentTypes.filter(
     (type) =>
       !investmentsConfig.investments.some(
         (investment) => investment.investmentTypeId === type.id
@@ -137,8 +140,8 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
     const typeId = e.target.value;
-    const typeName =
-      MOCK_INVESTMENT_TYPES.find((type) => type.id === typeId)?.name || "";
+    const selectedType = investmentTypes.find((type) => type.id === typeId);
+    const typeName = selectedType?.name || "";
 
     set_new_investment({
       ...newInvestment,
@@ -301,6 +304,68 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     0
   );
 
+  // Show guidance if no investment types exist at all
+  if (investmentTypes.length === 0) {
+    return (
+      <Box minH="100vh" bg={bg} py={8}>
+        <Container maxW="6xl" px={4}>
+          <Card
+            rounded="xl"
+            shadow="xl"
+            overflow="hidden"
+            borderWidth="1px"
+            borderColor={borderColor}
+            bg={cardBg}
+            mb={8}
+          >
+            <CardHeader
+              bg={useColorModeValue("blue.50", "blue.900")}
+              py={6}
+              px={8}
+              borderBottomWidth="1px"
+              borderBottomColor={borderColor}
+            >
+              <Flex justify="space-between" align="center">
+                <HStack spacing={3}>
+                  <Icon as={TrendingUp} boxSize={6} color="blue.500" />
+                  <Heading size="lg" fontWeight="bold">
+                    Investment Portfolio
+                  </Heading>
+                </HStack>
+                <Button
+                  variant="ghost"
+                  colorScheme="blue"
+                  onClick={onBack}
+                  leftIcon={<Icon as={FiChevronLeft} />}
+                  size="md"
+                >
+                  Back
+                </Button>
+              </Flex>
+            </CardHeader>
+            <CardBody p={8} textAlign="center">
+              <Icon as={FiInfo} boxSize={12} color="blue.500" mb={4} />
+              <Heading size="md" mb={4}>
+                No Investment Types Available
+              </Heading>
+              <Text color={useColorModeValue("gray.600", "gray.400")} mb={6}>
+                You need to create at least one investment type before you can
+                add investments to your portfolio.
+              </Text>
+              <Button
+                colorScheme="blue"
+                onClick={onBack}
+                leftIcon={<Icon as={FiChevronLeft} />}
+              >
+                Go Back to Create Investment Types
+              </Button>
+            </CardBody>
+          </Card>
+        </Container>
+      </Box>
+    );
+  }
+
   return (
     <Box minH="100vh" bg={bg} py={8}>
       <Container maxW="6xl" px={4}>
@@ -396,7 +461,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
                 </HStack>
                 <Heading size="lg" fontWeight="bold">
                   {investmentsConfig.investments.length} /{" "}
-                  {MOCK_INVESTMENT_TYPES.length}
+                  {investmentTypes.length}
                 </Heading>
               </Box>
 
@@ -570,21 +635,25 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
                         <FormLabel fontWeight="medium">
                           Investment Type
                         </FormLabel>
-                        <Select
-                          value={newInvestment.investmentTypeId}
-                          onChange={handle_change_investment_type}
-                          placeholder="Select investment type"
-                          borderRadius="md"
-                          size="lg"
-                          icon={<ChevronDownIcon />}
-                          disabled={available_investment_types.length === 0}
-                        >
-                          {available_investment_types.map((type) => (
-                            <option key={type.id} value={type.id}>
-                              {type.name}
-                            </option>
-                          ))}
-                        </Select>
+                        {available_investment_types.length > 0 ? (
+                          <Select
+                            value={newInvestment.investmentTypeId}
+                            onChange={handle_change_investment_type}
+                            placeholder="Select an investment type"
+                            isInvalid={!!errors.investmentType}
+                          >
+                            {available_investment_types.map((type) => (
+                              <option key={type.id} value={type.id || ""}>
+                                {type.name}
+                              </option>
+                            ))}
+                          </Select>
+                        ) : (
+                          <Text color="orange.500">
+                            You've added all available investment types. Go back
+                            to Investment Types to create more types.
+                          </Text>
+                        )}
                         {errors.investmentType && (
                           <FormErrorMessage>
                             {errors.investmentType}
@@ -826,7 +895,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
               </Card>
 
               {investmentsConfig.investments.length ===
-                MOCK_INVESTMENT_TYPES.length && (
+                investmentTypes.length && (
                 <Text
                   color="orange.500"
                   fontSize="sm"
