@@ -37,10 +37,6 @@ import {
   Divider,
   useBreakpointValue,
   chakra,
-  Grid,
-  GridItem,
-  Image,
-  useColorMode,
   Input,
   InputGroup,
   InputLeftElement,
@@ -49,15 +45,8 @@ import {
   Stat,
   StatLabel,
   StatNumber,
-  StatHelpText,
-  StatArrow,
-  StatGroup,
 } from "@chakra-ui/react";
-import {
-  AddIcon,
-  DeleteIcon,
-  InfoIcon,
-} from "@chakra-ui/icons";
+import { AddIcon, DeleteIcon, InfoIcon, EditIcon } from "@chakra-ui/icons";
 import {
   FiChevronLeft,
   FiChevronRight,
@@ -69,7 +58,6 @@ import {
   FiTrendingUp,
   FiPlus,
   FiSearch,
-  FiGrid,
   FiShield,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
@@ -97,6 +85,9 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
     []
   );
   const [typeToDelete, set_type_to_delete] = useState<string | null>(null);
+  const [typeToEdit, set_type_to_edit] = useState<InvestmentTypeRaw | null>(
+    null
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [newItemAdded, setNewItemAdded] = useState<string | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -105,15 +96,19 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
     onOpen: onDeleteOpen,
     onClose: onDeleteClose,
   } = useDisclosure();
+  const {
+    isOpen: isEditOpen,
+    onOpen: onEditOpen,
+    onClose: onEditClose,
+  } = useDisclosure();
   const cancelRef = React.useRef<any>();
   const toast = useToast();
 
   // Responsive values
   const isMobile = useBreakpointValue({ base: true, md: false });
   const cardMaxWidth = useBreakpointValue({ base: "100%", md: "7xl" });
-  const [viewMode, setViewMode] = useState<"cards" | "table">(
-    useBreakpointValue({ base: "cards", md: "table" }) as "cards" | "table"
-  );
+  // Always use table view
+  const viewMode = "table";
 
   // UI colors - enhanced for more vibrancy and better contrast
   const bg = useColorModeValue("gray.50", "gray.900");
@@ -175,25 +170,59 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
   };
 
   const handle_save_investment_type = (investmentType: InvestmentTypeRaw) => {
-    investmentTypeStorage.create(investmentType);
+    if (typeToEdit && typeToEdit.id) {
+      // Update existing investment type
+      investmentTypeStorage.update(typeToEdit.id, investmentType);
+
+      toast({
+        title: "Investment Type Updated",
+        description: `${investmentType.name} has been updated.`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "top-right",
+        variant: "subtle",
+      });
+
+      set_type_to_edit(null);
+      onEditClose();
+    } else {
+      // Create new investment type
+      investmentTypeStorage.create(investmentType);
+      setNewItemAdded(investmentType.id || null);
+
+      // Reset the highlight after animation completes
+      setTimeout(() => {
+        setNewItemAdded(null);
+      }, 2000);
+
+      toast({
+        title: "Investment Type Created",
+        description: `${investmentType.name} has been added to your investment types.`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "top-right",
+        variant: "subtle",
+      });
+      onClose();
+    }
+
     load_investment_types();
-    setNewItemAdded(investmentType.id || null);
+  };
 
-    // Reset the highlight after animation completes
-    setTimeout(() => {
-      setNewItemAdded(null);
-    }, 2000);
+  const handle_add_click = () => {
+    // Ensure edit state is cleared when adding new type
+    set_type_to_edit(null);
+    onOpen();
+  };
 
-    toast({
-      title: "Investment Type Created",
-      description: `${investmentType.name} has been added to your investment types.`,
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-      position: "top-right",
-      variant: "subtle",
-    });
-    onClose();
+  const handle_edit_click = (id: string) => {
+    const typeToEdit = investmentTypes.find((type) => type.id === id);
+    if (typeToEdit) {
+      set_type_to_edit(typeToEdit);
+      onEditOpen();
+    }
   };
 
   const handle_delete_click = (id: string) => {
@@ -227,12 +256,23 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
     set_type_to_delete(null);
   };
 
+  const handle_modal_close = () => {
+    // Clear edit state when modal is closed
+    set_type_to_edit(null);
+    onClose();
+  };
+
+  const handle_edit_modal_close = () => {
+    // Clear edit state when edit modal is closed
+    set_type_to_edit(null);
+    onEditClose();
+  };
+
   const handle_search_change = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
 
   const get_distribution_display = (distribution: Map<string, any>) => {
-    console.log(distribution);
     const type = distribution.get("type");
     return type;
   };
@@ -258,118 +298,6 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
     ? investmentTypes.reduce((sum, type) => sum + type.expenseRatio, 0) /
       investmentTypes.length
     : 0;
-
-  // Card design for investment types when in mobile view
-  const InvestmentTypeCard = ({ type }: { type: InvestmentTypeRaw }) => (
-    <MotionCard
-      variants={itemVariants}
-      borderWidth="1px"
-      borderRadius="xl"
-      shadow={cardShadow}
-      p={5}
-      bg={newItemAdded === type.id ? highlightColor : cardBg}
-      style={{ transition: "all 0.3s" }}
-      _hover={{ transform: "translateY(-4px)", shadow: "xl" }}
-      position="relative"
-      overflow="hidden"
-      animate={
-        newItemAdded === type.id
-          ? {
-              scale: [1, 1.03, 1],
-              backgroundColor: [cardBg, highlightColor, cardBg],
-            }
-          : {}
-      }
-      transition={{ duration: 1.5 }}
-    >
-      <Box
-        position="absolute"
-        top="0"
-        left="0"
-        right="0"
-        height="6px"
-        bgGradient={`linear(to-r, ${accentColor}, ${
-          type.taxability ? "green.400" : "purple.400"
-        })`}
-      />
-
-      <VStack align="stretch" spacing={4}>
-        <Flex justifyContent="space-between" alignItems="center">
-          <HStack spacing={3}>
-            <Icon as={FiPackage} color={accentColor} boxSize={5} />
-            <Heading size="md">{type.name}</Heading>
-          </HStack>
-          <Tooltip label="Delete" placement="top">
-            <IconButton
-              icon={<DeleteIcon />}
-              variant="ghost"
-              colorScheme="red"
-              aria-label="Delete investment type"
-              onClick={() => handle_delete_click(type.id || "")}
-              isDisabled={!type.id}
-              size="sm"
-            />
-          </Tooltip>
-        </Flex>
-
-        {type.description && (
-          <Text fontSize="sm" color="gray.500" noOfLines={2}>
-            {type.description}
-          </Text>
-        )}
-
-        <Divider />
-
-        <HStack spacing={4}>
-          <VStack align="start" spacing={2} flex="1">
-            <HStack>
-              <Icon as={FiTrendingUp} color={accentColor} boxSize={4} />
-              <Text fontWeight="medium" fontSize="sm">
-                Return:
-              </Text>
-            </HStack>
-            <Text fontSize="sm" fontWeight="bold">
-              {get_distribution_display(type.returnDistribution)}
-              {type.returnAmtOrPct === "percent" ? "%" : ""}
-            </Text>
-          </VStack>
-
-          <VStack align="start" spacing={2} flex="1">
-            <HStack>
-              <Icon as={FiPercent} color={accentColor} boxSize={4} />
-              <Text fontWeight="medium" fontSize="sm">
-                Expense Ratio:
-              </Text>
-            </HStack>
-            <Text fontSize="sm" fontWeight="bold">
-              {format_percent(type.expenseRatio)}
-            </Text>
-          </VStack>
-        </HStack>
-
-        <Badge
-          px={3}
-          py={1.5}
-          borderRadius="full"
-          textTransform="capitalize"
-          bg={type.taxability ? badgeColorTaxable : badgeColorExempt}
-          color={type.taxability ? badgeTextTaxable : badgeTextExempt}
-          alignSelf="flex-start"
-          fontSize="xs"
-          fontWeight="medium"
-          display="flex"
-          alignItems="center"
-        >
-          <Icon
-            as={type.taxability ? FiDollarSign : FiShield}
-            mr={1}
-            boxSize={3}
-          />
-          {type.taxability ? "Taxable" : "Tax-exempt"}
-        </Badge>
-      </VStack>
-    </MotionCard>
-  );
 
   return (
     <Box minH="100vh" bg={bg} py={8}>
@@ -446,7 +374,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                   initial="hidden"
                   animate="visible"
                 >
-                  <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4} mb={6}>
+                  <SimpleGrid columns={3} spacing={4} mb={6}>
                     <MotionStat
                       variants={statVariants}
                       px={5}
@@ -503,25 +431,6 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                         <StatNumber>{taxExemptCount}</StatNumber>
                       </Flex>
                     </MotionStat>
-
-                    <MotionStat
-                      variants={statVariants}
-                      px={5}
-                      py={4}
-                      bg={cardBg}
-                      rounded="lg"
-                      shadow="md"
-                      borderWidth="1px"
-                      borderColor={borderColor}
-                    >
-                      <StatLabel color="gray.500" fontSize="sm">
-                        Avg Expense Ratio
-                      </StatLabel>
-                      <Flex align="center">
-                        <Icon as={FiPercent} color={accentColor} mr={2} />
-                        <StatNumber>{avgExpenseRatio.toFixed(2)}%</StatNumber>
-                      </Flex>
-                    </MotionStat>
                   </SimpleGrid>
                 </MotionBox>
               )}
@@ -532,199 +441,162 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                 justifyContent="space-between"
                 alignItems={isMobile ? "flex-start" : "center"}
                 gap={4}
-                mb={2}
+                mb={5}
               >
-                <Box maxW="600px">
-                  <MotionText
-                    mb={2}
-                    fontSize="lg"
-                    fontWeight="medium"
-                    color={accentColor}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                  >
-                    Define Your Investment Options
-                  </MotionText>
-                  <MotionText
-                    color={useColorModeValue("gray.600", "gray.400")}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 }}
-                  >
-                    Create investment types before adding them to your
-                    portfolio. You'll use these types when building your
-                    investment portfolio in the next step.
-                  </MotionText>
-                </Box>
-
-                <HStack spacing={4}>
-                  {investmentTypes.length > 0 && (
-                    <InputGroup maxW="220px">
-                      <InputLeftElement pointerEvents="none">
-                        <Icon as={FiSearch} color="gray.400" />
-                      </InputLeftElement>
-                      <Input
-                        placeholder="Search types..."
-                        value={searchQuery}
-                        onChange={handle_search_change}
-                        borderRadius="md"
-                      />
-                    </InputGroup>
-                  )}
-
-                  {investmentTypes.length > 0 && (
-                    <HStack
-                      spacing={1}
-                      bg={headerBg}
-                      p={1}
-                      borderRadius="md"
-                      shadow="sm"
-                    >
-                      <Tooltip label="Table View">
-                        <IconButton
-                          icon={<FiList />}
-                          size="sm"
-                          aria-label="Table View"
-                          colorScheme="blue"
-                          variant={viewMode === "table" ? "solid" : "ghost"}
-                          onClick={() => setViewMode("table")}
+                <Flex
+                  direction={isMobile ? "column" : "row"}
+                  alignItems={isMobile ? "flex-start" : "center"}
+                  width="100%"
+                  justifyContent="space-between"
+                >
+                  {/* Left side with search */}
+                  <Box>
+                    {investmentTypes.length > 0 && (
+                      <InputGroup maxW="220px">
+                        <InputLeftElement pointerEvents="none">
+                          <Icon as={FiSearch} color="gray.400" />
+                        </InputLeftElement>
+                        <Input
+                          placeholder="Search types..."
+                          value={searchQuery}
+                          onChange={handle_search_change}
+                          borderRadius="md"
                         />
-                      </Tooltip>
-                      <Tooltip label="Card View">
-                        <IconButton
-                          icon={<FiGrid />}
-                          size="sm"
-                          aria-label="Card View"
-                          colorScheme="blue"
-                          variant={viewMode === "cards" ? "solid" : "ghost"}
-                          onClick={() => setViewMode("cards")}
-                        />
-                      </Tooltip>
-                    </HStack>
-                  )}
+                      </InputGroup>
+                    )}
+                  </Box>
 
-                  <Button
-                    leftIcon={<AddIcon />}
-                    colorScheme="blue"
-                    onClick={onOpen}
-                    size="md"
-                    shadow="md"
-                    _hover={{
-                      transform: "translateY(-2px)",
-                      shadow: "lg",
-                      bg: buttonHoverBg,
-                    }}
-                    transition="all 0.3s"
-                    borderRadius="md"
-                  >
-                    Add Investment Type
-                  </Button>
-                </HStack>
-              </Flex>
-
-              {/* Investment Types List */}
-              <AnimatePresence>
-                {investmentTypes.length > 0 ? (
-                  viewMode === "table" ? (
-                    <Box
-                      overflowX="auto"
-                      as={motion.div}
-                      variants={containerVariants}
-                      initial="hidden"
-                      animate="visible"
-                      rounded="lg"
+                  {/* Right side with add button */}
+                  <Box>
+                    <Button
+                      leftIcon={<AddIcon />}
+                      colorScheme="blue"
+                      onClick={handle_add_click}
+                      size="md"
                       shadow="md"
-                      borderWidth="1px"
-                      borderColor={borderColor}
+                      _hover={{
+                        transform: "translateY(-2px)",
+                        shadow: "lg",
+                        bg: buttonHoverBg,
+                      }}
+                      transition="all 0.3s"
+                      borderRadius="md"
                     >
-                      <Table variant="simple" colorScheme="blue">
-                        <Thead bg={headerBg}>
-                          <Tr>
-                            <Th>Name</Th>
-                            <Th>Return</Th>
-                            <Th>Expense Ratio</Th>
-                            <Th>Taxability</Th>
-                            <Th width="100px">Actions</Th>
-                          </Tr>
-                        </Thead>
-                        <Tbody>
-                          {filtered_investment_types.map((type) => (
-                            console.log(type),
-                            <Tr
-                              key={type.id}
-                              _hover={{ bg: hoverBg }}
-                              transition="background 0.2s"
-                              bg={
-                                newItemAdded === type.id
-                                  ? highlightColor
-                                  : undefined
-                              }
-                            >
-                              <Td>
-                                <chakra.div maxW="300px">
-                                  <Text fontWeight="semibold">{type.name}</Text>
-                                  {type.description && (
-                                    <Text
-                                      fontSize="sm"
-                                      color="gray.500"
-                                      noOfLines={1}
-                                    >
-                                      {type.description}
-                                    </Text>
+                      Add Investment Type
+                    </Button>
+                  </Box>
+                </Flex>
+              </Flex>
+              {/* Investment Types Table */}
+              <AnimatePresence>
+                <Box
+                  overflowX="auto"
+                  as={motion.div}
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  rounded="lg"
+                  shadow="md"
+                  borderWidth="1px"
+                  borderColor={borderColor}
+                >
+                  <Table variant="simple" colorScheme="blue">
+                    <Thead bg={headerBg}>
+                      <Tr>
+                        <Th>Name</Th>
+                        <Th>Return</Th>
+                        <Th>Expense Ratio</Th>
+                        <Th>Taxability</Th>
+                        <Th width="100px">Actions</Th>
+                      </Tr>
+                    </Thead>
+                    {filtered_investment_types.length > 0 ? (
+                      <Tbody>
+                        {filtered_investment_types.map((type) => (
+                          <Tr
+                            key={type.id}
+                            _hover={{ bg: hoverBg }}
+                            transition="background 0.2s"
+                            bg={
+                              newItemAdded === type.id
+                                ? highlightColor
+                                : undefined
+                            }
+                          >
+                            <Td>
+                              <chakra.div maxW="300px">
+                                <Text fontWeight="semibold">{type.name}</Text>
+                                {type.description && (
+                                  <Text
+                                    fontSize="sm"
+                                    color="gray.500"
+                                    noOfLines={1}
+                                  >
+                                    {type.description}
+                                  </Text>
+                                )}
+                              </chakra.div>
+                            </Td>
+                            <Td>
+                              <Tag
+                                size="md"
+                                variant="subtle"
+                                colorScheme="blue"
+                                borderRadius="full"
+                              >
+                                <TagLabel>
+                                  {get_distribution_display(
+                                    type.returnDistribution
                                   )}
-                                </chakra.div>
-                              </Td>
-                              <Td>
-                                <Tag
-                                  size="md"
-                                  variant="subtle"
-                                  colorScheme="blue"
-                                  borderRadius="full"
-                                >
-                                  <TagLabel>
-                                    {get_distribution_display(
-                                      type.returnDistribution
-                                    )}
-                                    {type.returnAmtOrPct === "percent"
-                                      ? "%"
-                                      : ""}
-                                  </TagLabel>
-                                </Tag>
-                              </Td>
-                              <Td>{format_percent(type.expenseRatio)}</Td>
-                              <Td>
-                                <Badge
-                                  px={2}
-                                  py={1}
-                                  borderRadius="full"
-                                  textTransform="capitalize"
-                                  bg={
-                                    type.taxability
-                                      ? badgeColorTaxable
-                                      : badgeColorExempt
-                                  }
-                                  color={
-                                    type.taxability
-                                      ? badgeTextTaxable
-                                      : badgeTextExempt
-                                  }
-                                >
-                                  <Flex align="center">
-                                    <Icon
-                                      as={
-                                        type.taxability
-                                          ? FiDollarSign
-                                          : FiShield
-                                      }
-                                      mr={1}
-                                      boxSize={3}
-                                    />
-                                    {type.taxability ? "Taxable" : "Tax-exempt"}
-                                  </Flex>
-                                </Badge>
-                              </Td>
-                              <Td>
+                                  {type.returnAmtOrPct === "percent" ? "%" : ""}
+                                </TagLabel>
+                              </Tag>
+                            </Td>
+                            <Td>{format_percent(type.expenseRatio)}</Td>
+                            <Td>
+                              <Badge
+                                px={2}
+                                py={1}
+                                borderRadius="full"
+                                textTransform="capitalize"
+                                bg={
+                                  type.taxability
+                                    ? badgeColorTaxable
+                                    : badgeColorExempt
+                                }
+                                color={
+                                  type.taxability
+                                    ? badgeTextTaxable
+                                    : badgeTextExempt
+                                }
+                              >
+                                <Flex align="center">
+                                  <Icon
+                                    as={
+                                      type.taxability ? FiDollarSign : FiShield
+                                    }
+                                    mr={1}
+                                    boxSize={3}
+                                  />
+                                  {type.taxability ? "Taxable" : "Tax-exempt"}
+                                </Flex>
+                              </Badge>
+                            </Td>
+                            <Td>
+                              <HStack spacing={2}>
+                                <Tooltip label="Edit" placement="top">
+                                  <IconButton
+                                    icon={<EditIcon />}
+                                    variant="ghost"
+                                    colorScheme="blue"
+                                    aria-label="Edit investment type"
+                                    onClick={() =>
+                                      handle_edit_click(type.id || "")
+                                    }
+                                    isDisabled={!type.id}
+                                    size="sm"
+                                  />
+                                </Tooltip>
                                 <Tooltip label="Delete" placement="top">
                                   <IconButton
                                     icon={<DeleteIcon />}
@@ -738,149 +610,99 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                                     size="sm"
                                   />
                                 </Tooltip>
-                              </Td>
-                            </Tr>
-                          ))}
-                        </Tbody>
-                      </Table>
-
-                      {filtered_investment_types.length === 0 &&
-                        investmentTypes.length > 0 && (
-                          <Box p={8} textAlign="center">
-                            <MotionBox
-                              initial={{ scale: 0.9 }}
-                              animate={{ scale: 1 }}
-                              transition={{ duration: 0.5 }}
-                            >
-                              <Icon
-                                as={FiSearch}
-                                boxSize={10}
-                                color={emptyStateIconColor}
-                                mb={4}
-                              />
-                            </MotionBox>
-                            <Heading size="sm" mb={2}>
-                              No matching investment types
-                            </Heading>
-                            <Text color="gray.500" fontSize="sm">
-                              Try adjusting your search criteria
-                            </Text>
-                          </Box>
-                        )}
-                    </Box>
-                  ) : (
-                    <Box
-                      as={motion.div}
-                      variants={containerVariants}
-                      initial="hidden"
-                      animate="visible"
-                    >
-                      <SimpleGrid
-                        columns={{ base: 1, sm: 2, lg: 3 }}
-                        spacing={6}
-                      >
-                        {filtered_investment_types.map((type) => (
-                          <InvestmentTypeCard key={type.id} type={type} />
+                              </HStack>
+                            </Td>
+                          </Tr>
                         ))}
-                      </SimpleGrid>
-
-                      {filtered_investment_types.length === 0 &&
-                        investmentTypes.length > 0 && (
-                          <Box
-                            p={8}
-                            textAlign="center"
-                            borderWidth="1px"
-                            borderStyle="dashed"
-                            borderColor={borderColor}
-                            borderRadius="lg"
-                            bg={cardBg}
-                            mt={4}
-                          >
-                            <MotionBox
-                              initial={{ scale: 0.9 }}
-                              animate={{ scale: 1 }}
-                              transition={{ duration: 0.5 }}
-                            >
-                              <Icon
-                                as={FiSearch}
-                                boxSize={10}
-                                color={emptyStateIconColor}
-                                mb={4}
-                              />
-                            </MotionBox>
-                            <Heading size="sm" mb={2}>
-                              No matching investment types
-                            </Heading>
-                            <Text color="gray.500" fontSize="sm">
-                              Try adjusting your search criteria
-                            </Text>
-                          </Box>
-                        )}
-                    </Box>
-                  )
-                ) : (
-                  <MotionBox
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    p={10}
-                    textAlign="center"
-                    borderWidth="2px"
-                    borderRadius="xl"
-                    borderStyle="dashed"
-                    borderColor={emptyBorderColor}
-                    bgGradient={`linear(to-b, ${gradientStart}, ${gradientEnd})`}
-                  >
-                    <MotionBox
-                      initial={{ scale: 0.8 }}
-                      animate={{ scale: 1 }}
-                      transition={{
-                        repeat: Infinity,
-                        repeatType: "reverse",
-                        duration: 2,
-                      }}
-                      display="inline-block"
-                      mb={5}
-                    >
-                      <Icon
-                        as={FiInfo}
-                        boxSize={14}
-                        color={emptyStateIconColor}
-                      />
-                    </MotionBox>
-                    <Heading
-                      size="md"
-                      color={accentColor}
-                      fontWeight="medium"
-                      mb={3}
-                    >
-                      No investment types created yet
-                    </Heading>
-                    <Text
-                      color="gray.500"
-                      fontSize="md"
-                      maxW="md"
-                      mx="auto"
-                      mt={2}
-                      mb={6}
-                    >
-                      Add your first investment type to get started. You'll need
-                      at least one investment type to continue.
-                    </Text>
-                    <Button
-                      leftIcon={<FiPlus />}
-                      colorScheme="blue"
-                      onClick={onOpen}
-                      size="lg"
-                      shadow="lg"
-                      _hover={{ transform: "translateY(-2px)" }}
-                      transition="all 0.3s"
-                      borderRadius="md"
-                    >
-                      Add Your First Investment Type
-                    </Button>
-                  </MotionBox>
-                )}
+                      </Tbody>
+                    ) : investmentTypes.length > 0 ? (
+                      <Tbody>
+                        <Tr>
+                          <Td colSpan={5}>
+                            <Box p={8} textAlign="center">
+                              <MotionBox
+                                initial={{ scale: 0.9 }}
+                                animate={{ scale: 1 }}
+                                transition={{ duration: 0.5 }}
+                              >
+                                <Icon
+                                  as={FiSearch}
+                                  boxSize={10}
+                                  color={emptyStateIconColor}
+                                  mb={4}
+                                />
+                              </MotionBox>
+                              <Heading size="sm" mb={2}>
+                                No matching investment types
+                              </Heading>
+                              <Text color="gray.500" fontSize="sm">
+                                Try adjusting your search criteria
+                              </Text>
+                            </Box>
+                          </Td>
+                        </Tr>
+                      </Tbody>
+                    ) : (
+                      <Tbody>
+                        <Tr>
+                          <Td colSpan={5}>
+                            <Box p={8} textAlign="center">
+                              <MotionBox
+                                initial={{ scale: 0.8 }}
+                                animate={{ scale: 1 }}
+                                transition={{
+                                  repeat: Infinity,
+                                  repeatType: "reverse",
+                                  duration: 2,
+                                }}
+                                display="inline-block"
+                                mb={5}
+                              >
+                                <Icon
+                                  as={FiInfo}
+                                  boxSize={14}
+                                  color={emptyStateIconColor}
+                                />
+                              </MotionBox>
+                              <Heading
+                                size="md"
+                                color={accentColor}
+                                fontWeight="medium"
+                                mb={3}
+                              >
+                                No investment types created yet
+                              </Heading>
+                              <Text
+                                color="gray.500"
+                                fontSize="md"
+                                maxW="md"
+                                mx="auto"
+                                mt={2}
+                                mb={6}
+                              >
+                                Add your first investment type to get started.
+                                You'll need at least one investment type to
+                                continue.
+                              </Text>
+                              <Button
+                                leftIcon={<FiPlus />}
+                                colorScheme="blue"
+                                onClick={handle_add_click}
+                                size="lg"
+                                shadow="lg"
+                                _hover={{ transform: "translateY(-2px)" }}
+                                transition="all 0.3s"
+                                borderRadius="md"
+                              >
+                                Add Your First Investment Type
+                              </Button>
+                            </Box>
+                          </Td>
+                        </Tr>
+                      </Tbody>
+                    )}
+                  </Table>
+                </Box>
               </AnimatePresence>
 
               {/* Continue Button */}
@@ -937,8 +759,17 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
       {/* Add Investment Type Modal */}
       <AddInvestmentTypeModal
         isOpen={isOpen}
-        onClose={onClose}
+        onClose={handle_modal_close}
         onSave={handle_save_investment_type}
+      />
+
+      {/* Edit Investment Type Modal */}
+      <AddInvestmentTypeModal
+        isOpen={isEditOpen}
+        onClose={handle_edit_modal_close}
+        onSave={handle_save_investment_type}
+        initialData={typeToEdit || undefined}
+        isEditMode={true}
       />
 
       {/* Confirmation Dialog for Delete */}

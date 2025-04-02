@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -80,6 +80,8 @@ interface AddInvestmentTypeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (investmentType: InvestmentTypeRaw) => void;
+  initialData?: InvestmentTypeRaw; // Added for edit mode
+  isEditMode?: boolean; // Flag to indicate if in edit mode
 }
 
 // Create the component
@@ -87,6 +89,8 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
   isOpen,
   onClose,
   onSave,
+  initialData,
+  isEditMode = false,
 }) => {
   // Define the steps
   const steps = [
@@ -104,13 +108,19 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
     { title: "Review", description: "Review and save", icon: FiCheck },
   ];
 
+  // Initialize at review step (3) if editing, otherwise at first step (0)
   const { activeStep, setActiveStep } = useSteps({
-    index: 0,
+    index: isEditMode ? 3 : 0,
     count: steps.length,
   });
 
-  // Initialize state for the investment type form
-  const [formData, setFormData] = useState<InvestmentTypeForm>({
+  // Reset active step when edit mode changes
+  useEffect(() => {
+    setActiveStep(isEditMode ? 3 : 0);
+  }, [isEditMode, setActiveStep]);
+
+  // Default empty form values
+  const defaultFormValues: InvestmentTypeForm = {
     name: "",
     description: "",
     returnType: DistributionType.FIXED,
@@ -121,7 +131,63 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
     dividendRate: "0",
     dividendInputMode: ValueInputMode.PERCENT,
     taxability: true,
+  };
+
+  // Initialize form data with initialData if provided
+  const [formData, setFormData] = useState<InvestmentTypeForm>(() => {
+    if (initialData) {
+      // Extract values from return distribution
+      const returnType =
+        initialData.returnDistribution.get("type") || DistributionType.FIXED;
+      const returnRateKey =
+        returnType === DistributionType.FIXED ? "value" : "mean";
+      const returnRate =
+        initialData.returnDistribution.get(returnRateKey)?.toString() || "0";
+      const returnRateStdDev =
+        returnType === DistributionType.NORMAL
+          ? initialData.returnDistribution.get("stdev")?.toString()
+          : undefined;
+
+      // Extract values from income distribution
+      const dividendType =
+        initialData.incomeDistribution.get("type") || DistributionType.FIXED;
+      const dividendRateKey =
+        dividendType === DistributionType.FIXED ? "value" : "mean";
+      const dividendRate =
+        initialData.incomeDistribution.get(dividendRateKey)?.toString() || "0";
+      const dividendRateStdDev =
+        dividendType === DistributionType.NORMAL
+          ? initialData.incomeDistribution.get("stdev")?.toString()
+          : undefined;
+
+      return {
+        name: initialData.name || "",
+        description: initialData.description || "",
+        returnType: returnType,
+        returnRate: returnRate,
+        returnInputMode: initialData.returnAmtOrPct || ValueInputMode.PERCENT,
+        returnRateStdDev: returnRateStdDev,
+        expenseRatio: initialData.expenseRatio.toString() || "0",
+        dividendType: dividendType,
+        dividendRate: dividendRate,
+        dividendInputMode: initialData.incomeAmtOrPct || ValueInputMode.PERCENT,
+        dividendRateStdDev: dividendRateStdDev,
+        taxability: initialData.taxability,
+      };
+    }
+
+    return defaultFormValues;
   });
+
+  // Reset form when modal is closed
+  const handleModalClose = () => {
+    // Only reset if not in edit mode to prevent resetting when closing during edit
+    if (!isEditMode) {
+      setFormData(defaultFormValues);
+      setActiveStep(0);
+    }
+    onClose();
+  };
 
   // Handle input changes
   const handleInputChange = (
@@ -234,6 +300,7 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
 
       // Convert the form data to the actual InvestmentTypeRaw format
       const formattedInvestmentType: InvestmentTypeRaw = {
+        id: initialData?.id, // Keep the original ID when editing
         name: formData.name,
         description: formData.description,
         returnAmtOrPct: formData.returnInputMode,
@@ -245,7 +312,12 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
       };
 
       onSave(formattedInvestmentType);
-      onClose();
+
+      // Reset form after saving
+      if (!isEditMode) {
+        setFormData(defaultFormValues);
+      }
+      handleModalClose();
     }
   };
 
@@ -949,10 +1021,15 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
     );
   };
 
+  // Update modal title based on mode
+  const modalTitle = isEditMode
+    ? "Edit Investment Type"
+    : "Add Investment Type";
+
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleModalClose}
       size="xl"
       scrollBehavior="inside"
       closeOnOverlayClick={false}
@@ -966,7 +1043,7 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
       >
         <Box bg="linear-gradient(to right, #3182ce, #805ad5)" px={8} py={5}>
           <ModalHeader color="white" p={0} fontSize="2xl" fontWeight="bold">
-            Add New Investment Type
+            {modalTitle}
           </ModalHeader>
         </Box>
         <ModalCloseButton color="white" mt={2} mr={3} />
