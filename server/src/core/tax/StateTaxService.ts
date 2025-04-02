@@ -3,7 +3,6 @@ import { create_tax_brackets } from "./TaxBrackets";
 import { TaxBrackets } from "./TaxBrackets";
 
 export interface StateTaxService {
-    load_state_tax_data(): void;
     adjust_for_inflation(rate: number): void;
     find_rate(income: number, status: TaxFilingStatus): number;
     clone(): StateTaxService;
@@ -11,9 +10,6 @@ export interface StateTaxService {
 
 export function create_state_tax_service_wo(taxable_income_bracket: TaxBrackets): StateTaxService {
 
-        const load_state_tax_data = () => {
-            // TODO
-        }
         const adjust_for_inflation = (rate: number) => {
             taxable_income_bracket.adjust_for_inflation(rate);
         }
@@ -26,15 +22,20 @@ export function create_state_tax_service_wo(taxable_income_bracket: TaxBrackets)
             }
         }
         return {
-            load_state_tax_data,
             adjust_for_inflation,
             find_rate,
             clone: () => create_state_tax_service_wo(taxable_income_bracket.clone())
         }
 }
+
 export async function create_state_tax_service(): Promise<StateTaxService> {
     try {
+
+        const load_state_tax_data = (taxable_income_bracket: TaxBrackets, data: any): void => {
+            // TODO
+        }
         const taxable_income_bracket = create_tax_brackets()
+        load_state_tax_data(taxable_income_bracket);
         return create_state_tax_service_wo(taxable_income_bracket);
     } catch(error) {
         throw new Error(`Error failed to initialize State tax data: ${error}`);
