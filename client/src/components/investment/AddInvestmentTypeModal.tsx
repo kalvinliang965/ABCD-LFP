@@ -13,11 +13,6 @@ import {
   Input,
   Select,
   Textarea,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
   Box,
   Stepper,
   Step,
@@ -37,11 +32,26 @@ import {
   Radio,
   Stack,
   Flex,
+  Heading,
+  useColorModeValue,
+  Icon,
+  Badge,
+  Tag,
+  VStack,
+  HStack,
 } from "@chakra-ui/react";
 import { InvestmentTypeRaw } from "../../types/Scenarios";
 import { DistributionType } from "../../types/Enum";
+import {
+  FiCheck,
+  FiDollarSign,
+  FiPercent,
+  FiInfo,
+  FiPieChart,
+} from "react-icons/fi";
 
 // AI-generated code
+// Generate a prettier modal for adding investment types
 // Define value input modes for form handling
 export enum ValueInputMode {
   PERCENT = "percentage",
@@ -49,18 +59,19 @@ export enum ValueInputMode {
 }
 
 // Define form state interface that's more friendly for the UI
+// *这里定义了form的state，用于存储用户输入的数据
 interface InvestmentTypeForm {
   name: string;
   description: string;
   returnType: string;
-  returnRate: number;
+  returnRate: string;
   returnInputMode: string;
-  returnRateStdDev?: number;
-  expenseRatio: number;
+  returnRateStdDev?: string;
+  expenseRatio: string;
   dividendType: string;
-  dividendRate: number;
+  dividendRate: string;
   dividendInputMode: string;
-  dividendRateStdDev?: number;
+  dividendRateStdDev?: string;
   taxability: boolean;
 }
 
@@ -79,16 +90,18 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
 }) => {
   // Define the steps
   const steps = [
-    { title: "Basic Info", description: "Name and description" },
+    { title: "Basic Info", description: "Name and description", icon: FiInfo },
     {
       title: "Return Details",
       description: "Expected returns and expense ratio",
+      icon: FiPieChart,
     },
     {
       title: "Income & Tax",
       description: "Dividend income and taxability",
+      icon: FiDollarSign,
     },
-    { title: "Review", description: "Review and save" },
+    { title: "Review", description: "Review and save", icon: FiCheck },
   ];
 
   const { activeStep, setActiveStep } = useSteps({
@@ -101,11 +114,11 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
     name: "",
     description: "",
     returnType: DistributionType.FIXED,
-    returnRate: 0,
+    returnRate: "0",
     returnInputMode: ValueInputMode.PERCENT,
-    expenseRatio: 0,
+    expenseRatio: "0",
     dividendType: DistributionType.FIXED,
-    dividendRate: 0,
+    dividendRate: "0",
     dividendInputMode: ValueInputMode.PERCENT,
     taxability: true,
   });
@@ -120,13 +133,17 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
     setFormData({ ...formData, [id]: value });
   };
 
-  // Handle number input changes
-  const handleNumberInputChange = (id: string, value: string) => {
-    setFormData({ ...formData, [id]: parseFloat(value) });
+  // Handle numeric input changes - now just uses regular handleInputChange since we're using strings
+  // We'll convert to numbers when submitting
+
+  // Prevent mouse wheel from changing number input values
+  const preventWheelChange = (e: React.WheelEvent<HTMLInputElement>) => {
+    e.currentTarget.blur();
   };
 
   // Handle radio input changes
   const handleRadioInputChange = (id: string, value: string) => {
+    console.log("handleRadioInputChange", id, value);
     setFormData({ ...formData, [id]: value });
   };
 
@@ -149,7 +166,7 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
       returnRateStdDev:
         value === DistributionType.FIXED
           ? undefined
-          : formData.returnRateStdDev || 0,
+          : formData.returnRateStdDev || "0",
     });
   };
 
@@ -165,13 +182,14 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
       dividendRateStdDev:
         value === DistributionType.FIXED
           ? undefined
-          : formData.dividendRateStdDev || 0,
+          : formData.dividendRateStdDev || "0",
     });
   };
 
   // Navigation functions
   const handleNext = () => {
     if (validateCurrentStep()) {
+      // Only save the values, don't change types in the form data
       setActiveStep(Math.min(activeStep + 1, steps.length - 1));
     }
   };
@@ -182,40 +200,51 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
 
   const handleSave = () => {
     if (validateCurrentStep()) {
+      // Convert all string values to numbers for the final save
+      const returnRate = parseFloat(formData.returnRate);
+      const returnRateStdDev = formData.returnRateStdDev
+        ? parseFloat(formData.returnRateStdDev)
+        : undefined;
+      const expenseRatio = parseFloat(formData.expenseRatio);
+      const dividendRate = parseFloat(formData.dividendRate);
+      const dividendRateStdDev = formData.dividendRateStdDev
+        ? parseFloat(formData.dividendRateStdDev)
+        : undefined;
+
       // Create distribution maps properly
       const returnDistMap = new Map<string, any>();
       returnDistMap.set("type", formData.returnType);
       returnDistMap.set(
         formData.returnType === DistributionType.FIXED ? "value" : "mean",
-        formData.returnRate
+        returnRate
       );
       if (formData.returnType === DistributionType.NORMAL) {
-        returnDistMap.set("stdev", formData.returnRateStdDev || 0);
+        returnDistMap.set("stdev", returnRateStdDev || 0);
       }
 
       const incomeDistMap = new Map<string, any>();
       incomeDistMap.set("type", formData.dividendType);
       incomeDistMap.set(
         formData.dividendType === DistributionType.FIXED ? "value" : "mean",
-        formData.dividendRate
+        dividendRate
       );
       if (formData.dividendType === DistributionType.NORMAL) {
-        incomeDistMap.set("stdev", formData.dividendRateStdDev || 0);
+        incomeDistMap.set("stdev", dividendRateStdDev || 0);
       }
 
       // Convert the form data to the actual InvestmentTypeRaw format
-      const formattedInvestment: InvestmentTypeRaw = {
+      const formattedInvestmentType: InvestmentTypeRaw = {
         name: formData.name,
         description: formData.description,
         returnAmtOrPct: formData.returnInputMode,
         returnDistribution: returnDistMap,
-        expenseRatio: formData.expenseRatio,
+        expenseRatio: expenseRatio,
         incomeAmtOrPct: formData.dividendInputMode,
         incomeDistribution: incomeDistMap,
         taxability: formData.taxability,
       };
 
-      onSave(formattedInvestment);
+      onSave(formattedInvestmentType);
       onClose();
     }
   };
@@ -226,14 +255,73 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
       case 0: // Basic Info
         return !!formData.name && !!formData.description;
       case 1: // Return Details
-        return formData.returnRate !== undefined;
+        // Check for valid number formats
+        const returnRateStr = formData.returnRate.trim();
+        const returnRateStdDevStr = formData.returnRateStdDev
+          ? formData.returnRateStdDev.trim()
+          : "";
+        const expenseRatioStr = formData.expenseRatio.trim();
+
+        // Check if inputs are valid numbers
+        const returnRateValid = is_valid_number_input(returnRateStr);
+        const returnRateStdDevValid =
+          formData.returnType !== DistributionType.NORMAL ||
+          (returnRateStdDevStr !== "" &&
+            is_valid_number_input(returnRateStdDevStr));
+        const expenseRatioValid = is_valid_number_input(expenseRatioStr);
+
+        return returnRateValid && returnRateStdDevValid && expenseRatioValid;
       case 2: // Income & Tax
-        return true; // All fields have defaults
+        // Check for valid number formats
+        const dividendRateStr = formData.dividendRate.trim();
+        const dividendRateStdDevStr = formData.dividendRateStdDev
+          ? formData.dividendRateStdDev.trim()
+          : "";
+
+        // Check if inputs are valid numbers
+        const dividendRateValid = is_valid_number_input(dividendRateStr);
+        const dividendRateStdDevValid =
+          formData.dividendType !== DistributionType.NORMAL ||
+          (dividendRateStdDevStr !== "" &&
+            is_valid_number_input(dividendRateStdDevStr));
+
+        return dividendRateValid && dividendRateStdDevValid;
       case 3: // Review
         return true; // All validations already happened in previous steps
       default:
         return false;
     }
+  };
+
+  // Helper function to validate number inputs
+  const is_valid_number_input = (value: string): boolean => {
+    // Empty string is invalid
+    if (value === "") return false;
+
+    // Check if it can be parsed as a valid number
+    const parsedNum = parseFloat(value);
+    if (isNaN(parsedNum)) return false;
+
+    // Check for invalid formats like 01, 02, etc.
+    // Allow 0 by itself, but not numbers starting with 0 followed by other digits
+    if (
+      value.length > 1 &&
+      value.startsWith("0") &&
+      !value.startsWith("0.") &&
+      value[1] !== "."
+    )
+      return false;
+
+    // Allow negative zero "-0"
+    if (value === "-0") return true;
+
+    // Allow negative numbers starting with decimal like "-.5"
+    if (value.startsWith("-.") || value.startsWith("-0.")) return true;
+
+    // Allow numbers starting with decimal like ".5"
+    if (value.startsWith(".")) return false;
+
+    return true;
   };
 
   // Helper functions for generating field labels
@@ -252,12 +340,12 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
   const getDividendRateLabel = () => {
     if (formData.dividendInputMode === ValueInputMode.PERCENT) {
       return formData.dividendType === DistributionType.NORMAL
-        ? "Average Annual Dividend Rate (%)"
-        : "Annual Dividend Rate (%)";
+        ? "Average Annual Income Rate (%)"
+        : "Annual Income Rate (%)";
     } else {
       return formData.dividendType === DistributionType.NORMAL
-        ? "Average Annual Dividend Amount ($)"
-        : "Annual Dividend Amount ($)";
+        ? "Average Annual Income Amount ($)"
+        : "Annual Income Amount ($)";
     }
   };
 
@@ -269,9 +357,16 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
 
   const getDividendRateDescription = () => {
     return formData.dividendInputMode === ValueInputMode.PERCENT
-      ? "The annual percentage paid as dividends or interest"
-      : "The annual dollar amount paid as dividends or interest";
+      ? "The annual percentage paid as income"
+      : "The annual dollar amount paid as income";
   };
+
+  // Colors
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const cardBgColor = useColorModeValue("gray.50", "gray.700");
+  const highlightColor = useColorModeValue("blue.500", "blue.300");
+  const accentColor = useColorModeValue("purple.50", "purple.800");
 
   // Render different steps based on active step
   const renderStep = () => {
@@ -292,415 +387,565 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
   // Step 1: Basic Information
   const renderBasicInfoStep = () => {
     return (
-      <Box>
-        <Text mb={4}>
-          Enter the basic information about this investment type.
-        </Text>
+      <VStack spacing={6} align="stretch">
+        <Box p={4} bg={accentColor} borderRadius="md">
+          <HStack>
+            <Icon as={FiInfo} boxSize={6} color={highlightColor} />
+            <Text fontWeight="medium">
+              Enter the basic information about this investment type.
+            </Text>
+          </HStack>
+        </Box>
 
-        <FormControl id="name" isRequired mb={4}>
-          <FormLabel>Investment Name</FormLabel>
+        <FormControl id="name" isRequired>
+          <FormLabel fontWeight="medium">Investment Name</FormLabel>
           <Input
             value={formData.name}
             onChange={handleInputChange}
             placeholder="e.g., S&P 500 Index Fund"
+            size="md"
+            borderRadius="md"
+            borderColor={borderColor}
+            _hover={{ borderColor: highlightColor }}
+            _focus={{ borderColor: highlightColor, boxShadow: "outline" }}
           />
         </FormControl>
 
-        <FormControl id="description" isRequired mb={4}>
-          <FormLabel>Description</FormLabel>
+        <FormControl id="description" isRequired>
+          <FormLabel fontWeight="medium">Description</FormLabel>
           <Textarea
             value={formData.description}
             onChange={handleInputChange}
             placeholder="Describe this investment type..."
             rows={4}
+            borderRadius="md"
+            borderColor={borderColor}
+            _hover={{ borderColor: highlightColor }}
+            _focus={{ borderColor: highlightColor, boxShadow: "outline" }}
           />
         </FormControl>
-      </Box>
+      </VStack>
     );
   };
 
   // Step 2: Return Details
   const renderReturnDetailsStep = () => {
     return (
-      <Box>
-        <Text mb={4}>
-          Define how this investment's value is expected to change over time.
-        </Text>
+      <VStack spacing={6} align="stretch">
+        <Box p={4} bg={accentColor} borderRadius="md">
+          <HStack>
+            <Icon as={FiPieChart} boxSize={6} color={highlightColor} />
+            <Text fontWeight="medium">
+              Define how this investment's value is expected to change over
+              time.
+            </Text>
+          </HStack>
+        </Box>
 
-        <FormControl mb={4}>
-          <FormLabel>Return Input Mode</FormLabel>
-          <RadioGroup
-            value={formData.returnInputMode}
-            onChange={(value) =>
-              handleRadioInputChange("returnInputMode", value)
-            }
-          >
-            <Stack direction="row">
-              <Radio value={ValueInputMode.PERCENT}>Percentage</Radio>
-              <Radio value={ValueInputMode.AMOUNT}>Fixed Amount</Radio>
-            </Stack>
-          </RadioGroup>
-          <Text fontSize="sm" color="gray.500" mt={1}>
-            {formData.returnInputMode === ValueInputMode.PERCENT
-              ? "Return is calculated as a percentage of the investment value"
-              : "Return is a fixed dollar amount regardless of investment value"}
-          </Text>
-        </FormControl>
-
-        <FormControl mb={4}>
-          <FormLabel>Return Type</FormLabel>
-          <Select
-            id="returnType"
-            value={formData.returnType}
-            onChange={handleReturnTypeChange}
-          >
-            <option value={DistributionType.FIXED}>Fixed</option>
-            <option value={DistributionType.NORMAL}>Normal Distribution</option>
-          </Select>
-          <Text fontSize="sm" color="gray.500" mt={1}>
-            {formData.returnType === DistributionType.FIXED
-              ? "A constant return that doesn't vary year to year"
-              : "Returns vary according to a normal (bell curve) distribution"}
-          </Text>
-        </FormControl>
-
-        <FormControl mb={4}>
-          <FormLabel>{getReturnRateLabel()}</FormLabel>
-          <NumberInput
-            value={formData.returnRate}
-            onChange={(value) => handleNumberInputChange("returnRate", value)}
-            min={0}
-            step={
-              formData.returnInputMode === ValueInputMode.PERCENT ? 0.1 : 100
-            }
-          >
-            <NumberInputField />
-            <NumberInputStepper>
-              <NumberIncrementStepper />
-              <NumberDecrementStepper />
-            </NumberInputStepper>
-          </NumberInput>
-          <Text fontSize="sm" color="gray.500" mt={1}>
-            {getReturnRateDescription()}
-          </Text>
-        </FormControl>
-
-        {formData.returnType === DistributionType.NORMAL && (
+        <Box
+          p={4}
+          borderWidth="1px"
+          borderRadius="md"
+          borderColor={borderColor}
+        >
           <FormControl mb={4}>
-            <FormLabel>
-              {formData.returnInputMode === ValueInputMode.PERCENT
-                ? "Standard Deviation (%)"
-                : "Standard Deviation ($)"}
+            <FormLabel fontWeight="medium">
+              Return Amount or Percentage
             </FormLabel>
-            <NumberInput
-              value={formData.returnRateStdDev || 0}
+            <RadioGroup
+              value={formData.returnInputMode}
               onChange={(value) =>
-                handleNumberInputChange("returnRateStdDev", value)
-              }
-              min={0}
-              step={
-                formData.returnInputMode === ValueInputMode.PERCENT ? 0.1 : 100
+                handleRadioInputChange("returnInputMode", value)
               }
             >
-              <NumberInputField />
-              <NumberInputStepper>
-                <NumberIncrementStepper />
-                <NumberDecrementStepper />
-              </NumberInputStepper>
-            </NumberInput>
-            <Text fontSize="sm" color="gray.500" mt={1}>
-              Measures the volatility or variation in returns
+              <Stack direction="row" spacing={6}>
+                <Radio value={ValueInputMode.PERCENT} colorScheme="blue">
+                  <HStack>
+                    <Icon as={FiPercent} />
+                    <Text>Percentage</Text>
+                  </HStack>
+                </Radio>
+                <Radio value={ValueInputMode.AMOUNT} colorScheme="blue">
+                  <HStack>
+                    <Icon as={FiDollarSign} />
+                    <Text>Fixed Amount</Text>
+                  </HStack>
+                </Radio>
+              </Stack>
+            </RadioGroup>
+            <Text fontSize="sm" color="gray.500" mt={2}>
+              {formData.returnInputMode === ValueInputMode.PERCENT
+                ? "Return is calculated as a percentage of the investment value"
+                : "Return is a fixed dollar amount regardless of investment value"}
             </Text>
           </FormControl>
-        )}
 
-        <FormControl mb={4}>
-          <FormLabel>Expense Ratio (%)</FormLabel>
-          <NumberInput
-            value={formData.expenseRatio}
-            onChange={(value) => handleNumberInputChange("expenseRatio", value)}
-            min={0}
-            max={10}
-            step={0.01}
-          >
-            <NumberInputField />
-            <NumberInputStepper>
-              <NumberIncrementStepper />
-              <NumberDecrementStepper />
-            </NumberInputStepper>
-          </NumberInput>
-          <Text fontSize="sm" color="gray.500" mt={1}>
-            Annual percentage deducted from the investment to cover management
-            costs
-          </Text>
-        </FormControl>
-      </Box>
+          <FormControl mb={4}>
+            <FormLabel fontWeight="medium">Return Distribution</FormLabel>
+            <Select
+              id="returnType"
+              value={formData.returnType}
+              onChange={handleReturnTypeChange}
+              borderRadius="md"
+              borderColor={borderColor}
+              _hover={{ borderColor: highlightColor }}
+              _focus={{ borderColor: highlightColor, boxShadow: "outline" }}
+            >
+              <option value={DistributionType.FIXED}>Fixed</option>
+              <option value={DistributionType.NORMAL}>
+                Normal Distribution
+              </option>
+            </Select>
+            <Text fontSize="sm" color="gray.500" mt={2}>
+              {formData.returnType === DistributionType.FIXED
+                ? "A constant return that doesn't vary year to year"
+                : "Returns vary according to a normal (bell curve) distribution"}
+            </Text>
+          </FormControl>
+        </Box>
+
+        <Box
+          p={4}
+          borderWidth="1px"
+          borderRadius="md"
+          borderColor={borderColor}
+        >
+          <FormControl mb={4}>
+            <FormLabel fontWeight="medium" color="pink.500">
+              {getReturnRateLabel()}
+            </FormLabel>
+            <Input
+              id="returnRate"
+              type="text"
+              value={formData.returnRate}
+              onChange={handleInputChange}
+              onWheel={preventWheelChange}
+              borderRadius="md"
+              borderColor={borderColor}
+              _hover={{ borderColor: highlightColor }}
+              _focus={{ borderColor: highlightColor, boxShadow: "outline" }}
+            />
+            <Text fontSize="sm" color="gray.500" mt={2}>
+              {getReturnRateDescription()}
+            </Text>
+          </FormControl>
+
+          {formData.returnType === DistributionType.NORMAL && (
+            <FormControl mb={4}>
+              <FormLabel fontWeight="medium">
+                {formData.returnInputMode === ValueInputMode.PERCENT
+                  ? "Standard Deviation (%)"
+                  : "Standard Deviation ($)"}
+              </FormLabel>
+              <Input
+                id="returnRateStdDev"
+                type="text"
+                value={formData.returnRateStdDev || ""}
+                onChange={handleInputChange}
+                onWheel={preventWheelChange}
+                borderRadius="md"
+                borderColor={borderColor}
+                _hover={{ borderColor: highlightColor }}
+                _focus={{ borderColor: highlightColor, boxShadow: "outline" }}
+              />
+              <Text fontSize="sm" color="gray.500" mt={2}>
+                Measures the volatility or variation in returns
+              </Text>
+            </FormControl>
+          )}
+        </Box>
+
+        <Box
+          p={4}
+          borderWidth="1px"
+          borderRadius="md"
+          borderColor={borderColor}
+        >
+          <FormControl>
+            <FormLabel fontWeight="medium">Expense Ratio (%)</FormLabel>
+            <Input
+              id="expenseRatio"
+              type="text"
+              value={formData.expenseRatio}
+              onChange={handleInputChange}
+              onWheel={preventWheelChange}
+              borderRadius="md"
+              borderColor={borderColor}
+              _hover={{ borderColor: highlightColor }}
+              _focus={{ borderColor: highlightColor, boxShadow: "outline" }}
+            />
+            <Text fontSize="sm" color="gray.500" mt={2}>
+              Annual percentage deducted from the investment to cover management
+              costs
+            </Text>
+          </FormControl>
+        </Box>
+      </VStack>
     );
   };
 
   // Step 3: Income and Tax
   const renderIncomeAndTaxStep = () => {
     return (
-      <Box>
-        <Text mb={4}>
-          Define any income generated by this investment and its tax treatment.
-        </Text>
+      <VStack spacing={6} align="stretch">
+        <Box p={4} bg={accentColor} borderRadius="md">
+          <HStack>
+            <Icon as={FiDollarSign} boxSize={6} color={highlightColor} />
+            <Text fontWeight="medium">
+              Define any income generated by this investment and its tax
+              treatment.
+            </Text>
+          </HStack>
+        </Box>
 
-        <FormControl mb={4}>
-          <FormLabel>Dividend Input Mode</FormLabel>
-          <RadioGroup
-            value={formData.dividendInputMode}
-            onChange={(value) =>
-              handleRadioInputChange("dividendInputMode", value)
-            }
-          >
-            <Stack direction="row">
-              <Radio value={ValueInputMode.PERCENT}>Percentage</Radio>
-              <Radio value={ValueInputMode.AMOUNT}>Fixed Amount</Radio>
-            </Stack>
-          </RadioGroup>
-          <Text fontSize="sm" color="gray.500" mt={1}>
-            {formData.dividendInputMode === ValueInputMode.PERCENT
-              ? "Dividend is calculated as a percentage of the investment value"
-              : "Dividend is a fixed dollar amount regardless of investment value"}
-          </Text>
-        </FormControl>
-
-        <FormControl mb={4}>
-          <FormLabel>Dividend Type</FormLabel>
-          <Select
-            id="dividendType"
-            value={formData.dividendType}
-            onChange={handleDividendTypeChange}
-          >
-            <option value={DistributionType.FIXED}>Fixed</option>
-            <option value={DistributionType.NORMAL}>Normal Distribution</option>
-          </Select>
-          <Text fontSize="sm" color="gray.500" mt={1}>
-            {formData.dividendType === DistributionType.FIXED
-              ? "A constant dividend that doesn't vary year to year"
-              : "Dividends vary according to a normal (bell curve) distribution"}
-          </Text>
-        </FormControl>
-
-        <FormControl mb={4}>
-          <FormLabel>{getDividendRateLabel()}</FormLabel>
-          <NumberInput
-            value={formData.dividendRate}
-            onChange={(value) => handleNumberInputChange("dividendRate", value)}
-            min={0}
-            step={
-              formData.dividendInputMode === ValueInputMode.PERCENT ? 0.1 : 100
-            }
-          >
-            <NumberInputField />
-            <NumberInputStepper>
-              <NumberIncrementStepper />
-              <NumberDecrementStepper />
-            </NumberInputStepper>
-          </NumberInput>
-          <Text fontSize="sm" color="gray.500" mt={1}>
-            {getDividendRateDescription()}
-          </Text>
-        </FormControl>
-
-        {formData.dividendType === DistributionType.NORMAL && (
+        <Box
+          p={4}
+          borderWidth="1px"
+          borderRadius="md"
+          borderColor={borderColor}
+        >
           <FormControl mb={4}>
-            <FormLabel>
-              {formData.dividendInputMode === ValueInputMode.PERCENT
-                ? "Standard Deviation (%)"
-                : "Standard Deviation ($)"}
+            <FormLabel fontWeight="medium">
+              Income Amount or Percentage
             </FormLabel>
-            <NumberInput
-              value={formData.dividendRateStdDev || 0}
+            <RadioGroup
+              value={formData.dividendInputMode}
               onChange={(value) =>
-                handleNumberInputChange("dividendRateStdDev", value)
-              }
-              min={0}
-              step={
-                formData.dividendInputMode === ValueInputMode.PERCENT
-                  ? 0.1
-                  : 100
+                handleRadioInputChange("dividendInputMode", value)
               }
             >
-              <NumberInputField />
-              <NumberInputStepper>
-                <NumberIncrementStepper />
-                <NumberDecrementStepper />
-              </NumberInputStepper>
-            </NumberInput>
-            <Text fontSize="sm" color="gray.500" mt={1}>
-              Measures the volatility or variation in dividends
+              <Stack direction="row" spacing={6}>
+                <Radio value={ValueInputMode.PERCENT} colorScheme="blue">
+                  <HStack>
+                    <Icon as={FiPercent} />
+                    <Text>Percentage</Text>
+                  </HStack>
+                </Radio>
+                <Radio value={ValueInputMode.AMOUNT} colorScheme="blue">
+                  <HStack>
+                    <Icon as={FiDollarSign} />
+                    <Text>Fixed Amount</Text>
+                  </HStack>
+                </Radio>
+              </Stack>
+            </RadioGroup>
+            <Text fontSize="sm" color="gray.500" mt={2}>
+              {formData.dividendInputMode === ValueInputMode.PERCENT
+                ? "Income is calculated as a percentage of the investment value"
+                : "Income is a fixed dollar amount regardless of investment value"}
             </Text>
           </FormControl>
-        )}
 
-        <FormControl mb={4}>
-          <FormLabel>Taxability</FormLabel>
-          <Select
-            id="taxability"
-            value={formData.taxability ? "taxable" : "tax-exempt"}
-            onChange={handleTaxabilityChange}
-          >
-            <option value="taxable">Taxable</option>
-            <option value="tax-exempt">Tax-Exempt</option>
-          </Select>
-          <Text fontSize="sm" color="gray.500" mt={1}>
-            {formData.taxability
-              ? "Returns and income from this investment are subject to taxation"
-              : "Returns and income from this investment are exempt from federal taxation"}
-          </Text>
-        </FormControl>
-
-        {!formData.taxability && (
-          <Alert status="info" borderRadius="md" mb={4}>
-            <AlertIcon />
-            <Text fontSize="sm">
-              Tax-exempt investments are typically best held in taxable
-              accounts, not tax-advantaged retirement accounts.
+          <FormControl mb={4}>
+            <FormLabel fontWeight="medium">Income Distribution</FormLabel>
+            <Select
+              id="dividendType"
+              value={formData.dividendType}
+              onChange={handleDividendTypeChange}
+              borderRadius="md"
+              borderColor={borderColor}
+              _hover={{ borderColor: highlightColor }}
+              _focus={{ borderColor: highlightColor, boxShadow: "outline" }}
+            >
+              <option value={DistributionType.FIXED}>Fixed</option>
+              <option value={DistributionType.NORMAL}>
+                Normal Distribution
+              </option>
+            </Select>
+            <Text fontSize="sm" color="gray.500" mt={2}>
+              {formData.dividendType === DistributionType.FIXED
+                ? "A constant income that doesn't vary year to year"
+                : "Income vary according to a normal (bell curve) distribution"}
             </Text>
-          </Alert>
-        )}
-      </Box>
+          </FormControl>
+        </Box>
+
+        <Box
+          p={4}
+          borderWidth="1px"
+          borderRadius="md"
+          borderColor={borderColor}
+        >
+          <FormControl mb={4}>
+            <FormLabel fontWeight="medium" color="pink.500">
+              {getDividendRateLabel()}
+            </FormLabel>
+            <Input
+              id="dividendRate"
+              type="text"
+              value={formData.dividendRate}
+              onChange={handleInputChange}
+              onWheel={preventWheelChange}
+              borderRadius="md"
+              borderColor={borderColor}
+              _hover={{ borderColor: highlightColor }}
+              _focus={{ borderColor: highlightColor, boxShadow: "outline" }}
+            />
+            <Text fontSize="sm" color="gray.500" mt={2}>
+              {getDividendRateDescription()}
+            </Text>
+          </FormControl>
+
+          {formData.dividendType === DistributionType.NORMAL && (
+            <FormControl mb={4}>
+              <FormLabel fontWeight="medium">
+                {formData.dividendInputMode === ValueInputMode.PERCENT
+                  ? "Standard Deviation (%)"
+                  : "Standard Deviation ($)"}
+              </FormLabel>
+              <Input
+                id="dividendRateStdDev"
+                type="text"
+                value={formData.dividendRateStdDev || ""}
+                onChange={handleInputChange}
+                onWheel={preventWheelChange}
+                borderRadius="md"
+                borderColor={borderColor}
+                _hover={{ borderColor: highlightColor }}
+                _focus={{ borderColor: highlightColor, boxShadow: "outline" }}
+              />
+              <Text fontSize="sm" color="gray.500" mt={2}>
+                Measures the volatility or variation in dividends
+              </Text>
+            </FormControl>
+          )}
+        </Box>
+
+        <Box
+          p={4}
+          borderWidth="1px"
+          borderRadius="md"
+          borderColor={borderColor}
+        >
+          <FormControl>
+            <FormLabel fontWeight="medium">Taxability</FormLabel>
+            <Select
+              id="taxability"
+              value={formData.taxability ? "taxable" : "tax-exempt"}
+              onChange={handleTaxabilityChange}
+              borderRadius="md"
+              borderColor={borderColor}
+              _hover={{ borderColor: highlightColor }}
+              _focus={{ borderColor: highlightColor, boxShadow: "outline" }}
+            >
+              <option value="taxable">Taxable</option>
+              <option value="tax-exempt">Tax-Exempt</option>
+            </Select>
+            <Text fontSize="sm" color="gray.500" mt={2}>
+              {formData.taxability
+                ? "Returns and income from this investment are subject to taxation"
+                : "Returns and income from this investment are exempt from federal taxation"}
+            </Text>
+          </FormControl>
+
+          {!formData.taxability && (
+            <Alert status="info" borderRadius="md" mt={4}>
+              <AlertIcon />
+              <Text fontSize="sm">
+                Tax-exempt investments are typically best held in taxable
+                accounts, not tax-advantaged retirement accounts.
+              </Text>
+            </Alert>
+          )}
+        </Box>
+      </VStack>
     );
   };
 
   // Step 4: Review
   const renderReviewStep = () => {
     // Format functions
-    const formatPercent = (val: number) => `${val.toFixed(2)}%`;
-    const formatCurrency = (val: number) =>
-      new Intl.NumberFormat("en-US", {
+    const formatPercent = (val: string | number) => {
+      const numVal = typeof val === "string" ? parseFloat(val) : val;
+      return `${numVal.toFixed(2)}%`;
+    };
+    const formatCurrency = (val: string | number) => {
+      const numVal = typeof val === "string" ? parseFloat(val) : val;
+      return new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
-      }).format(val);
+      }).format(numVal);
+    };
 
     return (
-      <Box>
-        <Text mb={4} fontWeight="bold">
-          Review your investment type details before saving
-        </Text>
-
-        <Box mb={4} p={4} borderWidth="1px" borderRadius="md">
-          <Text fontWeight="bold" fontSize="lg" mb={2}>
-            {formData.name}
-          </Text>
-          <Text mb={4}>{formData.description}</Text>
-
-          <Divider mb={4} />
-
-          <Grid templateColumns="1fr 1fr" gap={4}>
-            <Box>
-              <Text fontWeight="bold" mb={1}>
-                Return Type:
-              </Text>
-              <Text mb={3}>
-                {formData.returnType === DistributionType.FIXED
-                  ? "Fixed"
-                  : "Normal Distribution"}
-              </Text>
-            </Box>
-
-            <Box>
-              <Text fontWeight="bold" mb={1}>
-                Return Input:
-              </Text>
-              <Text mb={3}>
-                {formData.returnInputMode === ValueInputMode.PERCENT
-                  ? "Percentage"
-                  : "Fixed Amount"}
-              </Text>
-            </Box>
-
-            <Box>
-              <Text fontWeight="bold" mb={1}>
-                {getReturnRateLabel().replace(" (%)", "").replace(" ($)", "")}:
-              </Text>
-              <Text mb={3}>
-                {formData.returnInputMode === ValueInputMode.PERCENT
-                  ? formatPercent(formData.returnRate)
-                  : formatCurrency(formData.returnRate)}
-              </Text>
-            </Box>
-
-            {formData.returnType === DistributionType.NORMAL && (
-              <Box>
-                <Text fontWeight="bold" mb={1}>
-                  Return Std Dev:
-                </Text>
-                <Text mb={3}>
-                  {formData.returnInputMode === ValueInputMode.PERCENT
-                    ? formatPercent(formData.returnRateStdDev || 0)
-                    : formatCurrency(formData.returnRateStdDev || 0)}
-                </Text>
-              </Box>
-            )}
-
-            <Box>
-              <Text fontWeight="bold" mb={1}>
-                Expense Ratio:
-              </Text>
-              <Text mb={3}>{formatPercent(formData.expenseRatio)}</Text>
-            </Box>
-
-            <Box>
-              <Text fontWeight="bold" mb={1}>
-                Dividend Type:
-              </Text>
-              <Text mb={3}>
-                {formData.dividendType === DistributionType.FIXED
-                  ? "Fixed"
-                  : "Normal Distribution"}
-              </Text>
-            </Box>
-
-            <Box>
-              <Text fontWeight="bold" mb={1}>
-                Dividend Input:
-              </Text>
-              <Text mb={3}>
-                {formData.dividendInputMode === ValueInputMode.PERCENT
-                  ? "Percentage"
-                  : "Fixed Amount"}
-              </Text>
-            </Box>
-
-            <Box>
-              <Text fontWeight="bold" mb={1}>
-                {getDividendRateLabel().replace(" (%)", "").replace(" ($)", "")}
-                :
-              </Text>
-              <Text mb={3}>
-                {formData.dividendInputMode === ValueInputMode.PERCENT
-                  ? formatPercent(formData.dividendRate)
-                  : formatCurrency(formData.dividendRate)}
-              </Text>
-            </Box>
-
-            {formData.dividendType === DistributionType.NORMAL && (
-              <Box>
-                <Text fontWeight="bold" mb={1}>
-                  Dividend Std Dev:
-                </Text>
-                <Text mb={3}>
-                  {formData.dividendInputMode === ValueInputMode.PERCENT
-                    ? formatPercent(formData.dividendRateStdDev || 0)
-                    : formatCurrency(formData.dividendRateStdDev || 0)}
-                </Text>
-              </Box>
-            )}
-
-            <Box>
-              <Text fontWeight="bold" mb={1}>
-                Taxability:
-              </Text>
-              <Text mb={3}>
-                {formData.taxability ? "Taxable" : "Tax-Exempt"}
-              </Text>
-            </Box>
-          </Grid>
+      <VStack spacing={6} align="stretch">
+        <Box p={4} bg={accentColor} borderRadius="md">
+          <HStack>
+            <Icon as={FiCheck} boxSize={6} color={highlightColor} />
+            <Text fontWeight="medium">
+              Review your investment type details before saving
+            </Text>
+          </HStack>
         </Box>
-      </Box>
+
+        <Box
+          p={6}
+          borderWidth="1px"
+          borderRadius="md"
+          borderColor={borderColor}
+          bg={cardBgColor}
+        >
+          <VStack align="stretch" spacing={6}>
+            <Box>
+              <Heading as="h3" size="md" color={highlightColor} mb={2}>
+                {formData.name}
+              </Heading>
+              <Text>{formData.description}</Text>
+            </Box>
+
+            <Divider />
+
+            <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6}>
+              <Box>
+                <Text fontWeight="bold" mb={1}>
+                  Return Type:
+                </Text>
+                <Tag
+                  variant="solid"
+                  colorScheme={
+                    formData.returnType === DistributionType.FIXED
+                      ? "green"
+                      : "purple"
+                  }
+                >
+                  {formData.returnType === DistributionType.FIXED
+                    ? "Fixed"
+                    : "Normal Distribution"}
+                </Tag>
+              </Box>
+
+              <Box>
+                <Text fontWeight="bold" mb={1}>
+                  Return Input:
+                </Text>
+                <Tag
+                  variant="solid"
+                  colorScheme={
+                    formData.returnInputMode === ValueInputMode.PERCENT
+                      ? "blue"
+                      : "teal"
+                  }
+                >
+                  {formData.returnInputMode === ValueInputMode.PERCENT
+                    ? "Percentage"
+                    : "Fixed Amount"}
+                </Tag>
+              </Box>
+
+              <Box>
+                <Text fontWeight="bold" mb={1}>
+                  {getReturnRateLabel().replace(" (%)", "").replace(" ($)", "")}
+                  :
+                </Text>
+                <Text fontWeight="medium" fontSize="lg">
+                  {formData.returnInputMode === ValueInputMode.PERCENT
+                    ? formatPercent(formData.returnRate)
+                    : formatCurrency(formData.returnRate)}
+                </Text>
+              </Box>
+
+              {formData.returnType === DistributionType.NORMAL && (
+                <Box>
+                  <Text fontWeight="bold" mb={1}>
+                    Return Std Dev:
+                  </Text>
+                  <Text fontWeight="medium">
+                    {formData.returnInputMode === ValueInputMode.PERCENT
+                      ? formatPercent(formData.returnRateStdDev || 0)
+                      : formatCurrency(formData.returnRateStdDev || 0)}
+                  </Text>
+                </Box>
+              )}
+
+              <Box>
+                <Text fontWeight="bold" mb={1}>
+                  Expense Ratio:
+                </Text>
+                <Text fontWeight="medium">
+                  {formatPercent(formData.expenseRatio)}
+                </Text>
+              </Box>
+
+              <Box>
+                <Text fontWeight="bold" mb={1}>
+                  Dividend Type:
+                </Text>
+                <Tag
+                  variant="solid"
+                  colorScheme={
+                    formData.dividendType === DistributionType.FIXED
+                      ? "green"
+                      : "purple"
+                  }
+                >
+                  {formData.dividendType === DistributionType.FIXED
+                    ? "Fixed"
+                    : "Normal Distribution"}
+                </Tag>
+              </Box>
+
+              <Box>
+                <Text fontWeight="bold" mb={1}>
+                  Dividend Input:
+                </Text>
+                <Tag
+                  variant="solid"
+                  colorScheme={
+                    formData.dividendInputMode === ValueInputMode.PERCENT
+                      ? "blue"
+                      : "teal"
+                  }
+                >
+                  {formData.dividendInputMode === ValueInputMode.PERCENT
+                    ? "Percentage"
+                    : "Fixed Amount"}
+                </Tag>
+              </Box>
+
+              <Box>
+                <Text fontWeight="bold" mb={1}>
+                  {getDividendRateLabel()
+                    .replace(" (%)", "")
+                    .replace(" ($)", "")}
+                  :
+                </Text>
+                <Text fontWeight="medium" fontSize="lg">
+                  {formData.dividendInputMode === ValueInputMode.PERCENT
+                    ? formatPercent(formData.dividendRate)
+                    : formatCurrency(formData.dividendRate)}
+                </Text>
+              </Box>
+
+              {formData.dividendType === DistributionType.NORMAL && (
+                <Box>
+                  <Text fontWeight="bold" mb={1}>
+                    Dividend Std Dev:
+                  </Text>
+                  <Text fontWeight="medium">
+                    {formData.dividendInputMode === ValueInputMode.PERCENT
+                      ? formatPercent(formData.dividendRateStdDev || 0)
+                      : formatCurrency(formData.dividendRateStdDev || 0)}
+                  </Text>
+                </Box>
+              )}
+
+              <Box>
+                <Text fontWeight="bold" mb={1}>
+                  Taxability:
+                </Text>
+                <Badge
+                  colorScheme={formData.taxability ? "red" : "green"}
+                  borderRadius="full"
+                  px={3}
+                  py={1}
+                >
+                  {formData.taxability ? "Taxable" : "Tax-Exempt"}
+                </Badge>
+              </Box>
+            </Grid>
+          </VStack>
+        </Box>
+      </VStack>
     );
   };
 
@@ -712,18 +957,27 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
       scrollBehavior="inside"
       closeOnOverlayClick={false}
     >
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Add New Investment Type</ModalHeader>
-        <ModalCloseButton />
+      <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px)" />
+      <ModalContent
+        bg={bgColor}
+        borderRadius="lg"
+        boxShadow="xl"
+        overflow="hidden"
+      >
+        <Box bg="linear-gradient(to right, #3182ce, #805ad5)" px={8} py={5}>
+          <ModalHeader color="white" p={0} fontSize="2xl" fontWeight="bold">
+            Add New Investment Type
+          </ModalHeader>
+        </Box>
+        <ModalCloseButton color="white" mt={2} mr={3} />
 
-        <ModalBody p={4}>
-          <Stepper index={activeStep} mb={8} size="sm">
+        <Box mx={8} my={4}>
+          <Stepper index={activeStep} size="md" colorScheme="blue">
             {steps.map((step, index) => (
               <Step key={index}>
                 <StepIndicator>
                   <StepStatus
-                    complete={<StepIcon />}
+                    complete={<Icon as={step.icon} />}
                     incomplete={<StepNumber />}
                     active={<StepNumber />}
                   />
@@ -735,25 +989,46 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
               </Step>
             ))}
           </Stepper>
+        </Box>
 
-          {renderStep()}
-        </ModalBody>
+        <ModalBody p={8}>{renderStep()}</ModalBody>
 
-        <ModalFooter>
-          {activeStep > 0 && (
-            <Button mr={3} onClick={handleBack}>
-              Back
-            </Button>
-          )}
-          {activeStep < steps.length - 1 ? (
-            <Button colorScheme="blue" onClick={handleNext}>
-              Next
-            </Button>
-          ) : (
-            <Button colorScheme="green" onClick={handleSave}>
-              Save Investment Type
-            </Button>
-          )}
+        <ModalFooter borderTopWidth="1px" borderColor={borderColor} p={6}>
+          <Flex width="100%" justify="space-between">
+            {activeStep > 0 && (
+              <Button
+                mr={3}
+                onClick={handleBack}
+                variant="outline"
+                leftIcon={
+                  <Box transform="rotate(180deg)">
+                    <FiCheck />
+                  </Box>
+                }
+              >
+                Back
+              </Button>
+            )}
+            {activeStep === 0 && <Box></Box>}
+            {activeStep < steps.length - 1 ? (
+              <Button
+                colorScheme="blue"
+                onClick={handleNext}
+                rightIcon={<FiCheck />}
+                isDisabled={!validateCurrentStep()}
+              >
+                Next
+              </Button>
+            ) : (
+              <Button
+                colorScheme="green"
+                onClick={handleSave}
+                leftIcon={<FiCheck />}
+              >
+                Save Investment Type
+              </Button>
+            )}
+          </Flex>
         </ModalFooter>
       </ModalContent>
     </Modal>
