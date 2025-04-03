@@ -10,17 +10,17 @@ describe("TaxBrackets", () => {
     beforeEach(() => {
         base_bracket = create_tax_brackets();
         
-        base_bracket.add_rate(0, 3000, 0.10, TaxFilingStatus.SINGLE);
-        base_bracket.add_rate(0, 3000, 0.20, TaxFilingStatus.MARRIED);
+        base_bracket.add_bracket(0, 3000, 0.10, TaxFilingStatus.SINGLE);
+        base_bracket.add_bracket(0, 3000, 0.20, TaxFilingStatus.MARRIED);
         
-        base_bracket.add_rate(3001, 7000, 0.13, TaxFilingStatus.SINGLE);
-        base_bracket.add_rate(3001, 7000, 0.23, TaxFilingStatus.MARRIED);
+        base_bracket.add_bracket(3001, 7000, 0.13, TaxFilingStatus.SINGLE);
+        base_bracket.add_bracket(3001, 7000, 0.23, TaxFilingStatus.MARRIED);
 
-        base_bracket.add_rate(7001, 10000, 0.23, TaxFilingStatus.SINGLE);
-        base_bracket.add_rate(7001, 10000, 0.33, TaxFilingStatus.MARRIED);
+        base_bracket.add_bracket(7001, 10000, 0.23, TaxFilingStatus.SINGLE);
+        base_bracket.add_bracket(7001, 10000, 0.33, TaxFilingStatus.MARRIED);
 
-        base_bracket.add_rate(10001, Infinity, 0.4, TaxFilingStatus.SINGLE);
-        base_bracket.add_rate(10001, Infinity, 0.5, TaxFilingStatus.MARRIED);
+        base_bracket.add_bracket(10001, Infinity, 0.4, TaxFilingStatus.SINGLE);
+        base_bracket.add_bracket(10001, Infinity, 0.5, TaxFilingStatus.MARRIED);
     });
 
     describe("Basic functionalty", () => {

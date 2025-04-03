@@ -56,7 +56,7 @@ async function parse_table_rows(taxBrackets: TaxBrackets, status: TaxFilingStatu
         const min = extractNumbers(min_text, 1)[0];
         const max = max_text.toLowerCase() === "and up" ? Infinity: extractNumbers(max_text, 1)[0];
         const rate = extractNumbers(rate_text, 1)[0] / 100;
-        taxBrackets.add_rate(min, max, rate, status);
+        taxBrackets.add_bracket(min, max, rate, status);
         if (save_to_database) await save_bracket(min, max, rate, IncomeType.TAXABLE_INCOME, status);
     });
 }
@@ -179,10 +179,10 @@ async function parse_capital_gains(
                     const list_item = $(el);
                     const upperbound = extractNumbers(list_item.text(), 1)[0];
                     if (idx == 0) {
-                        taxBrackets.add_rate(0, upperbound, rate, TaxFilingStatus.SINGLE);
+                        taxBrackets.add_bracket(0, upperbound, rate, TaxFilingStatus.SINGLE);
                         if (save_to_database) await save_bracket(0, upperbound, rate, IncomeType.CAPITAL_GAINS, TaxFilingStatus.SINGLE);
                     } else if (idx == 1) {
-                        taxBrackets.add_rate(0, upperbound, rate, TaxFilingStatus.MARRIED);
+                        taxBrackets.add_bracket(0, upperbound, rate, TaxFilingStatus.MARRIED);
                         if (save_to_database) await save_bracket(0, upperbound, rate, IncomeType.CAPITAL_GAINS, TaxFilingStatus.MARRIED);
                     }
                 });
@@ -202,10 +202,10 @@ async function parse_capital_gains(
                 const list_item = $(el);
                 const [lowerbound, upperbound] = extractNumbers(list_item.text(), 2);
                     if (idx == 0) {
-                        taxBrackets.add_rate(lowerbound + 1, upperbound, rate, TaxFilingStatus.SINGLE);
+                        taxBrackets.add_bracket(lowerbound + 1, upperbound, rate, TaxFilingStatus.SINGLE);
                         if (save_to_database) await save_bracket(lowerbound, upperbound, rate, IncomeType.CAPITAL_GAINS, TaxFilingStatus.SINGLE);
                     } else if (idx == 2) {
-                        taxBrackets.add_rate(lowerbound + 1, upperbound, rate, TaxFilingStatus.MARRIED);
+                        taxBrackets.add_bracket(lowerbound + 1, upperbound, rate, TaxFilingStatus.MARRIED);
                         if (save_to_database) await save_bracket(lowerbound, upperbound, rate, IncomeType.CAPITAL_GAINS, TaxFilingStatus.MARRIED);
                     }
                 });
@@ -235,7 +235,7 @@ async function parse_capital_gains(
                         console.error(`Invalid highest rate: ${upper_rate} <= ${rate}`);
                         throw new Error("Invalid highest rate scrapped");
                     }
-                    taxBrackets.add_rate(max + 1, Infinity, upper_rate, taxpayer_type);
+                    taxBrackets.add_bracket(max + 1, Infinity, upper_rate, taxpayer_type);
                     if (save_to_database) await save_bracket(max + 1, Infinity, upper_rate, IncomeType.CAPITAL_GAINS, taxpayer_type);
                 }
             }

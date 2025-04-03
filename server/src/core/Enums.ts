@@ -57,6 +57,19 @@ export enum StateType {
     CT = "CT",
 }
 
+export function parse_state_type(state: string) {
+  switch (state) {
+    case "NY":
+      return StateType.NY;
+    case "CT":
+      return StateType.CT;
+    case "NJ":
+      return StateType.NJ;
+    default:
+      throw new Error("Invalid state");
+  }
+}
+
 export enum TaxStatus {
     NON_RETIREMENT = "NON_RETIREMENT",
     PRE_TAX = "PRE_TAX",

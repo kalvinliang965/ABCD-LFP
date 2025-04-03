@@ -22,7 +22,7 @@ async function initialize_taxable_income_bracket(): Promise<TaxBrackets> {
                     console.error("initialize_taxable_income_bracket() loadded wrong data");
                     process.exit(1);
                 }
-                gains.add_rate(min, max, rate, taxpayer_type);
+                gains.add_bracket(min, max, rate, taxpayer_type);
             })
             return gains;
         }
@@ -44,7 +44,7 @@ async function initialize_capital_gains_bracket(): Promise<TaxBrackets> {
                     console.error("initialize_capital_gains_bracket() loadded wrong data");
                     process.exit(1);
                 }
-                gains.add_rate(min, max, rate, taxpayer_type);
+                gains.add_bracket(min, max, rate, taxpayer_type);
             })
             return gains;
         }
