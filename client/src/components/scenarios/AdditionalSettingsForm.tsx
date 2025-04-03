@@ -964,7 +964,7 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
                 rightIcon={<Icon as={FiChevronRight} />}
                 fontWeight="bold"
               >
-                Continue
+                Save and Finish
               </Button>
             </Flex>
           </CardFooter>
