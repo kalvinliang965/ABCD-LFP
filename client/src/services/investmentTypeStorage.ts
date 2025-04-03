@@ -10,30 +10,7 @@ const STORAGE_KEY = "investment_types";
 function map_to_storage_object(investmentType: InvestmentTypeRaw): any {
   const clonedType = { ...investmentType };
 
-  // Convert returnDistribution Map to plain object
-  if (
-    clonedType.returnDistribution &&
-    clonedType.returnDistribution instanceof Map
-  ) {
-    const returnDistObj: any = {};
-    clonedType.returnDistribution.forEach((value, key) => {
-      returnDistObj[key] = value;
-    });
-    clonedType.returnDistribution = returnDistObj;
-  }
-
-  // Convert incomeDistribution Map to plain object
-  if (
-    clonedType.incomeDistribution &&
-    clonedType.incomeDistribution instanceof Map
-  ) {
-    const incomeDistObj: any = {};
-    clonedType.incomeDistribution.forEach((value, key) => {
-      incomeDistObj[key] = value;
-    });
-    clonedType.incomeDistribution = incomeDistObj;
-  }
-
+  // No conversion needed for array-based distributions - they can be directly serialized
   return clonedType;
 }
 
@@ -43,36 +20,7 @@ function object_to_investment_type(storedData: any): InvestmentTypeRaw {
     ...storedData,
   };
 
-  // Convert returnDistribution from plain object to Map
-  if (
-    baseConversion.returnDistribution &&
-    typeof baseConversion.returnDistribution === "object" &&
-    !(baseConversion.returnDistribution instanceof Map)
-  ) {
-    const returnDistMap = new Map<string, any>();
-    Object.entries(baseConversion.returnDistribution).forEach(
-      ([key, value]) => {
-        returnDistMap.set(key, value);
-      }
-    );
-    baseConversion.returnDistribution = returnDistMap;
-  }
-
-  // Convert incomeDistribution from plain object to Map
-  if (
-    baseConversion.incomeDistribution &&
-    typeof baseConversion.incomeDistribution === "object" &&
-    !(baseConversion.incomeDistribution instanceof Map)
-  ) {
-    const incomeDistMap = new Map<string, any>();
-    Object.entries(baseConversion.incomeDistribution).forEach(
-      ([key, value]) => {
-        incomeDistMap.set(key, value);
-      }
-    );
-    baseConversion.incomeDistribution = incomeDistMap;
-  }
-
+  // Arrays are already properly handled by JSON.parse()
   return baseConversion;
 }
 
