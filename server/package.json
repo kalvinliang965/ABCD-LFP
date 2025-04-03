@@ -36,6 +36,7 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "probability-distributions": "^0.9.1",
+    "react-beautiful-dnd": "^13.1.1",
     "semver": "^7.7.1"
   },
   "devDependencies": {
@@ -49,6 +50,7 @@
     "@types/node": "^16.11.7",
     "@types/passport": "^1.0.17",
     "@types/passport-google-oauth20": "^2.0.16",
+    "@types/react-beautiful-dnd": "^13.1.8",
     "jest": "^29.0.0",
     "ts-jest": "^29.0.0",
     "ts-node": "^10.9.2",

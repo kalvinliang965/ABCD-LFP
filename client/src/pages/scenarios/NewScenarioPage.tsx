@@ -106,18 +106,13 @@ function NewScenarioPage() {
     availableAccounts: [],
   });
   const [spendingStrategy, setSpendingStrategy] = useState<SpendingStrategy>({
-    enableCustomStrategy: true,
-    strategyType: "prioritized",
-    expensePriority: [],
     availableExpenses: [],
+    selectedExpenses: []
   });
-  const [withdrawalStrategy, setWithdrawalStrategy] =
-    useState<WithdrawalStrategy>({
-      enableCustomStrategy: true,
-      strategyType: "prioritized",
-      accountPriority: [],
-      availableAccounts: [],
-    });
+  const [withdrawalStrategy, setWithdrawalStrategy] = useState<WithdrawalStrategy>({
+    availableAccounts: [],
+    accountPriority: []
+  });
   //! 一直到这里。
 
   // *这边需要看谁叫了这个function，传入的type可以检查一下。
@@ -176,10 +171,10 @@ function NewScenarioPage() {
   };
 
   //! 海风写的，不要动
-  const handleSaveAndContinue = () => {
-    // Navigate to spending strategy instead of directly to additional settings
-    handle_continue_to_spending_strategy();
-  };
+  // const handleSaveAndContinue = () => {
+  //   // Navigate to spending strategy instead of directly to additional settings
+  //   handle_continue_to_spending_strategy();
+  // };
   //! 到这里都是海风写的，不要动。
 
   const handle_to_life_expectancy = () => {
@@ -226,22 +221,20 @@ function NewScenarioPage() {
     setStep("rmdSettings");
   };
 
-  //?????? 你在干嘛？？？？？ 那我为什么不直接叫continue_to_withdrawal_strategy？？？？？？？？？？？？？？？？？？？？？？
-  const handle_continue_from_rmd = () => {
-    handle_continue_to_withdrawal_strategy();
-  };
+  // //?????? 你在干嘛？？？？？ 那我为什么不直接叫continue_to_withdrawal_strategy？？？？？？？？？？？？？？？？？？？？？？
+  // const handle_continue_from_rmd = () => {
+  //   handle_continue_to_withdrawal_strategy();
+  // };
 
   const handle_continue_to_spending_strategy = () => {
-    // Get discretionary expenses from added events
-    const discretionaryExpenses = addedEvents
-      .filter(
-        (event) => event.type === "expense" && event.discretionary === true
-      )
+    // Get all expenses from added events
+    const allExpenses = addedEvents
+      .filter((event) => event.type === "expense")
       .map((event) => event.name);
 
     setSpendingStrategy({
-      ...spendingStrategy,
-      availableExpenses: discretionaryExpenses,
+      availableExpenses: allExpenses,
+      selectedExpenses: spendingStrategy.selectedExpenses || []
     });
 
     setStep("spendingStrategy");
@@ -260,8 +253,8 @@ function NewScenarioPage() {
     );
 
     setWithdrawalStrategy({
-      ...withdrawalStrategy,
       availableAccounts: allAccounts,
+      accountPriority: withdrawalStrategy.accountPriority || []
     });
 
     setStep("withdrawalStrategy");
@@ -289,21 +282,11 @@ function NewScenarioPage() {
       rmdStrategy: rmdSettings.enableRMD ? rmdSettings.accountPriority : [],
       rmdStartAge: rmdSettings.enableRMD ? rmdSettings.startAge : 72,
 
-      // Add withdrawal strategy
-      expenseWithdrawalStrategy: withdrawalStrategy.enableCustomStrategy
-        ? {
-            type: withdrawalStrategy.strategyType,
-            investmentOrder: withdrawalStrategy.accountPriority,
-          }
-        : null,
+      // Add withdrawal strategy as a simple array of investment IDs
+      expenseWithdrawalStrategy: withdrawalStrategy.accountPriority,
 
-      // Add spending strategy
-      spendingStrategy: spendingStrategy.enableCustomStrategy
-        ? {
-            type: spendingStrategy.strategyType,
-            expensePriority: spendingStrategy.expensePriority,
-          }
-        : null,
+      // Add spending strategy as a simple array of expense names
+      spendingStrategy: spendingStrategy.selectedExpenses,
     };
 
     // Submit the scenario
@@ -335,10 +318,6 @@ function NewScenarioPage() {
     }
   };
 
-  //! 这部分是海风写的，不要动。（why 有俩？？？？全是setStep（“rmdSettings”））
-  const handle_back_to_rmd_settings = () => {
-    setStep("rmdSettings");
-  };
 
   const handle_back_to_rmd = () => {
     setStep("rmdSettings");
@@ -454,7 +433,7 @@ function NewScenarioPage() {
       <RMDSettingsForm
         rmdSettings={rmdSettings}
         onChangeRMDSettings={setRmdSettings}
-        onContinue={handle_continue_from_rmd}
+        onContinue={handle_continue_to_withdrawal_strategy}
         onBack={handle_to_investments}
       />
     );
@@ -490,7 +469,7 @@ function NewScenarioPage() {
       <EventSeriesSection
         addedEvents={addedEvents}
         handleDeleteEvent={handleDeleteEvent}
-        handleSaveAndContinue={handleSaveAndContinue}
+        handleSaveAndContinue={handle_continue_to_spending_strategy}
         handleBackToInvestments={handle_continue_to_withdrawal_strategy}
         handleEventAdded={handleEventAdded}
       />
