@@ -19,7 +19,7 @@ export type EventRaw = {
 };
 
 export type InvestmentRaw = {
-  investmentType: InvestmentTypeRaw;
+  investmentType: string;
   value: number;
   taxStatus: string; // "non-retirement", "pre-tax", "after-tax"
   id: string;
@@ -59,6 +59,7 @@ export interface ScenarioRaw {
   martialStatus: string;
   birthYears: Array<number>;
   lifeExpectancy: Array<{ [key: string]: any }>; //! chen changed it to match with YAML
+  investmentTypes: Set<InvestmentTypeRaw>;
   investments: Set<InvestmentRaw>;
   eventSeries: Set<
     IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw
