@@ -191,7 +191,9 @@ function NewScenarioPage() {
     setStep("Scenario_name&type");
   };
 
-
+  const handle_to_investments = () => {
+    setStep("investments");
+  };
   const handle_back_to_investments = () => {
     setStep("withdrawalStrategy");
   };
@@ -244,7 +246,7 @@ function NewScenarioPage() {
     // Get discretionary expenses from added events
     const discretionaryExpenses = addedEvents
       .filter(
-        (event) => event.type === "expense" && event.discretionary === true
+        (event) => event.type === "expense" && event.isDiscretionary === true
       )
       .map((event) => event.name);
 
