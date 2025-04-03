@@ -80,7 +80,7 @@ export const CommonFields: React.FC<CommonFieldsProps> = ({
               }}
               min={1900}
               max={2100}
-            >
+            > 
               <NumberInputField />
             </NumberInput>
           </FormControl>

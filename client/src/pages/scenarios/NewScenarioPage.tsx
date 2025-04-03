@@ -3,10 +3,11 @@ import {
   Box,
   Text,
   useToast,
+  Button,
+  HStack,
 } from "@chakra-ui/react";
 import { useEventSeries } from "../../contexts/EventSeriesContext";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import ScenarioDetailsForm, {
   ScenarioDetails,
   ScenarioType,
@@ -173,7 +174,7 @@ function NewScenarioPage() {
 
 
   const handle_back_to_investments = () => {
-    setStep("investments");
+    setStep("withdrawalStrategy");
   };
 
   const handle_back_to_life_expectancy = () => {
@@ -467,15 +468,15 @@ function NewScenarioPage() {
   if (step === "eventSelection") {
     return (
       <EventSeriesSection
-      addedEvents={addedEvents}
-      handleDeleteEvent={handleDeleteEvent}
-      handleSaveAndContinue={handleSaveAndContinue}
-      handleBackToInvestments={handle_back_to_investments}
-      handleEventAdded={handleEventAdded}
-    />
+        addedEvents={addedEvents}
+        handleDeleteEvent={handleDeleteEvent}
+        handleSaveAndContinue={handleSaveAndContinue}
+        handleBackToInvestments={handle_back_to_investments}
+        handleEventAdded={handleEventAdded}
+        investments={investmentsConfig.investments}
+      />
     );
   }
-
 
   // Default fallback (shouldn't reach here)
   return <Text>Loading...</Text>;

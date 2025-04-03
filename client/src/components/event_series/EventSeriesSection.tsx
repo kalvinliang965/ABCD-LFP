@@ -13,10 +13,10 @@ import {
 } from "@chakra-ui/react";
 import { DeleteIcon } from "@chakra-ui/icons";
 import { Building2, Wallet, TrendingUp, BarChart } from "lucide-react";
-import axios from "axios";
 import { EventSeriesForm } from "./EventSeriesForm";
 import { useEventSeries } from "../../contexts/EventSeriesContext";
-import { EventSeriesType } from "../../types/eventSeries";
+import { EventSeriesType, EventSeries } from "../../types/eventSeries";
+import { Investment } from "../../components/scenarios/InvestmentsForm";
 
 const eventTypeOptions = [
   {
@@ -57,14 +57,9 @@ const eventTypeOptions = [
   },
 ];
 
-export interface AddedEvent {
+export interface AddedEvent extends Omit<EventSeries, 'id'> {
   id?: string;
   _id?: string;
-  name: string;
-  type: string;
-  initialAmount?: number;
-  startYear: any;
-  duration: any;
 }
 
 interface EventSeriesSectionProps {
@@ -73,6 +68,7 @@ interface EventSeriesSectionProps {
   handleSaveAndContinue: () => void;
   handleBackToInvestments: () => void;
   handleEventAdded: (event: AddedEvent) => void;
+  investments?: Investment[]; 
 }
 
 const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
@@ -81,25 +77,19 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
   handleSaveAndContinue,
   handleBackToInvestments,
   handleEventAdded,
+  investments = [], //default to empty array if not provided
 }) => {
   const { selectedType, setSelectedType } = useEventSeries();
   const [existingEvents, setExistingEvents] = useState<{ name: string }[]>([]);
+
+  //use local state for existing events instead of fetching from API
   useEffect(() => {
-    const fetchExistingEvents = async () => {
-      try {
-        const response = await axios.get("http://localhost:3000/api/eventSeries", {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        setExistingEvents(response.data);
-      } catch (error) {
-        console.error("Failed to fetch existing events:", error);
-      }
-    };
-    fetchExistingEvents();
-  }, []);
+    //convert addedEvents to the format needed for existingEvents
+    const events = addedEvents.map(event => ({
+      name: event.name
+    }));
+    setExistingEvents(events);
+  }, [addedEvents]);
 
   if (!selectedType) {
     return (
@@ -111,12 +101,18 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                 <Heading size="lg" color="gray.900">
                   New Event Series
                 </Heading>
-                <HStack spacing={2}>
-                  <Button variant="ghost" colorScheme="blue" onClick={handleBackToInvestments}>
+                <HStack spacing={4} justify="flex-end" mt={6}>
+                  <Button variant="ghost" onClick={handleBackToInvestments}>
                     Back
                   </Button>
-                  <Button colorScheme="blue" onClick={handleSaveAndContinue}>
-                    Save & Continue
+                  <Button 
+                    colorScheme="blue" 
+                    onClick={handleSaveAndContinue}
+                    bg="blue.500"
+                    _hover={{ bg: "blue.600" }}
+                    _active={{ bg: "blue.700" }}
+                  >
+                    Continue
                   </Button>
                 </HStack>
               </Flex>
@@ -250,6 +246,7 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
               onBack={() => setSelectedType(null)}
               onEventAdded={handleEventAdded}
               existingEvents={existingEvents}
+              investments={investments} //pass investments to the form
             />
           </Box>
         </Box>

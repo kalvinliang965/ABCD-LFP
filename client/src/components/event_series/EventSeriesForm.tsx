@@ -4,6 +4,7 @@ import { IncomeEventSeriesForm } from "./IncomeEventSeriesForm";
 import { ExpenseEventSeriesForm } from "./ExpenseEventSeriesForm";
 import { InvestEventSeriesForm } from "./InvestEventSeriesForm";
 import { RebalanceEventSeriesForm } from "./RebalanceEventSeriesForm";
+import { Investment } from "../../components/scenarios/InvestmentsForm";
 
 export interface EventSeriesFormProps {
   initialType?: EventSeriesType;
@@ -12,6 +13,7 @@ export interface EventSeriesFormProps {
   onEventAdded?: (event: any) => void;
   isCompactMode?: boolean;
   existingEvents: { name: string }[];
+  investments?: Investment[];
 }
 
 export const EventSeriesForm: React.FC<EventSeriesFormProps> = ({
@@ -21,6 +23,7 @@ export const EventSeriesForm: React.FC<EventSeriesFormProps> = ({
   onEventAdded,
   isCompactMode = false,
   existingEvents,
+  investments = [],
 }) => {
   const eventType = eventSeriesType || initialType;
 
@@ -47,6 +50,7 @@ export const EventSeriesForm: React.FC<EventSeriesFormProps> = ({
           onBack={onBack}
           onEventAdded={onEventAdded}
           existingEvents={existingEvents}
+          investments={investments}
         />
       );
     case "rebalance":
@@ -55,6 +59,7 @@ export const EventSeriesForm: React.FC<EventSeriesFormProps> = ({
           onBack={onBack}
           onEventAdded={onEventAdded}
           existingEvents={existingEvents}
+          investments={investments}
         />
       );
     default:

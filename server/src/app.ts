@@ -112,6 +112,7 @@ app.get("/", (req, res) => {
   res.json({ status: "ok", message: "Server is running" });
 });
 
+
 // 登录路由
 app.post("/api/login", (req, res) => {
   const { username, password } = req.body;
@@ -130,6 +131,13 @@ app.post("/api/login", (req, res) => {
 const server = app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
+//KEEP FOR KATE THIS
+// // Connect to database and handle shutdown
+// connect_database().catch((error) => {
+//   console.error("Failed to connect to database:", error);
+//   process.exit(1);
+// });
+
 
 // Graceful shutdown
 async function terminate() {
@@ -159,11 +167,6 @@ async function terminate() {
 process.on("SIGINT", terminate);
 process.on("SIGTERM", terminate);
 
-// Connect to database and handle shutdown
-connect_database().catch((error) => {
-  console.error("Failed to connect to database:", error);
-  process.exit(1);
-});
 
 // // Add this near the end of your file, before scrapping_demo()
 // function testRMDScraper() {
