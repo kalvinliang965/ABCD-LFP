@@ -7,7 +7,6 @@ import {
   Button,
   Flex,
   HStack,
-  Tooltip,
   VStack,
   FormControl,
   FormLabel,
@@ -19,7 +18,6 @@ import {
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
-  Stack,
   Card,
   CardHeader,
   CardBody,
@@ -29,7 +27,6 @@ import {
   InputGroup,
   InputLeftElement,
   useColorModeValue,
-  Badge,
   Container,
 } from "@chakra-ui/react";
 import {
@@ -55,19 +52,16 @@ export interface ScenarioDetailsFormProps {
   onChangeScenarioType: (value: string) => void;
   onChangeScenarioDetails: (details: ScenarioDetails) => void;
   onContinue: () => void;
-  onSkip: () => void;
   onBack?: () => void;
 }
 
 const MotionBox = motion(Box);
-const MotionFlex = motion(Flex);
 
 export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
   scenarioDetails,
   onChangeScenarioType,
   onChangeScenarioDetails,
   onContinue,
-  onSkip,
   onBack,
 }) => {
   console.log("ScenarioDetailsForm: Rendering with details:", scenarioDetails);
@@ -75,11 +69,6 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
   const cardBg = useColorModeValue("white", "gray.800");
   const headerBg = useColorModeValue("blue.50", "blue.900");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-  const textColor = useColorModeValue("gray.600", "gray.300");
-  const boxShadow = useColorModeValue(
-    "0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)",
-    "0 4px 20px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3)"
-  );
 
   const container = {
     hidden: { opacity: 0 },
@@ -162,17 +151,6 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                       Back
                     </Button>
                   )}
-                  <Tooltip label="Skip this step" placement="top" hasArrow>
-                    <Button
-                      variant="ghost"
-                      colorScheme="blue"
-                      onClick={onSkip}
-                      size="md"
-                      rounded="lg"
-                    >
-                      Skip
-                    </Button>
-                  </Tooltip>
                 </HStack>
               </Flex>
             </CardHeader>
