@@ -272,9 +272,13 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
     setSearchQuery(e.target.value);
   };
 
-  const get_distribution_display = (distribution: Map<string, any>) => {
-    const type = distribution.get("type");
-    return type;
+  const get_distribution_display = (
+    distribution: Array<{ [key: string]: any }>
+  ) => {
+    if (distribution && distribution.length > 0) {
+      return distribution[0].type;
+    }
+    return "";
   };
 
   const format_percent = (value: number) => {
@@ -552,7 +556,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                                 </TagLabel>
                               </Tag>
                             </Td>
-                            <Td>{format_percent(type.expenseRatio)}</Td>
+                            <Td>{format_percent(type.expenseRatio * 100)}</Td>
                             <Td>
                               <Badge
                                 px={2}

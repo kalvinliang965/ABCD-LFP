@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Badge,
@@ -11,6 +11,17 @@ import {
   Divider,
   useColorModeValue,
   Heading,
+  Icon,
+  Grid,
+  GridItem,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverHeader,
+  PopoverBody,
+  PopoverArrow,
+  PopoverCloseButton,
+  IconButton,
 } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router-dom";
 import {
@@ -23,16 +34,22 @@ import {
   FaChartLine,
   FaMoneyBillWave,
   FaPercentage,
+  FaExchangeAlt,
+  FaWallet,
+  FaShoppingBag,
+  FaPiggyBank,
+  FaInfoCircle,
+  FaChevronRight,
 } from "react-icons/fa";
 import Card from "../common/Card";
-import { Scenario, ScenarioType } from "../../types/scenario";
+import { ScenarioRaw } from "../../types/Scenarios";
 
 /**
  * AI prompt : help me design a card to show the scenario details by using the card component and the scenario type
  * I need to show the scenario name, type, birth year, life expectancy, financial goal, state, event count, investment count, and last modified date
  */
 interface ScenarioDetailCardProps {
-  scenario: Scenario;
+  scenario: ScenarioRaw;
 }
 
 const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
@@ -40,26 +57,29 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
 }) => {
   const highlightColor = useColorModeValue("blue.500", "blue.300");
   const secondaryTextColor = useColorModeValue("gray.600", "gray.300");
-  const badgeBg = useColorModeValue("gray.100", "gray.700");
+  const cardBg = useColorModeValue("white", "gray.800");
+  const cardBorder = useColorModeValue("gray.200", "gray.700");
+  const headerBg = useColorModeValue("blue.500", "blue.600");
+  const iconBg = useColorModeValue("blue.50", "blue.900");
 
   // Badge colors for the scenario type
   const getBadgeInfo = () => {
-    if (scenario.type === ScenarioType.INDIVIDUAL) {
+    if (scenario.martialStatus === "single") {
       return {
-        text: "Individual",
+        text: "INDIVIDUAL",
         colorScheme: "blue",
       };
     } else {
       return {
-        text: "Couple",
+        text: "COUPLE",
         colorScheme: "pink",
       };
     }
   };
 
   // Count the number of event series if they exist
-  const eventCount = scenario.eventSeries?.length || 0;
-  const investmentCount = scenario.investments?.length || 0;
+  const eventCount = scenario.eventSeries.size || 0;
+  const investmentCount = scenario.investments.size || 0;
 
   // Get relevant tooltips
   const getFinancialGoalTooltip = () => {
@@ -71,205 +91,240 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
   };
 
   return (
-    <Card title={scenario.name} minHeight="260px" leftBadge={getBadgeInfo()}>
-      <VStack spacing={3} align="start" mt={2}>
-        <Flex align="center">
-          <Box
-            as={scenario.type === ScenarioType.INDIVIDUAL ? FaUser : FaUsers}
-            color={highlightColor}
-            mr={2}
-          />
-          <Text fontSize="sm">
-            <Text as="span" fontWeight="bold">
-              Birth Year:
-            </Text>{" "}
-            {scenario.birthYear}
-          </Text>
+    <Box
+      borderWidth="1px"
+      borderRadius="xl"
+      overflow="hidden"
+      boxShadow="lg"
+      bg={cardBg}
+      borderColor={cardBorder}
+      transition="all 0.3s"
+      _hover={{
+        transform: "translateY(-4px)",
+        boxShadow: "xl",
+        borderColor: "blue.300",
+      }}
+    >
+      {/* Header with name and badge */}
+      <Box bg={headerBg} color="white" p={4}>
+        <Flex justify="space-between" align="center">
+          <Heading size="md" fontWeight="bold">
+            {scenario.name}
+          </Heading>
+          <Badge
+            colorScheme={
+              scenario.martialStatus === "single" ? "purple" : "pink"
+            }
+            fontSize="0.8em"
+            py={1}
+            px={2}
+            borderRadius="full"
+            textTransform="capitalize"
+          >
+            {scenario.martialStatus}
+          </Badge>
         </Flex>
+      </Box>
 
-        <Tooltip label={getLifeExpectancyTooltip()}>
-          <Flex align="center">
-            <Box as={FaHourglass} color={highlightColor} mr={2} />
-            <Text fontSize="sm">
-              <Text as="span" fontWeight="bold">
-                Life Expectancy:
-              </Text>{" "}
-              {scenario.lifeExpectancy}
-            </Text>
+      {/* Main content grid */}
+      <Grid templateColumns="repeat(2, 1fr)" gap={4} p={4}>
+        {/* Financial Goal */}
+        <InfoItem
+          icon={FaDollarSign}
+          label="Financial Goal"
+          value={`$${scenario.financialGoal.toLocaleString()}`}
+          tooltipContent="Target financial goal for this scenario"
+        />
+
+        {/* Residence State */}
+        <InfoItem
+          icon={FaMapMarkerAlt}
+          label="Residence State"
+          value={scenario.residenceState}
+          tooltipContent="State of residence for tax calculations"
+        />
+
+        {/* Life Expectancy */}
+        <InfoItem
+          icon={FaHourglass}
+          label="Life Expectancy"
+          value={
+            scenario.lifeExpectancy[0].type === "fixed"
+              ? scenario.lifeExpectancy[0].value
+              : `${scenario.lifeExpectancy[0].mean} ± ${scenario.lifeExpectancy[0].std}`
+          }
+          tooltipContent="Projected life expectancy for planning"
+        />
+
+        {/* Birth Year */}
+        <InfoItem
+          icon={FaCalendarAlt}
+          label="Birth Year"
+          value={scenario.birthYears.join(", ")}
+          tooltipContent="Birth year(s) for scenario participants"
+        />
+      </Grid>
+
+      {/* Spending Strategy */}
+      {scenario.spendingStrategy && scenario.spendingStrategy.length > 0 && (
+        <Box px={4} pb={4}>
+          <Divider my={2} />
+          <Heading size="sm" mb={2} display="flex" alignItems="center">
+            <Icon as={FaShoppingBag} mr={2} color={highlightColor} />
+            Spending Strategy
+          </Heading>
+          <Flex flexWrap="wrap" gap={2}>
+            {scenario.spendingStrategy.map((strategy, index) => (
+              <Badge
+                key={strategy}
+                colorScheme="blue"
+                variant="subtle"
+                px={2}
+                py={1}
+                borderRadius="md"
+              >
+                {strategy}
+              </Badge>
+            ))}
           </Flex>
-        </Tooltip>
+        </Box>
+      )}
 
-        <Tooltip label={getFinancialGoalTooltip()}>
-          <Flex align="center">
-            <Box as={FaDollarSign} color={highlightColor} mr={2} />
-            <Text fontSize="sm">
-              <Text as="span" fontWeight="bold">
-                Financial Goal:
-              </Text>{" "}
-              {scenario.financialGoal}
-            </Text>
-          </Flex>
-        </Tooltip>
-
-        <Flex align="center">
-          <Box as={FaMapMarkerAlt} color={highlightColor} mr={2} />
-          <Text fontSize="sm">
-            <Text as="span" fontWeight="bold">
-              State:
-            </Text>{" "}
-            {scenario.state}
-          </Text>
-        </Flex>
-
-        {/* Show additional badges if the scenario has more data */}
-        {(eventCount > 0 ||
-          investmentCount > 0 ||
-          scenario.inflationAssumption) && (
-          <>
-            <Divider my={1} />
-            <HStack spacing={2} wrap="wrap">
-              {eventCount > 0 && (
-                <Tooltip label={`${eventCount} event series defined`}>
-                  <Badge bg={badgeBg} px={2} py={1} borderRadius="md">
-                    <Flex align="center">
-                      <Box as={FaChartLine} fontSize="xs" mr={1} />
-                      <Text fontSize="xs">{eventCount} Events</Text>
-                    </Flex>
-                  </Badge>
-                </Tooltip>
-              )}
-
-              {investmentCount > 0 && (
-                <Tooltip label={`${investmentCount} investments defined`}>
-                  <Badge bg={badgeBg} px={2} py={1} borderRadius="md">
-                    <Flex align="center">
-                      <Box as={FaMoneyBillWave} fontSize="xs" mr={1} />
-                      <Text fontSize="xs">{investmentCount} Investments</Text>
-                    </Flex>
-                  </Badge>
-                </Tooltip>
-              )}
-
-              {scenario.inflationAssumption && (
-                <Tooltip
-                  label={`Inflation assumption: ${scenario.inflationAssumption.value}%`}
-                >
-                  <Badge bg={badgeBg} px={2} py={1} borderRadius="md">
-                    <Flex align="center">
-                      <Box as={FaPercentage} fontSize="xs" mr={1} />
-                      <Text fontSize="xs">Inflation</Text>
-                    </Flex>
-                  </Badge>
-                </Tooltip>
-              )}
-            </HStack>
-          </>
-        )}
-
-        <Flex align="center" mt={2}>
-          <Box as={FaCalendarAlt} color={secondaryTextColor} mr={2} />
-          <Text fontSize="xs" color={secondaryTextColor}>
-            Last modified: {scenario.lastModified}
-          </Text>
-        </Flex>
-
-        {scenario.rmdStrategy && (
-          <Box mt={4}>
-            <Heading size="sm" mb={2}>RMD Settings</Heading>
-            <Text fontSize="sm">
-              <Text as="span" fontWeight="bold">Start Age:</Text> {scenario.rmdStartAge || 72}
-            </Text>
-            <Text fontSize="sm" mt={1}>
-              <Text as="span" fontWeight="bold">Withdrawal Priority:</Text>
-            </Text>
-            <VStack align="start" pl={4} mt={1} spacing={1}>
-              {Array.isArray(scenario.rmdStrategy) ? 
-                scenario.rmdStrategy.map((account: string, index: number) => (
-                  <Text key={account} fontSize="sm">
-                    {index + 1}. {account}
+      {/* Additional info indicators */}
+      <Divider mb={2} />
+      <Flex justify="space-between" align="center" p={3}>
+        <HStack spacing={3}>
+          {scenario.investments.size > 0 && (
+            <Popover placement="top" trigger="hover">
+              <PopoverTrigger>
+                <IconButton
+                  aria-label="Investment details"
+                  icon={<Icon as={FaMoneyBillWave} />}
+                  size="sm"
+                  colorScheme="blue"
+                  variant="ghost"
+                />
+              </PopoverTrigger>
+              <PopoverContent>
+                <PopoverArrow />
+                <PopoverCloseButton />
+                <PopoverHeader fontWeight="bold">Investments</PopoverHeader>
+                <PopoverBody>
+                  <Text fontSize="sm">
+                    {scenario.investments.size} investment types configured
                   </Text>
-                )) : 
-                <Text fontSize="sm">Strategy configured</Text>
-              }
-            </VStack>
-          </Box>
-        )}
+                </PopoverBody>
+              </PopoverContent>
+            </Popover>
+          )}
 
-        {scenario.spendingStrategy && (
-          <Box mt={4}>
-            <Heading size="sm" mb={2}>Spending Strategy</Heading>
-            <Text fontSize="sm">
-              <Text as="span" fontWeight="bold">Type:</Text> {
-                scenario.spendingStrategy.type === "prioritized" 
-                  ? "Prioritized" 
-                  : "Proportional"
-              }
-            </Text>
-            
-            {scenario.spendingStrategy.type === "prioritized" && 
-             scenario.spendingStrategy.expensePriority && 
-             scenario.spendingStrategy.expensePriority.length > 0 && (
-              <>
-                <Text fontSize="sm" mt={1}>
-                  <Text as="span" fontWeight="bold">Expense Priority:</Text>
-                </Text>
-                <VStack align="start" pl={4} mt={1} spacing={1}>
-                  {scenario.spendingStrategy.expensePriority.map((expense: string, index: number) => (
-                    <Text key={expense} fontSize="sm">
-                      {index + 1}. {expense}
-                    </Text>
-                  ))}
-                </VStack>
-              </>
-            )}
-          </Box>
-        )}
+          {scenario.eventSeries.size > 0 && (
+            <Popover placement="top" trigger="hover">
+              <PopoverTrigger>
+                <IconButton
+                  aria-label="Event details"
+                  icon={<Icon as={FaChartLine} />}
+                  size="sm"
+                  colorScheme="blue"
+                  variant="ghost"
+                />
+              </PopoverTrigger>
+              <PopoverContent>
+                <PopoverArrow />
+                <PopoverCloseButton />
+                <PopoverHeader fontWeight="bold">Events</PopoverHeader>
+                <PopoverBody>
+                  <Text fontSize="sm">
+                    {scenario.eventSeries.size} events configured
+                  </Text>
+                </PopoverBody>
+              </PopoverContent>
+            </Popover>
+          )}
 
-        {scenario.expenseWithdrawalStrategy && (
-          <Box mt={4}>
-            <Heading size="sm" mb={2}>Withdrawal Strategy</Heading>
-            <Text fontSize="sm">
-              <Text as="span" fontWeight="bold">Type:</Text> {
-                scenario.expenseWithdrawalStrategy.type === "prioritized" 
-                  ? "Prioritized" 
-                  : scenario.expenseWithdrawalStrategy.type === "proportional"
-                    ? "Proportional"
-                    : "Tax-Efficient"
-              }
-            </Text>
-            
-            {scenario.expenseWithdrawalStrategy.type === "prioritized" && 
-             scenario.expenseWithdrawalStrategy.investmentOrder && 
-             scenario.expenseWithdrawalStrategy.investmentOrder.length > 0 && (
-              <>
-                <Text fontSize="sm" mt={1}>
-                  <Text as="span" fontWeight="bold">Account Priority:</Text>
-                </Text>
-                <VStack align="start" pl={4} mt={1} spacing={1}>
-                  {scenario.expenseWithdrawalStrategy.investmentOrder.map((account: string, index: number) => (
-                    <Text key={account} fontSize="sm">
-                      {index + 1}. {account}
-                    </Text>
-                  ))}
-                </VStack>
-              </>
-            )}
-          </Box>
-        )}
-      </VStack>
+          {scenario.inflationAssumption && (
+            <Popover placement="top" trigger="hover">
+              <PopoverTrigger>
+                <IconButton
+                  aria-label="Inflation details"
+                  icon={<Icon as={FaPercentage} />}
+                  size="sm"
+                  colorScheme="blue"
+                  variant="ghost"
+                />
+              </PopoverTrigger>
+              <PopoverContent>
+                <PopoverArrow />
+                <PopoverCloseButton />
+                <PopoverHeader fontWeight="bold">Inflation</PopoverHeader>
+                <PopoverBody>
+                  <Text fontSize="sm">
+                    Inflation rate:{" "}
+                    {scenario.inflationAssumption[0].value * 100}%
+                  </Text>
+                </PopoverBody>
+              </PopoverContent>
+            </Popover>
+          )}
+        </HStack>
 
-      <Box mt={4} textAlign="right">
         <Link
           as={RouterLink}
-          to={`/scenarios/${scenario.id}`}
+          to={`/scenarios/${encodeURIComponent(scenario.name)}`}
           color={highlightColor}
-          fontSize="sm"
           fontWeight="medium"
+          _hover={{
+            textDecoration: "none",
+          }}
         >
-          View Details &rarr;
+          <Flex align="center">
+            <Text mr={1}>View Details</Text>
+            <Icon as={FaChevronRight} boxSize={3} />
+          </Flex>
         </Link>
-      </Box>
-    </Card>
+      </Flex>
+    </Box>
+  );
+};
+
+// Helper component for displaying info items
+const InfoItem = ({
+  icon,
+  label,
+  value,
+  tooltipContent,
+}: {
+  icon: React.ComponentType;
+  label: string;
+  value: string | number;
+  tooltipContent: string;
+}) => {
+  const iconBg = useColorModeValue("blue.50", "blue.900");
+  const labelColor = useColorModeValue("gray.600", "gray.400");
+
+  return (
+    <GridItem>
+      <Tooltip label={tooltipContent} placement="top">
+        <Flex align="center">
+          <Flex
+            p={2}
+            borderRadius="md"
+            bg={iconBg}
+            alignItems="center"
+            justifyContent="center"
+            mr={3}
+          >
+            <Icon as={icon} color="blue.500" boxSize={4} />
+          </Flex>
+          <Box>
+            <Text fontSize="xs" color={labelColor} fontWeight="medium">
+              {label}
+            </Text>
+            <Text fontWeight="semibold">{value}</Text>
+          </Box>
+        </Flex>
+      </Tooltip>
+    </GridItem>
   );
 };
 

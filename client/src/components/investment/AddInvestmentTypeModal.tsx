@@ -138,26 +138,26 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
     if (initialData) {
       // Extract values from return distribution
       const returnType =
-        initialData.returnDistribution.get("type") || DistributionType.FIXED;
+        initialData.returnDistribution[0].type || DistributionType.FIXED;
       const returnRateKey =
         returnType === DistributionType.FIXED ? "value" : "mean";
       const returnRate =
-        initialData.returnDistribution.get(returnRateKey)?.toString() || "0";
+        initialData.returnDistribution[0][returnRateKey]?.toString() || "0";
       const returnRateStdDev =
         returnType === DistributionType.NORMAL
-          ? initialData.returnDistribution.get("stdev")?.toString()
+          ? initialData.returnDistribution[0]["stdev"]?.toString()
           : undefined;
 
       // Extract values from income distribution
       const dividendType =
-        initialData.incomeDistribution.get("type") || DistributionType.FIXED;
+        initialData.incomeDistribution[0].type || DistributionType.FIXED;
       const dividendRateKey =
         dividendType === DistributionType.FIXED ? "value" : "mean";
       const dividendRate =
-        initialData.incomeDistribution.get(dividendRateKey)?.toString() || "0";
+        initialData.incomeDistribution[0][dividendRateKey]?.toString() || "0";
       const dividendRateStdDev =
         dividendType === DistributionType.NORMAL
-          ? initialData.incomeDistribution.get("stdev")?.toString()
+          ? initialData.incomeDistribution[0]["stdev"]?.toString()
           : undefined;
 
       return {
@@ -265,59 +265,82 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
   };
 
   const handleSave = () => {
-    if (validateCurrentStep()) {
-      // Convert all string values to numbers for the final save
-      const returnRate = parseFloat(formData.returnRate);
-      const returnRateStdDev = formData.returnRateStdDev
-        ? parseFloat(formData.returnRateStdDev)
-        : undefined;
-      const expenseRatio = parseFloat(formData.expenseRatio);
-      const dividendRate = parseFloat(formData.dividendRate);
-      const dividendRateStdDev = formData.dividendRateStdDev
-        ? parseFloat(formData.dividendRateStdDev)
-        : undefined;
-
-      // Create distribution maps properly
-      const returnDistMap = new Map<string, any>();
-      returnDistMap.set("type", formData.returnType);
-      returnDistMap.set(
-        formData.returnType === DistributionType.FIXED ? "value" : "mean",
-        returnRate
-      );
-      if (formData.returnType === DistributionType.NORMAL) {
-        returnDistMap.set("stdev", returnRateStdDev || 0);
-      }
-
-      const incomeDistMap = new Map<string, any>();
-      incomeDistMap.set("type", formData.dividendType);
-      incomeDistMap.set(
-        formData.dividendType === DistributionType.FIXED ? "value" : "mean",
-        dividendRate
-      );
-      if (formData.dividendType === DistributionType.NORMAL) {
-        incomeDistMap.set("stdev", dividendRateStdDev || 0);
-      }
-
-      // Convert the form data to the actual InvestmentTypeRaw format
-      const formattedInvestmentType: InvestmentTypeRaw = {
-        id: initialData?.id, // Keep the original ID when editing
+    try {
+      // Convert form data to InvestmentTypeRaw format
+      const investmentType: InvestmentTypeRaw = {
         name: formData.name,
         description: formData.description,
         returnAmtOrPct: formData.returnInputMode,
-        returnDistribution: returnDistMap,
-        expenseRatio: expenseRatio,
+        expenseRatio: parseFloat(formData.expenseRatio) / 100, // Convert from percentage to decimal
         incomeAmtOrPct: formData.dividendInputMode,
-        incomeDistribution: incomeDistMap,
         taxability: formData.taxability,
+        id: initialData && initialData.id ? initialData.id : undefined,
+        returnDistribution: [], // Initialize with empty array
+        incomeDistribution: [], // Initialize with empty array
       };
 
-      onSave(formattedInvestmentType);
-
-      // Reset form after saving
-      if (!isEditMode) {
-        setFormData(defaultFormValues);
+      // Create return distribution based on type
+      if (formData.returnType === DistributionType.FIXED) {
+        investmentType.returnDistribution = [
+          {
+            type: DistributionType.FIXED,
+            value:
+              formData.returnInputMode === ValueInputMode.PERCENT
+                ? parseFloat(formData.returnRate) / 100
+                : parseFloat(formData.returnRate),
+          },
+        ];
+      } else if (formData.returnType === DistributionType.NORMAL) {
+        investmentType.returnDistribution = [
+          {
+            type: DistributionType.NORMAL,
+            mean:
+              formData.returnInputMode === ValueInputMode.PERCENT
+                ? parseFloat(formData.returnRate) / 100
+                : parseFloat(formData.returnRate),
+            stdev:
+              formData.returnInputMode === ValueInputMode.PERCENT
+                ? parseFloat(formData.returnRateStdDev || "0") / 100
+                : parseFloat(formData.returnRateStdDev || "0"),
+          },
+        ];
       }
+
+      // Create income distribution based on type
+      if (formData.dividendType === DistributionType.FIXED) {
+        investmentType.incomeDistribution = [
+          {
+            type: DistributionType.FIXED,
+            value:
+              formData.dividendInputMode === ValueInputMode.PERCENT
+                ? parseFloat(formData.dividendRate) / 100
+                : parseFloat(formData.dividendRate),
+          },
+        ];
+      } else if (formData.dividendType === DistributionType.NORMAL) {
+        investmentType.incomeDistribution = [
+          {
+            type: DistributionType.NORMAL,
+            mean:
+              formData.dividendInputMode === ValueInputMode.PERCENT
+                ? parseFloat(formData.dividendRate) / 100
+                : parseFloat(formData.dividendRate),
+            stdev:
+              formData.dividendInputMode === ValueInputMode.PERCENT
+                ? parseFloat(formData.dividendRateStdDev || "0") / 100
+                : parseFloat(formData.dividendRateStdDev || "0"),
+          },
+        ];
+      }
+
+      // Pass the data to the parent component
+      onSave(investmentType);
+
+      // Reset form and modal
       handleModalClose();
+    } catch (error) {
+      console.error("Error saving investment type:", error);
+      // Consider adding error handling UI here
     }
   };
 
