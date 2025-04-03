@@ -1,6 +1,5 @@
 // src/db/repositories/TaxBracketRepository.ts
 import { IncomeType, TaxFilingStatus } from "../../core/Enums";
-import { TaxBrackets, create_tax_brackets } from "../../core/tax/TaxBrackets";
 import TaxBracketModel, { ITaxBracket } from "../models/tax_bracket";
 
 const save_bracket = async (
@@ -19,7 +18,7 @@ const save_bracket = async (
       taxpayer_type: taxpayer_type,
     });
     await newBracket.save();
-    //console.log(`Data add succesfully: ${taxpayer_type} AND ${income_type}: [${min}, ${max}] = ${rate}`);
+    console.log(`Data save succesfully: ${taxpayer_type} AND ${income_type}: [${min}, ${max}] = ${rate}`);
   } catch (error) {
     throw new Error(`Internel Service error ${(error as Error).message}`);
   }

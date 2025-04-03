@@ -24,37 +24,12 @@ import {
 import { ScenarioRaw } from "../raw/scenario_raw";
 import { InvestmentRaw } from "../raw/investment_raw";
 import {ExpenseEventRaw, IncomeEventRaw, InvestmentEventRaw, RebalanceEventRaw} from "../raw/event_raw/event_raw"
-import { TaxStatus } from "../../Enums";
+import { TaxStatus, parse_state_type, parse_taxpayer_type } from "../../Enums";
 import { create_federal_tax_service, FederalTaxService } from "../../tax/FederalTaxService";
-import { create_state_tax_service, StateTaxService } from "../../tax/StateTaxService";
+import { create_state_tax_service_yaml, create_state_tax_service_db, StateTaxService } from "../../tax/StateTaxService";
 import { AccountManager, create_account_manager } from "../AccountManager";
 import { AccountMap } from "../AccountManager";
 import { create_investment_type_manager, InvestmentTypeManager } from "../InvestmentTypeManager";
-
-
-function parse_state(state: string) {
-  switch (state) {
-    case "NY":
-      return StateType.NY;
-    case "CT":
-      return StateType.CT;
-    case "NJ":
-      return StateType.NJ;
-    default:
-      throw new Error("Invalid state");
-  }
-}
-
-function parse_martial_status(status: string) {
-  switch (status) {
-    case "individual":
-      return TaxFilingStatus.SINGLE;
-    case "couple":
-      return TaxFilingStatus.MARRIED;
-    default:
-      throw new Error("Invalid martial status");
-  }
-}
 
 function parse_birth_years(birthYears: Array<number>): Array<number> {
   if (birthYears.length > 2 || birthYears.length == 0) {
@@ -302,7 +277,7 @@ function parse_investments(
 }
 export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenario> {
   try {
-    const taxfilingStatus: TaxFilingStatus = parse_martial_status(
+    const taxfilingStatus: TaxFilingStatus = parse_taxpayer_type(
       scenario_raw.martialStatus
     );
     const [user_birth_year, spouse_birth_year] = parse_birth_years(
@@ -339,7 +314,7 @@ export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenar
     const roth_conversion_strategy: Array<string> =
       scenario_raw.RothConversionStrategy;
     const financialGoal: number = scenario_raw.financialGoal;
-    const residenceState: StateType = parse_state(scenario_raw.residenceState);
+    const residenceState: StateType = parse_state_type(scenario_raw.residenceState);
 
     // Process investments - scenario.investments is already processed in create_scenario
     const [cash, non_retirement, pre_tax, after_tax] = parse_investments(
