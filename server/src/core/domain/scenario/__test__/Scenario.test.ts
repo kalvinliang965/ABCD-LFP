@@ -16,7 +16,7 @@ import { rebalance_one } from "../../raw/event_raw/rebalance_event_raw";
 import { salary_income_one } from "../../raw/event_raw/income_event_raw";
 import { cash_investment_type_one, InvestmentTypeRaw } from "../../raw/investment_type_raw";
 import { InvestmentRaw } from "../../raw/investment_raw";
-import { scenario_yaml_string } from "../../../../services/yaml_scraper";
+import { scenario_yaml_string } from "../../../../services/StateYamlParser";
 
 describe("Scenario initialization test", () => {
   describe("create_scenario_raw function test", () => {

@@ -1,5 +1,5 @@
 import { IncomeType, StateType, TaxFilingStatus } from "../../core/Enums";
-import { parse_state_tax_yaml } from "../YamlScraper";
+import { parse_state_tax_yaml } from "../StateYamlParser";
 
 describe("parse state tax", () => {
 

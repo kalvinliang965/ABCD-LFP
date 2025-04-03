@@ -1,4 +1,4 @@
-import { parse_state_tax_yaml, StateTaxYAML } from "../../services/YamlScraper";
+import { parse_state_tax_yaml, StateTaxYAML } from "../../services/StateYamlParser";
 import { StateType, TaxFilingStatus } from "../Enums";
 import { create_tax_brackets, TaxBracketSet } from "./TaxBrackets";
 import { TaxBrackets, TaxBracket } from "./TaxBrackets";
