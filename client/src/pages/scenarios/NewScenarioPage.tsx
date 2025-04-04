@@ -11,7 +11,6 @@ import LifeExpectancyForm, {
 } from "../../components/scenarios/LifeExpectancyForm";
 import InvestmentsForm, {
   InvestmentsConfig,
-  Investment,
   TaxStatus,
 } from "../../components/scenarios/InvestmentsForm";
 import { InvestmentTypesForm } from "../../components/scenarios/InvestmentTypesForm";
@@ -37,6 +36,7 @@ import EventSeriesSection, {
   AddedEvent,
 } from "../../components/event_series/EventSeriesSection";
 import { investmentTypeStorage } from "../../services/investmentTypeStorage";
+import { map_form_to_scenario_raw } from "../../utils/scenarioMapper";
 
 function NewScenarioPage() {
   //! belong to Kate, don't touch
@@ -191,10 +191,7 @@ function NewScenarioPage() {
 
   const handle_to_investments = () => {
     // Log investment types before clearing
-    console.log(
-      "Investment types",
-      investmentTypeStorage.get_all()
-    );
+    console.log("Investment types", investmentTypeStorage.get_all());
     setStep("investments");
   };
 
@@ -212,7 +209,7 @@ function NewScenarioPage() {
       .filter((inv) => inv.taxStatus === ("PRE_TAX_RETIREMENT" as TaxStatus))
       .map((inv) => {
         return (
-          inv.investmentTypeId ||
+          inv.investmentType ||
           `Investment ${inv.id || Math.random().toString(36).substr(2, 9)}`
         );
       });
@@ -247,7 +244,7 @@ function NewScenarioPage() {
     // Get all investment accounts
     const allAccounts = investmentsConfig.investments.map(
       (inv) =>
-        inv.investmentTypeId ||
+        inv.investmentType ||
         `Investment ${inv.id || Math.random().toString(36).substr(2, 9)}`
     );
 
@@ -287,6 +284,44 @@ function NewScenarioPage() {
       // Add spending strategy as a simple array of expense names
       spendingStrategy: spendingStrategy.selectedExpenses,
     };
+
+    // Map form data to ScenarioRaw
+    const scenarioRaw = map_form_to_scenario_raw(
+      scenarioDetails,
+      lifeExpectancyConfig,
+      investmentsConfig,
+      additionalSettings,
+      rmdSettings,
+      spendingStrategy,
+      withdrawalStrategy,
+      addedEvents
+    );
+
+    // Console log the final ScenarioRaw object with helpful formatting
+    console.log("============== Final ScenarioRaw Object ==============");
+    console.log("Basic Info:", {
+      name: scenarioRaw.name,
+      martialStatus: scenarioRaw.martialStatus,
+      birthYears: scenarioRaw.birthYears,
+      residenceState: scenarioRaw.residenceState,
+    });
+    console.log("Life Expectancy:", scenarioRaw.lifeExpectancy);
+    console.log("Investment Types:", Array.from(scenarioRaw.investmentTypes));
+    console.log("Investments:", Array.from(scenarioRaw.investments));
+    console.log("Event Series:", Array.from(scenarioRaw.eventSeries));
+    console.log("Inflation Assumption:", scenarioRaw.inflationAssumption);
+    console.log("Spending Strategy:", scenarioRaw.spendingStrategy);
+    console.log("Withdrawal Strategy:", scenarioRaw.expenseWithdrawalStrategy);
+    console.log("RMD Strategy:", scenarioRaw.RMDStrategy);
+    console.log("Roth Conversion:", {
+      enabled: scenarioRaw.RothConversionOpt,
+      startAge: scenarioRaw.RothConversionStart,
+      endAge: scenarioRaw.RothConversionEnd,
+      strategy: scenarioRaw.RothConversionStrategy,
+    });
+    console.log("Financial Goal:", scenarioRaw.financialGoal);
+    console.log("Complete ScenarioRaw Object:", scenarioRaw);
+    console.log("=====================================================");
 
     // Clean investment type data from localStorage
     investmentTypeStorage.clear();
