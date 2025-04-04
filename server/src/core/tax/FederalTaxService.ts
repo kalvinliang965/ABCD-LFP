@@ -29,7 +29,7 @@ async function initialize_taxable_income_bracket(): Promise<TaxBrackets> {
         const gains = await fetch_and_parse_taxable_income(tax_config.FEDERAL_TAX_URL);
         return gains;
     } catch (error) {
-        throw new Error("Error in initializing capital gains bracket");
+        throw new Error(`Error in initializing taxable income bracket ${error}`);
     }
 }
 
@@ -51,7 +51,7 @@ async function initialize_capital_gains_bracket(): Promise<TaxBrackets> {
         const gains = await fetch_and_parse_capital_gains(tax_config.CAPITAL_GAINS_URL);
         return gains;
     } catch (error) {
-        throw new Error("Error in initializing capital gains bracket");
+        throw new Error(`Error in initializing capital gains bracket ${error}`);
     }
 }
 
