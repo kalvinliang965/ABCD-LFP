@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Box,
-  Text,
-  useToast,
-  Button,
-  HStack,
-} from "@chakra-ui/react";
+import { Box, Text, useToast, Button, HStack } from "@chakra-ui/react";
 import { useEventSeries } from "../../contexts/EventSeriesContext";
 import { useNavigate } from "react-router-dom";
 import ScenarioDetailsForm, {
@@ -17,7 +11,6 @@ import LifeExpectancyForm, {
 } from "../../components/scenarios/LifeExpectancyForm";
 import InvestmentsForm, {
   InvestmentsConfig,
-  Investment,
   TaxStatus,
 } from "../../components/scenarios/InvestmentsForm";
 import { InvestmentTypesForm } from "../../components/scenarios/InvestmentTypesForm";
@@ -39,7 +32,11 @@ import WithdrawalStrategyForm, {
   WithdrawalStrategy,
 } from "../../components/scenarios/WithdrawalStrategyForm";
 //import { InvestmentTaxStatus } from "../../types/scenario";
-import EventSeriesSection, { AddedEvent } from "../../components/event_series/EventSeriesSection";
+import EventSeriesSection, {
+  AddedEvent,
+} from "../../components/event_series/EventSeriesSection";
+import { investmentTypeStorage } from "../../services/investmentTypeStorage";
+import { map_form_to_scenario_raw } from "../../utils/scenarioMapper";
 import { spendingStrategyApi } from "../../services/spendingStrategyApi";
 import spendingStrategyStorage from "../../services/spendingStrategyStorage";
 
@@ -110,12 +107,13 @@ function NewScenarioPage() {
   });
   const [spendingStrategy, setSpendingStrategy] = useState<SpendingStrategy>({
     availableExpenses: [],
-    selectedExpenses: []
+    selectedExpenses: [],
   });
-  const [withdrawalStrategy, setWithdrawalStrategy] = useState<WithdrawalStrategy>({
-    availableAccounts: [],
-    accountPriority: []
-  });
+  const [withdrawalStrategy, setWithdrawalStrategy] =
+    useState<WithdrawalStrategy>({
+      availableAccounts: [],
+      accountPriority: [],
+    });
   //! 一直到这里。
 
   // *这边需要看谁叫了这个function，传入的type可以检查一下。
@@ -126,6 +124,7 @@ function NewScenarioPage() {
       "NewScenarioPage: handle_scenario_type_select called with:",
       type
     );
+    investmentTypeStorage.clear();
     if (type === ScenarioCreationType.FROM_SCRATCH) {
       console.log("NewScenarioPage: Changing step to 'Scenario_name&type'");
       setStep("Scenario_name&type");
@@ -141,6 +140,10 @@ function NewScenarioPage() {
     // Here you would process the imported data
     // For now, we'll just show a success message and redirect
     //! 这里面需要写一个function，来处理导入的数据。那么就直接发给后端。让后端来生成ID然后存入数据库。
+
+    // Clean investment type data from localStorage
+    investmentTypeStorage.clear();
+
     toast({
       title: "Import Successful",
       description: `Scenario "${data.data.name}" imported successfully`,
@@ -189,14 +192,9 @@ function NewScenarioPage() {
   };
 
   const handle_to_investments = () => {
+    // Log investment types before clearing
+    console.log("Investment types", investmentTypeStorage.get_all());
     setStep("investments");
-  };
-  const handle_back_to_investments = () => {
-    setStep("withdrawalStrategy");
-  };
-
-  const handle_to_event_selection = () => {
-    setStep("eventSelection");
   };
 
   const handle_to_investment_types = () => {
@@ -207,21 +205,13 @@ function NewScenarioPage() {
     setStep("rothConversionOptimizer");
   };
 
-  const handle_back_to_roth_conversion = () => {
-    setStep("rothConversionOptimizer");
-  };
-
-  const handle_continue_from_roth_to_investments = () => {
-    setStep("investments");
-  };
-
   const handle_continue_to_rmd_settings = () => {
     // Update available accounts based on investments
     const preTaxAccounts = investmentsConfig.investments
       .filter((inv) => inv.taxStatus === ("PRE_TAX_RETIREMENT" as TaxStatus))
       .map((inv) => {
         return (
-          inv.investmentTypeId ||
+          inv.investmentType ||
           `Investment ${inv.id || Math.random().toString(36).substr(2, 9)}`
         );
       });
@@ -234,11 +224,6 @@ function NewScenarioPage() {
     setStep("rmdSettings");
   };
 
-  // //?????? 你在干嘛？？？？？ 那我为什么不直接叫continue_to_withdrawal_strategy？？？？？？？？？？？？？？？？？？？？？？
-  // const handle_continue_from_rmd = () => {
-  //   handle_continue_to_withdrawal_strategy();
-  // };
-
   const handle_continue_to_spending_strategy = () => {
     // Get all expenses from added events
     const allExpenses = addedEvents
@@ -247,7 +232,7 @@ function NewScenarioPage() {
 
     setSpendingStrategy({
       availableExpenses: allExpenses,
-      selectedExpenses: spendingStrategy.selectedExpenses || []
+      selectedExpenses: spendingStrategy.selectedExpenses || [],
     });
 
     setStep("spendingStrategy");
@@ -261,13 +246,13 @@ function NewScenarioPage() {
     // Get all investment accounts
     const allAccounts = investmentsConfig.investments.map(
       (inv) =>
-        inv.investmentTypeId ||
+        inv.investmentType ||
         `Investment ${inv.id || Math.random().toString(36).substr(2, 9)}`
     );
 
     setWithdrawalStrategy({
       availableAccounts: allAccounts,
-      accountPriority: withdrawalStrategy.accountPriority || []
+      accountPriority: withdrawalStrategy.accountPriority || [],
     });
 
     setStep("withdrawalStrategy");
@@ -302,6 +287,47 @@ function NewScenarioPage() {
       spendingStrategy: spendingStrategy.selectedExpenses,
     };
 
+    // Map form data to ScenarioRaw
+    const scenarioRaw = map_form_to_scenario_raw(
+      scenarioDetails,
+      lifeExpectancyConfig,
+      investmentsConfig,
+      additionalSettings,
+      rmdSettings,
+      spendingStrategy,
+      withdrawalStrategy,
+      addedEvents
+    );
+
+    // Console log the final ScenarioRaw object with helpful formatting
+    console.log("============== Final ScenarioRaw Object ==============");
+    console.log("Basic Info:", {
+      name: scenarioRaw.name,
+      martialStatus: scenarioRaw.martialStatus,
+      birthYears: scenarioRaw.birthYears,
+      residenceState: scenarioRaw.residenceState,
+    });
+    console.log("Life Expectancy:", scenarioRaw.lifeExpectancy);
+    console.log("Investment Types:", Array.from(scenarioRaw.investmentTypes));
+    console.log("Investments:", Array.from(scenarioRaw.investments));
+    console.log("Event Series:", Array.from(scenarioRaw.eventSeries));
+    console.log("Inflation Assumption:", scenarioRaw.inflationAssumption);
+    console.log("Spending Strategy:", scenarioRaw.spendingStrategy);
+    console.log("Withdrawal Strategy:", scenarioRaw.expenseWithdrawalStrategy);
+    console.log("RMD Strategy:", scenarioRaw.RMDStrategy);
+    console.log("Roth Conversion:", {
+      enabled: scenarioRaw.RothConversionOpt,
+      startAge: scenarioRaw.RothConversionStart,
+      endAge: scenarioRaw.RothConversionEnd,
+      strategy: scenarioRaw.RothConversionStrategy,
+    });
+    console.log("Financial Goal:", scenarioRaw.financialGoal);
+    console.log("Complete ScenarioRaw Object:", scenarioRaw);
+    console.log("=====================================================");
+
+    // Clean investment type data from localStorage
+    investmentTypeStorage.clear();
+
     // Submit the scenario
     toast({
       title: "Scenario Created",
@@ -334,7 +360,6 @@ function NewScenarioPage() {
       }));
     }
   };
-
 
   const handle_back_to_rmd = () => {
     setStep("rmdSettings");
