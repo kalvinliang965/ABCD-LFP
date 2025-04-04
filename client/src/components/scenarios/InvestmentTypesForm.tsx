@@ -141,15 +141,6 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
     },
   };
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { type: "spring", stiffness: 100 },
-    },
-  };
-
   const statVariants = {
     hidden: { scale: 0.9, opacity: 0 },
     visible: {
@@ -170,9 +161,9 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
   };
 
   const handle_save_investment_type = (investmentType: InvestmentTypeRaw) => {
-    if (typeToEdit && typeToEdit.id) {
+    if (typeToEdit && typeToEdit.name) {
       // Update existing investment type
-      investmentTypeStorage.update(typeToEdit.id, investmentType);
+      investmentTypeStorage.update(typeToEdit.name, investmentType);
 
       toast({
         title: "Investment Type Updated",
@@ -189,7 +180,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
     } else {
       // Create new investment type
       investmentTypeStorage.create(investmentType);
-      setNewItemAdded(investmentType.id || null);
+      setNewItemAdded(investmentType.name || null);
 
       // Reset the highlight after animation completes
       setTimeout(() => {
@@ -217,16 +208,16 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
     onOpen();
   };
 
-  const handle_edit_click = (id: string) => {
-    const typeToEdit = investmentTypes.find((type) => type.id === id);
+  const handle_edit_click = (name: string) => {
+    const typeToEdit = investmentTypes.find((type) => type.name === name);
     if (typeToEdit) {
       set_type_to_edit(typeToEdit);
       onEditOpen();
     }
   };
 
-  const handle_delete_click = (id: string) => {
-    set_type_to_delete(id);
+  const handle_delete_click = (name: string) => {
+    set_type_to_delete(name);
     onDeleteOpen();
   };
 
@@ -234,7 +225,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
     if (!typeToDelete) return;
 
     const typeToDeleteName = investmentTypes.find(
-      (type) => type.id === typeToDelete
+      (type) => type.name === typeToDelete
     )?.name;
 
     if (investmentTypeStorage.delete(typeToDelete)) {
@@ -518,11 +509,11 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                       <Tbody>
                         {filtered_investment_types.map((type) => (
                           <Tr
-                            key={type.id}
+                            key={type.name}
                             _hover={{ bg: hoverBg }}
                             transition="background 0.2s"
                             bg={
-                              newItemAdded === type.id
+                              newItemAdded === type.name
                                 ? highlightColor
                                 : undefined
                             }
@@ -595,9 +586,9 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                                     colorScheme="blue"
                                     aria-label="Edit investment type"
                                     onClick={() =>
-                                      handle_edit_click(type.id || "")
+                                      handle_edit_click(type.name || "")
                                     }
-                                    isDisabled={!type.id}
+                                    isDisabled={!type.name}
                                     size="sm"
                                   />
                                 </Tooltip>
@@ -608,9 +599,9 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                                     colorScheme="red"
                                     aria-label="Delete investment type"
                                     onClick={() =>
-                                      handle_delete_click(type.id || "")
+                                      handle_delete_click(type.name || "")
                                     }
-                                    isDisabled={!type.id}
+                                    isDisabled={!type.name}
                                     size="sm"
                                   />
                                 </Tooltip>

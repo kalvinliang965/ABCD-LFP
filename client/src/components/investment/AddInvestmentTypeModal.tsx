@@ -274,7 +274,6 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
         expenseRatio: parseFloat(formData.expenseRatio) / 100, // Convert from percentage to decimal
         incomeAmtOrPct: formData.dividendInputMode,
         taxability: formData.taxability,
-        id: initialData && initialData.id ? initialData.id : undefined,
         returnDistribution: [], // Initialize with empty array
         incomeDistribution: [], // Initialize with empty array
       };

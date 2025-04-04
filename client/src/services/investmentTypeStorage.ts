@@ -24,11 +24,6 @@ function object_to_investment_type(storedData: any): InvestmentTypeRaw {
   return baseConversion;
 }
 
-// Generate a unique ID
-function generate_id(): string {
-  return Date.now().toString() + Math.random().toString(36).substring(2, 9);
-}
-
 /**
  * Investment type storage service using localStorage
  */
@@ -78,17 +73,19 @@ export const investmentTypeStorage = {
    */
   create: (investmentType: InvestmentTypeRaw): InvestmentTypeRaw => {
     try {
-      // Add an ID if not present
-      const typeWithId = {
-        ...investmentType,
-        id: investmentType.id || generate_id(),
-      };
-
       // Get current data
       const currentData = investmentTypeStorage.get_all();
 
+      //check if name is already taken
+      const nameExists = currentData.some(
+        (type: InvestmentTypeRaw) => type.name === investmentType.name
+      );
+      if (nameExists) {
+        throw new Error("Investment type name already exists");
+      }
+
       // Add new type
-      const newData = [...currentData, typeWithId];
+      const newData = [...currentData, investmentType];
 
       // Convert for storage
       const storageData = newData.map(map_to_storage_object);
@@ -96,7 +93,7 @@ export const investmentTypeStorage = {
       // Save to localStorage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
 
-      return typeWithId;
+      return investmentType;
     } catch (error) {
       console.error("Error creating investment type in localStorage:", error);
       throw error;
@@ -110,19 +107,18 @@ export const investmentTypeStorage = {
    * @returns The updated investment type
    */
   update: (
-    id: string,
+    name: string,
     investmentType: InvestmentTypeRaw
   ): InvestmentTypeRaw | null => {
     try {
       const currentData = investmentTypeStorage.get_all();
-      const index = currentData.findIndex((type: any) => type.id === id);
+      const index = currentData.findIndex((type: any) => type.name === name);
 
       if (index === -1) return null;
 
       // Update the item
       const updatedType = {
         ...investmentType,
-        id,
       };
 
       currentData[index] = updatedType;
@@ -133,20 +129,20 @@ export const investmentTypeStorage = {
 
       return updatedType;
     } catch (error) {
-      console.error(`Error updating investment type with id ${id}:`, error);
+      console.error(`Error updating investment type with name ${name}:`, error);
       return null;
     }
   },
 
   /**
    * Delete an investment type
-   * @param id ID of the investment type to delete
+   * @param name Name of the investment type to delete
    * @returns true if deleted, false otherwise
    */
-  delete: (id: string): boolean => {
+  delete: (name: string): boolean => {
     try {
       const currentData = investmentTypeStorage.get_all();
-      const filteredData = currentData.filter((type: any) => type.id !== id);
+      const filteredData = currentData.filter((type: any) => type.name !== name);
 
       if (filteredData.length === currentData.length) {
         return false; // Nothing was deleted
@@ -158,7 +154,7 @@ export const investmentTypeStorage = {
 
       return true;
     } catch (error) {
-      console.error(`Error deleting investment type with id ${id}:`, error);
+      console.error(`Error deleting investment type with name ${name}:`, error);
       return false;
     }
   },

@@ -132,7 +132,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
   const available_investment_types = investmentTypes.filter(
     (type) =>
       !investmentsConfig.investments.some(
-        (investment) => investment.investmentTypeId === type.id
+        (investment) => investment.investmentTypeId === type.name
       )
   );
 
@@ -140,7 +140,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
     const typeId = e.target.value;
-    const selectedType = investmentTypes.find((type) => type.id === typeId);
+    const selectedType = investmentTypes.find((type) => type.name === typeId);
     const typeName = selectedType?.name || "";
 
     set_new_investment({
@@ -643,7 +643,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
                             isInvalid={!!errors.investmentType}
                           >
                             {available_investment_types.map((type) => (
-                              <option key={type.id} value={type.id || ""}>
+                              <option key={type.name} value={type.name || ""}>
                                 {type.name}
                               </option>
                             ))}

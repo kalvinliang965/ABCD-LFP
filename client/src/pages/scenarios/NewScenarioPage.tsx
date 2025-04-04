@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Box,
-  Text,
-  useToast,
-  Button,
-  HStack,
-} from "@chakra-ui/react";
+import { Box, Text, useToast, Button, HStack } from "@chakra-ui/react";
 import { useEventSeries } from "../../contexts/EventSeriesContext";
 import { useNavigate } from "react-router-dom";
 import ScenarioDetailsForm, {
@@ -39,7 +33,10 @@ import WithdrawalStrategyForm, {
   WithdrawalStrategy,
 } from "../../components/scenarios/WithdrawalStrategyForm";
 //import { InvestmentTaxStatus } from "../../types/scenario";
-import EventSeriesSection, { AddedEvent } from "../../components/event_series/EventSeriesSection";
+import EventSeriesSection, {
+  AddedEvent,
+} from "../../components/event_series/EventSeriesSection";
+import { investmentTypeStorage } from "../../services/investmentTypeStorage";
 
 function NewScenarioPage() {
   //! belong to Kate, don't touch
@@ -108,12 +105,13 @@ function NewScenarioPage() {
   });
   const [spendingStrategy, setSpendingStrategy] = useState<SpendingStrategy>({
     availableExpenses: [],
-    selectedExpenses: []
+    selectedExpenses: [],
   });
-  const [withdrawalStrategy, setWithdrawalStrategy] = useState<WithdrawalStrategy>({
-    availableAccounts: [],
-    accountPriority: []
-  });
+  const [withdrawalStrategy, setWithdrawalStrategy] =
+    useState<WithdrawalStrategy>({
+      availableAccounts: [],
+      accountPriority: [],
+    });
   //! 一直到这里。
 
   // *这边需要看谁叫了这个function，传入的type可以检查一下。
@@ -124,6 +122,7 @@ function NewScenarioPage() {
       "NewScenarioPage: handle_scenario_type_select called with:",
       type
     );
+    investmentTypeStorage.clear();
     if (type === ScenarioCreationType.FROM_SCRATCH) {
       console.log("NewScenarioPage: Changing step to 'Scenario_name&type'");
       setStep("Scenario_name&type");
@@ -139,6 +138,10 @@ function NewScenarioPage() {
     // Here you would process the imported data
     // For now, we'll just show a success message and redirect
     //! 这里面需要写一个function，来处理导入的数据。那么就直接发给后端。让后端来生成ID然后存入数据库。
+
+    // Clean investment type data from localStorage
+    investmentTypeStorage.clear();
+
     toast({
       title: "Import Successful",
       description: `Scenario "${data.data.name}" imported successfully`,
@@ -187,14 +190,12 @@ function NewScenarioPage() {
   };
 
   const handle_to_investments = () => {
+    // Log investment types before clearing
+    console.log(
+      "Investment types",
+      investmentTypeStorage.get_all()
+    );
     setStep("investments");
-  };
-  const handle_back_to_investments = () => {
-    setStep("withdrawalStrategy");
-  };
-
-  const handle_to_event_selection = () => {
-    setStep("eventSelection");
   };
 
   const handle_to_investment_types = () => {
@@ -203,14 +204,6 @@ function NewScenarioPage() {
 
   const handle_to_roth_conversion_optimizer = () => {
     setStep("rothConversionOptimizer");
-  };
-
-  const handle_back_to_roth_conversion = () => {
-    setStep("rothConversionOptimizer");
-  };
-
-  const handle_continue_from_roth_to_investments = () => {
-    setStep("investments");
   };
 
   const handle_continue_to_rmd_settings = () => {
@@ -232,11 +225,6 @@ function NewScenarioPage() {
     setStep("rmdSettings");
   };
 
-  // //?????? 你在干嘛？？？？？ 那我为什么不直接叫continue_to_withdrawal_strategy？？？？？？？？？？？？？？？？？？？？？？
-  // const handle_continue_from_rmd = () => {
-  //   handle_continue_to_withdrawal_strategy();
-  // };
-
   const handle_continue_to_spending_strategy = () => {
     // Get all expenses from added events
     const allExpenses = addedEvents
@@ -245,7 +233,7 @@ function NewScenarioPage() {
 
     setSpendingStrategy({
       availableExpenses: allExpenses,
-      selectedExpenses: spendingStrategy.selectedExpenses || []
+      selectedExpenses: spendingStrategy.selectedExpenses || [],
     });
 
     setStep("spendingStrategy");
@@ -265,7 +253,7 @@ function NewScenarioPage() {
 
     setWithdrawalStrategy({
       availableAccounts: allAccounts,
-      accountPriority: withdrawalStrategy.accountPriority || []
+      accountPriority: withdrawalStrategy.accountPriority || [],
     });
 
     setStep("withdrawalStrategy");
@@ -300,6 +288,9 @@ function NewScenarioPage() {
       spendingStrategy: spendingStrategy.selectedExpenses,
     };
 
+    // Clean investment type data from localStorage
+    investmentTypeStorage.clear();
+
     // Submit the scenario
     toast({
       title: "Scenario Created",
@@ -328,7 +319,6 @@ function NewScenarioPage() {
       }));
     }
   };
-
 
   const handle_back_to_rmd = () => {
     setStep("rmdSettings");
