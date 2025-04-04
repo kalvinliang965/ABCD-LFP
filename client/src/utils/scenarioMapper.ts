@@ -1,0 +1,198 @@
+// AI-generated code
+// Create a mapping function to transform form data to ScenarioRaw
+
+import {
+  ScenarioRaw,
+  InvestmentTypeRaw,
+  InvestmentRaw,
+  IncomeEventRaw,
+  ExpenseEventRaw,
+  InvestmentEventRaw,
+  RebalanceEventRaw,
+  EventRaw,
+} from "../types/Scenarios";
+import {
+  ScenarioDetails,
+  ScenarioType,
+} from "../components/scenarios/ScenarioDetailsForm";
+import { LifeExpectancyConfig } from "../components/scenarios/LifeExpectancyForm";
+import { InvestmentsConfig } from "../components/scenarios/InvestmentsForm";
+import { AdditionalSettingsConfig } from "../components/scenarios/AdditionalSettingsForm";
+import { RMDSettings } from "../components/scenarios/RMDSettingsForm";
+import { SpendingStrategy } from "../components/scenarios/SpendingStrategyForm";
+import { WithdrawalStrategy } from "../components/scenarios/WithdrawalStrategyForm";
+import { AddedEvent } from "../components/event_series/EventSeriesSection";
+import { investmentTypeStorage } from "../services/investmentTypeStorage";
+
+export function map_form_to_scenario_raw(
+  scenarioDetails: ScenarioDetails,
+  lifeExpectancyConfig: LifeExpectancyConfig,
+  investmentsConfig: InvestmentsConfig,
+  additionalSettings: AdditionalSettingsConfig,
+  rmdSettings: RMDSettings,
+  spendingStrategy: SpendingStrategy,
+  withdrawalStrategy: WithdrawalStrategy,
+  addedEvents: AddedEvent[]
+): ScenarioRaw {
+  // Get birth years
+  const birthYears: number[] = [scenarioDetails.userBirthYear];
+  if (scenarioDetails.type === "couple" && scenarioDetails.spouseBirthYear) {
+    birthYears.push(scenarioDetails.spouseBirthYear);
+  }
+
+  // Map life expectancy
+  const lifeExpectancy: Array<{ [key: string]: any }> = [];
+  if (lifeExpectancyConfig.userExpectancyType === "fixed") {
+    lifeExpectancy.push({
+      type: "fixed",
+      value: lifeExpectancyConfig.userFixedAge,
+    });
+  } else {
+    lifeExpectancy.push({
+      type: "distribution",
+      parameters: (lifeExpectancyConfig as any).userDistributionParams || {},
+    });
+  }
+
+  if (
+    scenarioDetails.type === "couple" &&
+    lifeExpectancyConfig.spouseExpectancyType
+  ) {
+    if (lifeExpectancyConfig.spouseExpectancyType === "fixed") {
+      lifeExpectancy.push({
+        type: "fixed",
+        value: lifeExpectancyConfig.spouseFixedAge,
+      });
+    } else {
+      lifeExpectancy.push({
+        type: "distribution",
+        parameters:
+          (lifeExpectancyConfig as any).spouseDistributionParams || {},
+      });
+    }
+  }
+
+  // Map investment types
+  const allInvestmentTypes = investmentTypeStorage.get_all();
+  console.log("All investment types before mapping:", allInvestmentTypes);
+
+  const investmentTypes = new Set<InvestmentTypeRaw>(
+    allInvestmentTypes.map((it: any) => {
+      const mappedType = {
+        name: it.name,
+        description: it.description || "",
+        returnAmtOrPct: it.returnType || "percent",
+        returnDistribution: it.returnDistribution || [],
+        expenseRatio: it.expenseRatio || 0,
+        incomeAmtOrPct: it.incomeType || "percent",
+        incomeDistribution: it.incomeDistribution || [],
+        taxability: it.taxability,
+      };
+      console.log(`Mapping investment type ${it.name}:`, {
+        original: it,
+        mapped: mappedType,
+      });
+      return mappedType;
+    })
+  );
+
+  // Map investments
+  const investments = new Set<InvestmentRaw>(
+    investmentsConfig.investments.map((inv) => ({
+      investmentType: inv.investmentType || "",
+      value: inv.value || 0,
+      taxStatus:
+        inv.taxStatus.toLowerCase().replace(/_/g, "-") || "non-retirement",
+      id: inv.id || `inv-${Math.random().toString(36).slice(2)}`,
+    }))
+  );
+
+  // Map events
+  const eventSeries = new Set(
+    addedEvents.map((event: any) => {
+      const baseEvent = {
+        name: event.name,
+        start: event.startConfig || [],
+        duration: event.durationConfig || [],
+        type: event.type || "",
+      };
+
+      if (event.type === "income") {
+        return {
+          ...baseEvent,
+          initialAmount: event.initialAmount || 0,
+          changeAmtOrPct: event.changeType || "percent",
+          changeDistribution: event.changeDistribution || [],
+          inflationAdjusted: event.inflationAdjusted || false,
+          userFraction: event.userFraction || 1,
+          socialSecurity: event.isSocialSecurity || false,
+        } as IncomeEventRaw;
+      } else if (event.type === "expense") {
+        return {
+          ...baseEvent,
+          initialAmount: event.initialAmount || 0,
+          changeAmtOrPct: event.changeType || "percent",
+          changeDistribution: event.changeDistribution || [],
+          inflationAdjusted: event.inflationAdjusted || false,
+          userFraction: event.userFraction || 1,
+          discretionary: event.isDiscretionary || false,
+        } as ExpenseEventRaw;
+      } else if (event.type === "invest") {
+        return {
+          ...baseEvent,
+          assetAllocation: event.assetAllocation || [],
+          assetAllocation2: event.assetAllocation || [], // Fallback to assetAllocation if assetAllocation2 doesn't exist
+          glidePath: event.useGlidePath || false,
+          maxCash: event.maxCash || 0,
+        } as InvestmentEventRaw;
+      } else if (event.type === "rebalance") {
+        return {
+          ...baseEvent,
+          assetAllocation: event.assetAllocation || [],
+        } as RebalanceEventRaw;
+      }
+      return baseEvent as EventRaw;
+    })
+  ) as unknown as Set<
+    IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw
+  >;
+
+  // Get Roth Conversion settings from form
+  const rothForm = {
+    enable: false, // Default values, would come from RothConversionOptimizerForm
+    startAge: 0,
+    endAge: 0,
+    strategy: [""],
+  };
+
+  // Return the final ScenarioRaw object
+  return {
+    name: scenarioDetails.name,
+    martialStatus: scenarioDetails.type === "couple" ? "married" : "single",
+    birthYears,
+    lifeExpectancy,
+    investmentTypes,
+    investments,
+    eventSeries,
+    inflationAssumption:
+      additionalSettings.inflationConfig.type === "fixed"
+        ? [{ type: "fixed", value: additionalSettings.inflationConfig.value }]
+        : [
+            {
+              type: "distribution",
+              parameters:
+                (additionalSettings.inflationConfig as any).parameters || {},
+            },
+          ],
+    afterTaxContributionLimit: 0, // Not in forms, default value
+    spendingStrategy: spendingStrategy.selectedExpenses || [],
+    expenseWithdrawalStrategy: withdrawalStrategy.accountPriority || [],
+    RMDStrategy: rmdSettings.enableRMD ? rmdSettings.accountPriority : [],
+    RothConversionOpt: rothForm.enable,
+    RothConversionStart: rothForm.startAge,
+    RothConversionEnd: rothForm.endAge,
+    RothConversionStrategy: rothForm.strategy,
+    financialGoal: additionalSettings.financialGoal?.value || 0,
+    residenceState: additionalSettings.stateOfResidence || "NY",
+  };
+}
