@@ -19,9 +19,11 @@ import {
 } from "@chakra-ui/react";
 import { MdCheckCircle } from "react-icons/md";
 import { FaMoneyBillWave } from "react-icons/fa";
+import spendingStrategyStorage from "../../services/spendingStrategyStorage";
 
 
 export interface SpendingStrategy {
+  id?: string;
   // This will be an array of expense names that are considered discretionary
   availableExpenses: string[];  // All available expenses
   selectedExpenses: string[];   // Selected discretionary expenses
@@ -34,6 +36,8 @@ interface SpendingStrategyFormProps {
   onBack: () => void;
 }
 
+
+
 export const SpendingStrategyForm: React.FC<SpendingStrategyFormProps> = ({
   spendingStrategy,
   onChangeSpendingStrategy,
@@ -42,6 +46,11 @@ export const SpendingStrategyForm: React.FC<SpendingStrategyFormProps> = ({
 }) => {
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
+  
+  // Add useEffect to log the current spending strategy whenever it changes
+  useEffect(() => {
+    console.log("Current spending strategy:", spendingStrategy);
+  }, [spendingStrategy]);
   
   // Handle checkbox changes
   const handleExpenseToggle = (expenseName: string) => {
@@ -58,11 +67,34 @@ export const SpendingStrategyForm: React.FC<SpendingStrategyFormProps> = ({
       updatedSelectedExpenses = [...spendingStrategy.selectedExpenses, expenseName];
     }
     
-    onChangeSpendingStrategy({
+    const updatedStrategy = {
       ...spendingStrategy,
       selectedExpenses: updatedSelectedExpenses,
-    });
+    };
+    
+    // Log the updated strategy before sending it to parent
+    console.log("Updated spending strategy:", updatedStrategy);
+    
+    // Save to localStorage immediately for auto-save functionality
+    try {
+      if (updatedStrategy.id) {
+        spendingStrategyStorage.update(updatedStrategy.id, updatedStrategy);
+      } else {
+        // Only add to localStorage if this is the first change
+        if (updatedSelectedExpenses.length === 1 && !isSelected) {
+          const savedStrategy = spendingStrategyStorage.add(updatedStrategy);
+          // Update with the new ID
+          updatedStrategy.id = savedStrategy.id;
+        }
+      }
+    } catch (error) {
+      console.error("Error auto-saving to localStorage:", error);
+    }
+    
+    onChangeSpendingStrategy(updatedStrategy);
   };
+
+  
 
   return (
     <Box maxW="800px" mx="auto" p={5}>
