@@ -136,44 +136,154 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
   // Initialize form data with initialData if provided
   const [formData, setFormData] = useState<InvestmentTypeForm>(() => {
     if (initialData) {
+      // Check if return distribution array exists and has content
+      if (
+        !initialData.returnDistribution ||
+        !Array.isArray(initialData.returnDistribution) ||
+        initialData.returnDistribution.length === 0
+      ) {
+        initialData.returnDistribution = [
+          { type: DistributionType.FIXED, value: 0 },
+        ];
+      }
+
+      // Check if income distribution array exists and has content
+      if (
+        !initialData.incomeDistribution ||
+        !Array.isArray(initialData.incomeDistribution) ||
+        initialData.incomeDistribution.length === 0
+      ) {
+        initialData.incomeDistribution = [
+          { type: DistributionType.FIXED, value: 0 },
+        ];
+      }
+
+      // Normalize distribution type (handles case sensitivity)
+      const normalizeType = (type: string): string => {
+        if (typeof type !== "string") return DistributionType.FIXED;
+        const lowerType = type.toLowerCase();
+        return lowerType === "normal"
+          ? DistributionType.NORMAL
+          : DistributionType.FIXED;
+      };
+
       // Extract values from return distribution
-      const returnType =
-        initialData.returnDistribution[0].type || DistributionType.FIXED;
+      const returnDistItem = initialData.returnDistribution[0] || {};
+      const returnType = normalizeType(returnDistItem.type);
+
+      // Determine which key to use for the value
       const returnRateKey =
         returnType === DistributionType.FIXED ? "value" : "mean";
-      const returnRate =
-        initialData.returnDistribution[0][returnRateKey]?.toString() || "0";
-      const returnRateStdDev =
+
+      // Get the value, handling different possible key names
+      let returnRateValue = null;
+      if (returnDistItem[returnRateKey] !== undefined) {
+        returnRateValue = returnDistItem[returnRateKey];
+      } else if (
+        returnDistItem["value"] !== undefined &&
+        returnType === DistributionType.FIXED
+      ) {
+        returnRateValue = returnDistItem["value"];
+      } else if (
+        returnDistItem["mean"] !== undefined &&
         returnType === DistributionType.NORMAL
-          ? initialData.returnDistribution[0]["stdev"]?.toString()
+      ) {
+        returnRateValue = returnDistItem["mean"];
+      }
+
+      // Convert to string and handle percentage display
+      const returnRate =
+        returnRateValue !== null && returnRateValue !== undefined
+          ? initialData.returnAmtOrPct === ValueInputMode.PERCENT
+            ? (parseFloat(returnRateValue.toString()) * 100).toString()
+            : returnRateValue.toString()
+          : "0";
+
+      // Handle standard deviation similarly
+      let returnRateStdDevValue = null;
+      if (returnType === DistributionType.NORMAL) {
+        if (returnDistItem["stdev"] !== undefined) {
+          returnRateStdDevValue = returnDistItem["stdev"];
+        }
+      }
+
+      const returnRateStdDev =
+        returnRateStdDevValue !== null && returnRateStdDevValue !== undefined
+          ? initialData.returnAmtOrPct === ValueInputMode.PERCENT
+            ? (parseFloat(returnRateStdDevValue.toString()) * 100).toString()
+            : returnRateStdDevValue.toString()
           : undefined;
 
-      // Extract values from income distribution
-      const dividendType =
-        initialData.incomeDistribution[0].type || DistributionType.FIXED;
+      // Extract values from income distribution - same approach as return
+      const incomeDistItem = initialData.incomeDistribution[0] || {};
+      const dividendType = normalizeType(incomeDistItem.type);
+
       const dividendRateKey =
         dividendType === DistributionType.FIXED ? "value" : "mean";
-      const dividendRate =
-        initialData.incomeDistribution[0][dividendRateKey]?.toString() || "0";
-      const dividendRateStdDev =
+
+      // Get the value, handling different possible key names
+      let dividendRateValue = null;
+      if (incomeDistItem[dividendRateKey] !== undefined) {
+        dividendRateValue = incomeDistItem[dividendRateKey];
+      } else if (
+        incomeDistItem["value"] !== undefined &&
+        dividendType === DistributionType.FIXED
+      ) {
+        dividendRateValue = incomeDistItem["value"];
+      } else if (
+        incomeDistItem["mean"] !== undefined &&
         dividendType === DistributionType.NORMAL
-          ? initialData.incomeDistribution[0]["stdev"]?.toString()
+      ) {
+        dividendRateValue = incomeDistItem["mean"];
+      }
+
+      const dividendRate =
+        dividendRateValue !== null && dividendRateValue !== undefined
+          ? initialData.incomeAmtOrPct === ValueInputMode.PERCENT
+            ? (parseFloat(dividendRateValue.toString()) * 100).toString()
+            : dividendRateValue.toString()
+          : "0";
+
+      // Handle dividend standard deviation similarly
+      let dividendRateStdDevValue = null;
+      if (dividendType === DistributionType.NORMAL) {
+        if (incomeDistItem["stdev"] !== undefined) {
+          dividendRateStdDevValue = incomeDistItem["stdev"];
+        }
+      }
+
+      const dividendRateStdDev =
+        dividendRateStdDevValue !== null &&
+        dividendRateStdDevValue !== undefined
+          ? initialData.incomeAmtOrPct === ValueInputMode.PERCENT
+            ? (parseFloat(dividendRateStdDevValue.toString()) * 100).toString()
+            : dividendRateStdDevValue.toString()
           : undefined;
 
-      return {
+      // Parse expense ratio as a percentage (multiply by 100 for display)
+      const expenseRatioValue =
+        initialData.expenseRatio !== undefined &&
+        initialData.expenseRatio !== null
+          ? (parseFloat(initialData.expenseRatio.toString()) * 100).toString()
+          : "0";
+
+      const result = {
         name: initialData.name || "",
         description: initialData.description || "",
         returnType: returnType,
         returnRate: returnRate,
         returnInputMode: initialData.returnAmtOrPct || ValueInputMode.PERCENT,
         returnRateStdDev: returnRateStdDev,
-        expenseRatio: initialData.expenseRatio.toString() || "0",
+        expenseRatio: expenseRatioValue,
         dividendType: dividendType,
         dividendRate: dividendRate,
         dividendInputMode: initialData.incomeAmtOrPct || ValueInputMode.PERCENT,
         dividendRateStdDev: dividendRateStdDev,
-        taxability: initialData.taxability,
+        taxability:
+          initialData.taxability !== undefined ? initialData.taxability : true,
       };
+
+      return result;
     }
 
     return defaultFormValues;
@@ -854,16 +964,21 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
   // Step 4: Review
   const renderReviewStep = () => {
     // Format functions
-    const formatPercent = (val: string | number) => {
+    const formatPercent = (val: string | number | null | undefined) => {
+      if (val === null || val === undefined || val === "") return "0.00%";
       const numVal = typeof val === "string" ? parseFloat(val) : val;
-      return `${numVal.toFixed(2)}%`;
+      return isNaN(numVal) ? "0.00%" : `${numVal.toFixed(2)}%`;
     };
-    const formatCurrency = (val: string | number) => {
+
+    const formatCurrency = (val: string | number | null | undefined) => {
+      if (val === null || val === undefined || val === "") return "$0.00";
       const numVal = typeof val === "string" ? parseFloat(val) : val;
-      return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(numVal);
+      return isNaN(numVal)
+        ? "$0.00"
+        : new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(numVal);
     };
 
     return (

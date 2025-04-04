@@ -211,7 +211,25 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
   const handle_edit_click = (name: string) => {
     const typeToEdit = investmentTypes.find((type) => type.name === name);
     if (typeToEdit) {
-      set_type_to_edit(typeToEdit);
+      console.log("Found investment type to edit:", typeToEdit);
+
+      // Ensure typeToEdit has valid returnDistribution and incomeDistribution arrays
+      const editableType = {
+        ...typeToEdit,
+        returnDistribution:
+          Array.isArray(typeToEdit.returnDistribution) &&
+          typeToEdit.returnDistribution.length > 0
+            ? typeToEdit.returnDistribution
+            : [{ type: "fixed", value: 0 }],
+        incomeDistribution:
+          Array.isArray(typeToEdit.incomeDistribution) &&
+          typeToEdit.incomeDistribution.length > 0
+            ? typeToEdit.incomeDistribution
+            : [{ type: "fixed", value: 0 }],
+      };
+
+      console.log("Prepared investment type for editing:", editableType);
+      set_type_to_edit(editableType);
       onEditOpen();
     }
   };

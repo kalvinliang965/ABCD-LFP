@@ -38,6 +38,7 @@ export const investmentTypeStorage = {
       if (!storedData) return [];
 
       const parsedData = JSON.parse(storedData);
+      console.log("Parsed data:", parsedData);
       return Array.isArray(parsedData)
         ? parsedData.map(object_to_investment_type)
         : [];
@@ -51,19 +52,33 @@ export const investmentTypeStorage = {
   },
 
   /**
-   * Get an investment type by ID
-   * @param id Investment type ID
+   * Get an investment type by name
+   * @param name Investment type name
    * @returns Investment type if found, null otherwise
    */
-  get_by_id: (id: string): InvestmentTypeRaw | null => {
+  get_by_name: (name: string): InvestmentTypeRaw | null => {
     try {
       const allTypes = investmentTypeStorage.get_all();
-      const foundType = allTypes.find((type: any) => type.id === id);
+      const foundType = allTypes.find((type: any) => type.name === name);
       return foundType || null;
     } catch (error) {
-      console.error(`Error fetching investment type with id ${id}:`, error);
+      console.error(`Error fetching investment type with name ${name}:`, error);
       return null;
     }
+  },
+
+  // For backward compatibility with code that might still use get_by_id
+  get_by_id: (id: string): InvestmentTypeRaw | null => {
+    console.warn(
+      `get_by_id is deprecated, use get_by_name instead. Called with id: "${id}"`
+    );
+    console.log(
+      "All available investment types:",
+      investmentTypeStorage.get_all().map((type) => type.name)
+    );
+    const result = investmentTypeStorage.get_by_name(id);
+    console.log("Result from get_by_name:", result);
+    return result;
   },
 
   /**
@@ -102,7 +117,7 @@ export const investmentTypeStorage = {
 
   /**
    * Update an existing investment type
-   * @param id ID of the investment type to update
+   * @param name Name of the investment type to update
    * @param investmentType Updated investment type data
    * @returns The updated investment type
    */
@@ -142,7 +157,9 @@ export const investmentTypeStorage = {
   delete: (name: string): boolean => {
     try {
       const currentData = investmentTypeStorage.get_all();
-      const filteredData = currentData.filter((type: any) => type.name !== name);
+      const filteredData = currentData.filter(
+        (type: any) => type.name !== name
+      );
 
       if (filteredData.length === currentData.length) {
         return false; // Nothing was deleted
