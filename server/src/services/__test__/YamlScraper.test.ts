@@ -1,5 +1,6 @@
 import { IncomeType, StateType, TaxFilingStatus } from "../../core/Enums";
-import { parse_state_tax_yaml } from "../YamlScraper";
+import { create_scenario_raw_yaml, scenario_yaml_string } from "../ScenarioYamlParser";
+import { create_state_tax__raw_yaml } from "../StateYamlParser";
 
 describe("parse state tax", () => {
 
@@ -19,7 +20,7 @@ describe("parse state tax", () => {
     `;
 
     it("should parse valid yaml info", () => {
-        const result = parse_state_tax_yaml(validYAML);
+        const result = create_state_tax__raw_yaml(validYAML);
         console.log(result); 
         expect(result).toEqual([
             {
@@ -41,7 +42,7 @@ describe("parse state tax", () => {
 
     describe("Should reject invalid data", () => {
         const test_error_case = (yaml: string) => {
-            expect(() => parse_state_tax_yaml(yaml)).toThrowError();
+            expect(() => create_state_tax__raw_yaml(yaml)).toThrowError();
         };
 
         it("should reject file with missing taxbrackets as entries point", () => {
@@ -209,4 +210,49 @@ describe("parse state tax", () => {
             );
         });
     })
+});
+
+
+describe("parse scenario yaml", () => {
+  it("should yaml_string contain scenario data correctly", () => {
+    const scenarioRaw = create_scenario_raw_yaml(scenario_yaml_string);
+
+    expect(scenarioRaw).toBeDefined();
+    expect(scenarioRaw.name).toBe("Retirement Planning Scenario");
+    expect(scenarioRaw.martialStatus).toBe("couple");
+    expect(scenarioRaw.birthYears).toEqual([1985, 1987]);
+    
+    expect(scenarioRaw.lifeExpectancy.length).toBe(2);
+    expect(scenarioRaw.lifeExpectancy[0].get("type")).toBe("fixed");
+    expect(scenarioRaw.lifeExpectancy[0].get("value")).toBe(80);
+    expect(scenarioRaw.lifeExpectancy[1].get("type")).toBe("normal");
+    expect(scenarioRaw.lifeExpectancy[1].get("mean")).toBe(82);
+    expect(scenarioRaw.lifeExpectancy[1].get("stdev")).toBe(3);
+
+    expect(scenarioRaw.investments.size).toBe(5);
+
+    expect(scenarioRaw.eventSeries.size).toBe(6);
+
+    const inflation = scenarioRaw.inflationAssumption;
+    expect(inflation.get("type")).toBe("fixed");
+    expect(inflation.get("value")).toBe(0.03);
+
+    expect(scenarioRaw.afterTaxContributionLimit).toBe(7000);
+    expect(scenarioRaw.spendingStrategy).toEqual([
+      "vacation",
+      "streaming services",
+    ]);
+    expect(scenarioRaw.expenseWithdrawalStrategy).toEqual([
+      "S&P 500 non-retirement",
+      "tax-exempt bonds",
+      "S&P 500 after-tax",
+    ]);
+    expect(scenarioRaw.RMDStrategy).toEqual(["S&P 500 pre-tax"]);
+    expect(scenarioRaw.RothConversionOpt).toBe(true);
+    expect(scenarioRaw.RothConversionStart).toBe(2050);
+    expect(scenarioRaw.RothConversionEnd).toBe(2060);
+    expect(scenarioRaw.RothConversionStrategy).toEqual(["S&P 500 pre-tax"]);
+    expect(scenarioRaw.financialGoal).toBe(10000);
+    expect(scenarioRaw.residenceState).toBe("NY");
+  });
 });
