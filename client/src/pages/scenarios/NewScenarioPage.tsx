@@ -39,6 +39,9 @@ import { investmentTypeStorage } from "../../services/investmentTypeStorage";
 import { map_form_to_scenario_raw } from "../../utils/scenarioMapper";
 import { spendingStrategyApi } from "../../services/spendingStrategyApi";
 import spendingStrategyStorage from "../../services/spendingStrategyStorage";
+import { withdrawalStrategyApi } from "../../services/withdrawalStrategyApi";
+import withdrawalStrategyStorage from "../../services/withdrawalStrategyStorage";
+import rmdStrategyStorage from "../../services/rmdStrategyStorage";
 
 function NewScenarioPage() {
   //! belong to Kate, don't touch
@@ -207,8 +210,15 @@ function NewScenarioPage() {
 
   const handle_continue_to_rmd_settings = () => {
     // Update available accounts based on investments
+    console.log("Investments before filtering:", investmentsConfig.investments);
+    
+    // Change this filter to match the actual tax status value
     const preTaxAccounts = investmentsConfig.investments
-      .filter((inv) => inv.taxStatus === ("PRE_TAX_RETIREMENT" as TaxStatus))
+      .filter((inv) => {
+        console.log("Investment tax status:", inv.taxStatus);
+        // Check for both possible formats to be safe
+        return inv.taxStatus === "pre-tax" || inv.taxStatus === "PRE_TAX_RETIREMENT";
+      })
       .map((inv) => {
         return (
           inv.investmentType ||
@@ -216,11 +226,18 @@ function NewScenarioPage() {
         );
       });
 
+    console.log("Filtered pre-tax accounts:", preTaxAccounts);
+
     setRmdSettings({
       ...rmdSettings,
       availableAccounts: preTaxAccounts,
     });
-
+    
+    console.log("RMD Settings after update:", {
+      ...rmdSettings,
+      availableAccounts: preTaxAccounts
+    });
+    
     setStep("rmdSettings");
   };
 
@@ -258,7 +275,8 @@ function NewScenarioPage() {
     setStep("withdrawalStrategy");
   };
 
-  const handle_continue_from_withdrawal_strategy = () => {
+  const handle_continue_from_withdrawal_strategy = async () => {
+    await saveWithdrawalStrategy();
     setStep("eventSelection");
   };
 
@@ -434,11 +452,116 @@ function NewScenarioPage() {
   const clearLocalStorage = () => {
     try {
       spendingStrategyStorage.clear();
-      console.log("Cleared spending strategy from localStorage");
+      withdrawalStrategyStorage.clear();
+      rmdStrategyStorage.clear();
+      console.log("Cleared all strategies from localStorage");
     } catch (error) {
       console.error("Error clearing localStorage:", error);
     }
   };
+
+  // Add a useEffect to load withdrawal strategy from localStorage
+  useEffect(() => {
+    // Try to load existing withdrawal strategy from localStorage
+    const savedStrategies = withdrawalStrategyStorage.get_all();
+    if (savedStrategies.length > 0) {
+      // Use the most recent one
+      setWithdrawalStrategy(savedStrategies[savedStrategies.length - 1]);
+      console.log("Loaded withdrawal strategy from localStorage:", savedStrategies[savedStrategies.length - 1]);
+    }
+  }, []);
+
+  // Add this function to NewScenarioPage.tsx
+  const saveWithdrawalStrategy = async () => {
+    try {
+      // Skip API calls for now
+      // if (withdrawalStrategy.id) {
+      //   await withdrawalStrategyApi.update(withdrawalStrategy.id, withdrawalStrategy);
+      // } else {
+      //   const savedStrategy = await withdrawalStrategyApi.create(withdrawalStrategy);
+      //   setWithdrawalStrategy(savedStrategy);
+      // }
+      
+      // Only use localStorage
+      if (withdrawalStrategy.id) {
+        withdrawalStrategyStorage.update(withdrawalStrategy.id, withdrawalStrategy);
+      } else {
+        const savedLocalStrategy = withdrawalStrategyStorage.add(withdrawalStrategy);
+        setWithdrawalStrategy(savedLocalStrategy);
+      }
+      
+      toast({
+        title: "Withdrawal strategy saved locally",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error saving withdrawal strategy:", error);
+      toast({
+        title: "Error saving withdrawal strategy",
+        description: "Please try again later",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // Add this near your other useEffects
+useEffect(() => {
+  console.log("investmentsConfig changed:", investmentsConfig);
+  console.log("Number of investments:", investmentsConfig.investments.length);
+  console.log("Pre-tax investments:", investmentsConfig.investments.filter(
+    inv => inv.taxStatus === "PRE_TAX_RETIREMENT"
+  ));
+}, [investmentsConfig]);
+
+  // Inside the NewScenarioPage component, add this function
+  const saveRMDStrategy = async () => {
+    try {
+      // Only use localStorage
+      if (rmdSettings.id) {
+        rmdStrategyStorage.update(rmdSettings.id, rmdSettings);
+      } else {
+        const savedSettings = rmdStrategyStorage.add(rmdSettings);
+        setRmdSettings(savedSettings);
+      }
+      
+      toast({
+        title: "RMD settings saved locally",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error saving RMD settings:", error);
+      toast({
+        title: "Error saving RMD settings",
+        description: "Please try again later",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // Update the handle_continue_from_rmd_settings function
+  const handle_continue_from_rmd_settings = async () => {
+    await saveRMDStrategy();
+    handle_continue_to_withdrawal_strategy();
+  };
+
+  // Add a useEffect to load RMD settings from localStorage
+  useEffect(() => {
+    // Try to load existing RMD settings from localStorage
+    const savedSettings = rmdStrategyStorage.get_all();
+    if (savedSettings.length > 0) {
+      // Use the most recent one
+      setRmdSettings(savedSettings[savedSettings.length - 1]);
+      console.log("Loaded RMD settings from localStorage:", savedSettings[savedSettings.length - 1]);
+    }
+  }, []);
 
   // Selection between creating from scratch or importing YAML
   if (step === "typeSelection") {

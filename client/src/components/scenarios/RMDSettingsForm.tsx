@@ -31,8 +31,10 @@ import {
 } from "@chakra-ui/react";
 import { FiInfo, FiDollarSign, FiCalendar, FiArrowRight } from "react-icons/fi";
 import { motion } from "framer-motion";
+import rmdStrategyStorage from "../../services/rmdStrategyStorage";
 
 export interface RMDSettings {
+  id?: string;
   enableRMD: boolean;
   startAge: number;
   accountPriority: string[];
@@ -64,10 +66,29 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
   const handleAddAccount = () => {
     if (selectedAccount && !rmdSettings.accountPriority.includes(selectedAccount)) {
       const updatedPriority = [...rmdSettings.accountPriority, selectedAccount];
-      onChangeRMDSettings({
+      const updatedSettings = {
         ...rmdSettings,
         accountPriority: updatedPriority,
-      });
+      };
+      
+      // Log the updated settings
+      console.log("Updated RMD settings:", updatedSettings);
+      
+      // Save to localStorage immediately for auto-save functionality
+      try {
+        if (updatedSettings.id) {
+          rmdStrategyStorage.update(updatedSettings.id, updatedSettings);
+        } else {
+          // Only add to localStorage if this is a significant change
+          const savedSettings = rmdStrategyStorage.add(updatedSettings);
+          // Update with the new ID
+          updatedSettings.id = savedSettings.id;
+        }
+      } catch (error) {
+        console.error("Error auto-saving to localStorage:", error);
+      }
+      
+      onChangeRMDSettings(updatedSettings);
       setSelectedAccount("");
     }
   };
@@ -76,10 +97,29 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
     const updatedPriority = rmdSettings.accountPriority.filter(
       (acc) => acc !== account
     );
-    onChangeRMDSettings({
+    const updatedSettings = {
       ...rmdSettings,
       accountPriority: updatedPriority,
-    });
+    };
+    
+    // Log the updated settings
+    console.log("Updated RMD settings:", updatedSettings);
+    
+    // Save to localStorage immediately for auto-save functionality
+    try {
+      if (updatedSettings.id) {
+        rmdStrategyStorage.update(updatedSettings.id, updatedSettings);
+      } else {
+        // Only add to localStorage if this is a significant change
+        const savedSettings = rmdStrategyStorage.add(updatedSettings);
+        // Update with the new ID
+        updatedSettings.id = savedSettings.id;
+      }
+    } catch (error) {
+      console.error("Error auto-saving to localStorage:", error);
+    }
+    
+    onChangeRMDSettings(updatedSettings);
   };
 
   const handleMoveAccount = (account: string, direction: "up" | "down") => {
@@ -92,16 +132,36 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
       const updatedPriority = [...rmdSettings.accountPriority];
       updatedPriority.splice(currentIndex, 1);
       updatedPriority.splice(newIndex, 0, account);
-      onChangeRMDSettings({
+      const updatedSettings = {
         ...rmdSettings,
         accountPriority: updatedPriority,
-      });
+      };
+      
+      // Log the updated settings
+      console.log("Updated RMD settings:", updatedSettings);
+      
+      // Save to localStorage immediately for auto-save functionality
+      try {
+        if (updatedSettings.id) {
+          rmdStrategyStorage.update(updatedSettings.id, updatedSettings);
+        } else {
+          // Only add to localStorage if this is a significant change
+          const savedSettings = rmdStrategyStorage.add(updatedSettings);
+          // Update with the new ID
+          updatedSettings.id = savedSettings.id;
+        }
+      } catch (error) {
+        console.error("Error auto-saving to localStorage:", error);
+      }
+      
+      onChangeRMDSettings(updatedSettings);
     }
   };
 
   const availableAccountsToAdd = rmdSettings.availableAccounts.filter(
     (account) => !rmdSettings.accountPriority.includes(account)
   );
+  console.log("Available accounts to add:", availableAccountsToAdd);
 
   return (
     <Container maxW="4xl" py={8}>
@@ -239,6 +299,7 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
                         maxW="300px"
                         isDisabled={availableAccountsToAdd.length === 0}
                       >
+            
                         {availableAccountsToAdd.map((account) => (
                           <option key={account} value={account}>
                             {account}

@@ -19,9 +19,11 @@ import {
 } from "@chakra-ui/react";
 import { FaArrowUp, FaArrowDown, FaWallet } from "react-icons/fa";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import withdrawalStrategyStorage from "../../services/withdrawalStrategyStorage";
 
 // Simplified interface to match YAML format
 export interface WithdrawalStrategy {
+  id?: string;
   availableAccounts: string[];  // All available investment accounts
   accountPriority: string[];    // Selected accounts in priority order
 }
@@ -52,28 +54,19 @@ export const WithdrawalStrategyForm: React.FC<WithdrawalStrategyFormProps> = ({
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
     
-    onChangeWithdrawalStrategy({
-      ...withdrawalStrategy,
-      accountPriority: items,
-    });
+    handleAccountPriorityChange(items);
   };
 
   // Add an account to the priority list
   const addAccount = (accountId: string) => {
     if (!withdrawalStrategy.accountPriority.includes(accountId)) {
-      onChangeWithdrawalStrategy({
-        ...withdrawalStrategy,
-        accountPriority: [...withdrawalStrategy.accountPriority, accountId],
-      });
+      handleAccountPriorityChange([...withdrawalStrategy.accountPriority, accountId]);
     }
   };
 
   // Remove an account from the priority list
   const removeAccount = (accountId: string) => {
-    onChangeWithdrawalStrategy({
-      ...withdrawalStrategy,
-      accountPriority: withdrawalStrategy.accountPriority.filter(id => id !== accountId),
-    });
+    handleAccountPriorityChange(withdrawalStrategy.accountPriority.filter(id => id !== accountId));
   };
 
   // Move an account up in priority
@@ -85,10 +78,7 @@ export const WithdrawalStrategyForm: React.FC<WithdrawalStrategyFormProps> = ({
     newPriority[index] = newPriority[index - 1];
     newPriority[index - 1] = temp;
     
-    onChangeWithdrawalStrategy({
-      ...withdrawalStrategy,
-      accountPriority: newPriority,
-    });
+    handleAccountPriorityChange(newPriority);
   };
 
   // Move an account down in priority
@@ -100,10 +90,7 @@ export const WithdrawalStrategyForm: React.FC<WithdrawalStrategyFormProps> = ({
     newPriority[index] = newPriority[index + 1];
     newPriority[index + 1] = temp;
     
-    onChangeWithdrawalStrategy({
-      ...withdrawalStrategy,
-      accountPriority: newPriority,
-    });
+    handleAccountPriorityChange(newPriority);
   };
 
   // Get available accounts that aren't already in the priority list
@@ -111,6 +98,34 @@ export const WithdrawalStrategyForm: React.FC<WithdrawalStrategyFormProps> = ({
     return withdrawalStrategy.availableAccounts.filter(
       account => !withdrawalStrategy.accountPriority.includes(account)
     );
+  };
+
+  const handleAccountPriorityChange = (newPriority: string[]) => {
+    const updatedStrategy = {
+      ...withdrawalStrategy,
+      accountPriority: newPriority
+    };
+    
+    // Log the updated strategy
+    console.log("Updated withdrawal strategy:", updatedStrategy);
+    
+    // Save to localStorage immediately for auto-save functionality
+    try {
+      if (updatedStrategy.id) {
+        withdrawalStrategyStorage.update(updatedStrategy.id, updatedStrategy);
+      } else {
+        // Only add to localStorage if this is the first change
+        if (newPriority.length === 1) {
+          const savedStrategy = withdrawalStrategyStorage.add(updatedStrategy);
+          // Update with the new ID
+          updatedStrategy.id = savedStrategy.id;
+        }
+      }
+    } catch (error) {
+      console.error("Error auto-saving to localStorage:", error);
+    }
+    
+    onChangeWithdrawalStrategy(updatedStrategy);
   };
 
   return (
