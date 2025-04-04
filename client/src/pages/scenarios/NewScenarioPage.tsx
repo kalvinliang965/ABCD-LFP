@@ -135,9 +135,11 @@ function NewScenarioPage() {
 
   //! 这边需要检查一下，如果用户选择的是IMPORT_YAML，那么应该直接跳转到yamlImport这个步骤。
   const handle_yaml_import_complete = (data: any) => {
+    investmentTypeStorage.clear();
     // Here you would process the imported data
     // For now, we'll just show a success message and redirect
     //! 这里面需要写一个function，来处理导入的数据。那么就直接发给后端。让后端来生成ID然后存入数据库。
+    //TODO：
 
     // Clean investment type data from localStorage
     investmentTypeStorage.clear();
@@ -267,24 +269,6 @@ function NewScenarioPage() {
 
   //* 这是我们最后最重要的代码
   const handle_finish_scenario = () => {
-    // Create the final scenario object
-    const finalScenario = {
-      // existing properties
-      name: scenarioDetails.name,
-      type: scenarioDetails.type,
-      // ...other properties
-
-      // Add RMD settings
-      rmdStrategy: rmdSettings.enableRMD ? rmdSettings.accountPriority : [],
-      rmdStartAge: rmdSettings.enableRMD ? rmdSettings.startAge : 72,
-
-      // Add withdrawal strategy as a simple array of investment IDs
-      expenseWithdrawalStrategy: withdrawalStrategy.accountPriority,
-
-      // Add spending strategy as a simple array of expense names
-      spendingStrategy: spendingStrategy.selectedExpenses,
-    };
-
     // Map form data to ScenarioRaw
     const scenarioRaw = map_form_to_scenario_raw(
       scenarioDetails,
@@ -336,8 +320,6 @@ function NewScenarioPage() {
     });
     navigate("/scenarios");
   };
-  // }catch (error) {
-  //     console.error("Failed to create scenario:", error)}};
 
   const handle_change_scenario_type = (value: string) => {
     setScenarioDetails((prev) => ({
@@ -362,7 +344,6 @@ function NewScenarioPage() {
 
   // Selection between creating from scratch or importing YAML
   if (step === "typeSelection") {
-    console.log("NewScenarioPage: Rendering ScenarioTypeSelector");
     return (
       <Box position="relative" zIndex={10} width="100%" height="100%">
         <ScenarioTypeSelector onTypeSelect={handle_scenario_type_select} />

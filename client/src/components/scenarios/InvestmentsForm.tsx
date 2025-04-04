@@ -115,9 +115,6 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
   const bg = useColorModeValue("gray.50", "gray.900");
   const cardBg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-  const hoverBg = useColorModeValue("gray.50", "gray.700");
-  const activeInvestmentBg = useColorModeValue("blue.50", "blue.900");
-  const statCardBg = useColorModeValue("white", "gray.800");
   const statIconBg = useColorModeValue("blue.50", "blue.900");
   const statTextColor = useColorModeValue("gray.600", "gray.400");
 
@@ -184,7 +181,8 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     // Add the investment
     const newInvestmentWithId: InvestmentRaw = {
       ...newInvestment,
-      id: Date.now().toString(), // Use a timestamp as a simple ID
+      //ID should be investmentType name + taxStatus
+      id: investmentTypeStorage.get_by_name(newInvestment.investmentType)?.name + newInvestment.taxStatus,
     };
 
     onChangeConfig({
