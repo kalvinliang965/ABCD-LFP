@@ -7,34 +7,25 @@ import { IncomeEventRaw, RebalanceEventRaw, InvestmentEventRaw } from "../core/d
 import { ReadVResult } from "fs";
 
 export const scenario_yaml_string = `
-# file format for scenario import/export.  version: 2025-03-23
-# CSE416, Software Engineering, Scott D. Stoller.
-
-# a distribution is represented as a map with one of the following forms:
-# {type: fixed, value: <number>}
-# {type: normal, mean: <number>, stdev: <number>}
-# {type: uniform, lower: <number>, upper: <number>}
-# percentages are represented by their decimal value, e.g., 4% is represented as 0.04.
-
 name: "Retirement Planning Scenario"
 maritalStatus: couple # couple or individual
 birthYears: [1985, 1987] # a list with length 1 or 2, depending on maritalStatus.
-lifeExpectancy: [ {type: fixed, value: 80}, {type: normal, mean: 82, stdev: 3} ] # a list with length 1 or 2, depending on maritalStatus.
+lifeExpectancy: [ {type: fixed, value: 80}, {type: normal, mean: 82, stdev: 3} ]
 
 investmentTypes:
   - name: cash
     description: cash
-    returnAmtOrPct: amount # "amount" or "percent"
+    returnAmtOrPct: amount
     returnDistribution: {type: fixed, value: 0}
     expenseRatio: 0
     incomeAmtOrPct: percent
     incomeDistribution: {type: fixed, value: 0}
-    taxability: true # Boolean.  true = taxable, false = tax-exempt
+    taxability: true
 
   - name: S&P 500
     description: S&P 500 index fund
-    returnAmtOrPct: percent  # whether expected annual return is specified as a dollar "amount" or a "percent"
-    returnDistribution: {type: normal, mean: 0.06, stdev: 0.02} # distribution of expected annual return
+    returnAmtOrPct: percent 
+    returnDistribution: {type: normal, mean: 0.06, stdev: 0.02}
     expenseRatio: 0.001
     incomeAmtOrPct: percent
     incomeDistribution: {type: normal, mean: 0.01, stdev: 0.005}
@@ -42,18 +33,16 @@ investmentTypes:
 
   - name: tax-exempt bonds
     description: NY tax-exempt bonds
-    returnAmtOrPct: amount # whether expected annual return is specified as a dollar "amount" or a "percent"
+    returnAmtOrPct: amount
     returnDistribution: {type: fixed, value: 0}
     expenseRatio: 0.004
     incomeAmtOrPct: percent
     incomeDistribution: {type: normal, mean: 0.03, stdev: 0.01}
     taxability: false
-
-# investment id is a unique identifier.  without it, we would need to use a pair (investment type, tax status) to identify an investment.
 investments:
   - investmentType: cash
     value: 100
-    taxStatus: non-retirement # "non-retirement", "pre-tax", or "after-tax"
+    taxStatus: non-retirement
     id: cash
 
   - investmentType: S&P 500
@@ -78,19 +67,19 @@ investments:
  
 eventSeries:
   - name: salary
-    start: {type: fixed, value: 2025} # a fixed, normal, or uniform distribution (as above)
+    start: {type: fixed, value: 2025}
     duration: {type: fixed, value: 40}
-    type: income # "income", "expense", "invest", or "rebalance"
+    type: income
     initialAmount: 75000
     changeAmtOrPct: amount
     changeDistribution: {type: uniform, lower: 500, upper: 2000}
-    inflationAdjusted: false # boolean
-    userFraction: 1.0 # fraction of the amount associated with the user.  the rest is associated with the spouse.
-    socialSecurity: false  # boolean
+    inflationAdjusted: false
+    userFraction: 1.0
+    socialSecurity: false
 
   - name: food
-    start: {type: startWith, eventSeries: salary}  # starts in same year as salary
-    duration: {type: fixed, value: 200}  # lasts for the rest of the user's life
+    start: {type: startWith, eventSeries: salary}
+    duration: {type: fixed, value: 200}
     type: expense
     initialAmount: 5000
     changeAmtOrPct: percent
@@ -100,7 +89,7 @@ eventSeries:
     discretionary: false
 
   - name: vacation
-    start: {type: startWith, eventSeries: salary}  # starts in same year as salary
+    start: {type: startWith, eventSeries: salary}
     duration: {type: fixed, value: 40}
     type: expense
     initialAmount: 1200
@@ -111,7 +100,7 @@ eventSeries:
     discretionary: true
 
   - name: streaming services
-    start: {type: startWith, eventSeries: salary}  # starts in same year as salary
+    start: {type: startWith, eventSeries: salary}
     duration: {type: fixed, value: 40}
     type: expense
     initialAmount: 500
@@ -126,7 +115,7 @@ eventSeries:
     duration: {type: fixed, value: 10}
     type: invest
     assetAllocation: {S&P 500 non-retirement: 0.6, S&P 500 after-tax: 0.4}
-    glidePath: true # boolean
+    glidePath: true
     assetAllocation2: {S&P 500 non-retirement: 0.8, S&P 500 after-tax: 0.2} 
     maxCash: 1000
 
@@ -137,16 +126,16 @@ eventSeries:
     assetAllocation: {S&P500 non-retirement: 0.7, tax-exempt bonds: 0.3}
 
 inflationAssumption: {type: fixed, value: 0.03}
-afterTaxContributionLimit: 7000 # annual limit on contributions to after-tax retirement accounts
-spendingStrategy: ["vacation", "streaming services"]  # list of discretionary expenses, identified by name
-expenseWithdrawalStrategy: [S&P 500 non-retirement, tax-exempt bonds, S&P 500 after-tax] # list of investments, identified by id
-RMDStrategy: [S&P 500 pre-tax] # list of pre-tax investments, identified by id
-RothConversionOpt: true   # boolean indicating whether the Roth Conversion optimizer is enabled
-RothConversionStart: 2050 # start year
-RothConversionEnd: 2060   # end year
-RothConversionStrategy: [S&P 500 pre-tax]  # list of pre-tax investments, identified by id
+afterTaxContributionLimit: 7000
+spendingStrategy: ["vacation", "streaming services"] 
+expenseWithdrawalStrategy: [S&P 500 non-retirement, tax-exempt bonds, S&P 500 after-tax]
+RMDStrategy: [S&P 500 pre-tax]
+RothConversionOpt: true
+RothConversionStart: 2050
+RothConversionEnd: 2060
+RothConversionStrategy: [S&P 500 pre-tax]
 financialGoal: 10000
-residenceState: NY  # states are identified by standard 2-letter abbreviations
+residenceState: NY
       `;
 
 const DistributionSchema = z.union([
@@ -162,6 +151,12 @@ const DistributionSchema = z.union([
         upper: z.number()
     })
 ]);
+
+const StartSchema = DistributionSchema.or(
+    (z.object({type: z.literal("startWith"), eventSeries: z.string()})).
+    or
+    (z.object({type: z.literal("startAfter"), eventSeries: z.string()}))
+);
 
 const MapSchema = z.record(z.any()).transform(
     obj => new Map(Object.entries(obj))
@@ -187,7 +182,7 @@ const InvestmentRawSchema = z.object({
      
 const BaseEventSchema = z.object({
     name: z.string(),
-    start: DistributionSchema.pipe(MapSchema),
+    start: StartSchema.pipe(MapSchema),
     duration: DistributionSchema.pipe(MapSchema),
     type: z.string()
 });
@@ -214,7 +209,7 @@ const ExpenseEventRawSchema = BaseEventSchema.extend({
 });
 
 const InvestEventRawSchema = BaseEventSchema.extend({
-    type: z.literal("investment"),
+    type: z.literal("invest"),
     assetAllocation: z.record(z.number()).pipe(MapSchema),
     glidePath: z.boolean(),
     assetAllocation2: z.record(z.number()).pipe(MapSchema),
@@ -286,123 +281,3 @@ export function create_scenario_raw_yaml(yamlString: string): ScenarioRaw {
         martialStatus: result.maritalStatus,
     }  as unknown as ScenarioRaw;
 }
-
-// function convert_parsed_yaml_to_scenario_raw(parsedYaml: any): ScenarioRaw {
-//     const investmentTypesMap = new Set<InvestmentTypeRaw>();
-//     parsedYaml.investmentTypes.forEach((type: any) => {
-//         const investmentType: InvestmentTypeRaw = {
-//         name: type.name,
-//         description: type.description,
-//         returnAmtOrPct: type.returnAmtOrPct,
-//         returnDistribution: new Map(
-//             Object.entries(type.returnDistribution)
-//         ),
-//         expenseRatio: type.expenseRatio,
-//         incomeAmtOrPct: type.incomeAmtOrPct,
-//         incomeDistribution: new Map(
-//             Object.entries(type.incomeDistribution)
-//         ),
-//         taxability: type.taxability,
-//         };
-//         investmentTypesMap.add(investmentType);
-//     });
-
-//     const investments = new Set<InvestmentRaw>();
-//     parsedYaml.investments.forEach((inv: any) => {
-//         const investment: InvestmentRaw = {
-//             investmentType: inv.investmentType,
-//             value: inv.value,
-//             taxStatus: inv.taxStatus,
-//             id: inv.id,
-//         };
-//         investments.add(investment);
-//     });
-
-//     // 转换事件系列
-//     const eventSeries = new Set();
-//     parsedYaml.eventSeries.forEach((event: any) => {
-//         const startMap = new Map(Object.entries(event.start));
-//         const durationMap = new Map(Object.entries(event.duration));
-
-//         if (event.type === "income") {
-//         const incomeEvent = {
-//             name: event.name,
-//             start: startMap,
-//             duration: durationMap,
-//             type: event.type,
-//             initialAmount: event.initialAmount,
-//             changeAmtOrPct: event.changeAmtOrPct,
-//             changeDistribution: new Map(
-//             Object.entries(event.changeDistribution)
-//             ),
-//             inflationAdjusted: event.inflationAdjusted,
-//             userFraction: event.userFraction,
-//             socialSecurity: event.socialSecurity,
-//         };
-//         eventSeries.add(incomeEvent);
-//         } else if (event.type === "expense") {
-//         const expenseEvent = {
-//             name: event.name,
-//             start: startMap,
-//             duration: durationMap,
-//             type: event.type,
-//             initialAmount: event.initialAmount,
-//             changeAmtOrPct: event.changeAmtOrPct,
-//             changeDistribution: new Map(
-//             Object.entries(event.changeDistribution)
-//             ),
-//             inflationAdjusted: event.inflationAdjusted,
-//             userFraction: event.userFraction,
-//             discretionary: event.discretionary,
-//         };
-//         eventSeries.add(expenseEvent);
-//         } else if (event.type === "invest") {
-//         const investEvent = {
-//             name: event.name,
-//             start: startMap,
-//             duration: durationMap,
-//             type: event.type,
-//             assetAllocation: new Map(Object.entries(event.assetAllocation)),
-//             assetAllocation2: new Map(Object.entries(event.assetAllocation2)),
-//             glidePath: event.glidePath,
-//             maxCash: event.maxCash,
-//         };
-//         eventSeries.add(investEvent);
-//         } else if (event.type === "rebalance") {
-//         const rebalanceEvent = {
-//             name: event.name,
-//             start: startMap,
-//             duration: durationMap,
-//             type: event.type,
-//             assetAllocation: new Map(Object.entries(event.assetAllocation)),
-//         };
-//         eventSeries.add(rebalanceEvent);
-//         }
-//     });
-
-//     // 创建ScenarioRaw对象
-//     return {
-//         name: parsedYaml.name,
-//         martialStatus: parsedYaml.maritalStatus, // 注意这里的字段名与YAML中略有不同
-//         birthYears: parsedYaml.birthYears,
-//         lifeExpectancy: parsedYaml.lifeExpectancy.map(
-//         (exp: any) => new Map(Object.entries(exp))
-//         ),
-//         investmentTypes: investmentTypesMap,
-//         investments: investments,
-//         eventSeries: eventSeries as Set<IncomeEventRaw | IncomeEventRaw | InvestmentEventRaw | RebalanceEventRaw>,
-//         inflationAssumption: new Map(
-//         Object.entries(parsedYaml.inflationAssumption)
-//         ),
-//         afterTaxContributionLimit: parsedYaml.afterTaxContributionLimit,
-//         spendingStrategy: parsedYaml.spendingStrategy,
-//         expenseWithdrawalStrategy: parsedYaml.expenseWithdrawalStrategy,
-//         RMDStrategy: parsedYaml.RMDStrategy,
-//         RothConversionOpt: parsedYaml.RothConversionOpt,
-//         RothConversionStart: parsedYaml.RothConversionStart,
-//         RothConversionEnd: parsedYaml.RothConversionEnd,
-//         RothConversionStrategy: parsedYaml.RothConversionStrategy,
-//         financialGoal: parsedYaml.financialGoal,
-//         residenceState: parsedYaml.residenceState,
-//     };
-// }

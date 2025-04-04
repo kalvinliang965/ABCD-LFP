@@ -325,7 +325,7 @@ export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenar
 
     // Create tax services
     const federal_tax_service = await create_federal_tax_service();
-    const state_tax_service = await create_state_tax_service();
+    const state_tax_service = await create_state_tax_service_db();
 
     // Sanity check
     for (const investment of investments) {

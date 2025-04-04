@@ -1,4 +1,4 @@
-import { parse_state_tax_yaml, StateTaxYAML } from "../../services/StateYamlParser";
+import { create_state_tax__raw_yaml, StateTaxYAML } from "../../services/StateYamlParser";
 import { StateType, TaxFilingStatus } from "../Enums";
 import { create_tax_brackets, TaxBracketSet } from "./TaxBrackets";
 import { TaxBrackets, TaxBracket } from "./TaxBrackets";
@@ -40,7 +40,7 @@ export function create_state_tax_service_wo(taxable_income_bracket: TaxBrackets)
 export async function create_state_tax_service_yaml(resident_state: StateType , yaml_string: string) {
     try {
         const taxable_income_bracket = create_tax_brackets()
-        const brackets: Array<StateTaxYAML> = parse_state_tax_yaml(yaml_string);
+        const brackets: Array<StateTaxYAML> = create_state_tax__raw_yaml(yaml_string);
         if (brackets.length <= 0) {
             throw new Error("state.yaml is empty");
         }

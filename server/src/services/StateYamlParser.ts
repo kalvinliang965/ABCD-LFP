@@ -113,7 +113,7 @@ tax_brackets:
     rate: 0.109
     taxpayer_type: "MARRIED"
 `
-export function parse_state_tax_yaml(yaml_string: string): Array<StateTaxYAML> {
+export function create_state_tax__raw_yaml(yaml_string: string): Array<StateTaxYAML> {
   try {
     const raw_data = parse(yaml_string);
     const resident_state = StateSchema.parse(raw_data.resident_state);
