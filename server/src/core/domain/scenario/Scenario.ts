@@ -25,8 +25,6 @@ import { ScenarioRaw } from "../raw/scenario_raw";
 import { InvestmentRaw } from "../raw/investment_raw";
 import {ExpenseEventRaw, IncomeEventRaw, InvestmentEventRaw, RebalanceEventRaw} from "../raw/event_raw/event_raw"
 import { TaxStatus, parse_state_type, parse_taxpayer_type } from "../../Enums";
-import { create_federal_tax_service, FederalTaxService } from "../../tax/FederalTaxService";
-import { create_state_tax_service_yaml, create_state_tax_service_db, StateTaxService } from "../../tax/StateTaxService";
 import { AccountManager, create_account_manager } from "../AccountManager";
 import { AccountMap } from "../AccountManager";
 import { create_investment_type_manager, InvestmentTypeManager } from "../InvestmentTypeManager";
@@ -227,11 +225,9 @@ export interface Scenario {
   roth_conversion_end: number;
   roth_conversion_strategy: Array<string>;
   financialGoal: number;
-  residenceState: StateType;
+  residence_state: StateType;
   account_manager: AccountManager
   cash: Investment;
-  federal_tax_service: FederalTaxService;
-  state_tax_service: StateTaxService;
 }
 
 // Parse investments by tax status
@@ -323,9 +319,6 @@ export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenar
 
     const investment_type_manager = create_investment_type_manager(scenario_raw.investmentTypes);
 
-    // Create tax services
-    const federal_tax_service = await create_federal_tax_service();
-    const state_tax_service = await create_state_tax_service_db();
 
     // Sanity check
     for (const investment of investments) {
@@ -336,8 +329,6 @@ export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenar
     }
 
     return {
-      federal_tax_service,
-      state_tax_service,
       cash,
       account_manager: create_account_manager(
         non_retirement,
@@ -365,7 +356,7 @@ export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenar
       roth_conversion_end,
       roth_conversion_strategy,
       financialGoal,
-      residenceState,
+      residence_state: residenceState,
     };
   } catch (error) {
     throw new Error(

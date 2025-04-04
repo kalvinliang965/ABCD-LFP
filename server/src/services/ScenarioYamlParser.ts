@@ -1,10 +1,6 @@
 import { parse } from "yaml";
 import { z } from "zod";
 import { ScenarioRaw } from "../core/domain/raw/scenario_raw";
-import { InvestmentRaw } from "../core/domain/raw/investment_raw";
-import { InvestmentTypeRaw } from "../core/domain/raw/investment_type_raw";
-import { IncomeEventRaw, RebalanceEventRaw, InvestmentEventRaw } from "../core/domain/raw/event_raw/event_raw";
-import { ReadVResult } from "fs";
 
 export const scenario_yaml_string = `
 name: "Retirement Planning Scenario"
