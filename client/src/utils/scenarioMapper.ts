@@ -53,8 +53,6 @@ export function map_form_to_scenario_raw(
   } else {
     lifeExpectancy.push({
       type: "normal",
-      // should push userMeanAge and userStandardDeviation
-      //! chen changed it to match with YAML
       parameters: {
         userMeanAge: lifeExpectancyConfig.userMeanAge,
         userStandardDeviation: lifeExpectancyConfig.userStandardDeviation,
@@ -221,7 +219,7 @@ export function map_form_to_scenario_raw(
     RothConversionStart: rothForm.startAge,
     RothConversionEnd: rothForm.endAge,
     RothConversionStrategy: rothForm.strategy,
-    financialGoal: additionalSettings.financialGoal?.value || 0,
-    residenceState: additionalSettings.stateOfResidence || "NY",
+    financialGoal: additionalSettings.financialGoal?.value,
+    residenceState: additionalSettings.stateOfResidence,
   };
 }
