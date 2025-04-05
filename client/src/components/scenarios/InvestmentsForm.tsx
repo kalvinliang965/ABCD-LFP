@@ -19,12 +19,6 @@ import {
   RadioGroup,
   Stack,
   Select,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   IconButton,
   Icon,
   Divider,
@@ -181,8 +175,11 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     // Add the investment
     const newInvestmentWithId: InvestmentRaw = {
       ...newInvestment,
-      //ID should be investmentType name + taxStatus
-      id: investmentTypeStorage.get_by_name(newInvestment.investmentType)?.name + newInvestment.taxStatus,
+      //ID should be investmentType name + space + taxStatus
+      id:
+        investmentTypeStorage.get_by_name(newInvestment.investmentType)?.name +
+        " " +
+        newInvestment.taxStatus,
     };
 
     onChangeConfig({
@@ -239,6 +236,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     }).format(value);
   };
 
+  //! this is dulicated
   const get_tax_status_display = (status: TaxStatus) => {
     switch (status) {
       case "non-retirement":
@@ -265,6 +263,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     }
   };
 
+  //! no need for this function
   const get_investment_icon = (type: string) => {
     switch (type) {
       case "stock":
@@ -288,7 +287,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     }
   };
 
-  // Calculate total investment value
+  //? wtf is this
   const total_investment_value = investmentsConfig.investments.reduce(
     (total, investment) => total + investment.value,
     0

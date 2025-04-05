@@ -17,7 +17,10 @@ import {
 } from "../components/scenarios/ScenarioDetailsForm";
 import { LifeExpectancyConfig } from "../components/scenarios/LifeExpectancyForm";
 import { InvestmentsConfig } from "../components/scenarios/InvestmentsForm";
-import { AdditionalSettingsConfig } from "../components/scenarios/AdditionalSettingsForm";
+import {
+  AdditionalSettingsConfig,
+  InflationConfig,
+} from "../components/scenarios/AdditionalSettingsForm";
 import { RMDSettings } from "../components/scenarios/RMDSettingsForm";
 import { SpendingStrategy } from "../components/scenarios/SpendingStrategyForm";
 import { WithdrawalStrategy } from "../components/scenarios/WithdrawalStrategyForm";
@@ -49,8 +52,13 @@ export function map_form_to_scenario_raw(
     });
   } else {
     lifeExpectancy.push({
-      type: "distribution",
-      parameters: (lifeExpectancyConfig as any).userDistributionParams || {},
+      type: "normal",
+      // should push userMeanAge and userStandardDeviation
+      //! chen changed it to match with YAML
+      parameters: {
+        userMeanAge: lifeExpectancyConfig.userMeanAge,
+        userStandardDeviation: lifeExpectancyConfig.userStandardDeviation,
+      },
     });
   }
 
@@ -65,9 +73,11 @@ export function map_form_to_scenario_raw(
       });
     } else {
       lifeExpectancy.push({
-        type: "distribution",
-        parameters:
-          (lifeExpectancyConfig as any).spouseDistributionParams || {},
+        type: "normal",
+        parameters: {
+          userMeanAge: lifeExpectancyConfig.spouseMeanAge,
+          userStandardDeviation: lifeExpectancyConfig.spouseStandardDeviation,
+        },
       });
     }
   }
@@ -80,12 +90,12 @@ export function map_form_to_scenario_raw(
     allInvestmentTypes.map((it: any) => {
       const mappedType = {
         name: it.name,
-        description: it.description || "",
-        returnAmtOrPct: it.returnType || "percent",
-        returnDistribution: it.returnDistribution || [],
-        expenseRatio: it.expenseRatio || 0,
-        incomeAmtOrPct: it.incomeType || "percent",
-        incomeDistribution: it.incomeDistribution || [],
+        description: it.description,
+        returnAmtOrPct: it.returnAmtOrPct,
+        returnDistribution: it.returnDistribution,
+        expenseRatio: it.expenseRatio,
+        incomeAmtOrPct: it.incomeAmtOrPct,
+        incomeDistribution: it.incomeDistribution,
         taxability: it.taxability,
       };
       console.log(`Mapping investment type ${it.name}:`, {
@@ -103,7 +113,7 @@ export function map_form_to_scenario_raw(
       value: inv.value || 0,
       taxStatus:
         inv.taxStatus.toLowerCase().replace(/_/g, "-") || "non-retirement",
-      id: inv.id || `inv-${Math.random().toString(36).slice(2)}`,
+      id: inv.id,
     }))
   );
 
@@ -165,25 +175,44 @@ export function map_form_to_scenario_raw(
     strategy: [""],
   };
 
+  function parse_inflation_config(
+    inflationConfig: InflationConfig
+  ): Array<{ [key: string]: any }> {
+    if (inflationConfig.type === "fixed") {
+      const inflation_value = (inflationConfig.value as number) / 100;
+      return [{ type: "fixed", value: inflation_value }];
+    } else if (inflationConfig.type === "uniform") {
+      return [
+        {
+          type: "uniform",
+          parameters: { min: inflationConfig.min, max: inflationConfig.max },
+        },
+      ];
+    } else {
+      return [
+        {
+          type: "normal",
+          parameters: {
+            mean: inflationConfig.mean,
+            standardDeviation: inflationConfig.standardDeviation,
+          },
+        },
+      ];
+    }
+  }
+
   // Return the final ScenarioRaw object
   return {
     name: scenarioDetails.name,
-    martialStatus: scenarioDetails.type === "couple" ? "married" : "single",
+    martialStatus: scenarioDetails.type === "couple" ? "couple" : "individual",
     birthYears,
     lifeExpectancy,
     investmentTypes,
     investments,
     eventSeries,
-    inflationAssumption:
-      additionalSettings.inflationConfig.type === "fixed"
-        ? [{ type: "fixed", value: additionalSettings.inflationConfig.value }]
-        : [
-            {
-              type: "distribution",
-              parameters:
-                (additionalSettings.inflationConfig as any).parameters || {},
-            },
-          ],
+    inflationAssumption: parse_inflation_config(
+      additionalSettings.inflationConfig
+    ),
     afterTaxContributionLimit: 0, // Not in forms, default value
     spendingStrategy: spendingStrategy.selectedExpenses || [],
     expenseWithdrawalStrategy: withdrawalStrategy.accountPriority || [],
