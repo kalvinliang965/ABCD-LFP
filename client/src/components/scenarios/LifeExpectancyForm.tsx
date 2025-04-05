@@ -46,7 +46,7 @@ import {
 import { motion } from "framer-motion";
 import lifeExpectancyStorage from "../../services/lifeExpectancyStorage";
 
-export type ExpectancyType = "fixed" | "distribution";
+export type ExpectancyType = "fixed" | "normal";
 
 export interface LifeExpectancyConfig {
   id?: string;
@@ -125,7 +125,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
     // Initialize appropriate fields based on the type
     if (newType === "fixed" && !lifeExpectancyConfig.userFixedAge) {
       updates.userFixedAge = 85;
-    } else if (newType === "distribution") {
+    } else if (newType === "normal") {
       if (!lifeExpectancyConfig.userMeanAge) updates.userMeanAge = 85;
       if (!lifeExpectancyConfig.userStandardDeviation)
         updates.userStandardDeviation = 5;
@@ -146,7 +146,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
     // Initialize appropriate fields based on the type
     if (newType === "fixed" && !lifeExpectancyConfig.spouseFixedAge) {
       updates.spouseFixedAge = 85;
-    } else if (newType === "distribution") {
+    } else if (newType === "normal") {
       if (!lifeExpectancyConfig.spouseMeanAge) updates.spouseMeanAge = 85;
       if (!lifeExpectancyConfig.spouseStandardDeviation)
         updates.spouseStandardDeviation = 5;
@@ -410,13 +410,13 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                             cursor="pointer"
                             borderColor={
                               lifeExpectancyConfig.userExpectancyType ===
-                              "distribution"
+                              "normal"
                                 ? "blue.400"
                                 : "gray.200"
                             }
                             bg={
                               lifeExpectancyConfig.userExpectancyType ===
-                              "distribution"
+                              "normal"
                                 ? "white"
                                 : "gray.50"
                             }
@@ -428,7 +428,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                           >
                             <Flex align="center">
                               <Radio
-                                value="distribution"
+                                value="normal"
                                 colorScheme="blue"
                                 size="lg"
                                 mr={3}
@@ -707,13 +707,13 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                               cursor="pointer"
                               borderColor={
                                 lifeExpectancyConfig.spouseExpectancyType ===
-                                "distribution"
+                                "normal"
                                   ? "purple.400"
                                   : "gray.200"
                               }
                               bg={
                                 lifeExpectancyConfig.spouseExpectancyType ===
-                                "distribution"
+                                "normal"
                                   ? "white"
                                   : "gray.50"
                               }
@@ -725,7 +725,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                             >
                               <Flex align="center">
                                 <Radio
-                                  value="distribution"
+                                  value="normal"
                                   colorScheme="purple"
                                   size="lg"
                                   mr={3}

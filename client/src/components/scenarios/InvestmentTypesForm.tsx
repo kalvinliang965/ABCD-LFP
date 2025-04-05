@@ -34,7 +34,6 @@ import {
   AlertDialogContent,
   AlertDialogOverlay,
   Tooltip,
-  Divider,
   useBreakpointValue,
   chakra,
   Input,
@@ -54,8 +53,6 @@ import {
   FiInfo,
   FiPackage,
   FiDollarSign,
-  FiPercent,
-  FiTrendingUp,
   FiPlus,
   FiSearch,
   FiShield,
@@ -107,8 +104,6 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
   // Responsive values
   const isMobile = useBreakpointValue({ base: true, md: false });
   const cardMaxWidth = useBreakpointValue({ base: "100%", md: "7xl" });
-  // Always use table view
-  const viewMode = "table";
 
   // UI colors - enhanced for more vibrancy and better contrast
   const bg = useColorModeValue("gray.50", "gray.900");
