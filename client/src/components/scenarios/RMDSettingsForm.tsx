@@ -38,9 +38,18 @@ export interface RMDSettings {
   id?: string;
   enableRMD: boolean;
   currentAge: number;
-  accountPriority: string[];
-  availableAccounts: string[];
+  accountPriority: string[]; // Account IDs in priority order
+  availableAccounts: Array<{
+    id: string;
+    name: string;
+  }>; // Available accounts with ID and name
 }
+
+// Helper to get account name by ID
+const getAccountNameById = (accounts: Array<{id: string; name: string}>, id: string): string => {
+  const account = accounts.find(acc => acc.id === id);
+  return account ? account.name : id; // Fallback to ID if name not found
+};
 
 interface RMDSettingsFormProps {
   rmdSettings: RMDSettings;
@@ -69,102 +78,69 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
   
   const handleAddAccount = () => {
     if (selectedAccount && !rmdSettings.accountPriority.includes(selectedAccount)) {
-      const updatedPriority = [...rmdSettings.accountPriority, selectedAccount];
-      const updatedSettings = {
+      handleRMDSettingsChange({
         ...rmdSettings,
-        accountPriority: updatedPriority,
-      };
-      
-      // Log the updated settings
-      console.log("Updated RMD settings:", updatedSettings);
-      
-      // Save to localStorage immediately for auto-save functionality
-      try {
-        if (updatedSettings.id) {
-          rmdStrategyStorage.update(updatedSettings.id, updatedSettings);
-        } else {
-          // Only add to localStorage if this is a significant change
-          const savedSettings = rmdStrategyStorage.add(updatedSettings);
-          // Update with the new ID
-          updatedSettings.id = savedSettings.id;
-        }
-      } catch (error) {
-        console.error("Error auto-saving to localStorage:", error);
-      }
-      
-      onChangeRMDSettings(updatedSettings);
+        accountPriority: [...rmdSettings.accountPriority, selectedAccount],
+      });
       setSelectedAccount("");
     }
   };
 
-  const handleRemoveAccount = (account: string) => {
-    const updatedPriority = rmdSettings.accountPriority.filter(
-      (acc) => acc !== account
-    );
-    const updatedSettings = {
+  const handleRemoveAccount = (accountId: string) => {
+    handleRMDSettingsChange({
       ...rmdSettings,
-      accountPriority: updatedPriority,
-    };
+      accountPriority: rmdSettings.accountPriority.filter((id) => id !== accountId),
+    });
+  };
+
+  const handleMoveAccount = (accountId: string, direction: "up" | "down") => {
+    const currentIndex = rmdSettings.accountPriority.indexOf(accountId);
+    if (currentIndex === -1) return;
+
+    const newPriority = [...rmdSettings.accountPriority];
     
+    if (direction === "up" && currentIndex > 0) {
+      // Swap with previous item
+      [newPriority[currentIndex - 1], newPriority[currentIndex]] = 
+      [newPriority[currentIndex], newPriority[currentIndex - 1]];
+    } else if (direction === "down" && currentIndex < newPriority.length - 1) {
+      // Swap with next item
+      [newPriority[currentIndex], newPriority[currentIndex + 1]] = 
+      [newPriority[currentIndex + 1], newPriority[currentIndex]];
+    }
+
+    handleRMDSettingsChange({
+      ...rmdSettings,
+      accountPriority: newPriority,
+    });
+  };
+
+  const handleRMDSettingsChange = (newSettings: RMDSettings) => {
     // Log the updated settings
-    console.log("Updated RMD settings:", updatedSettings);
+    console.log("Updated RMD settings:", newSettings);
     
     // Save to localStorage immediately for auto-save functionality
     try {
-      if (updatedSettings.id) {
-        rmdStrategyStorage.update(updatedSettings.id, updatedSettings);
+      if (newSettings.id) {
+        rmdStrategyStorage.update(newSettings.id, newSettings);
       } else {
-        // Only add to localStorage if this is a significant change
-        const savedSettings = rmdStrategyStorage.add(updatedSettings);
+        // Only add to localStorage if this is the first change
+        const savedSettings = rmdStrategyStorage.add(newSettings);
         // Update with the new ID
-        updatedSettings.id = savedSettings.id;
+        newSettings.id = savedSettings.id;
       }
     } catch (error) {
       console.error("Error auto-saving to localStorage:", error);
     }
     
-    onChangeRMDSettings(updatedSettings);
+    onChangeRMDSettings(newSettings);
   };
 
-  const handleMoveAccount = (account: string, direction: "up" | "down") => {
-    const currentIndex = rmdSettings.accountPriority.indexOf(account);
-    if (
-      (direction === "up" && currentIndex > 0) ||
-      (direction === "down" && currentIndex < rmdSettings.accountPriority.length - 1)
-    ) {
-      const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-      const updatedPriority = [...rmdSettings.accountPriority];
-      updatedPriority.splice(currentIndex, 1);
-      updatedPriority.splice(newIndex, 0, account);
-      const updatedSettings = {
-        ...rmdSettings,
-        accountPriority: updatedPriority,
-      };
-      
-      // Log the updated settings
-      console.log("Updated RMD settings:", updatedSettings);
-      
-      // Save to localStorage immediately for auto-save functionality
-      try {
-        if (updatedSettings.id) {
-          rmdStrategyStorage.update(updatedSettings.id, updatedSettings);
-        } else {
-          // Only add to localStorage if this is a significant change
-          const savedSettings = rmdStrategyStorage.add(updatedSettings);
-          // Update with the new ID
-          updatedSettings.id = savedSettings.id;
-        }
-      } catch (error) {
-        console.error("Error auto-saving to localStorage:", error);
-      }
-      
-      onChangeRMDSettings(updatedSettings);
-    }
-  };
-
+  // Get available accounts that aren't already in the priority list
   const availableAccountsToAdd = rmdSettings.availableAccounts.filter(
-    (account) => !rmdSettings.accountPriority.includes(account)
+    (account) => !rmdSettings.accountPriority.includes(account.id)
   );
+  
   console.log("Available accounts to add:", availableAccountsToAdd);
 
   return (
@@ -234,7 +210,7 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
                   size="lg"
                   isChecked={rmdSettings.enableRMD}
                   onChange={(e) =>
-                    onChangeRMDSettings({
+                    handleRMDSettingsChange({
                       ...rmdSettings,
                       enableRMD: e.target.checked,
                     })
@@ -304,8 +280,8 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
                         isDisabled={availableAccountsToAdd.length === 0}
                       >
                         {availableAccountsToAdd.map((account) => (
-                          <option key={account} value={account}>
-                            {account}
+                          <option key={account.id} value={account.id}>
+                            {account.name} (ID: {account.id})
                           </option>
                         ))}
                       </Select>
@@ -326,9 +302,9 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
                         p={4}
                         borderRadius="md"
                       >
-                        {rmdSettings.accountPriority.map((account, index) => (
+                        {rmdSettings.accountPriority.map((accountId, index) => (
                           <HStack
-                            key={account}
+                            key={accountId}
                             justify="space-between"
                             p={2}
                             borderWidth="1px"
@@ -337,13 +313,14 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
                           >
                             <HStack>
                               <Text fontWeight="bold">{index + 1}.</Text>
-                              <Text>{account}</Text>
+                              <Text>{getAccountNameById(rmdSettings.availableAccounts, accountId)}</Text>
+                              <Badge colorScheme="blue" ml={2}>ID: {accountId}</Badge>
                             </HStack>
                             <HStack>
                               {index > 0 && (
                                 <Button
                                   size="sm"
-                                  onClick={() => handleMoveAccount(account, "up")}
+                                  onClick={() => handleMoveAccount(accountId, "up")}
                                   variant="ghost"
                                 >
                                   ↑
@@ -352,7 +329,7 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
                               {index < rmdSettings.accountPriority.length - 1 && (
                                 <Button
                                   size="sm"
-                                  onClick={() => handleMoveAccount(account, "down")}
+                                  onClick={() => handleMoveAccount(accountId, "down")}
                                   variant="ghost"
                                 >
                                   ↓
@@ -362,7 +339,7 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
                                 size="sm"
                                 colorScheme="red"
                                 variant="ghost"
-                                onClick={() => handleRemoveAccount(account)}
+                                onClick={() => handleRemoveAccount(accountId)}
                               >
                                 ✕
                               </Button>

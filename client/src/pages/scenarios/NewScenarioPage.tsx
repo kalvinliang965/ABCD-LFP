@@ -220,18 +220,18 @@ function NewScenarioPage() {
     console.log("Investments before filtering:", investmentsConfig.investments);
     
     // Change this filter to match the actual tax status value
-    const preTaxAccounts = investmentsConfig.investments
+    const preTaxInvestments = investmentsConfig.investments
       .filter((inv) => {
         console.log("Investment tax status:", inv.taxStatus);
         // Check for both possible formats to be safe
         return inv.taxStatus === "pre-tax" || inv.taxStatus === "PRE_TAX_RETIREMENT";
-      })
-      .map((inv) => {
-        return (
-          inv.investmentType ||
-          `Investment ${inv.id || Math.random().toString(36).substr(2, 9)}`
-        );
       });
+    
+    // Map to the format needed for RMDSettings
+    const preTaxAccounts = preTaxInvestments.map((inv) => ({
+      id: inv.id || `inv-${Math.random().toString(36).substring(2, 9)}`,
+      name: inv.investmentType || `Investment ${inv.id || Math.random().toString(36).substring(2, 9)}`
+    }));
 
     console.log("Filtered pre-tax accounts:", preTaxAccounts);
     console.log("Current age:", currentAge);
