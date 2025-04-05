@@ -6,7 +6,7 @@ import { ScenarioRaw } from "./Scenarios";
 // These are sample scenarios for the initial display
 export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
   // AI-generated code
-  // Convert YAML retirement planning scenario into ScenarioRaw
+  // Update SAMPLE_SCENARIOS to conform to ScenarioRaw interface
   {
     name: "Retirement Planning Scenario",
     martialStatus: "couple",
@@ -17,84 +17,65 @@ export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
     ],
     financialGoal: 10000,
     residenceState: "NY",
+    investmentTypes: new Set([
+      {
+        name: "cash",
+        description: "cash",
+        returnAmtOrPct: "amount",
+        returnDistribution: [{ type: "fixed", value: "0" }],
+        expenseRatio: 0,
+        incomeAmtOrPct: "percent",
+        incomeDistribution: [{ type: "fixed", value: "0" }],
+        taxability: true,
+      },
+      {
+        name: "S&P 500",
+        description: "S&P 500 index fund",
+        returnAmtOrPct: "percent",
+        returnDistribution: [{ type: "normal", mean: "0.06", stdev: "0.02" }],
+        expenseRatio: 0.001,
+        incomeAmtOrPct: "percent",
+        incomeDistribution: [{ type: "normal", mean: "0.01", stdev: "0.005" }],
+        taxability: true,
+      },
+      {
+        name: "tax-exempt bonds",
+        description: "NY tax-exempt bonds",
+        returnAmtOrPct: "amount",
+        returnDistribution: [{ type: "fixed", value: "0" }],
+        expenseRatio: 0.004,
+        incomeAmtOrPct: "percent",
+        incomeDistribution: [{ type: "normal", mean: "0.03", stdev: "0.01" }],
+        taxability: false,
+      },
+    ]),
     investments: new Set([
       {
-        investmentType: {
-          name: "cash",
-          description: "cash",
-          returnAmtOrPct: "amount",
-          returnDistribution: [{ type: "fixed", value: "0" }],
-          expenseRatio: 0,
-          incomeAmtOrPct: "percent",
-          incomeDistribution: [{ type: "fixed", value: "0" }],
-          taxability: true,
-        },
+        investmentType: "cash",
         value: 100,
         taxStatus: "non-retirement",
         id: "cash",
       },
       {
-        investmentType: {
-          name: "S&P 500",
-          description: "S&P 500 index fund",
-          returnAmtOrPct: "percent",
-          returnDistribution: [{ type: "normal", mean: "0.06", stdev: "0.02" }],
-          expenseRatio: 0.001,
-          incomeAmtOrPct: "percent",
-          incomeDistribution: [
-            { type: "normal", mean: "0.01", stdev: "0.005" },
-          ],
-          taxability: true,
-        },
+        investmentType: "S&P 500",
         value: 10000,
         taxStatus: "non-retirement",
         id: "S&P 500 non-retirement",
       },
       {
-        investmentType: {
-          name: "tax-exempt bonds",
-          description: "NY tax-exempt bonds",
-          returnAmtOrPct: "amount",
-          returnDistribution: [{ type: "fixed", value: "0" }],
-          expenseRatio: 0.004,
-          incomeAmtOrPct: "percent",
-          incomeDistribution: [{ type: "normal", mean: "0.03", stdev: "0.01" }],
-          taxability: false,
-        },
+        investmentType: "tax-exempt bonds",
         value: 2000,
         taxStatus: "non-retirement",
         id: "tax-exempt bonds",
       },
       {
-        investmentType: {
-          name: "S&P 500",
-          description: "S&P 500 index fund",
-          returnAmtOrPct: "percent",
-          returnDistribution: [{ type: "normal", mean: "0.06", stdev: "0.02" }],
-          expenseRatio: 0.001,
-          incomeAmtOrPct: "percent",
-          incomeDistribution: [
-            { type: "normal", mean: "0.01", stdev: "0.005" },
-          ],
-          taxability: true,
-        },
+        investmentType: "S&P 500",
         value: 10000,
         taxStatus: "pre-tax",
         id: "S&P 500 pre-tax",
       },
       {
-        investmentType: {
-          name: "S&P 500",
-          description: "S&P 500 index fund",
-          returnAmtOrPct: "percent",
-          returnDistribution: [{ type: "normal", mean: "0.06", stdev: "0.02" }],
-          expenseRatio: 0.001,
-          incomeAmtOrPct: "percent",
-          incomeDistribution: [
-            { type: "normal", mean: "0.01", stdev: "0.005" },
-          ],
-          taxability: true,
-        },
+        investmentType: "S&P 500",
         value: 2000,
         taxStatus: "after-tax",
         id: "S&P 500 after-tax",

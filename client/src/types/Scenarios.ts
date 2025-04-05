@@ -1,6 +1,5 @@
 export type InvestmentTypeRaw = {
   //!chen 我并不觉得ID在这里是必须的，可以通过名称来匹配。
-  id?: string;
   name: string;
   description: string;
   returnAmtOrPct: string; // amount or percent
@@ -19,7 +18,7 @@ export type EventRaw = {
 };
 
 export type InvestmentRaw = {
-  investmentType: InvestmentTypeRaw;
+  investmentType: string;
   value: number;
   taxStatus: string; // "non-retirement", "pre-tax", "after-tax"
   id: string;
@@ -59,6 +58,7 @@ export interface ScenarioRaw {
   martialStatus: string;
   birthYears: Array<number>;
   lifeExpectancy: Array<{ [key: string]: any }>; //! chen changed it to match with YAML
+  investmentTypes: Set<InvestmentTypeRaw>;
   investments: Set<InvestmentRaw>;
   eventSeries: Set<
     IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw

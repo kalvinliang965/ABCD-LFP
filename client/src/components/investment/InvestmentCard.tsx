@@ -18,7 +18,7 @@ const InvestmentCard: React.FC<InvestmentCardProps> = ({
         colorScheme: investmentType.taxability ? "red" : "green",
       }}
       rightBadge={{
-        text: String(investmentType.returnDistribution.get("type")),
+        text: String(investmentType.returnDistribution[0].type),
         variant: "outline",
       }}
     />

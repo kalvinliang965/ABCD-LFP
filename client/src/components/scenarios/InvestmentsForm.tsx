@@ -64,19 +64,12 @@ import {
 } from "react-icons/fi";
 import { investmentTypeStorage } from "../../services/investmentTypeStorage";
 import { InvestmentTypeRaw } from "../../types/Scenarios";
+import { InvestmentRaw } from "../../types/Scenarios";
 
 export type TaxStatus = "non-retirement" | "pre-tax" | "after-tax";
 
-export type Investment = {
-  id: string;
-  investmentTypeId: string;
-  investmentTypeName: string;
-  value: number;
-  taxStatus: TaxStatus;
-};
-
 export type InvestmentsConfig = {
-  investments: Investment[];
+  investments: InvestmentRaw[];
 };
 
 export interface InvestmentsFormProps {
@@ -95,11 +88,11 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
   const [investmentTypes, set_investment_types] = useState<InvestmentTypeRaw[]>(
     []
   );
-  const [newInvestment, set_new_investment] = useState<Omit<Investment, "id">>({
-    investmentTypeId: "",
-    investmentTypeName: "",
+  const [newInvestment, set_new_investment] = useState<InvestmentRaw>({
+    investmentType: "",
     value: 0,
     taxStatus: "non-retirement",
+    id: "",
   });
   const [errors, set_errors] = useState<{
     investmentType?: string;
@@ -132,7 +125,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
   const available_investment_types = investmentTypes.filter(
     (type) =>
       !investmentsConfig.investments.some(
-        (investment) => investment.investmentTypeId === type.id
+        (investment) => investment.investmentType === type.name
       )
   );
 
@@ -140,13 +133,12 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
     const typeId = e.target.value;
-    const selectedType = investmentTypes.find((type) => type.id === typeId);
+    const selectedType = investmentTypes.find((type) => type.name === typeId);
     const typeName = selectedType?.name || "";
 
     set_new_investment({
       ...newInvestment,
-      investmentTypeId: typeId,
-      investmentTypeName: typeName,
+      investmentType: typeId,
     });
 
     if (errors.investmentType) {
@@ -176,7 +168,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     // Validate
     const newErrors: typeof errors = {};
 
-    if (!newInvestment.investmentTypeId) {
+    if (!newInvestment.investmentType) {
       newErrors.investmentType = "Please select an investment type";
     }
 
@@ -190,7 +182,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     }
 
     // Add the investment
-    const newInvestmentWithId: Investment = {
+    const newInvestmentWithId: InvestmentRaw = {
       ...newInvestment,
       id: Date.now().toString(), // Use a timestamp as a simple ID
     };
@@ -201,15 +193,15 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
 
     // Reset the form
     set_new_investment({
-      investmentTypeId: "",
-      investmentTypeName: "",
+      investmentType: "",
       value: 0,
       taxStatus: "non-retirement",
+      id: "",
     });
 
     toast({
       title: "Investment added",
-      description: `Added ${newInvestmentWithId.investmentTypeName} investment`,
+      description: `Added ${newInvestmentWithId.investmentType} investment`,
       status: "success",
       duration: 2000,
       isClosable: true,
@@ -231,7 +223,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
 
     toast({
       title: "Investment removed",
-      description: `Removed ${investmentToRemove?.investmentTypeName} investment`,
+      description: `Removed ${investmentToRemove?.investmentType} investment`,
       status: "info",
       duration: 2000,
       isClosable: true,
@@ -522,10 +514,10 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
                           <Flex
                             bg={useColorModeValue(
                               `${get_tax_status_color(
-                                investment.taxStatus
+                                investment.taxStatus as TaxStatus
                               )}.50`,
                               `${get_tax_status_color(
-                                investment.taxStatus
+                                investment.taxStatus as TaxStatus
                               )}.900`
                             )}
                             p={3}
@@ -535,10 +527,10 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
                           >
                             <Icon
                               as={get_investment_icon(
-                                investment.investmentTypeId
+                                investment.investmentType
                               )}
                               color={`${get_tax_status_color(
-                                investment.taxStatus
+                                investment.taxStatus as TaxStatus
                               )}.500`}
                               boxSize={5}
                             />
@@ -556,7 +548,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
                         </Flex>
 
                         <Heading size="md" mb={1}>
-                          {investment.investmentTypeName}
+                          {investment.investmentType}
                         </Heading>
                         <Text
                           fontSize="2xl"
@@ -569,13 +561,15 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
 
                         <Badge
                           colorScheme={get_tax_status_color(
-                            investment.taxStatus
+                            investment.taxStatus as TaxStatus
                           )}
                           px={2}
                           py={1}
                           borderRadius="md"
                         >
-                          {get_tax_status_display(investment.taxStatus)}
+                          {get_tax_status_display(
+                            investment.taxStatus as TaxStatus
+                          )}
                         </Badge>
                       </CardBody>
                     </Card>
@@ -637,13 +631,13 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
                         </FormLabel>
                         {available_investment_types.length > 0 ? (
                           <Select
-                            value={newInvestment.investmentTypeId}
+                            value={newInvestment.investmentType}
                             onChange={handle_change_investment_type}
                             placeholder="Select an investment type"
                             isInvalid={!!errors.investmentType}
                           >
                             {available_investment_types.map((type) => (
-                              <option key={type.id} value={type.id || ""}>
+                              <option key={type.name} value={type.name || ""}>
                                 {type.name}
                               </option>
                             ))}
