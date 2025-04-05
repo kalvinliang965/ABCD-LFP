@@ -28,6 +28,7 @@ import {
   Icon,
   Tooltip,
   Container,
+  Badge,
 } from "@chakra-ui/react";
 import { FiInfo, FiDollarSign, FiCalendar, FiArrowRight } from "react-icons/fi";
 import { motion } from "framer-motion";
@@ -36,7 +37,7 @@ import rmdStrategyStorage from "../../services/rmdStrategyStorage";
 export interface RMDSettings {
   id?: string;
   enableRMD: boolean;
-  startAge: number;
+  currentAge: number;
   accountPriority: string[];
   availableAccounts: string[];
 }
@@ -63,6 +64,9 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const textColor = useColorModeValue("gray.600", "gray.400");
 
+  // Calculate if RMD is required based on age
+  const isRmdRequired = rmdSettings.currentAge >= 72;
+  
   const handleAddAccount = () => {
     if (selectedAccount && !rmdSettings.accountPriority.includes(selectedAccount)) {
       const updatedPriority = [...rmdSettings.accountPriority, selectedAccount];
@@ -244,35 +248,35 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
 
                   <FormControl>
                     <FormLabel display="flex" alignItems="center">
-                      RMD Start Age
+                      Your Current Age
                       <Tooltip
-                        label="The age at which you must begin taking RMDs. Current law requires starting at age 72."
+                        label="RMDs typically begin at age 72. This is your current age based on your birth year."
                         placement="right"
                         hasArrow
                       >
                         <Box display="inline-block">
-                            <Icon as={FiInfo} ml={2} color="blue.400" />
+                          <Icon as={FiInfo} ml={2} color="blue.400" />
                         </Box>
                       </Tooltip>
                     </FormLabel>
-                    <NumberInput
-                      min={70}
-                      max={100}
-                      value={rmdSettings.startAge}
-                      onChange={(_, value) =>
-                        onChangeRMDSettings({
-                          ...rmdSettings,
-                          startAge: value,
-                        })
+                    <HStack>
+                      <Text fontSize="lg" fontWeight="medium">{rmdSettings.currentAge}</Text>
+                      <Badge 
+                        colorScheme={isRmdRequired ? "red" : "green"}
+                        fontSize="sm"
+                        px={2}
+                        py={1}
+                        borderRadius="md"
+                      >
+                        {isRmdRequired ? "RMDs Required" : "RMDs Not Yet Required"}
+                      </Badge>
+                    </HStack>
+                    <Text fontSize="sm" color={textColor} mt={1}>
+                      {isRmdRequired 
+                        ? "You are 72 or older, so RMDs are required from your pre-tax retirement accounts."
+                        : `RMDs will be required when you reach age 72 (in ${72 - rmdSettings.currentAge} years).`
                       }
-                      maxW="200px"
-                    >
-                      <NumberInputField />
-                      <NumberInputStepper>
-                        <NumberIncrementStepper />
-                        <NumberDecrementStepper />
-                      </NumberInputStepper>
-                    </NumberInput>
+                    </Text>
                   </FormControl>
 
                   <Divider />
@@ -299,7 +303,6 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
                         maxW="300px"
                         isDisabled={availableAccountsToAdd.length === 0}
                       >
-            
                         {availableAccountsToAdd.map((account) => (
                           <option key={account} value={account}>
                             {account}
@@ -336,23 +339,25 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
                               <Text fontWeight="bold">{index + 1}.</Text>
                               <Text>{account}</Text>
                             </HStack>
-                            <HStack spacing={2}>
-                              <Button
-                                size="sm"
-                                onClick={() => handleMoveAccount(account, "up")}
-                                isDisabled={index === 0}
-                                variant="ghost"
-                              >
-                                ↑
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => handleMoveAccount(account, "down")}
-                                isDisabled={index === rmdSettings.accountPriority.length - 1}
-                                variant="ghost"
-                              >
-                                ↓
-                              </Button>
+                            <HStack>
+                              {index > 0 && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleMoveAccount(account, "up")}
+                                  variant="ghost"
+                                >
+                                  ↑
+                                </Button>
+                              )}
+                              {index < rmdSettings.accountPriority.length - 1 && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleMoveAccount(account, "down")}
+                                  variant="ghost"
+                                >
+                                  ↓
+                                </Button>
+                              )}
                               <Button
                                 size="sm"
                                 colorScheme="red"
@@ -366,8 +371,8 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
                         ))}
                       </VStack>
                     ) : (
-                      <Text color={textColor}>
-                        No accounts added. Add accounts to set withdrawal priority.
+                      <Text color="gray.500" fontStyle="italic">
+                        No accounts selected for RMD priority
                       </Text>
                     )}
                   </Box>

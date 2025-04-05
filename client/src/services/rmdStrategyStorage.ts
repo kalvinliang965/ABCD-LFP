@@ -16,7 +16,7 @@ function object_to_rmd_settings(storedData: any): RMDSettings {
   return {
     id: storedData.id,
     enableRMD: storedData.enableRMD !== undefined ? storedData.enableRMD : true,
-    startAge: storedData.startAge || 72,
+    currentAge: storedData.currentAge || 72,
     accountPriority: storedData.accountPriority || [],
     availableAccounts: storedData.availableAccounts || []
   };

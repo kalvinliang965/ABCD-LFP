@@ -104,7 +104,7 @@ function NewScenarioPage() {
   //! 这个部分是海风写的，不要我来查看。
   const [rmdSettings, setRmdSettings] = useState<RMDSettings>({
     enableRMD: true,
-    startAge: 72, //default start age
+    currentAge: 0, // Will be calculated based on birth year
     accountPriority: [],
     availableAccounts: [],
   });
@@ -209,7 +209,10 @@ function NewScenarioPage() {
   };
 
   const handle_continue_to_rmd_settings = () => {
-    // Update available accounts based on investments
+    // Calculate current age based on birth year
+    const currentYear = new Date().getFullYear();
+    const currentAge = currentYear - scenarioDetails.userBirthYear;
+    
     console.log("Investments before filtering:", investmentsConfig.investments);
     
     // Change this filter to match the actual tax status value
@@ -227,14 +230,17 @@ function NewScenarioPage() {
       });
 
     console.log("Filtered pre-tax accounts:", preTaxAccounts);
+    console.log("Current age:", currentAge);
 
     setRmdSettings({
       ...rmdSettings,
+      currentAge: currentAge, // Set the calculated current age
       availableAccounts: preTaxAccounts,
     });
     
     console.log("RMD Settings after update:", {
       ...rmdSettings,
+      currentAge: currentAge,
       availableAccounts: preTaxAccounts
     });
     
@@ -260,18 +266,20 @@ function NewScenarioPage() {
   };
 
   const handle_continue_to_withdrawal_strategy = () => {
-    // Get all investment accounts
-    const allAccounts = investmentsConfig.investments.map(
-      (inv) =>
-        inv.investmentType ||
-        `Investment ${inv.id || Math.random().toString(36).substr(2, 9)}`
-    );
-
+    // Get all accounts from investments with their IDs
+    //console.log("Investments:", investmentsConfig.investments);
+    const allAccounts = investmentsConfig.investments.map(inv => ({
+      id: inv.id || `inv-${Math.random().toString(36).substring(2, 9)}`,
+      name: inv.investmentType || `Investment ${inv.id || Math.random().toString(36).substring(2, 9)}`
+    }));
+    
+    console.log("Available accounts for withdrawal:", allAccounts);
+    
     setWithdrawalStrategy({
       availableAccounts: allAccounts,
       accountPriority: withdrawalStrategy.accountPriority || [],
     });
-
+    
     setStep("withdrawalStrategy");
   };
 
@@ -296,7 +304,7 @@ function NewScenarioPage() {
 
       // Add RMD settings
       rmdStrategy: rmdSettings.enableRMD ? rmdSettings.accountPriority : [],
-      rmdStartAge: rmdSettings.enableRMD ? rmdSettings.startAge : 72,
+      rmdStartAge: rmdSettings.enableRMD ? rmdSettings.currentAge : 72,
 
       // Add withdrawal strategy as a simple array of investment IDs
       expenseWithdrawalStrategy: withdrawalStrategy.accountPriority,
@@ -358,7 +366,7 @@ function NewScenarioPage() {
 
     // After successfully saving the complete scenario
     //need to check what is the correct way to clear the local storage
-   // clearLocalStorage();
+    clearLocalStorage();
   };
   // }catch (error) {
   //     console.error("Failed to create scenario:", error)}};

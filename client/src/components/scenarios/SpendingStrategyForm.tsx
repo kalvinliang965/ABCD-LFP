@@ -150,7 +150,8 @@ export const SpendingStrategyForm: React.FC<SpendingStrategyFormProps> = ({
             <Divider />
             
             <Box>
-              <Heading size="sm" mb={3}>Selected Discretionary Expenses:</Heading>
+              <Heading size="sm" mb={3}>Selected Discretionary Expenses: </Heading>
+              <Text mb={4}>The order represents priority — the higher the item, the earlier it will be reduced.</Text>
               {spendingStrategy.selectedExpenses.length > 0 ? (
                 <List spacing={2}>
                   {spendingStrategy.selectedExpenses.map((expense) => (
