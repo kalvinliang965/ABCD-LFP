@@ -7,12 +7,12 @@ import {
 } from "@chakra-ui/react";
 import InvestmentCard from "./InvestmentCard";
 import AddInvestmentCard from "./AddInvestmentCard";
-import InvestmentDetailModal from "./InvestmentDetailModal";
 import {
   type InvestmentType,
   type InvestmentTypeListProps,
 } from "../../types/investmentTypes";
 
+// this is the page that will be deleted later.
 const InvestmentList: React.FC<InvestmentTypeListProps> = ({
   investmentTypes,
   onOpenInvestmentTypeModal,
@@ -65,12 +65,6 @@ const InvestmentList: React.FC<InvestmentTypeListProps> = ({
 
         <AddInvestmentCard onClick={onOpenInvestmentTypeModal} />
       </SimpleGrid>
-
-      <InvestmentDetailModal
-        isOpen={isOpen}
-        onClose={handleCloseModal}
-        investmentType={selectedInvestmentType}
-      />
     </Box>
   );
 };
