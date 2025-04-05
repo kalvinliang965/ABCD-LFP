@@ -44,10 +44,12 @@ import {
   FiUsers,
 } from "react-icons/fi";
 import { motion } from "framer-motion";
+import lifeExpectancyStorage from "../../services/lifeExpectancyStorage";
 
 export type ExpectancyType = "fixed" | "distribution";
 
-export type LifeExpectancyConfig = {
+export interface LifeExpectancyConfig {
+  id?: string;
   userExpectancyType: ExpectancyType;
   userFixedAge?: number;
   userMeanAge?: number;
@@ -56,7 +58,7 @@ export type LifeExpectancyConfig = {
   spouseFixedAge?: number;
   spouseMeanAge?: number;
   spouseStandardDeviation?: number;
-};
+}
 
 export interface LifeExpectancyFormProps {
   lifeExpectancyConfig: LifeExpectancyConfig;
@@ -129,7 +131,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
         updates.userStandardDeviation = 5;
     }
 
-    onChangeConfig({
+    handleLifeExpectancyChange({
       ...lifeExpectancyConfig,
       ...updates,
     });
@@ -150,10 +152,27 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
         updates.spouseStandardDeviation = 5;
     }
 
-    onChangeConfig({
+    handleLifeExpectancyChange({
       ...lifeExpectancyConfig,
       ...updates,
     });
+  };
+
+  const handleLifeExpectancyChange = (updatedConfig: LifeExpectancyConfig) => {
+    console.log("Updated life expectancy config:", updatedConfig);
+    
+    try {
+      if (updatedConfig.id) {
+        lifeExpectancyStorage.update(updatedConfig.id, updatedConfig);
+      } else {
+        const savedConfig = lifeExpectancyStorage.add(updatedConfig);
+        updatedConfig.id = savedConfig.id;
+      }
+    } catch (error) {
+      console.error("Error auto-saving to localStorage:", error);
+    }
+    
+    onChangeConfig(updatedConfig);
   };
 
   return (
@@ -443,7 +462,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                           max={120}
                           value={lifeExpectancyConfig.userFixedAge}
                           onChange={(_, value) =>
-                            onChangeConfig({
+                            handleLifeExpectancyChange({
                               ...lifeExpectancyConfig,
                               userFixedAge: value,
                             })
@@ -480,7 +499,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                             max={120}
                             value={lifeExpectancyConfig.userMeanAge}
                             onChange={(_, value) =>
-                              onChangeConfig({
+                              handleLifeExpectancyChange({
                                 ...lifeExpectancyConfig,
                                 userMeanAge: value,
                               })
@@ -516,7 +535,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                             max={20}
                             value={lifeExpectancyConfig.userStandardDeviation}
                             onChange={(_, value) =>
-                              onChangeConfig({
+                              handleLifeExpectancyChange({
                                 ...lifeExpectancyConfig,
                                 userStandardDeviation: value,
                               })
@@ -740,7 +759,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                             max={120}
                             value={lifeExpectancyConfig.spouseFixedAge}
                             onChange={(_, value) =>
-                              onChangeConfig({
+                              handleLifeExpectancyChange({
                                 ...lifeExpectancyConfig,
                                 spouseFixedAge: value,
                               })
@@ -777,7 +796,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                               max={120}
                               value={lifeExpectancyConfig.spouseMeanAge}
                               onChange={(_, value) =>
-                                onChangeConfig({
+                                handleLifeExpectancyChange({
                                   ...lifeExpectancyConfig,
                                   spouseMeanAge: value,
                                 })
@@ -815,7 +834,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                                 lifeExpectancyConfig.spouseStandardDeviation
                               }
                               onChange={(_, value) =>
-                                onChangeConfig({
+                                handleLifeExpectancyChange({
                                   ...lifeExpectancyConfig,
                                   spouseStandardDeviation: value,
                                 })

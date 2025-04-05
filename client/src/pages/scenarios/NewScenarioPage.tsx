@@ -42,6 +42,7 @@ import spendingStrategyStorage from "../../services/spendingStrategyStorage";
 import { withdrawalStrategyApi } from "../../services/withdrawalStrategyApi";
 import withdrawalStrategyStorage from "../../services/withdrawalStrategyStorage";
 import rmdStrategyStorage from "../../services/rmdStrategyStorage";
+import lifeExpectancyStorage from "../../services/lifeExpectancyStorage";
 
 function NewScenarioPage() {
   //! belong to Kate, don't touch
@@ -200,7 +201,8 @@ function NewScenarioPage() {
     setStep("investments");
   };
 
-  const handle_to_investment_types = () => {
+  const handle_to_investment_types = async () => {
+    await saveLifeExpectancyConfig();
     setStep("investmentTypes");
   };
 
@@ -462,6 +464,7 @@ function NewScenarioPage() {
       spendingStrategyStorage.clear();
       withdrawalStrategyStorage.clear();
       rmdStrategyStorage.clear();
+      lifeExpectancyStorage.clear();
       console.log("Cleared all strategies from localStorage");
     } catch (error) {
       console.error("Error clearing localStorage:", error);
@@ -570,6 +573,35 @@ useEffect(() => {
       console.log("Loaded RMD settings from localStorage:", savedSettings[savedSettings.length - 1]);
     }
   }, []);
+
+  // Inside the NewScenarioPage component, add this function
+  const saveLifeExpectancyConfig = async () => {
+    try {
+      // Only use localStorage
+      if (lifeExpectancyConfig.id) {
+        lifeExpectancyStorage.update(lifeExpectancyConfig.id, lifeExpectancyConfig);
+      } else {
+        const savedConfig = lifeExpectancyStorage.add(lifeExpectancyConfig);
+        setLifeExpectancyConfig(savedConfig);
+      }
+      
+      toast({
+        title: "Life expectancy settings saved locally",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error saving life expectancy settings:", error);
+      toast({
+        title: "Error saving life expectancy settings",
+        description: "Please try again later",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
 
   // Selection between creating from scratch or importing YAML
   if (step === "typeSelection") {
