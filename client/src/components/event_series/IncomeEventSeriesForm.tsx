@@ -159,17 +159,17 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
             <FormLabel>Annual Change ($)</FormLabel>
             <InputGroup>
               <InputLeftElement pointerEvents="none" color="gray.500" children="$" />
-              <Input
-                type="number"
-                value={annualChange.value ?? ""}
-                onChange={(e) =>
-                  setAnnualChange({ type: "fixed", value: parseInt(e.target.value) })
-                }
+            <Input
+              type="number"
+              value={annualChange.value ?? ""}
+              onChange={(e) =>
+                setAnnualChange({ type: "fixed", value: parseInt(e.target.value) })
+              }
                 placeholder="0"
-                min="0"
-                step="1"
+              min="0"
+              step="1"
                 pl={7}
-              />
+            />
             </InputGroup>
           </FormControl>
         )}

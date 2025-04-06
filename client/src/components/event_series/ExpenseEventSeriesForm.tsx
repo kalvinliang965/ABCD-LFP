@@ -49,6 +49,7 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
   const [isDiscretionary, setIsDiscretionary] = useState(false);
   const [userPercentage, setUserPercentage] = useState(100);
   const [spousePercentage, setSpousePercentage] = useState(0);
+  const [inflationAdjusted, setInflationAdjusted] = useState(false);
 
   const handlePercentageChange = (isUser: boolean, value: string) => {
     const numValue = value === "" ? 0 : Math.min(100, Math.max(0, parseInt(value) || 0));
@@ -74,6 +75,7 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
       isDiscretionary,
       userPercentage,
       spousePercentage,
+      inflationAdjusted,
     };
     if (onEventAdded) {
       onEventAdded(eventData);
@@ -88,6 +90,7 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
     setIsDiscretionary(false);
     setUserPercentage(100);
     setSpousePercentage(0);
+    setInflationAdjusted(false);
     setStartYear({ type: "fixed", value: new Date().getFullYear() });
     setDuration({ type: "fixed", value: 1 });
     setAnnualChange({ type: "fixed", value: undefined });
@@ -156,17 +159,17 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
             <FormLabel>Annual Change ($)</FormLabel>
             <InputGroup>
               <InputLeftElement pointerEvents="none" color="gray.500" children="$" />
-              <Input
-                type="number"
-                value={annualChange.value ?? ""}
-                onChange={(e) =>
-                  setAnnualChange({ type: "fixed", value: parseInt(e.target.value) })
-                }
+            <Input
+              type="number"
+              value={annualChange.value ?? ""}
+              onChange={(e) =>
+                setAnnualChange({ type: "fixed", value: parseInt(e.target.value) })
+              }
                 placeholder="0"
-                min="0"
-                step="1"
+              min="0"
+              step="1"
                 pl={7}
-              />
+            />
             </InputGroup>
           </FormControl>
         )}
@@ -243,7 +246,7 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
         <Box p={4} bg="indigo.50" borderRadius="lg" width="100%">
           <FormControl display="flex" alignItems="center" justifyContent="space-between">
             <FormLabel mb={0}>Inflation Adjusted</FormLabel>
-            <Switch isChecked={false} onChange={(e) => {}} />
+            <Switch isChecked={inflationAdjusted} onChange={(e) => setInflationAdjusted(e.target.checked)} />
           </FormControl>
         </Box>
         <Box p={4} bg="indigo.50" borderRadius="lg" width="100%">
