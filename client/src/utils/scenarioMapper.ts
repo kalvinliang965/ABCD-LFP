@@ -23,7 +23,7 @@ import { SpendingStrategy } from "../components/scenarios/SpendingStrategyForm";
 import { WithdrawalStrategy } from "../components/scenarios/WithdrawalStrategyForm";
 import { AddedEvent } from "../components/event_series/EventSeriesSection";
 import { investmentTypeStorage } from "../services/investmentTypeStorage";
-import { RothConversionStrategy } from "../components/roth_conversion_optimizer/RothConversionForm"
+import { RothConversionStrategy } from "../components/scenarios/RothConversionForm"
 
 export function map_form_to_scenario_raw(
   scenarioDetails: ScenarioDetails,
@@ -178,7 +178,7 @@ export function map_form_to_scenario_raw(
                 (additionalSettings.inflationConfig as any).parameters || {},
             },
           ],
-    afterTaxContributionLimit: 0, // Not in forms, default value
+    afterTaxContributionLimit: additionalSettings.afterTaxContributionLimit, // Not in forms, default value
     spendingStrategy: spendingStrategy.selectedExpenses || [],
     expenseWithdrawalStrategy: withdrawalStrategy.accountPriority || [],
     RMDStrategy: rmdSettings.enableRMD ? rmdSettings.accountPriority : [],

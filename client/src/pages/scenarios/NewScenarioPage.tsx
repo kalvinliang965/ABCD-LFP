@@ -17,7 +17,7 @@ import { InvestmentTypesForm } from "../../components/scenarios/InvestmentTypesF
 import AdditionalSettingsForm, {
   AdditionalSettingsConfig,
 } from "../../components/scenarios/AdditionalSettingsForm";
-import RothConversionOptimizerForm, { RothConversionStrategy } from "../../components/roth_conversion_optimizer/RothConversionForm";
+import RothConversionOptimizerForm, { RothConversionStrategy } from "../../components/scenarios/RothConversionForm";
 import ScenarioTypeSelector, {
   ScenarioCreationType,
 } from "../../components/scenarios/ScenarioTypeSelector";
@@ -90,6 +90,7 @@ function NewScenarioPage() {
         type: "fixed",
         value: 2.5, //! 这边2.5是默认值 也就是用户什么都不输入就这这个值
       },
+      afterTaxContributionLimit: 0,
       financialGoal: {
         value: 0, //! 这边0是默认值 也就是用户什么都不输入就这这个值
       },
