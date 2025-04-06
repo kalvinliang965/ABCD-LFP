@@ -37,6 +37,7 @@ import EventSeriesSection, {
 } from "../../components/event_series/EventSeriesSection";
 import { investmentTypeStorage } from "../../services/investmentTypeStorage";
 import { map_form_to_scenario_raw } from "../../utils/scenarioMapper";
+import { FaLeaf } from "react-icons/fa";
 
 function NewScenarioPage() {
   //! belong to Kate, don't touch
@@ -113,6 +114,9 @@ function NewScenarioPage() {
     });
 
   const [rothConversionStrategy, setRothConversionStrategy] = useState<RothConversionStrategy>({
+      roth_conversion_start: 0,
+      roth_conversion_end: 0,
+      roth_conversion_opt: false,
       availableAccounts: [],
       accountPriority: [],
     });
@@ -210,6 +214,9 @@ function NewScenarioPage() {
         `Investment ${inv.id || Math.random().toString(36).substr(2, 9)}`
     );
     setRothConversionStrategy({
+      roth_conversion_opt: false,
+      roth_conversion_start: new Date().getFullYear(),
+      roth_conversion_end: new Date().getFullYear() + 5,
       availableAccounts: allAccounts,
       accountPriority: rothConversionStrategy.accountPriority || [],
     });
@@ -280,24 +287,6 @@ function NewScenarioPage() {
 
   //* 这是我们最后最重要的代码
   const handle_finish_scenario = () => {
-    // Create the final scenario object
-    const finalScenario = {
-      // existing properties
-      name: scenarioDetails.name,
-      type: scenarioDetails.type,
-      // ...other properties
-
-      // Add RMD settings
-      rmdStrategy: rmdSettings.enableRMD ? rmdSettings.accountPriority : [],
-      rmdStartAge: rmdSettings.enableRMD ? rmdSettings.startAge : 72,
-
-      // Add withdrawal strategy as a simple array of investment IDs
-      expenseWithdrawalStrategy: withdrawalStrategy.accountPriority,
-
-      // Add spending strategy as a simple array of expense names
-      spendingStrategy: spendingStrategy.selectedExpenses,
-    };
-
     // Map form data to ScenarioRaw
     const scenarioRaw = map_form_to_scenario_raw(
       scenarioDetails,
@@ -307,6 +296,7 @@ function NewScenarioPage() {
       rmdSettings,
       spendingStrategy,
       withdrawalStrategy,
+      rothConversionStrategy,
       addedEvents
     );
 
@@ -328,8 +318,8 @@ function NewScenarioPage() {
     console.log("RMD Strategy:", scenarioRaw.RMDStrategy);
     console.log("Roth Conversion:", {
       enabled: scenarioRaw.RothConversionOpt,
-      startAge: scenarioRaw.RothConversionStart,
-      endAge: scenarioRaw.RothConversionEnd,
+      start_year: scenarioRaw.RothConversionStart,
+      end_yaer: scenarioRaw.RothConversionEnd,
       strategy: scenarioRaw.RothConversionStrategy,
     });
     console.log("Financial Goal:", scenarioRaw.financialGoal);

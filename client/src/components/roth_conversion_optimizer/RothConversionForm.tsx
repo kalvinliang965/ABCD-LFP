@@ -48,7 +48,6 @@ import {
   FiRepeat,
 } from "react-icons/fi";
 
-import { useImmer } from "use-immer";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { FaArrowUp, FaArrowDown, FaWallet } from "react-icons/fa";
 
@@ -59,6 +58,9 @@ export type RothConversionOptimizer = {
 };
 
 export interface RothConversionStrategy {
+  roth_conversion_opt: boolean;
+  roth_conversion_start: number;
+  roth_conversion_end: number;
   availableAccounts: string[];  // All available account
   accountPriority: string[];   // account priority
 }
@@ -87,39 +89,32 @@ export const RothConversionOptimizerForm: React.FC<
   const bgColor = useColorModeValue("white", "gray.800");
   const listItemBg = useColorModeValue("gray.50", "gray.700");
   const listItemHoverBg = useColorModeValue("gray.100", "gray.600");
+
   const current_year = new Date().getFullYear();
 
-  const [roth, update_roth] = useImmer({
-    opt: "opt-out",
-    start_year: current_year,
-    end_year: current_year + 5,
-    strategy: [],
-  });
-
-  function handle_opt_change(checked) {
-    update_roth((draft) => {
-      draft.opt = checked ? "opt-in" : "opt-out";
+  function handle_opt_change(checked: boolean) {
+    onChangeRothConversionStrategy({
+      ...rothConversionStrategy,
+      roth_conversion_opt: checked,
     });
   }
 
-  function handle_start_year_change(value) {
-    update_roth((draft) => {
-      draft.start_year = value;
-      // Ensure end year is not before start year
-      if (draft.end_year < value) {
-        draft.end_year = value;
-      }
-    });
+  function handle_start_year_change(stringValue: string, numValue: number) {
+    onChangeRothConversionStrategy({
+      ...rothConversionStrategy,
+      roth_conversion_start: numValue,
+    })
   }
 
-  function handle_end_year_change(value) {
-    update_roth((draft) => {
-      draft.end_year = value;
-    });
+  function handle_end_year_change(stringValue: string, numValue: number) {
+    onChangeRothConversionStrategy({
+      ...rothConversionStrategy,
+      roth_conversion_end: numValue,
+    })
   }
 
-  const is_opt_in = roth.opt === "opt-in";
-  const conversion_years = roth.end_year - roth.start_year + 1;
+  const is_opt_in = rothConversionStrategy.roth_conversion_opt;
+  const conversion_years = rothConversionStrategy.roth_conversion_end - rothConversionStrategy.roth_conversion_start + 1;
 
 
   // Handle drag and drop reordering
@@ -331,7 +326,7 @@ export const RothConversionOptimizerForm: React.FC<
                         <NumberInput
                           min={current_year}
                           max={current_year + 50}
-                          value={roth.start_year}
+                          value={rothConversionStrategy.roth_conversion_start}
                           onChange={handle_start_year_change}
                           w="100%"
                         >
@@ -364,9 +359,9 @@ export const RothConversionOptimizerForm: React.FC<
                           <Icon as={FiCalendar} color="blue.500" />
                         </InputLeftElement>
                         <NumberInput
-                          min={roth.start_year}
+                          min={rothConversionStrategy.roth_conversion_start}
                           max={current_year + 50}
-                          value={roth.end_year}
+                          value={rothConversionStrategy.roth_conversion_end}
                           onChange={handle_end_year_change}
                           w="100%"
                         >
@@ -399,7 +394,7 @@ export const RothConversionOptimizerForm: React.FC<
                     <Text fontSize="sm" color="purple.800">
                       Your conversion will be spread over{" "}
                       <strong>{conversion_years} years</strong> (
-                      {roth.start_year} - {roth.end_year}) to minimize tax
+                      {rothConversionStrategy.roth_conversion_start} - {rothConversionStrategy.roth_conversion_end}) to minimize tax
                       impact.
                     </Text>
                   </Flex>

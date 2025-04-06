@@ -351,6 +351,15 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
               >
                 Go Back to Create Investment Types
               </Button>
+              {(import.meta.env.MODE === "development") && (
+                <Button
+                  colorScheme="blue"
+                  onClick={onContinue}
+                  ml={4}
+                >
+                 Skip 
+                </Button>
+              )}
             </CardBody>
           </Card>
         </Container>
