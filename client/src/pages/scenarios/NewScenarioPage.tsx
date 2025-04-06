@@ -323,6 +323,13 @@ function NewScenarioPage() {
       end_yaer: scenarioRaw.RothConversionEnd,
       strategy: scenarioRaw.RothConversionStrategy,
     });
+    console.log("Inflation Assumption");
+    console.log("type:", scenarioRaw.inflationAssumption["type"]);
+    console.log("value: ",scenarioRaw.inflationAssumption["value"]);
+    console.log("min", scenarioRaw.inflationAssumption["min"]);
+    console.log("max:", scenarioRaw.inflationAssumption["max"]);
+    console.log("mean: ",scenarioRaw.inflationAssumption["mean"]);
+    console.log("stdev", scenarioRaw.inflationAssumption["stdev"]);
     console.log("Financial Goal:", scenarioRaw.financialGoal);
     console.log("Complete ScenarioRaw Object:", scenarioRaw);
     console.log("=====================================================");

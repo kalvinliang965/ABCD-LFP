@@ -75,7 +75,7 @@ import {
   FiBarChart,
   FiShield,
 } from "react-icons/fi";
-
+import { useState } from "react";
 // Define types
 export type InflationType = "fixed" | "uniform" | "normal";
 
@@ -160,13 +160,22 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
     });
   };
 
-  const handle_change_financial_goal = (_: string, value: number) => {
-    onChangeSettings({
-      ...additionalSettings,
-      financialGoal: {
-        value: Math.max(0, value), // Ensure non-negative
-      },
-    });
+  const handle_change_financial_goal = (valueString: string, value: number) => {
+    if (valueString === "") {
+        onChangeSettings({
+          ...additionalSettings,
+          financialGoal: {
+            value: 0, // ensure non-negative
+          },
+        });
+    } else {
+        onChangeSettings({
+          ...additionalSettings,
+          financialGoal: {
+            value: Math.max(0, value), // ensure non-negative
+          },
+        });
+    }
   };
 
   const handle_change_state = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -231,6 +240,13 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
         return "Not set";
     }
   };
+  
+  const [inflation_buffer1, set_inflation_buffer1] = useState("");
+  const [inflation_buffer2, set_inflation_buffer2] = useState("");
+  const reset_inflation_buffer = () => {
+    set_inflation_buffer1("");
+    set_inflation_buffer2("");
+  }
 
   // Render inflation card options
   const render_inflation_type_options = () => {
@@ -265,7 +281,10 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
             _hover: { bg: "green.900", borderColor: "green.700" },
           }}
           transition="all 0.2s"
-          onClick={() => handle_change_inflation_type("fixed")}
+          onClick={() => {
+            reset_inflation_buffer();
+            handle_change_inflation_type("fixed");
+          }}
           height="full"
         >
           <Flex direction="column" align="center" height="100%">
@@ -316,7 +335,10 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
             _hover: { bg: "orange.900", borderColor: "orange.700" },
           }}
           transition="all 0.2s"
-          onClick={() => handle_change_inflation_type("uniform")}
+          onClick={() => {
+            reset_inflation_buffer();
+            handle_change_inflation_type("uniform")
+          }}
           height="full"
         >
           <Flex direction="column" align="center" height="100%">
@@ -367,7 +389,10 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
             _hover: { bg: "purple.900", borderColor: "purple.700" },
           }}
           transition="all 0.2s"
-          onClick={() => handle_change_inflation_type("normal")}
+          onClick={() => {
+            reset_inflation_buffer();
+            handle_change_inflation_type("normal");
+          }}
           height="full"
         >
           <Flex direction="column" align="center" height="100%">
@@ -392,9 +417,65 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
     );
   };
 
+  
   // Render inflation fields based on type
   const render_inflation_fields = () => {
     const { inflationConfig } = additionalSettings;
+
+    const convertToValidNumber = (value: string): number => {
+      if (value === '' || value === '.') return 0;
+      const numValue = parseFloat(value);
+      return isNaN(numValue) ? 0 : numValue;
+    };
+
+    const handle_change_inflation = (field: string, value: string, update_func: Function) => {
+      let processedValue = value;
+      processedValue = processedValue
+      .replace(/,/g, '.') 
+      .replace(/[^0-9.]/g, '')
+      .replace(/(\..*)\./g, '$1'); 
+      if (processedValue.startsWith("0") && processedValue.length > 1 && !processedValue.startsWith("0.")) {
+        processedValue = processedValue.substring(1);
+      } else if (processedValue.startsWith(".")) {
+        processedValue = `0${processedValue}`
+      } 
+      update_func(processedValue);
+
+
+      let finalValue = convertToValidNumber(processedValue);
+      switch (field) {
+        case 'value':
+        case 'mean':
+          finalValue = Math.min(20, Math.max(0, finalValue));
+          break;
+        case 'min':
+          finalValue = Math.min(
+            additionalSettings.inflationConfig.max ?? 20,
+            Math.max(0, finalValue)
+          );
+          break;
+        case 'max':
+          finalValue = Math.max(
+            additionalSettings.inflationConfig.min ?? 0,
+            Math.min(20, finalValue)
+          );
+          break;
+        case 'standardDeviation':
+          finalValue = Math.min(10, Math.max(0.1, finalValue));
+          break;
+      }
+      const newInflationConfig = {
+        ...additionalSettings.inflationConfig,
+        [field]: Number(finalValue.toFixed(4)) 
+      };
+      
+      console.log(newInflationConfig);
+    
+      onChangeSettings({
+        ...additionalSettings,
+        inflationConfig: newInflationConfig
+      });
+    }
 
     switch (inflationConfig.type) {
       case "fixed":
@@ -408,17 +489,12 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
               <NumberInput
                 min={0}
                 max={20}
-                step={0.1}
-                value={inflationConfig.value}
-                onChange={(_, value) =>
-                  onChangeSettings({
-                    ...additionalSettings,
-                    inflationConfig: {
-                      ...inflationConfig,
-                      value,
-                    },
-                  })
-                }
+                inputMode="decimal"
+                pattern="[0-9.,]*"
+                step={0.0001}
+                precision={4}
+                value={inflation_buffer1}
+                onChange={(valueAsString: string) => handle_change_inflation("value", valueAsString, set_inflation_buffer1)}
                 w="100%"
               >
                 <NumberInputField pl={10} borderRadius="md" />
@@ -444,16 +520,10 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
                   min={0}
                   max={20}
                   step={0.1}
-                  value={inflationConfig.min}
-                  onChange={(_, value) =>
-                    onChangeSettings({
-                      ...additionalSettings,
-                      inflationConfig: {
-                        ...inflationConfig,
-                        min: value,
-                      },
-                    })
-                  }
+                  inputMode="decimal"
+                  pattern="[0-9.,]*"
+                  value={inflation_buffer1}
+                  onChange={(valueAsString: string) => handle_change_inflation("min", valueAsString, set_inflation_buffer1)}
                   w="100%"
                 >
                   <NumberInputField pl={10} borderRadius="md" />
@@ -475,16 +545,10 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
                   min={0}
                   max={20}
                   step={0.1}
-                  value={inflationConfig.max}
-                  onChange={(_, value) =>
-                    onChangeSettings({
-                      ...additionalSettings,
-                      inflationConfig: {
-                        ...inflationConfig,
-                        max: value,
-                      },
-                    })
-                  }
+                  inputMode="decimal"
+                  pattern="[0-9.,]*"
+                  value={inflation_buffer2}
+                  onChange={(valueAsString: string) => handle_change_inflation("max", valueAsString, set_inflation_buffer2)}
                   w="100%"
                 >
                   <NumberInputField pl={10} borderRadius="md" />
@@ -511,16 +575,9 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
                   min={0}
                   max={20}
                   step={0.1}
-                  value={inflationConfig.mean}
-                  onChange={(_, value) =>
-                    onChangeSettings({
-                      ...additionalSettings,
-                      inflationConfig: {
-                        ...inflationConfig,
-                        mean: value,
-                      },
-                    })
-                  }
+                  inputMode="decimal"
+                  value={inflation_buffer1}
+                  onChange={(valueAsString: string) => handle_change_inflation("mean", valueAsString, set_inflation_buffer1)}
                   w="100%"
                 >
                   <NumberInputField pl={10} borderRadius="md" />
@@ -544,16 +601,8 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
                   min={0.1}
                   max={10}
                   step={0.1}
-                  value={inflationConfig.standardDeviation}
-                  onChange={(_, value) =>
-                    onChangeSettings({
-                      ...additionalSettings,
-                      inflationConfig: {
-                        ...inflationConfig,
-                        standardDeviation: value,
-                      },
-                    })
-                  }
+                  value={inflation_buffer2}
+                  onChange={(valueAsString: string) => handle_change_inflation("standardDeviation", valueAsString, set_inflation_buffer2)}
                   w="100%"
                 >
                   <NumberInputField pl={10} borderRadius="md" />
@@ -816,11 +865,19 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
                           min={0}
                           step={1}
                           value={additionalSettings.afterTaxContributionLimit}
-                          onChange={(_, value) =>
-                            onChangeSettings({
-                              ...additionalSettings,
-                              afterTaxContributionLimit: value
-                            })
+                          onChange={(valueString, value) => {
+                            if (valueString === "") {
+                              onChangeSettings({
+                                ...additionalSettings,
+                                afterTaxContributionLimit: 0
+                              })
+                            } else {
+                              onChangeSettings({
+                                ...additionalSettings,
+                                afterTaxContributionLimit: value
+                              })
+                            }
+                          }
                           }
                           w="100%"
                         >
@@ -1025,7 +1082,10 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
               <Button
                 colorScheme="blue"
                 size="lg"
-                onClick={onContinue}
+                onClick={() => {
+                  console.log(additionalSettings.inflationConfig)
+                  onContinue();
+                }}
                 px={8}
                 rightIcon={<Icon as={FiChevronRight} />}
                 fontWeight="bold"
