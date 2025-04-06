@@ -17,7 +17,7 @@ import {
   FaRegLightbulb,
 } from "react-icons/fa";
 import { ScenarioDetailCard } from "../../components/scenarios";
-import { SAMPLE_SCENARIOS } from "../../types/scenario";
+import { SAMPLE_SCENARIOS } from "../../types/scenario"; //! 临时的
 import { Link as RouterLink } from "react-router-dom";
 
 const MyScenariosPage: React.FC = () => {
@@ -199,9 +199,9 @@ const MyScenariosPage: React.FC = () => {
             {SAMPLE_SCENARIOS.length} scenarios
           </Badge>
         </Flex>
-        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+        <SimpleGrid columns={{ base: 1, md: 1}} spacing={6}>
           {SAMPLE_SCENARIOS.map((scenario) => (
-            <ScenarioDetailCard key={scenario.id} scenario={scenario} />
+            <ScenarioDetailCard key={scenario.name} scenario={scenario} />
           ))}
         </SimpleGrid>
       </Box>

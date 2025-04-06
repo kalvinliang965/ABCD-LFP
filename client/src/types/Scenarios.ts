@@ -1,25 +1,24 @@
 export type InvestmentTypeRaw = {
   //!chen 我并不觉得ID在这里是必须的，可以通过名称来匹配。
-  id?: string;
   name: string;
   description: string;
   returnAmtOrPct: string; // amount or percent
-  returnDistribution: Map<string, any>;
+  returnDistribution: Array<{ [key: string]: any }>; //! chen changed it to match with YAML
   expenseRatio: number;
   incomeAmtOrPct: string;
-  incomeDistribution: Map<string, any>;
+  incomeDistribution: Array<{ [key: string]: any }>; //! chen changed it to match with YAML
   taxability: boolean;
 };
 
 export type EventRaw = {
   name: string;
-  start: Map<string, any>;
-  duration: Map<string, any>;
+  start: Array<{ [key: string]: any }>; //! chen changed it to match with YAML
+  duration: Array<{ [key: string]: any }>; //! chen changed it to match with YAML
   type: string;
 };
 
 export type InvestmentRaw = {
-  investmentType: InvestmentTypeRaw;
+  investmentType: string;
   value: number;
   taxStatus: string; // "non-retirement", "pre-tax", "after-tax"
   id: string;
@@ -28,7 +27,7 @@ export type InvestmentRaw = {
 export type IncomeEventRaw = EventRaw & {
   initialAmount: number;
   changeAmtOrPct: string;
-  changeDistribution: Map<string, any>;
+  changeDistribution: Array<{ [key: string]: any }>; //! chen changed it to match with YAML
   inflationAdjusted: boolean;
   userFraction: number;
   socialSecurity: boolean;
@@ -37,33 +36,34 @@ export type IncomeEventRaw = EventRaw & {
 export type ExpenseEventRaw = EventRaw & {
   initialAmount: number;
   changeAmtOrPct: string;
-  changeDistribution: Map<string, any>;
+  changeDistribution: Array<{ [key: string]: any }>; //! chen changed it to match with YAML
   inflationAdjusted: boolean;
   userFraction: number;
   discretionary: boolean;
 };
 
 export type InvestmentEventRaw = EventRaw & {
-  assetAllocation: Map<string, number>;
-  assetAllocation2: Map<string, number>;
+  assetAllocation: Array<{ type: string; value: number }>; //! chen changed it to match with YAML
+  assetAllocation2: Array<{ type: string; value: number }>; //! chen changed it to match with YAML
   glidePath: boolean;
   maxCash: number;
 };
 
 export type RebalanceEventRaw = EventRaw & {
-  assetAllocation: Map<string, number>;
+  assetAllocation: Array<{ type: string; value: number }>; //! chen changed it to match with YAML
 };
 
 export interface ScenarioRaw {
   name: string;
   martialStatus: string;
   birthYears: Array<number>;
-  lifeExpectancy: Array<Map<string, any>>;
+  lifeExpectancy: Array<{ [key: string]: any }>; //! chen changed it to match with YAML
+  investmentTypes: Set<InvestmentTypeRaw>;
   investments: Set<InvestmentRaw>;
   eventSeries: Set<
     IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw
   >;
-  inflationAssumption: Map<string, number>;
+  inflationAssumption: { [key: string]: any }; //! chen changed it to match with YAML
   afterTaxContributionLimit: number;
   spendingStrategy: Array<string>;
   expenseWithdrawalStrategy: Array<string>;

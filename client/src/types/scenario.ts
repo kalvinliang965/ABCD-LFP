@@ -1,175 +1,174 @@
-export enum ScenarioType {
-  INDIVIDUAL = "individual",
-  COUPLE = "couple",
-}
-
-export enum InvestmentTaxStatus {
-  NON_RETIREMENT = "non-retirement",
-  PRE_TAX_RETIREMENT = "pre-tax-retirement",
-  AFTER_TAX_RETIREMENT = "after-tax-retirement",
-}
-
-export enum EventSeriesType {
-  INCOME = "income",
-  EXPENSE = "expense",
-  INVEST = "invest",
-  REBALANCE = "rebalance",
-}
-
-// Basic scenario interface with only the fields we're currently displaying
-export interface Scenario {
-  id: string;
-  name: string;
-  type: ScenarioType;
-  birthYear: number | string; // Can be a single year or a string like "1982 / 1984" for couples
-  lifeExpectancy: number | string; // Can be like "85±5 years" or "90 years"
-  financialGoal: string;
-  state: string;
-  lastModified: string;
-
-  // Optional fields that may be implemented later
-  inflationAssumption?: InflationAssumption;
-  investmentTypes?: InvestmentType[];
-  investments?: Investment[];
-  eventSeries?: EventSeries[];
-  spendingStrategy?: SpendingStrategy;
-  expenseWithdrawalStrategy?: WithdrawalStrategy;
-  rmdStrategy?: WithdrawalStrategy;
-  rmdStartAge?: number;
-  rothConversionStrategy?: WithdrawalStrategy;
-  rothConversionSettings?: RothConversionSettings;
-  sharingSettings?: SharingSettings;
-  initialRetirementContributionLimit?: number;
-}
-
-// Supporting interfaces for complete scenario definition
-export interface InflationAssumption {
-  type: "fixed" | "distribution";
-  value: number;
-  // Additional fields for distribution type
-  distributionType?: "uniform" | "normal";
-  min?: number;
-  max?: number;
-  mean?: number;
-  stdDev?: number;
-}
-
-export interface InvestmentType {
-  name: string;
-  description: string;
-  returnRate: {
-    type: "fixed" | "percentage" | "normal-distribution";
-    value: number;
-    mean?: number;
-    stdDev?: number;
-  };
-  expenseRatio: number;
-  income: {
-    type: "fixed" | "percentage" | "normal-distribution";
-    value: number;
-    mean?: number;
-    stdDev?: number;
-  };
-  taxability: "tax-exempt" | "taxable";
-}
-
-export interface Investment {
-  investmentType: string;
-  value: number;
-  taxStatus: InvestmentTaxStatus;
-}
-
-export interface EventSeries {
-  name: string;
-  description?: string;
-  type: EventSeriesType;
-  startYear: {
-    type: "fixed" | "distribution" | "with-series" | "after-series";
-    value: number | string;
-    referenceSeries?: string;
-    distributionType?: "uniform" | "normal";
-    min?: number;
-    max?: number;
-    mean?: number;
-    stdDev?: number;
-  };
-  duration: {
-    type: "fixed" | "distribution";
-    value: number;
-    distributionType?: "uniform" | "normal";
-    min?: number;
-    max?: number;
-    mean?: number;
-    stdDev?: number;
-  };
-
-  // For income or expense events
-  amount?: number;
-  amountChange?: {
-    type: "fixed" | "percentage" | "distribution";
-    value: number;
-    distributionType?: "uniform" | "normal";
-    min?: number;
-    max?: number;
-    mean?: number;
-    stdDev?: number;
-  };
-  inflationAdjusted?: boolean;
-  userPercentage?: number;
-  spousePercentage?: number;
-  isSocialSecurity?: boolean;
-  isDiscretionary?: boolean;
-
-  // For invest or rebalance events
-  assetAllocation?: {
-    type: "fixed" | "glide-path";
-    initial: { [investmentId: string]: number }; // Percentages
-    final?: { [investmentId: string]: number }; // Percentages for glide path
-  };
-  maximumCash?: number;
-}
-
-export interface SpendingStrategy {
-  type: "prioritized" | "proportional";
-  expensePriority?: string[];
-}
-
-export interface WithdrawalStrategy {
-  type: "prioritized" | "proportional" | "tax-efficient";
-  investmentOrder?: string[]; // IDs of investments in order of withdrawal
-}
-
-export interface RothConversionSettings {
-  enabled: boolean;
-  startYear?: number;
-  endYear?: number;
-}
-
-export interface SharingSettings {
-  isPublic: boolean;
-  sharedWith: string[]; // User IDs
-}
+import { ScenarioRaw } from "./Scenarios";
+//! 目前想法是，当前端第一次发给后端的时候，数据应符合ScenarioRaw的格式。
+//! 但是在后端接收到后，则需要添加一些信息增加到DB，比如UserID，LastModifiedDate等。
+//! 前端再次拿取时应该从DB中拿取，然后转换为前端需要接收到的格式，其基本符合ScenarioRaw的格式，但是需要多一些不展示的信息，比如ScenarioID，lastModifiedDate等。
 
 // These are sample scenarios for the initial display
-export const SAMPLE_SCENARIOS: Scenario[] = [
+export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
+  // AI-generated code
+  // Update SAMPLE_SCENARIOS to conform to ScenarioRaw interface
   {
-    id: "early-retirement",
-    name: "Early Retirement Plan",
-    type: ScenarioType.INDIVIDUAL,
-    birthYear: 1985,
-    lifeExpectancy: "85±5 years",
-    financialGoal: "$2.0M",
-    state: "California",
-    lastModified: "2024/3/14",
-  },
-  {
-    id: "family-planning",
-    name: "Family Planning",
-    type: ScenarioType.COUPLE,
-    birthYear: "1982 / 1984",
-    lifeExpectancy: "90 years",
-    financialGoal: "$3.0M",
-    state: "Texas",
-    lastModified: "2024/3/9",
+    name: "Retirement Planning Scenario",
+    martialStatus: "couple",
+    birthYears: [1985, 1987],
+    lifeExpectancy: [
+      { type: "fixed", value: 80 },
+      { type: "normal", mean: 82, std: 3 },
+    ],
+    financialGoal: 10000,
+    residenceState: "NY",
+    investmentTypes: new Set([
+      {
+        name: "cash",
+        description: "cash",
+        returnAmtOrPct: "amount",
+        returnDistribution: [{ type: "fixed", value: "0" }],
+        expenseRatio: 0,
+        incomeAmtOrPct: "percent",
+        incomeDistribution: [{ type: "fixed", value: "0" }],
+        taxability: true,
+      },
+      {
+        name: "S&P 500",
+        description: "S&P 500 index fund",
+        returnAmtOrPct: "percent",
+        returnDistribution: [{ type: "normal", mean: "0.06", stdev: "0.02" }],
+        expenseRatio: 0.001,
+        incomeAmtOrPct: "percent",
+        incomeDistribution: [{ type: "normal", mean: "0.01", stdev: "0.005" }],
+        taxability: true,
+      },
+      {
+        name: "tax-exempt bonds",
+        description: "NY tax-exempt bonds",
+        returnAmtOrPct: "amount",
+        returnDistribution: [{ type: "fixed", value: "0" }],
+        expenseRatio: 0.004,
+        incomeAmtOrPct: "percent",
+        incomeDistribution: [{ type: "normal", mean: "0.03", stdev: "0.01" }],
+        taxability: false,
+      },
+    ]),
+    investments: new Set([
+      {
+        investmentType: "cash",
+        value: 100,
+        taxStatus: "non-retirement",
+        id: "cash",
+      },
+      {
+        investmentType: "S&P 500",
+        value: 10000,
+        taxStatus: "non-retirement",
+        id: "S&P 500 non-retirement",
+      },
+      {
+        investmentType: "tax-exempt bonds",
+        value: 2000,
+        taxStatus: "non-retirement",
+        id: "tax-exempt bonds",
+      },
+      {
+        investmentType: "S&P 500",
+        value: 10000,
+        taxStatus: "pre-tax",
+        id: "S&P 500 pre-tax",
+      },
+      {
+        investmentType: "S&P 500",
+        value: 2000,
+        taxStatus: "after-tax",
+        id: "S&P 500 after-tax",
+      },
+    ]),
+    eventSeries: new Set([
+      {
+        name: "salary",
+        start: [{ type: "fixed", value: "2025" }],
+        duration: [{ type: "fixed", value: "40" }],
+        type: "income",
+        initialAmount: 75000,
+        changeAmtOrPct: "amount",
+        changeDistribution: [{ type: "uniform", lower: "500", upper: "2000" }],
+        inflationAdjusted: false,
+        userFraction: 1.0,
+        socialSecurity: false,
+      },
+      {
+        name: "food",
+        start: [{ type: "startWith", eventSeries: "salary" }],
+        duration: [{ type: "fixed", value: "200" }],
+        type: "expense",
+        initialAmount: 5000,
+        changeAmtOrPct: "percent",
+        changeDistribution: [{ type: "normal", mean: "0.02", stdev: "0.01" }],
+        inflationAdjusted: true,
+        userFraction: 0.5,
+        discretionary: false,
+      },
+      {
+        name: "vacation",
+        start: [{ type: "startWith", eventSeries: "salary" }],
+        duration: [{ type: "fixed", value: "40" }],
+        type: "expense",
+        initialAmount: 1200,
+        changeAmtOrPct: "amount",
+        changeDistribution: [{ type: "fixed", value: "0" }],
+        inflationAdjusted: true,
+        userFraction: 0.6,
+        discretionary: true,
+      },
+      {
+        name: "streaming services",
+        start: [{ type: "startWith", eventSeries: "salary" }],
+        duration: [{ type: "fixed", value: "40" }],
+        type: "expense",
+        initialAmount: 500,
+        changeAmtOrPct: "amount",
+        changeDistribution: [{ type: "fixed", value: "0" }],
+        inflationAdjusted: true,
+        userFraction: 1.0,
+        discretionary: true,
+      },
+      {
+        name: "my investments",
+        start: [{ type: "uniform", lower: "2025", upper: "2030" }],
+        duration: [{ type: "fixed", value: "10" }],
+        type: "invest",
+        assetAllocation: [
+          { type: "S&P 500 non-retirement", value: 0.6 },
+          { type: "S&P 500 after-tax", value: 0.4 },
+        ],
+        assetAllocation2: [
+          { type: "S&P 500 non-retirement", value: 0.8 },
+          { type: "S&P 500 after-tax", value: 0.2 },
+        ],
+        glidePath: true,
+        maxCash: 1000,
+      },
+      {
+        name: "rebalance",
+        start: [{ type: "uniform", lower: "2025", upper: "2030" }],
+        duration: [{ type: "fixed", value: "10" }],
+        type: "rebalance",
+        assetAllocation: [
+          { type: "S&P 500 non-retirement", value: 0.7 },
+          { type: "tax-exempt bonds", value: 0.3 },
+        ],
+      },
+    ]),
+    inflationAssumption: [{ type: "fixed", value: 0.03 }],
+    afterTaxContributionLimit: 7000,
+    spendingStrategy: ["vacation", "streaming services"],
+    expenseWithdrawalStrategy: [
+      "S&P 500 non-retirement",
+      "tax-exempt bonds",
+      "S&P 500 after-tax",
+    ],
+    RMDStrategy: ["S&P 500 pre-tax"],
+    RothConversionOpt: true,
+    RothConversionStart: 2050,
+    RothConversionEnd: 2060,
+    RothConversionStrategy: ["S&P 500 pre-tax"],
   },
 ];

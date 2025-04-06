@@ -141,15 +141,6 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
     },
   };
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { type: "spring", stiffness: 100 },
-    },
-  };
-
   const statVariants = {
     hidden: { scale: 0.9, opacity: 0 },
     visible: {
@@ -170,9 +161,9 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
   };
 
   const handle_save_investment_type = (investmentType: InvestmentTypeRaw) => {
-    if (typeToEdit && typeToEdit.id) {
+    if (typeToEdit && typeToEdit.name) {
       // Update existing investment type
-      investmentTypeStorage.update(typeToEdit.id, investmentType);
+      investmentTypeStorage.update(typeToEdit.name, investmentType);
 
       toast({
         title: "Investment Type Updated",
@@ -189,7 +180,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
     } else {
       // Create new investment type
       investmentTypeStorage.create(investmentType);
-      setNewItemAdded(investmentType.id || null);
+      setNewItemAdded(investmentType.name || null);
 
       // Reset the highlight after animation completes
       setTimeout(() => {
@@ -217,16 +208,34 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
     onOpen();
   };
 
-  const handle_edit_click = (id: string) => {
-    const typeToEdit = investmentTypes.find((type) => type.id === id);
+  const handle_edit_click = (name: string) => {
+    const typeToEdit = investmentTypes.find((type) => type.name === name);
     if (typeToEdit) {
-      set_type_to_edit(typeToEdit);
+      console.log("Found investment type to edit:", typeToEdit);
+
+      // Ensure typeToEdit has valid returnDistribution and incomeDistribution arrays
+      const editableType = {
+        ...typeToEdit,
+        returnDistribution:
+          Array.isArray(typeToEdit.returnDistribution) &&
+          typeToEdit.returnDistribution.length > 0
+            ? typeToEdit.returnDistribution
+            : [{ type: "fixed", value: 0 }],
+        incomeDistribution:
+          Array.isArray(typeToEdit.incomeDistribution) &&
+          typeToEdit.incomeDistribution.length > 0
+            ? typeToEdit.incomeDistribution
+            : [{ type: "fixed", value: 0 }],
+      };
+
+      console.log("Prepared investment type for editing:", editableType);
+      set_type_to_edit(editableType);
       onEditOpen();
     }
   };
 
-  const handle_delete_click = (id: string) => {
-    set_type_to_delete(id);
+  const handle_delete_click = (name: string) => {
+    set_type_to_delete(name);
     onDeleteOpen();
   };
 
@@ -234,7 +243,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
     if (!typeToDelete) return;
 
     const typeToDeleteName = investmentTypes.find(
-      (type) => type.id === typeToDelete
+      (type) => type.name === typeToDelete
     )?.name;
 
     if (investmentTypeStorage.delete(typeToDelete)) {
@@ -272,9 +281,13 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
     setSearchQuery(e.target.value);
   };
 
-  const get_distribution_display = (distribution: Map<string, any>) => {
-    const type = distribution.get("type");
-    return type;
+  const get_distribution_display = (
+    distribution: Array<{ [key: string]: any }>
+  ) => {
+    if (distribution && distribution.length > 0) {
+      return distribution[0].type;
+    }
+    return "";
   };
 
   const format_percent = (value: number) => {
@@ -514,11 +527,11 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                       <Tbody>
                         {filtered_investment_types.map((type) => (
                           <Tr
-                            key={type.id}
+                            key={type.name}
                             _hover={{ bg: hoverBg }}
                             transition="background 0.2s"
                             bg={
-                              newItemAdded === type.id
+                              newItemAdded === type.name
                                 ? highlightColor
                                 : undefined
                             }
@@ -552,7 +565,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                                 </TagLabel>
                               </Tag>
                             </Td>
-                            <Td>{format_percent(type.expenseRatio)}</Td>
+                            <Td>{format_percent(type.expenseRatio * 100)}</Td>
                             <Td>
                               <Badge
                                 px={2}
@@ -591,9 +604,9 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                                     colorScheme="blue"
                                     aria-label="Edit investment type"
                                     onClick={() =>
-                                      handle_edit_click(type.id || "")
+                                      handle_edit_click(type.name || "")
                                     }
-                                    isDisabled={!type.id}
+                                    isDisabled={!type.name}
                                     size="sm"
                                   />
                                 </Tooltip>
@@ -604,9 +617,9 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                                     colorScheme="red"
                                     aria-label="Delete investment type"
                                     onClick={() =>
-                                      handle_delete_click(type.id || "")
+                                      handle_delete_click(type.name || "")
                                     }
-                                    isDisabled={!type.id}
+                                    isDisabled={!type.name}
                                     size="sm"
                                   />
                                 </Tooltip>
@@ -706,7 +719,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
               </AnimatePresence>
 
               {/* Continue Button */}
-              <Flex justify="flex-end" mt={8}>
+              <Flex justify="flex-end" mt={8} display="flex" gap={4}>
                 <Button
                   rightIcon={<Icon as={FiChevronRight} />}
                   colorScheme="blue"
@@ -724,6 +737,24 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                 >
                   Continue to Investments
                 </Button>
+                {(import.meta.env.MODE === "development") && (
+                  <Button
+                    rightIcon={<Icon as={FiChevronRight} />}
+                    colorScheme="blue"
+                    onClick={onContinue}
+                    size="lg"
+                    shadow="md"
+                    _hover={{
+                      transform: can_continue ? "translateY(-2px)" : "none",
+                      shadow: "lg",
+                      bg: can_continue ? buttonHoverBg : undefined,
+                    }}
+                    transition="all 0.3s"
+                    borderRadius="md"
+                  >
+                    Skip to Investments
+                  </Button>
+                )}
               </Flex>
             </VStack>
           </CardBody>

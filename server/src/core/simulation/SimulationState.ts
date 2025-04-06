@@ -13,6 +13,7 @@ import { SpendingEvent, update_expense_amount } from "./logic/ExpenseHelper";
 import { create_yearly_records } from "./YearlyTaxRecords";
 import { AccountManager } from "../domain/AccountManager";
 import { InvestmentTypeManager } from "../domain/InvestmentTypeManager";
+import { State } from "js-yaml";
 export type EventMap = Map<string, Event>;
 
 export interface PersonDetails {
@@ -120,7 +121,9 @@ function create_person_details(
 
 // Main simulation state creation function
 export async function create_simulation_state(
-  scenario: Scenario
+  scenario: Scenario,
+  federal_tax_service: FederalTaxService,
+  state_tax_service: StateTaxService
 ): Promise<SimulationState> {
   try {
     const start_year: number = new Date().getFullYear();
@@ -156,8 +159,8 @@ export async function create_simulation_state(
     // Create the simulation state object
     // clone to prevent refetching from database
     const investment_type_manager = scenario.investment_type_manager.clone();
-    const federal_tax_service = scenario.federal_tax_service.clone();
-    const state_tax_service = scenario.state_tax_service.clone();
+    const cloned_federal_tax_service = federal_tax_service.clone();
+    const cloned_state_tax_service = state_tax_service.clone();
     // Account and event organization
     const account_manager = scenario.account_manager.clone();
 
@@ -257,9 +260,10 @@ export async function create_simulation_state(
       get_current_year: () => current_year,
       advance_year: () => {
         current_year++;
-        inflation_factor *= 1 + scenario.inflation_assumption.sample();
-        federal_tax_service.adjust_for_inflation(inflation_factor);
-        state_tax_service.adjust_for_inflation(inflation_factor);
+        const annual_inflation_rate = scenario.inflation_assumption.sample();
+        inflation_factor *= 1 + annual_inflation_rate;
+        cloned_federal_tax_service.adjust_for_inflation(annual_inflation_rate);
+        cloned_state_tax_service.adjust_for_inflation(annual_inflation_rate);
         investment_type_manager.resample_all();
         if (!spouse?.is_alive) {
           tax_filing_status = TaxFilingStatus.SINGLE;
@@ -272,8 +276,8 @@ export async function create_simulation_state(
         rebalance: rebalance_events,
       },
       investment_type_manager,
-      federal_tax_service,
-      state_tax_service,
+      federal_tax_service: cloned_federal_tax_service,
+      state_tax_service: cloned_state_tax_service,
       account_manager,
     };
 
