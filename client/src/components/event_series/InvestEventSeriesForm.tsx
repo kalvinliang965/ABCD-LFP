@@ -18,13 +18,14 @@ import {
 } from "@chakra-ui/react";
 import { CommonFields } from "./CommonFields";
 import { AmountChangeType } from "../../types/eventSeries";
-import { Investment, TaxStatus } from "../../components/scenarios/InvestmentsForm";
+import { InvestmentRaw } from "../../types/Scenarios";
+import { TaxStatus } from "../../components/scenarios/InvestmentsForm";
 
 interface InvestEventSeriesFormProps {
   onBack?: () => void;
   onEventAdded?: (event: any) => void;
   existingEvents: { name: string }[];
-  investments?: Investment[];
+  investments?: InvestmentRaw[];
 }
 
 export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
@@ -56,7 +57,7 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
     
     const initialAllocations: { [key: string]: number } = {};
     nonPreTaxInvestments.forEach(inv => {
-      initialAllocations[inv.investmentTypeId || `Investment ${inv.id}`] = 0;
+      initialAllocations[inv.investmentType || `Investment ${inv.id}`] = 0;
     });
     setAllocations(initialAllocations);
     setFinalAllocations(initialAllocations);
@@ -110,12 +111,12 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
         {nonPreTaxInvestments.map((inv) => (
           <FormControl key={inv.id} isRequired>
             <FormLabel>
-              {inv.investmentTypeId || `Investment ${inv.id}`} (%)
+              {inv.investmentType || `Investment ${inv.id}`} (%)
             </FormLabel>
             <NumberInput
-              value={targetAllocations[inv.investmentTypeId || `Investment ${inv.id}`] || 0}
+              value={targetAllocations[inv.investmentType || `Investment ${inv.id}`] || 0}
               onChange={(value) => handleAllocationChange(
-                inv.investmentTypeId || `Investment ${inv.id}`,
+                inv.investmentType || `Investment ${inv.id}`,
                 parseFloat(value) || 0,
                 isFinal
               )}
@@ -173,7 +174,7 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
     const equalShare = 100 / nonPreTaxInvestments.length;
     const initialAllocations: { [key: string]: number } = {};
     nonPreTaxInvestments.forEach(inv => {
-      initialAllocations[inv.investmentTypeId || `Investment ${inv.id}`] = equalShare;
+      initialAllocations[inv.investmentType || `Investment ${inv.id}`] = equalShare;
     });
     setAllocations(initialAllocations);
     setFinalAllocations(initialAllocations);
