@@ -17,7 +17,7 @@ import { InvestmentTypesForm } from "../../components/scenarios/InvestmentTypesF
 import AdditionalSettingsForm, {
   AdditionalSettingsConfig,
 } from "../../components/scenarios/AdditionalSettingsForm";
-import RothConversionOptimizerForm from "../../components/roth_conversion_optimizer/RothConversionForm";
+import RothConversionOptimizerForm, { RothConversionStrategy } from "../../components/roth_conversion_optimizer/RothConversionForm";
 import ScenarioTypeSelector, {
   ScenarioCreationType,
 } from "../../components/scenarios/ScenarioTypeSelector";
@@ -107,8 +107,12 @@ function NewScenarioPage() {
     availableExpenses: [],
     selectedExpenses: [],
   });
-  const [withdrawalStrategy, setWithdrawalStrategy] =
-    useState<WithdrawalStrategy>({
+  const [withdrawalStrategy, setWithdrawalStrategy] = useState<WithdrawalStrategy>({
+      availableAccounts: [],
+      accountPriority: [],
+    });
+
+  const [rothConversionStrategy, setRothConversionStrategy] = useState<RothConversionStrategy>({
       availableAccounts: [],
       accountPriority: [],
     });
@@ -202,6 +206,15 @@ function NewScenarioPage() {
   };
 
   const handle_to_roth_conversion_optimizer = () => {
+    const allAccounts = investmentsConfig.investments.map(
+      (inv) =>
+        inv.investmentType ||
+        `Investment ${inv.id || Math.random().toString(36).substr(2, 9)}`
+    );
+    setRothConversionStrategy({
+      availableAccounts: allAccounts,
+      accountPriority: rothConversionStrategy.accountPriority || [],
+    });
     setStep("rothConversionOptimizer");
   };
 
@@ -398,6 +411,8 @@ function NewScenarioPage() {
   if (step === "rothConversionOptimizer") {
     return (
       <RothConversionOptimizerForm
+        rothConversionStrategy={rothConversionStrategy}
+        onChangeRothConversionStrategy={setRothConversionStrategy}
         onBack={handle_to_spending_strategy}
         onContinue={handle_to_additional_settings}
       />
