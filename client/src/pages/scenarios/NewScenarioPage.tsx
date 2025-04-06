@@ -17,7 +17,9 @@ import { InvestmentTypesForm } from "../../components/scenarios/InvestmentTypesF
 import AdditionalSettingsForm, {
   AdditionalSettingsConfig,
 } from "../../components/scenarios/AdditionalSettingsForm";
-import RothConversionOptimizerForm, { RothConversionStrategy } from "../../components/roth_conversion_optimizer/RothConversionForm";
+import RothConversionOptimizerForm, {
+  RothConversionStrategy,
+} from "../../components/roth_conversion_optimizer/RothConversionForm";
 import ScenarioTypeSelector, {
   ScenarioCreationType,
 } from "../../components/scenarios/ScenarioTypeSelector";
@@ -37,6 +39,7 @@ import EventSeriesSection, {
 } from "../../components/event_series/EventSeriesSection";
 import { investmentTypeStorage } from "../../services/investmentTypeStorage";
 import { map_form_to_scenario_raw } from "../../utils/scenarioMapper";
+import { scenarioApi } from "../../services/scenario";
 
 function NewScenarioPage() {
   //! belong to Kate, don't touch
@@ -107,12 +110,14 @@ function NewScenarioPage() {
     availableExpenses: [],
     selectedExpenses: [],
   });
-  const [withdrawalStrategy, setWithdrawalStrategy] = useState<WithdrawalStrategy>({
+  const [withdrawalStrategy, setWithdrawalStrategy] =
+    useState<WithdrawalStrategy>({
       availableAccounts: [],
       accountPriority: [],
     });
 
-  const [rothConversionStrategy, setRothConversionStrategy] = useState<RothConversionStrategy>({
+  const [rothConversionStrategy, setRothConversionStrategy] =
+    useState<RothConversionStrategy>({
       availableAccounts: [],
       accountPriority: [],
     });
@@ -281,7 +286,7 @@ function NewScenarioPage() {
   //! 这部分是海风写的，不要动。
 
   //* 这是我们最后最重要的代码
-  const handle_finish_scenario = () => {
+  const handle_finish_scenario = async () => {
     // Map form data to ScenarioRaw
     const scenarioRaw = map_form_to_scenario_raw(
       scenarioDetails,
@@ -320,18 +325,35 @@ function NewScenarioPage() {
     console.log("Complete ScenarioRaw Object:", scenarioRaw);
     console.log("=====================================================");
 
-    // Clean investment type data from localStorage
-    investmentTypeStorage.clear();
+    // AI-generated code
+    // Send scenario to backend using scenarioApi
+    try {
+      const savedScenario = await scenarioApi.create(scenarioRaw);
+      console.log("Scenario saved to backend:", savedScenario);
 
-    // Submit the scenario
-    toast({
-      title: "Scenario Created",
-      description: "Your scenario has been created successfully.",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
-    navigate("/scenarios");
+      // Clean investment type data from localStorage
+      investmentTypeStorage.clear();
+
+      // Show success toast and navigate to scenarios page
+      toast({
+        title: "Scenario Created",
+        description: "Your scenario has been created successfully.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      navigate("/scenarios");
+    } catch (error) {
+      console.error("Error saving scenario:", error);
+      toast({
+        title: "Error Creating Scenario",
+        description:
+          "There was a problem creating your scenario. Please try again.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   };
 
   const handle_change_scenario_type = (value: string) => {
