@@ -89,6 +89,8 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
     },
   };
 
+  console.log(import.meta.env.MODE);
+
   return (
     <MotionBox
       initial="hidden"
@@ -478,6 +480,32 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                   >
                     Continue
                   </Button>
+                  {/* Will only display during development mode*/}
+                  {(import.meta.env.MODE === "development") && (
+                      <Button
+                      colorScheme="blue"
+                      size="lg"
+                      onClick={() => {
+                        console.log(
+                          "ScenarioDetailsForm: Skip button clicked"
+                        );
+                        onContinue();
+                      }}
+                      rightIcon={<FiArrowRight />}
+                      px={8}
+                      ml={4}
+                      borderRadius="lg"
+                      bgGradient="linear(to-r, blue.400, purple.500)"
+                      _hover={{
+                        bgGradient: "linear(to-r, blue.500, purple.600)",
+                        transform: "translateY(-2px)",
+                        boxShadow: "lg",
+                      }}
+                      transition="all 0.2s"
+                    >
+                      Skip
+                    </Button>
+                  )}
                 </MotionBox>
               </Flex>
             </CardFooter>

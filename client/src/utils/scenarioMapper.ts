@@ -26,6 +26,7 @@ import { SpendingStrategy } from "../components/scenarios/SpendingStrategyForm";
 import { WithdrawalStrategy } from "../components/scenarios/WithdrawalStrategyForm";
 import { AddedEvent } from "../components/event_series/EventSeriesSection";
 import { investmentTypeStorage } from "../services/investmentTypeStorage";
+import { RothConversionStrategy } from "../components/scenarios/RothConversionForm"
 
 export function map_form_to_scenario_raw(
   scenarioDetails: ScenarioDetails,
@@ -35,6 +36,7 @@ export function map_form_to_scenario_raw(
   rmdSettings: RMDSettings,
   spendingStrategy: SpendingStrategy,
   withdrawalStrategy: WithdrawalStrategy,
+  rothConversionStrategy: RothConversionStrategy,
   addedEvents: AddedEvent[]
 ): ScenarioRaw {
   // Get birth years
@@ -165,40 +167,6 @@ export function map_form_to_scenario_raw(
     IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw
   >;
 
-  // Get Roth Conversion settings from form
-  const rothForm = {
-    enable: false, // Default values, would come from RothConversionOptimizerForm
-    startAge: 0,
-    endAge: 0,
-    strategy: [""],
-  };
-
-  function parse_inflation_config(
-    inflationConfig: InflationConfig
-  ): Array<{ [key: string]: any }> {
-    if (inflationConfig.type === "fixed") {
-      const inflation_value = (inflationConfig.value as number) / 100;
-      return [{ type: "fixed", value: inflation_value }];
-    } else if (inflationConfig.type === "uniform") {
-      return [
-        {
-          type: "uniform",
-          parameters: { min: inflationConfig.min, max: inflationConfig.max },
-        },
-      ];
-    } else {
-      return [
-        {
-          type: "normal",
-          parameters: {
-            mean: inflationConfig.mean,
-            standardDeviation: inflationConfig.standardDeviation,
-          },
-        },
-      ];
-    }
-  }
-
   // Return the final ScenarioRaw object
   return {
     name: scenarioDetails.name,
@@ -208,18 +176,25 @@ export function map_form_to_scenario_raw(
     investmentTypes,
     investments,
     eventSeries,
-    inflationAssumption: parse_inflation_config(
-      additionalSettings.inflationConfig
-    ),
-    afterTaxContributionLimit: 0, // Not in forms, default value
+    inflationAssumption:
+      additionalSettings.inflationConfig.type === "fixed"
+        ? [{ type: "fixed", value: additionalSettings.inflationConfig.value }]
+        : [
+            {
+              type: "distribution",
+              parameters:
+                (additionalSettings.inflationConfig as any).parameters || {},
+            },
+          ],
+    afterTaxContributionLimit: additionalSettings.afterTaxContributionLimit, // Not in forms, default value
     spendingStrategy: spendingStrategy.selectedExpenses || [],
     expenseWithdrawalStrategy: withdrawalStrategy.accountPriority || [],
     RMDStrategy: rmdSettings.enableRMD ? rmdSettings.accountPriority : [],
-    RothConversionOpt: rothForm.enable,
-    RothConversionStart: rothForm.startAge,
-    RothConversionEnd: rothForm.endAge,
-    RothConversionStrategy: rothForm.strategy,
-    financialGoal: additionalSettings.financialGoal?.value,
-    residenceState: additionalSettings.stateOfResidence,
+    RothConversionOpt: rothConversionStrategy.roth_conversion_opt ,
+    RothConversionStart: rothConversionStrategy.roth_conversion_start,
+    RothConversionEnd: rothConversionStrategy.roth_conversion_end,
+    RothConversionStrategy: rothConversionStrategy.accountPriority,
+    financialGoal: additionalSettings.financialGoal?.value || 0,
+    residenceState: additionalSettings.stateOfResidence || "NY",
   };
 }

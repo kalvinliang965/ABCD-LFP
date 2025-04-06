@@ -17,9 +17,7 @@ import { InvestmentTypesForm } from "../../components/scenarios/InvestmentTypesF
 import AdditionalSettingsForm, {
   AdditionalSettingsConfig,
 } from "../../components/scenarios/AdditionalSettingsForm";
-import RothConversionOptimizerForm, {
-  RothConversionStrategy,
-} from "../../components/roth_conversion_optimizer/RothConversionForm";
+import RothConversionOptimizerForm, { RothConversionStrategy } from "../../components/scenarios/RothConversionForm";
 import ScenarioTypeSelector, {
   ScenarioCreationType,
 } from "../../components/scenarios/ScenarioTypeSelector";
@@ -39,6 +37,7 @@ import EventSeriesSection, {
 } from "../../components/event_series/EventSeriesSection";
 import { investmentTypeStorage } from "../../services/investmentTypeStorage";
 import { map_form_to_scenario_raw } from "../../utils/scenarioMapper";
+import { FaLeaf } from "react-icons/fa";
 import { scenarioApi } from "../../services/scenario";
 
 function NewScenarioPage() {
@@ -92,6 +91,7 @@ function NewScenarioPage() {
         type: "fixed",
         value: 2.5, //! 这边2.5是默认值 也就是用户什么都不输入就这这个值
       },
+      afterTaxContributionLimit: 0,
       financialGoal: {
         value: 0, //! 这边0是默认值 也就是用户什么都不输入就这这个值
       },
@@ -116,8 +116,10 @@ function NewScenarioPage() {
       accountPriority: [],
     });
 
-  const [rothConversionStrategy, setRothConversionStrategy] =
-    useState<RothConversionStrategy>({
+  const [rothConversionStrategy, setRothConversionStrategy] = useState<RothConversionStrategy>({
+      roth_conversion_start: 0,
+      roth_conversion_end: 0,
+      roth_conversion_opt: false,
       availableAccounts: [],
       accountPriority: [],
     });
@@ -217,6 +219,9 @@ function NewScenarioPage() {
         `Investment ${inv.id || Math.random().toString(36).substr(2, 9)}`
     );
     setRothConversionStrategy({
+      roth_conversion_opt: false,
+      roth_conversion_start: new Date().getFullYear(),
+      roth_conversion_end: new Date().getFullYear() + 5,
       availableAccounts: allAccounts,
       accountPriority: rothConversionStrategy.accountPriority || [],
     });
@@ -296,6 +301,7 @@ function NewScenarioPage() {
       rmdSettings,
       spendingStrategy,
       withdrawalStrategy,
+      rothConversionStrategy,
       addedEvents
     );
 
@@ -317,8 +323,8 @@ function NewScenarioPage() {
     console.log("RMD Strategy:", scenarioRaw.RMDStrategy);
     console.log("Roth Conversion:", {
       enabled: scenarioRaw.RothConversionOpt,
-      startAge: scenarioRaw.RothConversionStart,
-      endAge: scenarioRaw.RothConversionEnd,
+      start_year: scenarioRaw.RothConversionStart,
+      end_yaer: scenarioRaw.RothConversionEnd,
       strategy: scenarioRaw.RothConversionStrategy,
     });
     console.log("Financial Goal:", scenarioRaw.financialGoal);

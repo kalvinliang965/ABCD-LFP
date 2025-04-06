@@ -67,6 +67,7 @@ import {
   FiDollarSign,
   FiPercent,
   FiHome,
+  FiMinusCircle,
   FiSettings,
   FiTarget,
   FiMapPin,
@@ -97,6 +98,7 @@ export type AdditionalSettingsConfig = {
   inflationConfig: InflationConfig;
   financialGoal: FinancialGoalConfig;
   stateOfResidence: StateOfResidence;
+  afterTaxContributionLimit: number; 
 };
 
 export interface AdditionalSettingsFormProps {
@@ -768,6 +770,70 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
                 state of residence.
               </Text>
 
+              {/* After tax contribution limit */}
+              <Card
+                mb={8}
+                borderWidth="1px"
+                borderColor={borderColor}
+                borderRadius="lg"
+                overflow="hidden"
+                shadow="sm"
+              >
+                <CardHeader
+                  bg={useColorModeValue("gray.50", "gray.700")}
+                  borderBottomWidth="1px"
+                  borderBottomColor={borderColor}
+                  py={4}
+                  px={6}
+                >
+                  <Flex alignItems="center">
+                    <Icon as={FiMinusCircle} mr={2} color="green.500" boxSize={5} />
+                    <Heading size="md">After tax contribution limit</Heading>
+                    <Tooltip
+                      label="After tax contribution limit is an annual limit on contributions to after-tax retirement accounts"
+                      placement="top"
+                      hasArrow
+                    >
+                      <Box ml={2}>
+                        <Icon as={FiInfo} color="gray.400" boxSize={5} />
+                      </Box>
+                    </Tooltip>
+                  </Flex>
+                </CardHeader>
+                <CardBody p={6}>
+                  <Text fontSize="md" color="gray.600" mb={6}>
+                      Set the maximum amount you plan to contribute to after-tax accounts in your 
+                      financial plan. This helps model savings beyond traditional retirement 
+                      limits and can be adjusted to reflect your specific goals or income strategies.
+                  </Text>
+                    <FormControl isRequired>
+                      <FormLabel fontWeight="medium">After Tax Contribution Limit</FormLabel>
+                      <InputGroup size="lg">
+                        <InputLeftElement pointerEvents="none">
+                          <Icon as={FiMinusCircle} color="green.500" />
+                        </InputLeftElement>
+                        <NumberInput
+                          min={0}
+                          step={1}
+                          value={additionalSettings.afterTaxContributionLimit}
+                          onChange={(_, value) =>
+                            onChangeSettings({
+                              ...additionalSettings,
+                              afterTaxContributionLimit: value
+                            })
+                          }
+                          w="100%"
+                        >
+                          <NumberInputField pl={10} borderRadius="md" />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                      </InputGroup>
+                    </FormControl>
+                </CardBody>
+              </Card>
               {/* Inflation Configuration */}
               <Card
                 mb={8}
