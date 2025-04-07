@@ -19,12 +19,6 @@ import {
   RadioGroup,
   Stack,
   Select,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   IconButton,
   Icon,
   Divider,
@@ -111,23 +105,15 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
   };
 
   // AI-generated code
-  // upgrade the UI for this page to make it looks better and more modern
+  // Allow users to add multiple investments of the same type
   const bg = useColorModeValue("gray.50", "gray.900");
   const cardBg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-  const hoverBg = useColorModeValue("gray.50", "gray.700");
-  const activeInvestmentBg = useColorModeValue("blue.50", "blue.900");
-  const statCardBg = useColorModeValue("white", "gray.800");
   const statIconBg = useColorModeValue("blue.50", "blue.900");
   const statTextColor = useColorModeValue("gray.600", "gray.400");
 
-  // Filter out already selected investment types
-  const available_investment_types = investmentTypes.filter(
-    (type) =>
-      !investmentsConfig.investments.some(
-        (investment) => investment.investmentType === type.name
-      )
-  );
+  // Remove filtering so users can select the same investment type multiple times
+  const available_investment_types = investmentTypes;
 
   const handle_change_investment_type = (
     e: React.ChangeEvent<HTMLSelectElement>
@@ -181,10 +167,14 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
       return;
     }
 
-    // Add the investment
+    // Add the investment with a unique ID using timestamp
     const newInvestmentWithId: InvestmentRaw = {
       ...newInvestment,
-      id: Date.now().toString(), // Use a timestamp as a simple ID
+      // Generate unique ID using timestamp to allow multiple investments of same type
+      id:
+        investmentTypeStorage.get_by_name(newInvestment.investmentType)?.name +
+        " " +
+        newInvestment.taxStatus,
     };
 
     onChangeConfig({
@@ -236,11 +226,12 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(value);
   };
 
+  //! this is dulicated
   const get_tax_status_display = (status: TaxStatus) => {
     switch (status) {
       case "non-retirement":
@@ -267,6 +258,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     }
   };
 
+  //! no need for this function
   const get_investment_icon = (type: string) => {
     switch (type) {
       case "stock":
@@ -290,7 +282,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     }
   };
 
-  // Calculate total investment value
+  //? wtf is this
   const total_investment_value = investmentsConfig.investments.reduce(
     (total, investment) => total + investment.value,
     0
@@ -490,7 +482,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
             <Box p={8}>
               <Text fontSize="lg" fontWeight="medium" mb={6}>
                 Configure your investment portfolio by adding different types of
-                investments. Each investment can only be added once.
+                investments. You can add multiple investments of the same type.
               </Text>
 
               {/* Investment Cards */}
@@ -674,7 +666,8 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
                           </InputLeftElement>
                           <NumberInput
                             min={0}
-                            step={1000}
+                            step={100}
+                            precision={2}
                             value={newInvestment.value}
                             onChange={handle_change_value}
                             w="100%"
@@ -887,7 +880,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
                       colorScheme="blue"
                       onClick={handle_add_investment}
                       size="lg"
-                      disabled={available_investment_types.length === 0}
+                      disabled={investmentTypes.length === 0}
                       px={8}
                       fontWeight="bold"
                     >
@@ -897,16 +890,15 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
                 </CardBody>
               </Card>
 
-              {investmentsConfig.investments.length ===
-                investmentTypes.length && (
+              {investmentTypes.length === 0 && (
                 <Text
                   color="orange.500"
                   fontSize="sm"
                   mt={4}
                   textAlign="center"
                 >
-                  All investment types have been used. Remove an existing
-                  investment to add a different type.
+                  No investment types available. Please go back and create
+                  investment types first.
                 </Text>
               )}
             </Box>

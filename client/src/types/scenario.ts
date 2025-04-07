@@ -8,7 +8,7 @@ export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
   // AI-generated code
   // Update SAMPLE_SCENARIOS to conform to ScenarioRaw interface
   {
-    name: "Retirement Planning Scenario",
+    name: "Chen's Retirement Planning Scenario",
     martialStatus: "couple",
     birthYears: [1985, 1987],
     lifeExpectancy: [

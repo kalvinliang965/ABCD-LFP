@@ -12,23 +12,12 @@ import userRoutes from "./routes/userRoutes";
 import authRoutes from "./routes/authRoutes";
 import "./auth/passport"; // Import passport configuration
 import investmentTypeRoutes from "./routes/InvestmentType.routes";
-import session from 'express-session';
+import scenarioRoutes from "./routes/scenarioRoutes";
 const port = api_config.PORT;
 const app = express();
 
 // Register middleware
 registerGlobalMiddleWare(app);
-
-// Add session middleware before passport
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-session-secret',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
-  }
-}));
 
 // Initialize Passport
 app.use(passport.initialize());
@@ -40,36 +29,37 @@ app.use("/api/investments", investmentRoutes);
 app.use("/api/investmentTypes", investmentTypeRoutes);
 app.use("/api/users", userRoutes);
 app.use("/auth", authRoutes);
+app.use("/api/scenarios", scenarioRoutes);
 
-// Add a specific route for YAML files
-app.post('/api/yaml', async (req, res) => {
-  try {
-    const { name, content } = req.body;
-    // @ts-ignore
-    const userId = req.user?.id || req.user?._id;
-    
-    if (!userId) {
-      return res.status(401).json({ success: false, message: "Not authenticated" });
-    }
-    
-    const User = require('./db/models/User').default;
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-    
-    // Add the new YAML file
-    user.yamlFiles.push({ name, content, createdAt: new Date() });
-    await user.save();
-    
-    // Return the newly added YAML file
-    const newFile = user.yamlFiles[user.yamlFiles.length - 1];
-    res.status(201).json(newFile);
-  } catch (error) {
-    console.error('Error adding YAML file:', error);
-    res.status(500).json({ success: false, message: "Error adding YAML file" });
-  }
-});
+// // Add a specific route for YAML files
+// app.post('/api/yaml', async (req, res) => {
+//   try {
+//     const { name, content } = req.body;
+//     // @ts-ignore
+//     const userId = req.user?.id || req.user?._id;
+
+//     if (!userId) {
+//       return res.status(401).json({ success: false, message: "Not authenticated" });
+//     }
+
+//     const User = require('./db/models/User').default;
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(404).json({ success: false, message: "User not found" });
+//     }
+
+//     // Add the new YAML file
+//     user.yamlFiles.push({ name, content, createdAt: new Date() });
+//     await user.save();
+
+//     // Return the newly added YAML file
+//     const newFile = user.yamlFiles[user.yamlFiles.length - 1];
+//     res.status(201).json(newFile);
+//   } catch (error) {
+//     console.error('Error adding YAML file:', error);
+//     res.status(500).json({ success: false, message: "Error adding YAML file" });
+//   }
+// });
 
 //this part is for the login, check it after finishing other backend
 // Initialize Passport (add this after registerGlobalMiddleWare)
@@ -112,7 +102,6 @@ app.get("/", (req, res) => {
   res.json({ status: "ok", message: "Server is running" });
 });
 
-
 // 登录路由
 app.post("/api/login", (req, res) => {
   const { username, password } = req.body;
@@ -136,7 +125,6 @@ connect_database().catch((error) => {
   console.error("Failed to connect to database:", error);
   process.exit(1);
 });
-
 
 // Graceful shutdown
 async function terminate() {
@@ -165,7 +153,6 @@ async function terminate() {
 
 process.on("SIGINT", terminate);
 process.on("SIGTERM", terminate);
-
 
 // // Add this near the end of your file, before scrapping_demo()
 // function testRMDScraper() {

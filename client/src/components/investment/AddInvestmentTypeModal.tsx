@@ -54,7 +54,7 @@ import {
 // Generate a prettier modal for adding investment types
 // Define value input modes for form handling
 export enum ValueInputMode {
-  PERCENT = "percentage",
+  PERCENT = "percent",
   AMOUNT = "amount",
 }
 

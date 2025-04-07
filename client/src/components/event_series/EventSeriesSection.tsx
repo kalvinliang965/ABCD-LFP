@@ -16,7 +16,7 @@ import { Building2, Wallet, TrendingUp, BarChart } from "lucide-react";
 import { EventSeriesForm } from "./EventSeriesForm";
 import { useEventSeries } from "../../contexts/EventSeriesContext";
 import { EventSeriesType, EventSeries } from "../../types/eventSeries";
-import { Investment } from "../../components/scenarios/InvestmentsForm";
+import { InvestmentRaw } from "../../types/Scenarios";
 
 const eventTypeOptions = [
   {
@@ -68,7 +68,7 @@ interface EventSeriesSectionProps {
   handleSaveAndContinue: () => void;
   handleBackToInvestments: () => void;
   handleEventAdded: (event: AddedEvent) => void;
-  investments?: Investment[]; 
+  investments?: InvestmentRaw[]; 
 }
 
 const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({

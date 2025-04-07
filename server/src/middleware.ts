@@ -19,6 +19,11 @@ function registerGlobalMiddleWare(app: Express) {
 
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: false }));
+    // added this so express can understand yaml
+    app.use(bodyParser.text({
+        type: ["application/x-yaml", "text/yaml"],
+        limit: "10mb"
+    }));
     app.use(cookieParser());
     app.use(cors({
         origin: process.env.CLIENT_URL || 'http://localhost:5173',

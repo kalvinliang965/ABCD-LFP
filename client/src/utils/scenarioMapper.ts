@@ -17,7 +17,10 @@ import {
 } from "../components/scenarios/ScenarioDetailsForm";
 import { LifeExpectancyConfig } from "../components/scenarios/LifeExpectancyForm";
 import { InvestmentsConfig } from "../components/scenarios/InvestmentsForm";
-import { AdditionalSettingsConfig } from "../components/scenarios/AdditionalSettingsForm";
+import {
+  AdditionalSettingsConfig,
+  InflationConfig,
+} from "../components/scenarios/AdditionalSettingsForm";
 import { RMDSettings } from "../components/scenarios/RMDSettingsForm";
 import { SpendingStrategy } from "../components/scenarios/SpendingStrategyForm";
 import { WithdrawalStrategy } from "../components/scenarios/WithdrawalStrategyForm";
@@ -51,8 +54,11 @@ export function map_form_to_scenario_raw(
     });
   } else {
     lifeExpectancy.push({
-      type: "distribution",
-      parameters: (lifeExpectancyConfig as any).userDistributionParams || {},
+      type: "normal",
+      parameters: {
+        userMeanAge: lifeExpectancyConfig.userMeanAge,
+        userStandardDeviation: lifeExpectancyConfig.userStandardDeviation,
+      },
     });
   }
 
@@ -67,9 +73,11 @@ export function map_form_to_scenario_raw(
       });
     } else {
       lifeExpectancy.push({
-        type: "distribution",
-        parameters:
-          (lifeExpectancyConfig as any).spouseDistributionParams || {},
+        type: "normal",
+        parameters: {
+          userMeanAge: lifeExpectancyConfig.spouseMeanAge,
+          userStandardDeviation: lifeExpectancyConfig.spouseStandardDeviation,
+        },
       });
     }
   }
@@ -82,12 +90,12 @@ export function map_form_to_scenario_raw(
     allInvestmentTypes.map((it: any) => {
       const mappedType = {
         name: it.name,
-        description: it.description || "",
-        returnAmtOrPct: it.returnType || "percent",
-        returnDistribution: it.returnDistribution || [],
-        expenseRatio: it.expenseRatio || 0,
-        incomeAmtOrPct: it.incomeType || "percent",
-        incomeDistribution: it.incomeDistribution || [],
+        description: it.description,
+        returnAmtOrPct: it.returnAmtOrPct,
+        returnDistribution: it.returnDistribution,
+        expenseRatio: it.expenseRatio,
+        incomeAmtOrPct: it.incomeAmtOrPct,
+        incomeDistribution: it.incomeDistribution,
         taxability: it.taxability,
       };
       console.log(`Mapping investment type ${it.name}:`, {
@@ -105,7 +113,7 @@ export function map_form_to_scenario_raw(
       value: inv.value || 0,
       taxStatus:
         inv.taxStatus.toLowerCase().replace(/_/g, "-") || "non-retirement",
-      id: inv.id || `inv-${Math.random().toString(36).slice(2)}`,
+      id: inv.id,
     }))
   );
 
@@ -114,8 +122,8 @@ export function map_form_to_scenario_raw(
     addedEvents.map((event: any) => {
       const baseEvent = {
         name: event.name,
-        start: event.startConfig || [],
-        duration: event.durationConfig || [],
+        start: event.startYear || [],
+        duration: event.duration || [],
         type: event.type || "",
       };
 
@@ -126,7 +134,7 @@ export function map_form_to_scenario_raw(
           changeAmtOrPct: event.changeType || "percent",
           changeDistribution: event.changeDistribution || [],
           inflationAdjusted: event.inflationAdjusted || false,
-          userFraction: event.userFraction || 1,
+          userFraction: (event.userPercentage ?? 100) / 100,
           socialSecurity: event.isSocialSecurity || false,
         } as IncomeEventRaw;
       } else if (event.type === "expense") {
@@ -136,15 +144,15 @@ export function map_form_to_scenario_raw(
           changeAmtOrPct: event.changeType || "percent",
           changeDistribution: event.changeDistribution || [],
           inflationAdjusted: event.inflationAdjusted || false,
-          userFraction: event.userFraction || 1,
-          discretionary: event.isDiscretionary || false,
+          userFraction: (event.userPercentage ?? 100) / 100,
+          discretionary: event.discretionary || false,
         } as ExpenseEventRaw;
       } else if (event.type === "invest") {
         return {
           ...baseEvent,
           assetAllocation: event.assetAllocation || [],
-          assetAllocation2: event.assetAllocation || [], // Fallback to assetAllocation if assetAllocation2 doesn't exist
-          glidePath: event.useGlidePath || false,
+          assetAllocation2: event.assetAllocation2 || event.assetAllocation || [], // Use assetAllocation2 if provided, otherwise fallback to assetAllocation
+          glidePath: event.glidePath || false,
           maxCash: event.maxCash || 0,
         } as InvestmentEventRaw;
       } else if (event.type === "rebalance") {
@@ -162,7 +170,7 @@ export function map_form_to_scenario_raw(
   // Return the final ScenarioRaw object
   return {
     name: scenarioDetails.name,
-    martialStatus: scenarioDetails.type === "couple" ? "married" : "single",
+    martialStatus: scenarioDetails.type === "couple" ? "couple" : "individual",
     birthYears,
     lifeExpectancy,
     investmentTypes,
