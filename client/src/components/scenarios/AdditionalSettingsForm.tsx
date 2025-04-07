@@ -441,7 +441,6 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
       } 
       update_func(processedValue);
 
-
       let finalValue = convertToValidNumber(processedValue);
       switch (field) {
         case 'value':
