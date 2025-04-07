@@ -114,8 +114,8 @@ export function map_form_to_scenario_raw(
     addedEvents.map((event: any) => {
       const baseEvent = {
         name: event.name,
-        start: event.startConfig || [],
-        duration: event.durationConfig || [],
+        start: event.startYear || [],
+        duration: event.duration || [],
         type: event.type || "",
       };
 
@@ -126,7 +126,7 @@ export function map_form_to_scenario_raw(
           changeAmtOrPct: event.changeType || "percent",
           changeDistribution: event.changeDistribution || [],
           inflationAdjusted: event.inflationAdjusted || false,
-          userFraction: event.userFraction || 1,
+          userFraction: (event.userPercentage ?? 100) / 100,
           socialSecurity: event.isSocialSecurity || false,
         } as IncomeEventRaw;
       } else if (event.type === "expense") {
@@ -136,15 +136,15 @@ export function map_form_to_scenario_raw(
           changeAmtOrPct: event.changeType || "percent",
           changeDistribution: event.changeDistribution || [],
           inflationAdjusted: event.inflationAdjusted || false,
-          userFraction: event.userFraction || 1,
-          discretionary: event.isDiscretionary || false,
+          userFraction: (event.userPercentage ?? 100) / 100,
+          discretionary: event.discretionary || false,
         } as ExpenseEventRaw;
       } else if (event.type === "invest") {
         return {
           ...baseEvent,
           assetAllocation: event.assetAllocation || [],
-          assetAllocation2: event.assetAllocation || [], // Fallback to assetAllocation if assetAllocation2 doesn't exist
-          glidePath: event.useGlidePath || false,
+          assetAllocation2: event.assetAllocation2 || event.assetAllocation || [], // Use assetAllocation2 if provided, otherwise fallback to assetAllocation
+          glidePath: event.glidePath || false,
           maxCash: event.maxCash || 0,
         } as InvestmentEventRaw;
       } else if (event.type === "rebalance") {
