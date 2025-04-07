@@ -10,7 +10,6 @@ import {
   Text,
   Button,
   Box,
-  Switch,
   Alert,
   AlertIcon,
   AlertTitle,
@@ -44,9 +43,7 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
     value: 1,
   });
   const [selectedTaxStatus, setSelectedTaxStatus] = useState<TaxStatus | "">("");
-  const [useGlidePath, setUseGlidePath] = useState(false);
   const [allocations, setAllocations] = useState<{ [key: string]: number }>({});
-  const [finalAllocations, setFinalAllocations] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
     if (selectedTaxStatus) {
@@ -60,7 +57,6 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
         initialAllocations[inv.investmentType || `Investment ${inv.id}`] = 0;
       });
       setAllocations(initialAllocations);
-      setFinalAllocations(initialAllocations);
     }
   }, [selectedTaxStatus, investments]);
 
@@ -69,19 +65,15 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
     return Math.abs(sum - 100) < 0.01;
   };
 
-  const handleAllocationChange = (investmentId: string, value: number, isFinal: boolean = false) => {
-    const targetAllocations = isFinal ? finalAllocations : allocations;
-    const setTargetAllocations = isFinal ? setFinalAllocations : setAllocations;
-    
-    const newAllocations = { ...targetAllocations };
+  const handleAllocationChange = (investmentId: string, value: number) => {
+    const newAllocations = { ...allocations };
     newAllocations[investmentId] = value;
-    setTargetAllocations(newAllocations);
+    setAllocations(newAllocations);
   };
 
-  const renderAllocationInputs = (isFinal: boolean = false) => {
+  const renderAllocationInputs = () => {
     if (!selectedTaxStatus) return null;
     
-    const targetAllocations = isFinal ? finalAllocations : allocations;
     const matchingInvestments = investments.filter(
       inv => inv.taxStatus === selectedTaxStatus
     );
@@ -107,7 +99,7 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
           <Box>
             <AlertTitle>Asset Allocation</AlertTitle>
             <AlertDescription>
-              Enter your desired asset allocation. Percentages must sum to 100%. For glide paths, specify both starting and ending percentages.
+              Enter your desired asset allocation. Percentages must sum to 100%.
             </AlertDescription>
           </Box>
         </Alert>
@@ -117,11 +109,10 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
               {inv.investmentType || `Investment ${inv.id}`} (%)
             </FormLabel>
             <NumberInput
-              value={targetAllocations[inv.investmentType || `Investment ${inv.id}`] || 0}
+              value={allocations[inv.investmentType || `Investment ${inv.id}`] || 0}
               onChange={(value) => handleAllocationChange(
                 inv.investmentType || `Investment ${inv.id}`,
-                parseFloat(value) || 0,
-                isFinal
+                parseFloat(value) || 0
               )}
               min={0}
               max={100}
@@ -131,9 +122,9 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
             </NumberInput>
           </FormControl>
         ))}
-        <Text color={validateAllocationPercentages(targetAllocations) ? "green.500" : "red.500"}>
-          Total: {Object.values(targetAllocations).reduce((acc, val) => acc + val, 0).toFixed(2)}%
-          {!validateAllocationPercentages(targetAllocations) && " (must equal 100%)"}
+        <Text color={validateAllocationPercentages(allocations) ? "green.500" : "red.500"}>
+          Total: {Object.values(allocations).reduce((acc, val) => acc + val, 0).toFixed(2)}%
+          {!validateAllocationPercentages(allocations) && " (must equal 100%)"}
         </Text>
       </VStack>
     );
@@ -142,8 +133,7 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateAllocationPercentages(allocations) || 
-        (useGlidePath && !validateAllocationPercentages(finalAllocations))) {
+    if (!validateAllocationPercentages(allocations)) {
       return;
     }
 
@@ -154,9 +144,7 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
       startYear,
       duration,
       selectedTaxStatus,
-      assetAllocation: allocations,
-      glidePath: useGlidePath,
-      ...(useGlidePath && { assetAllocation2: finalAllocations })
+      assetAllocation: allocations
     };
 
     if (onEventAdded) {
@@ -169,9 +157,7 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
     setName("");
     setDescription("");
     setSelectedTaxStatus("");
-    setUseGlidePath(false);
     setAllocations({});
-    setFinalAllocations({});
   };
 
   return (
@@ -201,25 +187,9 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
           </Select>
         </FormControl>
         {selectedTaxStatus && (
-          <>
-            <FormControl display="flex" alignItems="center">
-              <FormLabel mb="0">Use Glide Path</FormLabel>
-              <Switch
-                isChecked={useGlidePath}
-                onChange={(e) => setUseGlidePath(e.target.checked)}
-              />
-            </FormControl>
-            <Box>
-              <Text fontWeight="medium" mb={4}>Initial Asset Allocation</Text>
-              {renderAllocationInputs(false)}
-            </Box>
-            {useGlidePath && (
-              <Box>
-                <Text fontWeight="medium" mb={4}>Final Asset Allocation</Text>
-                {renderAllocationInputs(true)}
-              </Box>
-            )}
-          </>
+          <Box>
+            {renderAllocationInputs()}
+          </Box>
         )}
         <HStack spacing={4} justify="flex-end">
           {onBack && <Button variant="ghost" onClick={onBack}>Cancel</Button>}
