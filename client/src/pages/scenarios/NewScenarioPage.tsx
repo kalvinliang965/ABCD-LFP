@@ -11,7 +11,7 @@ import LifeExpectancyForm, {
 } from "../../components/scenarios/LifeExpectancyForm";
 import InvestmentsForm, {
   InvestmentsConfig,
-  TaxStatus,
+  //TaxStatus,
 } from "../../components/scenarios/InvestmentsForm";
 import { InvestmentTypesForm } from "../../components/scenarios/InvestmentTypesForm";
 import AdditionalSettingsForm, {
@@ -299,23 +299,7 @@ function NewScenarioPage() {
 
   //* 这是我们最后最重要的代码
   const handle_finish_scenario = async () => {
-    // Create the final scenario object
-    const finalScenario = {
-      // existing properties
-      name: scenarioDetails.name,
-      type: scenarioDetails.type,
-      // ...other properties
 
-      // Add RMD settings
-      rmdStrategy: rmdSettings.enableRMD ? rmdSettings.accountPriority : [],
-      rmdStartAge: rmdSettings.enableRMD ? rmdSettings.currentAge : 72,
-
-      // Add withdrawal strategy as a simple array of investment IDs
-      expenseWithdrawalStrategy: withdrawalStrategy.accountPriority,
-
-      // Add spending strategy as a simple array of expense names
-      spendingStrategy: spendingStrategy.selectedExpenses,
-    };
 
     // Map form data to ScenarioRaw
     const scenarioRaw = map_form_to_scenario_raw(
@@ -453,10 +437,10 @@ function NewScenarioPage() {
     }
   };
 
-  const handle_continue_from_spending_strategy = async () => {
-    await saveSpendingStrategy();
-    setStep("withdrawalStrategy");
-  };
+  // const handle_continue_from_spending_strategy = async () => {
+  //   await saveSpendingStrategy();
+  //   setStep("withdrawalStrategy");
+  // };
 
   // Add this function to clear localStorage when a scenario is completed
   const clearLocalStorage = () => {
@@ -558,10 +542,10 @@ useEffect(() => {
   };
 
   // Update the handle_continue_from_rmd_settings function
-  const handle_continue_from_rmd_settings = async () => {
-    await saveRMDStrategy();
-    handle_continue_to_withdrawal_strategy();
-  };
+  // const handle_continue_from_rmd_settings = async () => {
+  //   await saveRMDStrategy();
+  //   handle_continue_to_withdrawal_strategy();
+  // };
 
   // Add a useEffect to load RMD settings from localStorage
   useEffect(() => {

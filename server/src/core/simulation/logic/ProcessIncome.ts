@@ -6,6 +6,20 @@ import { Event as DomainEvent } from "../../domain/event/Event";
 import { Scenario } from "../../domain/scenario/Scenario";
 import ValueGenerator from "../../../utils/math/ValueGenerator";
 
+// Define interfaces to match your YAML structure
+interface Investment {
+  id: string;
+  value: number;
+  investment_type: InvestmentType | string;
+}
+
+interface InvestmentType {
+  name: string;
+  taxability?: boolean;
+  incomeDistribution?: Map<string, any>;
+  incomeAmtOrPct?: string;
+}
+
 /**
  * Process income for all investments
  * 
@@ -33,13 +47,24 @@ export default async function process_income(
       (investment as any).value += income;
       
       // Track income for tax purposes
-      if (investment.investment_type.taxability) {
-        // For stocks, assume dividends are qualified
-        if (investment.investment_type.name.toLowerCase().includes('stock')) {
+      if (typeof investment.investment_type === 'string') {
+        // Handle string investment types (from YAML)
+        const isStock = investment.investment_type.toLowerCase().includes('stock');
+        if (isStock) {
           (state as any).incr_qualified_dividends(income);
         } else {
-          // Other income (interest, etc.) is ordinary income
           (state as any).incr_ordinary_income(income);
+        }
+      } else if (investment.investment_type && typeof investment.investment_type === 'object') {
+        // Handle object investment types
+        const investType = investment.investment_type as InvestmentType;
+        if (investType.taxability) {
+          const typeName = investType.name || '';
+          if (typeName.toLowerCase().includes('stock')) {
+            (state as any).incr_qualified_dividends(income);
+          } else {
+            (state as any).incr_ordinary_income(income);
+          }
         }
       }
     }
@@ -92,6 +117,13 @@ export default async function process_income(
 function calculate_investment_income(investment: any): number {
   const investmentType = investment.investment_type;
   const value = investment.value;
+  
+  // Handle string investment types (from YAML)
+  if (typeof investmentType === 'string') {
+    // Default behavior for string investment types
+    // You might want to implement a mapping from string types to income rates
+    return 0;
+  }
   
   if (!investmentType || !investmentType.incomeDistribution) {
     return 0;
