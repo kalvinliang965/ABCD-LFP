@@ -168,7 +168,6 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     }
 
     // Add the investment with a unique ID using timestamp
-    const timestamp = new Date().getTime();
     const newInvestmentWithId: InvestmentRaw = {
       ...newInvestment,
       // Generate unique ID using timestamp to allow multiple investments of same type
