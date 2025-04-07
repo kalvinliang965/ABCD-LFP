@@ -141,6 +141,7 @@ function NewScenarioPage() {
       type
     );
     investmentTypeStorage.clear();
+    clearLocalStorage();
     if (type === ScenarioCreationType.FROM_SCRATCH) {
       console.log("NewScenarioPage: Changing step to 'Scenario_name&type'");
       setStep("Scenario_name&type");
@@ -380,7 +381,8 @@ function NewScenarioPage() {
 
       // Clean investment type data from localStorage
       investmentTypeStorage.clear();
-
+    //need to check what is the correct way to clear the local storage
+      clearLocalStorage();
       // Show success toast and navigate to scenarios page
       toast({
         title: "Scenario Created",
@@ -392,8 +394,7 @@ function NewScenarioPage() {
       navigate("/scenarios");
 
     // After successfully saving the complete scenario
-    //need to check what is the correct way to clear the local storage
-    clearLocalStorage();
+
     } catch (error) {
       console.error("Error saving scenario:", error);
       toast({

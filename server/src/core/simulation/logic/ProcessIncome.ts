@@ -20,12 +20,7 @@ interface InvestmentType {
   incomeAmtOrPct?: string;
 }
 
-/**
- * Process income for all investments
- * 
- * @param state The simulation state
- * @returns The total income processed
- */
+
 export default async function process_income(
   state: SimulationState & Partial<Scenario>
 ): Promise<number> {
@@ -108,12 +103,7 @@ export default async function process_income(
   return total_income_for_year;
 }
 
-/**
- * Calculate income for a single investment
- * 
- * @param investment The investment to calculate income for
- * @returns The income amount
- */
+
 function calculate_investment_income(investment: any): number {
   const investmentType = investment.investment_type;
   const value = investment.value;
@@ -147,13 +137,7 @@ function calculate_investment_income(investment: any): number {
   return 0;
 }
 
-/**
- * Check if an event is active in the given year
- * 
- * @param event The event to check
- * @param year The year to check
- * @returns True if the event is active
- */
+
 function is_event_active(event: any, year: number): boolean {
   const startYear = event.start_year || 0;
   const endYear = event.end_year || Infinity;
