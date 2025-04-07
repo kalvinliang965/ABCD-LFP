@@ -38,6 +38,8 @@ import EventSeriesSection, {
 import { investmentTypeStorage } from "../../services/investmentTypeStorage";
 import { map_form_to_scenario_raw } from "../../utils/scenarioMapper";
 import { FaLeaf } from "react-icons/fa";
+import { scenarioApi } from "../../services/scenario";
+import { convert_scenario_to_yaml } from "../../utils/yamlExport";
 
 function NewScenarioPage() {
   //! belong to Kate, don't touch
@@ -109,7 +111,8 @@ function NewScenarioPage() {
     availableExpenses: [],
     selectedExpenses: [],
   });
-  const [withdrawalStrategy, setWithdrawalStrategy] = useState<WithdrawalStrategy>({
+  const [withdrawalStrategy, setWithdrawalStrategy] =
+    useState<WithdrawalStrategy>({
       availableAccounts: [],
       accountPriority: [],
     });
@@ -144,9 +147,11 @@ function NewScenarioPage() {
 
   //! 这边需要检查一下，如果用户选择的是IMPORT_YAML，那么应该直接跳转到yamlImport这个步骤。
   const handle_yaml_import_complete = (data: any) => {
+    investmentTypeStorage.clear();
     // Here you would process the imported data
     // For now, we'll just show a success message and redirect
     //! 这里面需要写一个function，来处理导入的数据。那么就直接发给后端。让后端来生成ID然后存入数据库。
+    //TODO：
 
     // Clean investment type data from localStorage
     investmentTypeStorage.clear();
@@ -287,7 +292,7 @@ function NewScenarioPage() {
   //! 这部分是海风写的，不要动。
 
   //* 这是我们最后最重要的代码
-  const handle_finish_scenario = () => {
+  const handle_finish_scenario = async () => {
     // Map form data to ScenarioRaw
     const scenarioRaw = map_form_to_scenario_raw(
       scenarioDetails,
@@ -334,21 +339,37 @@ function NewScenarioPage() {
     console.log("Complete ScenarioRaw Object:", scenarioRaw);
     console.log("=====================================================");
 
-    // Clean investment type data from localStorage
-    investmentTypeStorage.clear();
+    // AI-generated code
+    // Send scenario to backend using scenarioApi
+    try {
+      const yaml = convert_scenario_to_yaml(scenarioRaw);
+      const savedScenario = await scenarioApi.create(yaml); // 这里需要修改，因为scenarioRaw是一个ScenarioRaw对象，而scenarioApi.create需要一个string。
+      console.log("Scenario saved to backend:", savedScenario);
 
-    // Submit the scenario
-    toast({
-      title: "Scenario Created",
-      description: "Your scenario has been created successfully.",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
-    navigate("/scenarios");
+      // Clean investment type data from localStorage
+      investmentTypeStorage.clear();
+
+      // Show success toast and navigate to scenarios page
+      toast({
+        title: "Scenario Created",
+        description: "Your scenario has been created successfully.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      navigate("/scenarios");
+    } catch (error) {
+      console.error("Error saving scenario:", error);
+      toast({
+        title: "Error Creating Scenario",
+        description:
+          "There was a problem creating your scenario. Please try again.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   };
-  // }catch (error) {
-  //     console.error("Failed to create scenario:", error)}};
 
   const handle_change_scenario_type = (value: string) => {
     setScenarioDetails((prev) => ({
@@ -373,7 +394,6 @@ function NewScenarioPage() {
 
   // Selection between creating from scratch or importing YAML
   if (step === "typeSelection") {
-    console.log("NewScenarioPage: Rendering ScenarioTypeSelector");
     return (
       <Box position="relative" zIndex={10} width="100%" height="100%">
         <ScenarioTypeSelector onTypeSelect={handle_scenario_type_select} />
