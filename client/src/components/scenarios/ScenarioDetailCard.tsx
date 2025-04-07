@@ -22,6 +22,8 @@ import {
   PopoverArrow,
   PopoverCloseButton,
   IconButton,
+  Button,
+  useToast,
 } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router-dom";
 import {
@@ -40,9 +42,11 @@ import {
   FaPiggyBank,
   FaInfoCircle,
   FaChevronRight,
+  FaDownload,
 } from "react-icons/fa";
 import Card from "../common/Card";
 import { ScenarioRaw } from "../../types/Scenarios";
+import { download_scenario_as_yaml } from "../../utils/yamlExport";
 
 /**
  * AI prompt : help me design a card to show the scenario details by using the card component and the scenario type
@@ -55,6 +59,7 @@ interface ScenarioDetailCardProps {
 const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
   scenario,
 }) => {
+  const toast = useToast();
   const highlightColor = useColorModeValue("blue.500", "blue.300");
   const secondaryTextColor = useColorModeValue("gray.600", "gray.300");
   const cardBg = useColorModeValue("white", "gray.800");
@@ -88,6 +93,28 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
 
   const getLifeExpectancyTooltip = () => {
     return "The age at which the scenario simulation will end for the individual or couple.";
+  };
+
+  const handle_download_yaml = () => {
+    try {
+      download_scenario_as_yaml(scenario);
+      toast({
+        title: "YAML Downloaded",
+        description: `Scenario "${scenario.name}" has been downloaded as YAML`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error downloading YAML:", error);
+      toast({
+        title: "Download Failed",
+        description: "There was an error downloading the YAML file",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   return (
@@ -266,6 +293,17 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
               </PopoverContent>
             </Popover>
           )}
+
+          <Tooltip label="Download as YAML" placement="top">
+            <IconButton
+              aria-label="Download YAML"
+              icon={<Icon as={FaDownload} />}
+              size="sm"
+              colorScheme="green"
+              variant="ghost"
+              onClick={handle_download_yaml}
+            />
+          </Tooltip>
         </HStack>
 
         <Link

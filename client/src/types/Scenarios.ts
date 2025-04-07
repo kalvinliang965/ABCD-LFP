@@ -63,7 +63,7 @@ export interface ScenarioRaw {
   eventSeries: Set<
     IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw
   >;
-  inflationAssumption: Array<{ [key: string]: any }>; //! chen changed it to match with YAML
+  inflationAssumption: { [key: string]: any }; //! chen changed it to match with YAML
   afterTaxContributionLimit: number;
   spendingStrategy: Array<string>;
   expenseWithdrawalStrategy: Array<string>;

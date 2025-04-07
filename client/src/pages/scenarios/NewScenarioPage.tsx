@@ -17,7 +17,7 @@ import { InvestmentTypesForm } from "../../components/scenarios/InvestmentTypesF
 import AdditionalSettingsForm, {
   AdditionalSettingsConfig,
 } from "../../components/scenarios/AdditionalSettingsForm";
-import RothConversionOptimizerForm from "../../components/roth_conversion_optimizer/RothConversionForm";
+import RothConversionOptimizerForm, { RothConversionStrategy } from "../../components/scenarios/RothConversionForm";
 import ScenarioTypeSelector, {
   ScenarioCreationType,
 } from "../../components/scenarios/ScenarioTypeSelector";
@@ -43,6 +43,9 @@ import { withdrawalStrategyApi } from "../../services/withdrawalStrategyApi";
 import withdrawalStrategyStorage from "../../services/withdrawalStrategyStorage";
 import rmdStrategyStorage from "../../services/rmdStrategyStorage";
 import lifeExpectancyStorage from "../../services/lifeExpectancyStorage";
+import { FaLeaf } from "react-icons/fa";
+import { scenarioApi } from "../../services/scenario";
+import { convert_scenario_to_yaml } from "../../utils/yamlExport";
 
 function NewScenarioPage() {
   //! belong to Kate, don't touch
@@ -95,6 +98,7 @@ function NewScenarioPage() {
         type: "fixed",
         value: 2.5, //! 这边2.5是默认值 也就是用户什么都不输入就这这个值
       },
+      afterTaxContributionLimit: 0,
       financialGoal: {
         value: 0, //! 这边0是默认值 也就是用户什么都不输入就这这个值
       },
@@ -115,6 +119,14 @@ function NewScenarioPage() {
   });
   const [withdrawalStrategy, setWithdrawalStrategy] =
     useState<WithdrawalStrategy>({
+      availableAccounts: [],
+      accountPriority: [],
+    });
+
+  const [rothConversionStrategy, setRothConversionStrategy] = useState<RothConversionStrategy>({
+      roth_conversion_start: 0,
+      roth_conversion_end: 0,
+      roth_conversion_opt: false,
       availableAccounts: [],
       accountPriority: [],
     });
@@ -209,6 +221,18 @@ function NewScenarioPage() {
   };
 
   const handle_to_roth_conversion_optimizer = () => {
+    const allAccounts = investmentsConfig.investments.map(
+      (inv) =>
+        inv.investmentType ||
+        `Investment ${inv.id || Math.random().toString(36).substr(2, 9)}`
+    );
+    setRothConversionStrategy({
+      roth_conversion_opt: false,
+      roth_conversion_start: new Date().getFullYear(),
+      roth_conversion_end: new Date().getFullYear() + 5,
+      availableAccounts: allAccounts,
+      accountPriority: rothConversionStrategy.accountPriority || [],
+    });
     setStep("rothConversionOptimizer");
   };
 
@@ -310,6 +334,7 @@ function NewScenarioPage() {
       rmdSettings,
       spendingStrategy,
       withdrawalStrategy,
+      rothConversionStrategy,
       addedEvents
     );
 
@@ -331,30 +356,55 @@ function NewScenarioPage() {
     console.log("RMD Strategy:", scenarioRaw.RMDStrategy);
     console.log("Roth Conversion:", {
       enabled: scenarioRaw.RothConversionOpt,
-      startAge: scenarioRaw.RothConversionStart,
-      endAge: scenarioRaw.RothConversionEnd,
+      start_year: scenarioRaw.RothConversionStart,
+      end_yaer: scenarioRaw.RothConversionEnd,
       strategy: scenarioRaw.RothConversionStrategy,
     });
+    console.log("Inflation Assumption");
+    console.log("type:", scenarioRaw.inflationAssumption["type"]);
+    console.log("value: ",scenarioRaw.inflationAssumption["value"]);
+    console.log("min", scenarioRaw.inflationAssumption["min"]);
+    console.log("max:", scenarioRaw.inflationAssumption["max"]);
+    console.log("mean: ",scenarioRaw.inflationAssumption["mean"]);
+    console.log("stdev", scenarioRaw.inflationAssumption["stdev"]);
     console.log("Financial Goal:", scenarioRaw.financialGoal);
     console.log("Complete ScenarioRaw Object:", scenarioRaw);
     console.log("=====================================================");
 
-    // Clean investment type data from localStorage
-    investmentTypeStorage.clear();
+    // AI-generated code
+    // Send scenario to backend using scenarioApi
+    try {
+      const yaml = convert_scenario_to_yaml(scenarioRaw);
+      const savedScenario = await scenarioApi.create(yaml); // 这里需要修改，因为scenarioRaw是一个ScenarioRaw对象，而scenarioApi.create需要一个string。
+      console.log("Scenario saved to backend:", savedScenario);
 
-    // Submit the scenario
-    toast({
-      title: "Scenario Created",
-      description: "Your scenario has been created successfully.",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
-    navigate("/scenarios");
+      // Clean investment type data from localStorage
+      investmentTypeStorage.clear();
+
+      // Show success toast and navigate to scenarios page
+      toast({
+        title: "Scenario Created",
+        description: "Your scenario has been created successfully.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      navigate("/scenarios");
 
     // After successfully saving the complete scenario
     //need to check what is the correct way to clear the local storage
     clearLocalStorage();
+    } catch (error) {
+      console.error("Error saving scenario:", error);
+      toast({
+        title: "Error Creating Scenario",
+        description:
+          "There was a problem creating your scenario. Please try again.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   };
 
   const handle_change_scenario_type = (value: string) => {
@@ -643,6 +693,8 @@ useEffect(() => {
   if (step === "rothConversionOptimizer") {
     return (
       <RothConversionOptimizerForm
+        rothConversionStrategy={rothConversionStrategy}
+        onChangeRothConversionStrategy={setRothConversionStrategy}
         onBack={handle_to_spending_strategy}
         onContinue={handle_to_additional_settings}
       />

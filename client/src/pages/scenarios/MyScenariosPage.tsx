@@ -19,6 +19,9 @@ import {
 import { ScenarioDetailCard } from "../../components/scenarios";
 import { SAMPLE_SCENARIOS } from "../../types/scenario"; //! 临时的
 import { Link as RouterLink } from "react-router-dom";
+import { ScenarioRaw } from "../../types/Scenarios";
+import { scenarioApi } from "../../services/scenario";
+import { convert_scenario_to_yaml, download_scenario_as_yaml } from "../../utils/yamlExport";
 
 const MyScenariosPage: React.FC = () => {
   const headingColor = useColorModeValue("gray.700", "white");
@@ -28,6 +31,18 @@ const MyScenariosPage: React.FC = () => {
   const bgColor = useColorModeValue("white", "gray.800");
   const cardBgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
+
+  const handle_sample_scenario = async (scenario: ScenarioRaw) => {
+    try {
+      console.log("Scenario to create:", scenario);
+      // Download the scenario as YAML before creating it
+      const yaml = convert_scenario_to_yaml(scenario);
+      const savedScenario = await scenarioApi.create(yaml);
+      console.log("Scenario created:", savedScenario);
+    } catch (error) {
+      console.error("Error creating scenario:", error);
+    }
+  };
 
   return (
     <Box py={4} px={4} w="100%" position="relative">
@@ -53,18 +68,19 @@ const MyScenariosPage: React.FC = () => {
               Plan and simulate your financial future
             </Text>
           </Box>
-            <Button
-              as={RouterLink}
-              to="/scenarios/new"
-              size="sm"
-              colorScheme="blue"
-              leftIcon={<FaPlus />}
-              boxShadow="sm"
-              _hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
-              transition="all 0.2s"
-            >
-              New Scenario
-            </Button>
+          <Button
+            // as={RouterLink}
+            // to="/scenarios/new"
+            onClick={() => handle_sample_scenario(SAMPLE_SCENARIOS[0])}
+            size="sm"
+            colorScheme="blue"
+            leftIcon={<FaPlus />}
+            boxShadow="sm"
+            _hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
+            transition="all 0.2s"
+          >
+            New Scenario
+          </Button>
         </Flex>
 
         {/* Info box with improved styling */}
@@ -199,7 +215,7 @@ const MyScenariosPage: React.FC = () => {
             {SAMPLE_SCENARIOS.length} scenarios
           </Badge>
         </Flex>
-        <SimpleGrid columns={{ base: 1, md: 1}} spacing={6}>
+        <SimpleGrid columns={{ base: 1, md: 1 }} spacing={6}>
           {SAMPLE_SCENARIOS.map((scenario) => (
             <ScenarioDetailCard key={scenario.name} scenario={scenario} />
           ))}

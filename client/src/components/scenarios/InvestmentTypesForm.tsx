@@ -714,7 +714,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
               </AnimatePresence>
 
               {/* Continue Button */}
-              <Flex justify="flex-end" mt={8}>
+              <Flex justify="flex-end" mt={8} display="flex" gap={4}>
                 <Button
                   rightIcon={<Icon as={FiChevronRight} />}
                   colorScheme="blue"
@@ -732,6 +732,24 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                 >
                   Continue to Investments
                 </Button>
+                {(import.meta.env.MODE === "development") && (
+                  <Button
+                    rightIcon={<Icon as={FiChevronRight} />}
+                    colorScheme="blue"
+                    onClick={onContinue}
+                    size="lg"
+                    shadow="md"
+                    _hover={{
+                      transform: can_continue ? "translateY(-2px)" : "none",
+                      shadow: "lg",
+                      bg: can_continue ? buttonHoverBg : undefined,
+                    }}
+                    transition="all 0.3s"
+                    borderRadius="md"
+                  >
+                    Skip to Investments
+                  </Button>
+                )}
               </Flex>
             </VStack>
           </CardBody>

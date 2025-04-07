@@ -27,11 +27,12 @@ import {
   InputLeftElement,
   useColorModeValue,
   FormHelperText,
+  Tooltip,
   List,
   ListItem,
-  ListIcon,
   Badge,
   Container,
+  IconButton,
 } from "@chakra-ui/react";
 
 import {
@@ -47,7 +48,8 @@ import {
   FiRepeat,
 } from "react-icons/fi";
 
-import { useImmer } from "use-immer";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { FaArrowUp, FaArrowDown, FaWallet } from "react-icons/fa";
 
 export type RothConversionOptimizer = {
   roth_conversion_start: number;
@@ -55,7 +57,17 @@ export type RothConversionOptimizer = {
   roth_conversion_strategy: Array<String>;
 };
 
+export interface RothConversionStrategy {
+  roth_conversion_opt: boolean;
+  roth_conversion_start: number;
+  roth_conversion_end: number;
+  availableAccounts: string[];  // All available account
+  accountPriority: string[];   // account priority
+}
+
 export interface RothConversionOptimizerFormProps {
+  rothConversionStrategy: RothConversionStrategy;
+  onChangeRothConversionStrategy: (strategy: RothConversionStrategy) => void;
   onBack: () => void;
   onFinish?: () => void;
   onContinue?: () => void;
@@ -63,7 +75,7 @@ export interface RothConversionOptimizerFormProps {
 
 export const RothConversionOptimizerForm: React.FC<
   RothConversionOptimizerFormProps
-> = ({ onBack, onFinish, onContinue }) => {
+> = ({ rothConversionStrategy, onChangeRothConversionStrategy, onBack, onFinish, onContinue }) => {
   const cardBg = useColorModeValue("white", "gray.800");
   const headerBg = useColorModeValue("blue.50", "blue.900");
   const borderColor = useColorModeValue("gray.200", "gray.700");
@@ -74,40 +86,105 @@ export const RothConversionOptimizerForm: React.FC<
     "0 4px 6px rgba(0, 0, 0, 0.3)"
   );
 
+  const bgColor = useColorModeValue("white", "gray.800");
+  const listItemBg = useColorModeValue("gray.50", "gray.700");
+  const listItemHoverBg = useColorModeValue("gray.100", "gray.600");
+
   const current_year = new Date().getFullYear();
 
-  const [roth, update_roth] = useImmer({
-    opt: "opt-out",
-    start_year: current_year,
-    end_year: current_year + 5,
-    strategy: [],
-  });
-
-  function handle_opt_change(checked) {
-    update_roth((draft) => {
-      draft.opt = checked ? "opt-in" : "opt-out";
+  function handle_opt_change(checked: boolean) {
+    onChangeRothConversionStrategy({
+      ...rothConversionStrategy,
+      roth_conversion_opt: checked,
     });
   }
 
-  function handle_start_year_change(value) {
-    update_roth((draft) => {
-      draft.start_year = value;
-      // Ensure end year is not before start year
-      if (draft.end_year < value) {
-        draft.end_year = value;
-      }
-    });
+  function handle_start_year_change(stringValue: string, numValue: number) {
+    onChangeRothConversionStrategy({
+      ...rothConversionStrategy,
+      roth_conversion_start: numValue,
+    })
   }
 
-  function handle_end_year_change(value) {
-    update_roth((draft) => {
-      draft.end_year = value;
-    });
+  function handle_end_year_change(stringValue: string, numValue: number) {
+    onChangeRothConversionStrategy({
+      ...rothConversionStrategy,
+      roth_conversion_end: numValue,
+    })
   }
 
-  const is_opt_in = roth.opt === "opt-in";
-  const conversion_years = roth.end_year - roth.start_year + 1;
+  const is_opt_in = rothConversionStrategy.roth_conversion_opt;
+  const conversion_years = rothConversionStrategy.roth_conversion_end - rothConversionStrategy.roth_conversion_start + 1;
 
+
+  // Handle drag and drop reordering
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return;
+    
+    const items = Array.from(rothConversionStrategy.accountPriority);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    onChangeRothConversionStrategy({
+      ...rothConversionStrategy,
+      accountPriority: items,
+    });
+  };
+
+  // Add an account to the priority list
+  const addAccount = (accountId: string) => {
+    if (!rothConversionStrategy.accountPriority.includes(accountId)) {
+      onChangeRothConversionStrategy({
+        ...rothConversionStrategy,
+        accountPriority: [...rothConversionStrategy.accountPriority, accountId],
+      });
+    }
+  };
+
+  // Remove an account from the priority list
+  const removeAccount = (accountId: string) => {
+    onChangeRothConversionStrategy({
+      ...rothConversionStrategy,
+      accountPriority: rothConversionStrategy.accountPriority.filter(id => id !== accountId),
+    });
+  };
+
+  // Move an account up in priority
+  const moveUp = (index: number) => {
+    if (index <= 0) return;
+    
+    const newPriority = [...rothConversionStrategy.accountPriority];
+    const temp = newPriority[index];
+    newPriority[index] = newPriority[index - 1];
+    newPriority[index - 1] = temp;
+    
+    onChangeRothConversionStrategy({
+      ...rothConversionStrategy,
+      accountPriority: newPriority,
+    });
+  };
+
+  // Move an account down in priority
+  const moveDown = (index: number) => {
+    if (index >= rothConversionStrategy.accountPriority.length - 1) return;
+    
+    const newPriority = [...rothConversionStrategy.accountPriority];
+    const temp = newPriority[index];
+    newPriority[index] = newPriority[index + 1];
+    newPriority[index + 1] = temp;
+    
+    onChangeRothConversionStrategy({
+      ...rothConversionStrategy,
+      accountPriority: newPriority,
+    });
+  };
+
+  // Get available accounts that aren't already in the priority list
+  const getAvailableAccounts = () => {
+    return rothConversionStrategy.availableAccounts.filter(
+      account => !rothConversionStrategy.accountPriority.includes(account)
+    );
+  };
   return (
     <Box minH="100vh" bg={useColorModeValue("gray.50", "gray.900")} py={8}>
       <Container maxW="4xl" px={{ base: 4, md: 6 }}>
@@ -249,7 +326,7 @@ export const RothConversionOptimizerForm: React.FC<
                         <NumberInput
                           min={current_year}
                           max={current_year + 50}
-                          value={roth.start_year}
+                          value={rothConversionStrategy.roth_conversion_start}
                           onChange={handle_start_year_change}
                           w="100%"
                         >
@@ -282,9 +359,9 @@ export const RothConversionOptimizerForm: React.FC<
                           <Icon as={FiCalendar} color="blue.500" />
                         </InputLeftElement>
                         <NumberInput
-                          min={roth.start_year}
+                          min={rothConversionStrategy.roth_conversion_start}
                           max={current_year + 50}
-                          value={roth.end_year}
+                          value={rothConversionStrategy.roth_conversion_end}
                           onChange={handle_end_year_change}
                           w="100%"
                         >
@@ -317,11 +394,152 @@ export const RothConversionOptimizerForm: React.FC<
                     <Text fontSize="sm" color="purple.800">
                       Your conversion will be spread over{" "}
                       <strong>{conversion_years} years</strong> (
-                      {roth.start_year} - {roth.end_year}) to minimize tax
+                      {rothConversionStrategy.roth_conversion_start} - {rothConversionStrategy.roth_conversion_end}) to minimize tax
                       impact.
                     </Text>
                   </Flex>
+                  <Box maxW="800px" mx="auto" p={5}>
+                    <Card
+                      bg={bgColor}
+                      boxShadow="xl"
+                      borderRadius="lg"
+                      borderWidth="1px"
+                      borderColor={borderColor}
+                      overflow="hidden"
+                    >
+                      <CardHeader bg="blue.600" color="white" p={4}>
+                        <Heading size="lg">Roth Conversion Strategy</Heading>
+                        <Text mt={2}>
+                          Define the order in which your investments will be used to cover expenses
+                        </Text>
+                      </CardHeader>
+                      
+                      <CardBody p={6}>
+                        <VStack spacing={6} align="stretch">
+                          <Box>
+                            <Heading size="md" mb={4} display="flex" alignItems="center">
+                              <Icon as={FaWallet} mr={2} color="blue.500" />
+                              Roth Conversion Priority Order
+                            </Heading>
+                            <Text mb={4}>
+                              Arrange your investment accounts in the order you want them to be used for roth conversions.
+                              Accounts at the top will be used first.
+                            </Text>
+                            
+                            {rothConversionStrategy.accountPriority.length > 0 ? (
+                              <DragDropContext onDragEnd={handleDragEnd}>
+                                <Droppable droppableId="roth-conversion-priority">
+                                  {(provided) => (
+                                    <List 
+                                      spacing={3} 
+                                      mt={4}
+                                      {...provided.droppableProps}
+                                      ref={provided.innerRef}
+                                    >
+                                      {rothConversionStrategy.accountPriority.map((account, index) => (
+                                        <Draggable key={account} draggableId={account} index={index}>
+                                          {(provided) => (
+                                            <ListItem
+                                              ref={provided.innerRef}
+                                              {...provided.draggableProps}
+                                              {...provided.dragHandleProps}
+                                              p={3}
+                                              bg={listItemBg}
+                                              borderRadius="md"
+                                              boxShadow="sm"
+                                              display="flex"
+                                              justifyContent="space-between"
+                                              alignItems="center"
+                                              _hover={{ bg: listItemHoverBg }}
+                                            >
+                                              <Text fontWeight="medium">
+                                                {index + 1}. {account}
+                                              </Text>
+                                              <Flex>
+                                                <Tooltip label="Move up" placement="top">
+                                                  <IconButton
+                                                    aria-label="Move up"
+                                                    icon={<FaArrowUp />}
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    isDisabled={index === 0}
+                                                    onClick={() => moveUp(index)}
+                                                    mr={1}
+                                                  />
+                                                </Tooltip>
+                                                <Tooltip label="Move down" placement="top">
+                                                  <IconButton
+                                                    aria-label="Move down"
+                                                    icon={<FaArrowDown />}
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    isDisabled={index === rothConversionStrategy.accountPriority.length - 1}
+                                                    onClick={() => moveDown(index)}
+                                                    mr={1}
+                                                  />
+                                                </Tooltip>
+                                                <Tooltip label="Remove" placement="top">
+                                                  <IconButton
+                                                    aria-label="Remove account"
+                                                    icon={<Icon name="close" />}
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    colorScheme="red"
+                                                    onClick={() => removeAccount(account)}
+                                                  />
+                                                </Tooltip>
+                                              </Flex>
+                                            </ListItem>
+                                          )}
+                                        </Draggable>
+                                      ))}
+                                      {provided.placeholder}
+                                    </List>
+                                  )}
+                                </Droppable>
+                              </DragDropContext>
+                            ) : (
+                              <Text color="gray.500" fontStyle="italic">
+                                No accounts selected for roth conversion priority
+                              </Text>
+                            )}
+                          </Box>
+                          
+                          <Divider />
+                          
+                          <Box>
+                            <Heading size="sm" mb={3}>Available Accounts:</Heading>
+                            {getAvailableAccounts().length > 0 ? (
+                              <List spacing={2}>
+                                {getAvailableAccounts().map((account) => (
+                                  <ListItem 
+                                    key={account} 
+                                    p={2} 
+                                    borderRadius="md" 
+                                    _hover={{ bg: "gray.50", cursor: "pointer" }}
+                                    onClick={() => addAccount(account)}
+                                  >
+                                    <Flex align="center">
+                                      <Text>{account}</Text>
+                                      <Text ml={2} fontSize="sm" color="blue.500">
+                                        (Click to add)
+                                      </Text>
+                                    </Flex>
+                                  </ListItem>
+                                ))}
+                              </List>
+                            ) : (
+                              <Text color="gray.500" fontStyle="italic">
+                                All accounts have been added to the priority list
+                              </Text>
+                            )}
+                          </Box>
+                        </VStack>
+                      </CardBody>
+                    </Card>
+                  </Box>
                 </Card>
+              
               )}
 
               {/* How it Works Section */}
@@ -396,15 +614,6 @@ export const RothConversionOptimizerForm: React.FC<
                     >
                       3
                     </Flex>
-                    <Box>
-                      <Text fontWeight="medium" mb={1}>
-                        Enjoy Tax-Free Growth
-                      </Text>
-                      <Text fontSize="sm" color="gray.600">
-                        Future growth and qualified withdrawals will be
-                        completely tax-free in retirement.
-                      </Text>
-                    </Box>
                   </ListItem>
                 </List>
 

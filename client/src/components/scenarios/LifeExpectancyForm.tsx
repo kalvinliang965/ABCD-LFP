@@ -910,6 +910,26 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                   >
                     Continue
                   </Button>
+                  {(import.meta.env.MODE==="development") && (
+                    <Button
+                      colorScheme="blue"
+                      onClick={onContinue}
+                      rightIcon={<FiChevronRight />}
+                      size="lg"
+                      rounded="lg"
+                      px={8}
+                      bgGradient="linear(to-r, blue.400, teal.500)"
+                      _hover={{
+                        bgGradient: "linear(to-r, blue.500, teal.600)",
+                        transform: "translateY(-2px)",
+                        boxShadow: "lg",
+                      }}
+                      transition="all 0.2s"
+                      ml={4}
+                    >
+                      Skip
+                    </Button>
+                  )}
                 </MotionBox>
               </Flex>
             </CardFooter>

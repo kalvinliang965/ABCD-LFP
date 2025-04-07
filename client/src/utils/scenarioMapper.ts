@@ -26,6 +26,7 @@ import { SpendingStrategy } from "../components/scenarios/SpendingStrategyForm";
 import { WithdrawalStrategy } from "../components/scenarios/WithdrawalStrategyForm";
 import { AddedEvent } from "../components/event_series/EventSeriesSection";
 import { investmentTypeStorage } from "../services/investmentTypeStorage";
+import { RothConversionStrategy } from "../components/scenarios/RothConversionForm"
 
 export function map_form_to_scenario_raw(
   scenarioDetails: ScenarioDetails,
@@ -35,6 +36,7 @@ export function map_form_to_scenario_raw(
   rmdSettings: RMDSettings,
   spendingStrategy: SpendingStrategy,
   withdrawalStrategy: WithdrawalStrategy,
+  rothConversionStrategy: RothConversionStrategy,
   addedEvents: AddedEvent[]
 ): ScenarioRaw {
   // Get birth years
@@ -120,8 +122,8 @@ export function map_form_to_scenario_raw(
     addedEvents.map((event: any) => {
       const baseEvent = {
         name: event.name,
-        start: event.startConfig || [],
-        duration: event.durationConfig || [],
+        start: event.startYear || [],
+        duration: event.duration || [],
         type: event.type || "",
       };
 
@@ -132,7 +134,7 @@ export function map_form_to_scenario_raw(
           changeAmtOrPct: event.changeType || "percent",
           changeDistribution: event.changeDistribution || [],
           inflationAdjusted: event.inflationAdjusted || false,
-          userFraction: event.userFraction || 1,
+          userFraction: (event.userPercentage ?? 100) / 100,
           socialSecurity: event.isSocialSecurity || false,
         } as IncomeEventRaw;
       } else if (event.type === "expense") {
@@ -142,15 +144,15 @@ export function map_form_to_scenario_raw(
           changeAmtOrPct: event.changeType || "percent",
           changeDistribution: event.changeDistribution || [],
           inflationAdjusted: event.inflationAdjusted || false,
-          userFraction: event.userFraction || 1,
-          discretionary: event.isDiscretionary || false,
+          userFraction: (event.userPercentage ?? 100) / 100,
+          discretionary: event.discretionary || false,
         } as ExpenseEventRaw;
       } else if (event.type === "invest") {
         return {
           ...baseEvent,
           assetAllocation: event.assetAllocation || [],
-          assetAllocation2: event.assetAllocation || [], // Fallback to assetAllocation if assetAllocation2 doesn't exist
-          glidePath: event.useGlidePath || false,
+          assetAllocation2: event.assetAllocation2 || event.assetAllocation || [], // Use assetAllocation2 if provided, otherwise fallback to assetAllocation
+          glidePath: event.glidePath || false,
           maxCash: event.maxCash || 0,
         } as InvestmentEventRaw;
       } else if (event.type === "rebalance") {
@@ -165,40 +167,6 @@ export function map_form_to_scenario_raw(
     IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw
   >;
 
-  // Get Roth Conversion settings from form
-  const rothForm = {
-    enable: false, // Default values, would come from RothConversionOptimizerForm
-    startAge: 0,
-    endAge: 0,
-    strategy: [""],
-  };
-
-  function parse_inflation_config(
-    inflationConfig: InflationConfig
-  ): Array<{ [key: string]: any }> {
-    if (inflationConfig.type === "fixed") {
-      const inflation_value = (inflationConfig.value as number) / 100;
-      return [{ type: "fixed", value: inflation_value }];
-    } else if (inflationConfig.type === "uniform") {
-      return [
-        {
-          type: "uniform",
-          parameters: { min: inflationConfig.min, max: inflationConfig.max },
-        },
-      ];
-    } else {
-      return [
-        {
-          type: "normal",
-          parameters: {
-            mean: inflationConfig.mean,
-            standardDeviation: inflationConfig.standardDeviation,
-          },
-        },
-      ];
-    }
-  }
-
   // Return the final ScenarioRaw object
   return {
     name: scenarioDetails.name,
@@ -208,18 +176,16 @@ export function map_form_to_scenario_raw(
     investmentTypes,
     investments,
     eventSeries,
-    inflationAssumption: parse_inflation_config(
-      additionalSettings.inflationConfig
-    ),
-    afterTaxContributionLimit: 0, // Not in forms, default value
+    inflationAssumption: additionalSettings.inflationConfig,
+    afterTaxContributionLimit: additionalSettings.afterTaxContributionLimit, // Not in forms, default value
     spendingStrategy: spendingStrategy.selectedExpenses || [],
     expenseWithdrawalStrategy: withdrawalStrategy.accountPriority || [],
     RMDStrategy: rmdSettings.enableRMD ? rmdSettings.accountPriority : [],
-    RothConversionOpt: rothForm.enable,
-    RothConversionStart: rothForm.startAge,
-    RothConversionEnd: rothForm.endAge,
-    RothConversionStrategy: rothForm.strategy,
-    financialGoal: additionalSettings.financialGoal?.value,
-    residenceState: additionalSettings.stateOfResidence,
+    RothConversionOpt: rothConversionStrategy.roth_conversion_opt ,
+    RothConversionStart: rothConversionStrategy.roth_conversion_start,
+    RothConversionEnd: rothConversionStrategy.roth_conversion_end,
+    RothConversionStrategy: rothConversionStrategy.accountPriority,
+    financialGoal: additionalSettings.financialGoal?.value || 0,
+    residenceState: additionalSettings.stateOfResidence || "NY",
   };
 }
