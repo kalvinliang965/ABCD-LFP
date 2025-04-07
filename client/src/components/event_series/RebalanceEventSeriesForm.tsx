@@ -17,13 +17,14 @@ import {
   AlertDescription,
 } from "@chakra-ui/react";
 import { CommonFields } from "./CommonFields";
-import { Investment, TaxStatus } from "../../components/scenarios/InvestmentsForm";
+import { InvestmentRaw } from "../../types/Scenarios";
+import { TaxStatus } from "../../components/scenarios/InvestmentsForm";
 
 interface RebalanceEventSeriesFormProps {
   onBack?: () => void;
   onEventAdded?: (event: any) => void;
   existingEvents: { name: string }[];
-  investments?: Investment[];
+  investments?: InvestmentRaw[];
 }
 
 export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> = ({
@@ -56,7 +57,7 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
       // Initialize allocations with empty values
       const initialAllocations: { [key: string]: number } = {};
       matchingInvestments.forEach(inv => {
-        initialAllocations[inv.investmentTypeId || `Investment ${inv.id}`] = 0;
+        initialAllocations[inv.investmentType || `Investment ${inv.id}`] = 0;
       });
       setAllocations(initialAllocations);
       setFinalAllocations(initialAllocations);
@@ -113,12 +114,12 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
         {matchingInvestments.map((inv) => (
           <FormControl key={inv.id} isRequired>
             <FormLabel>
-              {inv.investmentTypeId || `Investment ${inv.id}`} (%)
+              {inv.investmentType || `Investment ${inv.id}`} (%)
             </FormLabel>
             <NumberInput
-              value={targetAllocations[inv.investmentTypeId || `Investment ${inv.id}`] || 0}
+              value={targetAllocations[inv.investmentType || `Investment ${inv.id}`] || 0}
               onChange={(value) => handleAllocationChange(
-                inv.investmentTypeId || `Investment ${inv.id}`,
+                inv.investmentType || `Investment ${inv.id}`,
                 parseFloat(value) || 0,
                 isFinal
               )}

@@ -176,16 +176,7 @@ export function map_form_to_scenario_raw(
     investmentTypes,
     investments,
     eventSeries,
-    inflationAssumption:
-      additionalSettings.inflationConfig.type === "fixed"
-        ? [{ type: "fixed", value: additionalSettings.inflationConfig.value }]
-        : [
-            {
-              type: "distribution",
-              parameters:
-                (additionalSettings.inflationConfig as any).parameters || {},
-            },
-          ],
+    inflationAssumption: additionalSettings.inflationConfig,
     afterTaxContributionLimit: additionalSettings.afterTaxContributionLimit, // Not in forms, default value
     spendingStrategy: spendingStrategy.selectedExpenses || [],
     expenseWithdrawalStrategy: withdrawalStrategy.accountPriority || [],
