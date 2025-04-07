@@ -72,7 +72,7 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
       duration,
       initialAmount: Number(amount) || 0,
       annualChange,
-      isDiscretionary,
+      discretionary: isDiscretionary,
       userPercentage,
       spousePercentage,
       inflationAdjusted,
