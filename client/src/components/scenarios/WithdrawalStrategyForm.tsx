@@ -149,7 +149,7 @@ export const WithdrawalStrategyForm: React.FC<WithdrawalStrategyFormProps> = ({
         overflow="hidden"
       >
         <CardHeader bg="blue.600" color="white" p={4}>
-          <Heading size="lg">Withdrawal Strategy</Heading>
+          <Heading size="lg">Withdrawal Investment Strategy</Heading>
           <Text mt={2}>
             Define the order in which your investments will be used to cover expenses
           </Text>

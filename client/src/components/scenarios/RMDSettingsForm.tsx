@@ -36,7 +36,7 @@ import rmdStrategyStorage from "../../services/rmdStrategyStorage";
 
 export interface RMDSettings {
   id?: string;
-  enableRMD: boolean;
+//   enableRMD: boolean;
   currentAge: number;
   accountPriority: string[]; // Account IDs in priority order
   availableAccounts: Array<{
@@ -60,7 +60,7 @@ interface RMDSettingsFormProps {
 
 const MotionBox = motion(Box);
 
-const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
+export const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
   rmdSettings,
   onChangeRMDSettings,
   onContinue,
@@ -200,25 +200,9 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
             </Alert>
 
             <VStack spacing={8} align="stretch">
-              <FormControl display="flex" alignItems="center" justifyContent="space-between">
-                <FormLabel htmlFor="enable-rmd" mb="0" fontWeight="medium">
-                  Enable RMD Calculations
-                </FormLabel>
-                <Switch
-                  id="enable-rmd"
-                  colorScheme="teal"
-                  size="lg"
-                  isChecked={rmdSettings.enableRMD}
-                  onChange={(e) =>
-                    handleRMDSettingsChange({
-                      ...rmdSettings,
-                      enableRMD: e.target.checked,
-                    })
-                  }
-                />
-              </FormControl>
+              
 
-              {rmdSettings.enableRMD && (
+              {/* {rmdSettings.enableRMD && ( */}
                 <>
                   <Divider />
 
@@ -354,7 +338,7 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
                     )}
                   </Box>
                 </>
-              )}
+              {/* )} */}
             </VStack>
           </CardBody>
 

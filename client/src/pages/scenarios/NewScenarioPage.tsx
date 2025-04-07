@@ -108,7 +108,7 @@ function NewScenarioPage() {
   const toast = useToast();
   //! don't touch
   const [rmdSettings, setRmdSettings] = useState<RMDSettings>({
-    enableRMD: true,
+    //enableRMD: true,
     currentAge: 0, // Will be calculated based on birth year
     accountPriority: [],
     availableAccounts: [],
