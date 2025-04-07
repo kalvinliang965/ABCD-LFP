@@ -12,20 +12,20 @@ jest.mock("../services/investmentTypeStorage", () => ({
       {
         name: "Stock Fund",
         description: "stock fund",
-        returnType: "percent",
+        returnAmtOrPct: "percent",
         returnDistribution: [{ type: "normal", mean: 8, stdDev: 15 }],
         expenseRatio: 0.1,
-        incomeType: "percent",
+        incomeAmtOrPct: "percent",
         incomeDistribution: [{ type: "fixed", value: 2 }],
         taxability: true
       },
       {
         name: "Bond Fund",
         description: "bond fund",
-        returnType: "percent",
+        returnAmtOrPct: "percent",
         returnDistribution: [{ type: "normal", mean: 4, stdDev: 5 }],
         expenseRatio: 0.05,
-        incomeType: "percent",
+        incomeAmtOrPct: "percent",
         incomeDistribution: [{ type: "fixed", value: 3 }],
         taxability: true
       }
@@ -152,7 +152,7 @@ describe("scenarioMapper", () => {
     //check that the result is a valid ScenarioRaw
     expect(result).toBeDefined();
     expect(result.name).toBe("Test Scenario");
-    expect(result.martialStatus).toBe("single");
+    expect(result.martialStatus).toBe("individual");
     expect(result.birthYears).toEqual([1980]);
     expect(result.lifeExpectancy).toEqual([
       { type: "fixed", value: 85 }
@@ -329,10 +329,12 @@ describe("scenarioMapper", () => {
     };
 
     const coupleLifeExpectancyConfig = {
-      userExpectancyType: "distribution" as ExpectancyType,
-      userDistributionParams: { type: "normal", mean: 85, stdDev: 5 },
-      spouseExpectancyType: "distribution" as ExpectancyType,
-      spouseDistributionParams: { type: "normal", mean: 87, stdDev: 5 }
+      userExpectancyType: "normal" as ExpectancyType,
+      userMeanAge: 85,
+      userStandardDeviation: 5,
+      spouseExpectancyType: "normal" as ExpectancyType,
+      spouseMeanAge: 87,
+      spouseStandardDeviation: 5
     };
 
     const result = map_form_to_scenario_raw(
@@ -347,11 +349,11 @@ describe("scenarioMapper", () => {
       []
     );
 
-    expect(result.martialStatus).toBe("married");
+    expect(result.martialStatus).toBe("couple");
     expect(result.birthYears).toEqual([1980, 1982]);
     expect(result.lifeExpectancy).toEqual([
-      { type: "distribution", parameters: { type: "normal", mean: 85, stdDev: 5 } },
-      { type: "distribution", parameters: { type: "normal", mean: 87, stdDev: 5 } }
+      { type: "normal", parameters: { userMeanAge: 85, userStandardDeviation: 5 } },
+      { type: "normal", parameters: { userMeanAge: 87, userStandardDeviation: 5 } }
     ]);
   });
 
@@ -504,7 +506,7 @@ describe("scenarioMapper", () => {
 
     expect(result).toBeDefined();
     expect(result.name).toBe("Minimal Scenario");
-    expect(result.martialStatus).toBe("single");
+    expect(result.martialStatus).toBe("individual");
     expect(result.birthYears).toEqual([1980]);
     expect(result.lifeExpectancy).toEqual([
       { type: "fixed", value: 85 }
