@@ -17,6 +17,11 @@ import { create_simulation_state } from "../../SimulationState";
 import { pay_mandatory_expenses } from "../PayMandatoryExpense";
 import { pay_discretionary_expenses } from "../PayDiscretionaryExpense";
 import { SpendingEvent, update_expense_amount } from "../ExpenseHelper";
+import { create_scenario_raw_yaml, scenario_yaml_string } from "../../../../services/ScenarioYamlParser";
+import { state_tax_yaml_string } from "../../../../services/StateYamlParser";
+import { create_federal_tax_service } from "../../../tax/FederalTaxService";
+import { create_state_tax_service_yaml } from "../../../tax/StateTaxService";
+import { state } from "@stdlib/random-base-normal";
 const scenarioYaml = `
 # file format for scenario import/export.  version: 2025-03-23
 # CSE416, Software Engineering, Scott D. Stoller.
@@ -216,8 +221,11 @@ afterAll(async () => {
 describe("Testing Simulation State", () => {
   it("should pay discretionary expense", async () => {
     const scenario = await create_scenario(scenarioRaw);
+    // initialize scenario object
+    const federal_tax_service = await create_federal_tax_service();
+    const state_tax_service = await create_state_tax_service_yaml(scenario.residence_state, state_tax_yaml_string);
     console.log("scenario", scenario);
-    const state = await create_simulation_state(scenario);
+    const state = await create_simulation_state(scenario, federal_tax_service, state_tax_service,);
 
     //update 所有的expense的amount
     for (const expense of scenario.event_series) {
@@ -282,7 +290,7 @@ export function convert_yaml_to_scenario_raw(parsedYaml: any): ScenarioRaw {
       const typeRaw = investmentTypesMap.get(inv.investmentType);
       // 构造 InvestmentRaw
       const invRaw: InvestmentRaw = {
-        investmentType: typeRaw!, // 这里假设一定能找到
+        investmentType: typeRaw.name, // 这里假设一定能找到
         value: inv.value,
         taxStatus: inv.taxStatus,
         id: inv.id,
