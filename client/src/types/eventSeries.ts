@@ -46,10 +46,10 @@ export interface EventSeries {
   duration: DistributionConfig;
   initialAmount: number;
   annualChange?: AmountChangeType;
-  inflationAdjust: boolean;
+  inflationAdjusted: boolean;
   userPercentage?: number;
   spousePercentage?: number;
-  isDiscretionary?: boolean;
+  discretionary?: boolean;
   isSocialSecurity?: boolean;
   maxCash?: number;
   assetAllocation?: {
