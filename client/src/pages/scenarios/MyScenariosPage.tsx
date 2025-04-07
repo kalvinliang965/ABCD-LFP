@@ -17,7 +17,7 @@ import {
   FaRegLightbulb,
 } from "react-icons/fa";
 import { ScenarioDetailCard } from "../../components/scenarios";
-import { SAMPLE_SCENARIOS } from "../../types/scenario"; //! 临时的
+import { SAMPLE_SCENARIOS } from "../../types/scenario"; //! temporary
 import { Link as RouterLink } from "react-router-dom";
 import { ScenarioRaw } from "../../types/Scenarios";
 import { scenarioApi } from "../../services/scenario";

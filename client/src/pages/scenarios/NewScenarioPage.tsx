@@ -77,10 +77,10 @@ function NewScenarioPage() {
   const [scenarioDetails, setScenarioDetails] = useState<ScenarioDetails>({
     name: "",
     type: "individual",
-    userBirthYear: new Date().getFullYear() - 20, //! 这里会帮助用户填写一个默认的值，这个值是当前的日期-20年
+    userBirthYear: new Date().getFullYear() - 20, //! this will help the user fill in a default value, which is the current date - 20 years
   });
   const [lifeExpectancyConfig, setLifeExpectancyConfig] =
-    //这个部分是couple的默认值
+    //this part is the default value for couple
     useState<LifeExpectancyConfig>({
       userExpectancyType: "fixed",
       userFixedAge: 85,
@@ -96,17 +96,17 @@ function NewScenarioPage() {
     useState<AdditionalSettingsConfig>({
       inflationConfig: {
         type: "fixed",
-        value: 2.5, //! 这边2.5是默认值 也就是用户什么都不输入就这这个值
+        value: 2.5, //! 2.5 is the default value, which means the user doesn't input anything, then it's 2.5
       },
       afterTaxContributionLimit: 0,
       financialGoal: {
-        value: 0, //! 这边0是默认值 也就是用户什么都不输入就这这个值
+        value: 0, //! 0 is the default value, which means the user doesn't input anything, then it's 0
       },
-      stateOfResidence: "NY", // ! state of residence 当前只有三个值，NY, NJ, CT。之后需要拓展时需要修改。
+      stateOfResidence: "NY", // ! state of residence, currently only has 3 values, NY, NJ, CT. need to modify when expanding.
     });
 
   const toast = useToast();
-  //! 这个部分是海风写的，不要我来查看。
+  //! don't touch
   const [rmdSettings, setRmdSettings] = useState<RMDSettings>({
     enableRMD: true,
     currentAge: 0, // Will be calculated based on birth year
@@ -130,11 +130,11 @@ function NewScenarioPage() {
       availableAccounts: [],
       accountPriority: [],
     });
-  //! 一直到这里。
+  //! don't touch
 
-  // *这边需要看谁叫了这个function，传入的type可以检查一下。
-  // *这边的ScenarioCreationType只有两个值，FROM_SCRATCH和IMPORT_YAML。
-  //! 如果用户选择的是IMPORT_YAML，那么直接跳转到yamlImport这个步骤。
+  // *this part is called by who? check the type.
+  // *this part only has two values, FROM_SCRATCH and IMPORT_YAML.
+  //! if the user choose IMPORT_YAML, then jump to yamlImport step.
   const handle_scenario_type_select = (type: ScenarioCreationType) => {
     console.log(
       "NewScenarioPage: handle_scenario_type_select called with:",
@@ -151,13 +151,13 @@ function NewScenarioPage() {
     console.log("NewScenarioPage: Current step after setState:", step); // This will still show the old value due to React's state update timing
   };
 
-  //! 这边需要检查一下，如果用户选择的是IMPORT_YAML，那么应该直接跳转到yamlImport这个步骤。
+  //! check if the user choose IMPORT_YAML, then jump to yamlImport step.
   const handle_yaml_import_complete = (data: any) => {
     investmentTypeStorage.clear();
     // Here you would process the imported data
     // For now, we'll just show a success message and redirect
-    //! 这里面需要写一个function，来处理导入的数据。那么就直接发给后端。让后端来生成ID然后存入数据库。
-    //TODO：
+    //! need to write a function to handle the imported data. send it to the backend. let the backend generate the ID and save it to the database.
+    //TODO:
 
     // Clean investment type data from localStorage
     investmentTypeStorage.clear();
@@ -172,7 +172,7 @@ function NewScenarioPage() {
     navigate("/scenarios");
   };
 
-  //! 从这里开始把所有的back和continue都改成to，然后调用同一个function。
+  //! from here on, all back and continue are changed to to, and call the same function.
   const handle_to_type_selection = () => {
     setStep("typeSelection");
   };
@@ -194,12 +194,12 @@ function NewScenarioPage() {
     );
   };
 
-  //! 海风写的，不要动
+  //! don't touch
   // const handleSaveAndContinue = () => {
   //   // Navigate to spending strategy instead of directly to additional settings
   //   handle_continue_to_spending_strategy();
   // };
-  //! 到这里都是海风写的，不要动。
+  //! don't touch
 
   const handle_to_life_expectancy = () => {
     setStep("lifeExpectancy");
@@ -319,9 +319,9 @@ function NewScenarioPage() {
   const handle_to_spending_strategy = () => {
     setStep("spendingStrategy");
   };
-  //! 这部分是海风写的，不要动。
+  //! don't touch
 
-  //* 这是我们最后最重要的代码
+  //* the final step
   const handle_finish_scenario = async () => {
 
 
@@ -426,66 +426,66 @@ function NewScenarioPage() {
   const handle_back_to_rmd = () => {
     setStep("rmdSettings");
   };
-  //! 这部分是海风写的，不要动。
+  //! don't touch
 
-  const saveSpendingStrategy = async () => {
-    try {
-      // Save to API
-      if (spendingStrategy.id) {
-        await spendingStrategyApi.update(spendingStrategy.id, spendingStrategy);
-      } else {
-        const savedStrategy = await spendingStrategyApi.create(spendingStrategy);
-        setSpendingStrategy(savedStrategy);
-      }
+  // const saveSpendingStrategy = async () => {
+  //   try {
+  //     // Save to API
+  //     if (spendingStrategy.id) {
+  //       await spendingStrategyApi.update(spendingStrategy.id, spendingStrategy);
+  //     } else {
+  //       const savedStrategy = await spendingStrategyApi.create(spendingStrategy);
+  //       setSpendingStrategy(savedStrategy);
+  //     }
       
-      // Also save to localStorage
-      if (spendingStrategy.id) {
-        spendingStrategyStorage.update(spendingStrategy.id, spendingStrategy);
-      } else {
-        const savedLocalStrategy = spendingStrategyStorage.add(spendingStrategy);
-        // Update with the ID generated by localStorage if we didn't get one from the API
-        if (!spendingStrategy.id) {
-          setSpendingStrategy(savedLocalStrategy);
-        }
-      }
+  //     // Also save to localStorage
+  //     if (spendingStrategy.id) {
+  //       spendingStrategyStorage.update(spendingStrategy.id, spendingStrategy);
+  //     } else {
+  //       const savedLocalStrategy = spendingStrategyStorage.add(spendingStrategy);
+  //       // Update with the ID generated by localStorage if we didn't get one from the API
+  //       if (!spendingStrategy.id) {
+  //         setSpendingStrategy(savedLocalStrategy);
+  //       }
+  //     }
       
-      toast({
-        title: "Spending strategy saved",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error("Error saving spending strategy:", error);
+  //     toast({
+  //       title: "Spending strategy saved",
+  //       status: "success",
+  //       duration: 3000,
+  //       isClosable: true,
+  //     });
+  //   } catch (error) {
+  //     console.error("Error saving spending strategy:", error);
       
-      // If API fails, still try to save to localStorage
-      try {
-        if (spendingStrategy.id) {
-          spendingStrategyStorage.update(spendingStrategy.id, spendingStrategy);
-        } else {
-          const savedLocalStrategy = spendingStrategyStorage.add(spendingStrategy);
-          setSpendingStrategy(savedLocalStrategy);
-        }
+  //     // If API fails, still try to save to localStorage
+  //     try {
+  //       if (spendingStrategy.id) {
+  //         spendingStrategyStorage.update(spendingStrategy.id, spendingStrategy);
+  //       } else {
+  //         const savedLocalStrategy = spendingStrategyStorage.add(spendingStrategy);
+  //         setSpendingStrategy(savedLocalStrategy);
+  //       }
         
-        toast({
-          title: "Spending strategy saved locally",
-          description: "Could not connect to server, saved to browser storage",
-          status: "warning",
-          duration: 5000,
-          isClosable: true,
-        });
-      } catch (localError) {
-        console.error("Error saving to localStorage:", localError);
-        toast({
-          title: "Error saving spending strategy",
-          description: "Please try again later",
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-        });
-      }
-    }
-  };
+  //       toast({
+  //         title: "Spending strategy saved locally",
+  //         description: "Could not connect to server, saved to browser storage",
+  //         status: "warning",
+  //         duration: 5000,
+  //         isClosable: true,
+  //       });
+  //     } catch (localError) {
+  //       console.error("Error saving to localStorage:", localError);
+  //       toast({
+  //         title: "Error saving spending strategy",
+  //         description: "Please try again later",
+  //         status: "error",
+  //         duration: 5000,
+  //         isClosable: true,
+  //       });
+  //     }
+  //   }
+  // };
 
   // const handle_continue_from_spending_strategy = async () => {
   //   await saveSpendingStrategy();
@@ -554,42 +554,42 @@ function NewScenarioPage() {
   };
 
   // Add this near your other useEffects
-useEffect(() => {
-  console.log("investmentsConfig changed:", investmentsConfig);
-  console.log("Number of investments:", investmentsConfig.investments.length);
-  console.log("Pre-tax investments:", investmentsConfig.investments.filter(
-    inv => inv.taxStatus === "PRE_TAX_RETIREMENT"
-  ));
-}, [investmentsConfig]);
+// useEffect(() => {
+//   console.log("investmentsConfig changed:", investmentsConfig);
+//   console.log("Number of investments:", investmentsConfig.investments.length);
+//   console.log("Pre-tax investments:", investmentsConfig.investments.filter(
+//     inv => inv.taxStatus === "PRE_TAX_RETIREMENT"
+//   ));
+// }, [investmentsConfig]);
 
-  // Inside the NewScenarioPage component, add this function
-  const saveRMDStrategy = async () => {
-    try {
-      // Only use localStorage
-      if (rmdSettings.id) {
-        rmdStrategyStorage.update(rmdSettings.id, rmdSettings);
-      } else {
-        const savedSettings = rmdStrategyStorage.add(rmdSettings);
-        setRmdSettings(savedSettings);
-      }
+  // // Inside the NewScenarioPage component, add this function
+  // const saveRMDStrategy = async () => {
+  //   try {
+  //     // Only use localStorage
+  //     if (rmdSettings.id) {
+  //       rmdStrategyStorage.update(rmdSettings.id, rmdSettings);
+  //     } else {
+  //       const savedSettings = rmdStrategyStorage.add(rmdSettings);
+  //       setRmdSettings(savedSettings);
+  //     }
       
-      toast({
-        title: "RMD settings saved locally",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error("Error saving RMD settings:", error);
-      toast({
-        title: "Error saving RMD settings",
-        description: "Please try again later",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
-    }
-  };
+  //     toast({
+  //       title: "RMD settings saved locally",
+  //       status: "success",
+  //       duration: 3000,
+  //       isClosable: true,
+  //     });
+  //   } catch (error) {
+  //     console.error("Error saving RMD settings:", error);
+  //     toast({
+  //       title: "Error saving RMD settings",
+  //       description: "Please try again later",
+  //       status: "error",
+  //       duration: 5000,
+  //       isClosable: true,
+  //     });
+  //   }
+  // };
 
   // Update the handle_continue_from_rmd_settings function
   // const handle_continue_from_rmd_settings = async () => {
