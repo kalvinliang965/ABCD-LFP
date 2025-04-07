@@ -21,6 +21,7 @@ import { SAMPLE_SCENARIOS } from "../../types/scenario"; //! 临时的
 import { Link as RouterLink } from "react-router-dom";
 import { ScenarioRaw } from "../../types/Scenarios";
 import { scenarioApi } from "../../services/scenario";
+import { convert_scenario_to_yaml, download_scenario_as_yaml } from "../../utils/yamlExport";
 
 const MyScenariosPage: React.FC = () => {
   const headingColor = useColorModeValue("gray.700", "white");
@@ -31,10 +32,12 @@ const MyScenariosPage: React.FC = () => {
   const cardBgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
 
-  const handleSampleScenario = async (scenario: ScenarioRaw) => {
+  const handle_sample_scenario = async (scenario: ScenarioRaw) => {
     try {
       console.log("Scenario to create:", scenario);
-      const savedScenario = await scenarioApi.create(scenario);
+      // Download the scenario as YAML before creating it
+      const yaml = convert_scenario_to_yaml(scenario);
+      const savedScenario = await scenarioApi.create(yaml);
       console.log("Scenario created:", savedScenario);
     } catch (error) {
       console.error("Error creating scenario:", error);
@@ -68,7 +71,7 @@ const MyScenariosPage: React.FC = () => {
           <Button
             // as={RouterLink}
             // to="/scenarios/new"
-            onClick={() => handleSampleScenario(SAMPLE_SCENARIOS[0])}
+            onClick={() => handle_sample_scenario(SAMPLE_SCENARIOS[0])}
             size="sm"
             colorScheme="blue"
             leftIcon={<FaPlus />}

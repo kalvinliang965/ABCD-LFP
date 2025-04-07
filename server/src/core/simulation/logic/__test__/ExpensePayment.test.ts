@@ -163,6 +163,8 @@ residenceState: NY
 
     `;
 
+console.log("scenarioYaml", scenarioYaml);
+
 const parsedYaml = yaml.load(scenarioYaml);
 
 // 3) 转换为 ScenarioRaw（把需要 Map 的字段全部转成 Map）

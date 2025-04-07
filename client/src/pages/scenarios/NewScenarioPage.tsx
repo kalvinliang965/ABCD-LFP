@@ -39,6 +39,7 @@ import { investmentTypeStorage } from "../../services/investmentTypeStorage";
 import { map_form_to_scenario_raw } from "../../utils/scenarioMapper";
 import { FaLeaf } from "react-icons/fa";
 import { scenarioApi } from "../../services/scenario";
+import { convert_scenario_to_yaml } from "../../utils/yamlExport";
 
 function NewScenarioPage() {
   //! belong to Kate, don't touch
@@ -334,7 +335,8 @@ function NewScenarioPage() {
     // AI-generated code
     // Send scenario to backend using scenarioApi
     try {
-      const savedScenario = await scenarioApi.create(scenarioRaw);
+      const yaml = convert_scenario_to_yaml(scenarioRaw);
+      const savedScenario = await scenarioApi.create(yaml); // 这里需要修改，因为scenarioRaw是一个ScenarioRaw对象，而scenarioApi.create需要一个string。
       console.log("Scenario saved to backend:", savedScenario);
 
       // Clean investment type data from localStorage
