@@ -24,6 +24,6 @@ export function serialize_scenario_for_api(scenario: any) {
   if (serialized.eventSeries instanceof Set) {
     serialized.eventSeries = Array.from(serialized.eventSeries);
   }
-
+  
   return serialized;
 }
