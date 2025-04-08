@@ -26,7 +26,7 @@ import { SpendingStrategy } from "../components/scenarios/SpendingStrategyForm";
 import { WithdrawalStrategy } from "../components/scenarios/WithdrawalStrategyForm";
 import { AddedEvent } from "../components/event_series/EventSeriesSection";
 import { investmentTypeStorage } from "../services/investmentTypeStorage";
-import { RothConversionStrategy } from "../components/scenarios/RothConversionForm"
+import { RothConversionStrategy } from "../components/scenarios/RothConversionForm";
 
 export function map_form_to_scenario_raw(
   scenarioDetails: ScenarioDetails,
@@ -44,6 +44,30 @@ export function map_form_to_scenario_raw(
   if (scenarioDetails.type === "couple" && scenarioDetails.spouseBirthYear) {
     birthYears.push(scenarioDetails.spouseBirthYear);
   }
+
+  const inflation_assumption = (() => {
+    if (additionalSettings.inflationConfig.type === "fixed") {
+      return {
+        type: "fixed",
+        value: additionalSettings.inflationConfig.value,
+      };
+    } else if (additionalSettings.inflationConfig.type === "uniform") {
+      return {
+        type: "uniform",
+        min: additionalSettings.inflationConfig.min,
+        max: additionalSettings.inflationConfig.max,
+      };
+    } else {
+      return {
+        type: "normal",
+        mean: additionalSettings.inflationConfig.mean,
+        standardDeviation: additionalSettings.inflationConfig.standardDeviation,
+      };
+    }
+  })();
+
+  console.log("you are now at the inflation assumption section");
+  console.log("Inflation assumption:", inflation_assumption);
 
   // Map life expectancy
   const lifeExpectancy: Array<{ [key: string]: any }> = [];
@@ -155,7 +179,8 @@ export function map_form_to_scenario_raw(
         return {
           ...baseEvent,
           assetAllocation: event.assetAllocation || [],
-          assetAllocation2: event.assetAllocation2 || event.assetAllocation || [], // Use assetAllocation2 if provided, otherwise fallback to assetAllocation
+          assetAllocation2:
+            event.assetAllocation2 || event.assetAllocation || [], // Use assetAllocation2 if provided, otherwise fallback to assetAllocation
           glidePath: event.glidePath || false,
           maxCash: event.maxCash || 0,
         } as InvestmentEventRaw;
@@ -180,12 +205,12 @@ export function map_form_to_scenario_raw(
     investmentTypes,
     investments,
     eventSeries,
-    inflationAssumption: additionalSettings.inflationConfig,
-    afterTaxContributionLimit: additionalSettings.afterTaxContributionLimit, // Not in forms, default value
+    inflationAssumption: inflation_assumption,
+    afterTaxContributionLimit: additionalSettings.afterTaxContributionLimit,
     spendingStrategy: spendingStrategy.selectedExpenses || [],
     expenseWithdrawalStrategy: withdrawalStrategy.accountPriority || [],
     RMDStrategy: rmdSettings.enableRMD ? rmdSettings.accountPriority : [],
-    RothConversionOpt: rothConversionStrategy.roth_conversion_opt ,
+    RothConversionOpt: rothConversionStrategy.roth_conversion_opt,
     RothConversionStart: rothConversionStrategy.roth_conversion_start,
     RothConversionEnd: rothConversionStrategy.roth_conversion_end,
     RothConversionStrategy: rothConversionStrategy.accountPriority,

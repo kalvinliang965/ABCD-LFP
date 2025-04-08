@@ -14,12 +14,14 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
   // First, ensure all Sets are converted to Arrays
   const serializedScenario = serialize_scenario_for_api(scenario);
 
+  console.log("inflation assumption:", serializedScenario.inflationAssumption);
+
   // Create a structured object that matches the expected YAML format
   const yamlObject: any = {
     // Add comment header with version information
     // Special formatting for the header comments
     name: serializedScenario.name,
-    maritalStatus: serializedScenario.martialStatus, // Fix spelling issue in original data
+    maritalStatus: serializedScenario.martialStatus, //fix spelling issue in original data
     birthYears: serializedScenario.birthYears,
     lifeExpectancy: serializedScenario.lifeExpectancy,
 
@@ -116,7 +118,7 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
       return baseEvent;
     }),
 
-    inflationAssumption: serializedScenario.inflationAssumption[0],
+    inflationAssumption: serializedScenario.inflationAssumption,
     afterTaxContributionLimit: serializedScenario.afterTaxContributionLimit,
     spendingStrategy: serializedScenario.spendingStrategy,
     expenseWithdrawalStrategy: serializedScenario.expenseWithdrawalStrategy,

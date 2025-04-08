@@ -1,37 +1,32 @@
 
 export enum TaxFilingStatus {
-    SINGLE = "SINGLE",
-    MARRIED = "MARRIED",
-}
-
-export const enum IncomeType {
-    TAXABLE_INCOME = "TAXABLE_INCOME",
-    CAPITAL_GAINS = "CAPITAL_GAINS"
+    SINGLE = "single",
+    MARRIED = "married",
 }
 
 export enum DistributionType {
-    NORMAL = "NORMAL",
-    UNIFORM = "UNIFORM",
-    FIXED = "FIXED",
+    NORMAL = "normal",
+    UNIFORM = "uniform",
+    FIXED = "fixed",
 }
 
 export enum ChangeType {
-    FIXED = "FIXED_AMOUNT",
-    PERCENTAGE = "PERCENTAGE",
+    FIXED = "fixed_amount",
+    PERCENTAGE = "percentage",
 }
 
 export enum Taxability {
-    TAXABLE = "TAXABLE",
-    TAX_EXEMPT = "TAX_EXEMPT",
+    TAXABLE = "taxable",
+    TAX_EXEMPT = "tax_exempt",
 }
 
 
 export enum StatisticType {
-    MEAN = "MEAN",
-    STDEV = "STDEV",
-    VALUE = "VALUE",
-    LOWER = "LOWER",
-    UPPER = "UPPER",
+    MEAN = "mean",
+    STDEV = "stdev",
+    VALUE = "value",
+    LOWER = "lower",
+    UPPER = "upper",
 }
 
 export enum StateType {
@@ -41,8 +36,8 @@ export enum StateType {
 }
 
 export enum TaxStatus {
-    NON_RETIREMENT = "NON_RETIREMENT",
-    PRE_TAX = "PRE_TAX",
-    AFTER_TAX = "AFTER_TAX",
+    NON_RETIREMENT = "non-retirement",
+    PRE_TAX = "pre-tax",
+    AFTER_TAX = "after-tax",
 }
     

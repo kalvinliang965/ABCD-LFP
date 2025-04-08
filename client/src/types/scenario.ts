@@ -1,7 +1,4 @@
 import { ScenarioRaw } from "./Scenarios";
-//! 目前想法是，当前端第一次发给后端的时候，数据应符合ScenarioRaw的格式。
-//! 但是在后端接收到后，则需要添加一些信息增加到DB，比如UserID，LastModifiedDate等。
-//! 前端再次拿取时应该从DB中拿取，然后转换为前端需要接收到的格式，其基本符合ScenarioRaw的格式，但是需要多一些不展示的信息，比如ScenarioID，lastModifiedDate等。
 
 // These are sample scenarios for the initial display
 export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
@@ -13,7 +10,7 @@ export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
     birthYears: [1985, 1987],
     lifeExpectancy: [
       { type: "fixed", value: 80 },
-      { type: "normal", mean: 82, std: 3 },
+      { type: "normal", mean: 82, stdev: 3 },
     ],
     financialGoal: 10000,
     residenceState: "NY",
@@ -22,30 +19,30 @@ export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
         name: "cash",
         description: "cash",
         returnAmtOrPct: "amount",
-        returnDistribution: [{ type: "fixed", value: "0" }],
+        returnDistribution: [{ type: "fixed", value: 0 }],
         expenseRatio: 0,
         incomeAmtOrPct: "percent",
-        incomeDistribution: [{ type: "fixed", value: "0" }],
+        incomeDistribution: [{ type: "fixed", value: 0 }],
         taxability: true,
       },
       {
         name: "S&P 500",
         description: "S&P 500 index fund",
         returnAmtOrPct: "percent",
-        returnDistribution: [{ type: "normal", mean: "0.06", stdev: "0.02" }],
+        returnDistribution: [{ type: "normal", mean: 0.06, stdev: 0.02 }],
         expenseRatio: 0.001,
         incomeAmtOrPct: "percent",
-        incomeDistribution: [{ type: "normal", mean: "0.01", stdev: "0.005" }],
+        incomeDistribution: [{ type: "normal", mean: 0.01, stdev: 0.005 }],
         taxability: true,
       },
       {
         name: "tax-exempt bonds",
         description: "NY tax-exempt bonds",
         returnAmtOrPct: "amount",
-        returnDistribution: [{ type: "fixed", value: "0" }],
+        returnDistribution: [{ type: "fixed", value: 0 }],
         expenseRatio: 0.004,
         incomeAmtOrPct: "percent",
-        incomeDistribution: [{ type: "normal", mean: "0.03", stdev: "0.01" }],
+        incomeDistribution: [{ type: "normal", mean: 0.03, stdev: 0.01 }],
         taxability: false,
       },
     ]),
@@ -84,12 +81,12 @@ export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
     eventSeries: new Set([
       {
         name: "salary",
-        start: [{ type: "fixed", value: "2025" }],
-        duration: [{ type: "fixed", value: "40" }],
+        start: [{ type: "fixed", value: 2025 }],
+        duration: [{ type: "fixed", value: 40 }],
         type: "income",
         initialAmount: 75000,
         changeAmtOrPct: "amount",
-        changeDistribution: [{ type: "uniform", lower: "500", upper: "2000" }],
+        changeDistribution: [{ type: "uniform", lower: 500, upper: 2000 }],
         inflationAdjusted: false,
         userFraction: 1.0,
         socialSecurity: false,
@@ -97,11 +94,11 @@ export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
       {
         name: "food",
         start: [{ type: "startWith", eventSeries: "salary" }],
-        duration: [{ type: "fixed", value: "200" }],
+        duration: [{ type: "fixed", value: 200 }],
         type: "expense",
         initialAmount: 5000,
         changeAmtOrPct: "percent",
-        changeDistribution: [{ type: "normal", mean: "0.02", stdev: "0.01" }],
+        changeDistribution: [{ type: "normal", mean: 0.02, stdev: 0.01 }],
         inflationAdjusted: true,
         userFraction: 0.5,
         discretionary: false,
@@ -109,11 +106,11 @@ export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
       {
         name: "vacation",
         start: [{ type: "startWith", eventSeries: "salary" }],
-        duration: [{ type: "fixed", value: "40" }],
+        duration: [{ type: "fixed", value: 40 }],
         type: "expense",
         initialAmount: 1200,
         changeAmtOrPct: "amount",
-        changeDistribution: [{ type: "fixed", value: "0" }],
+        changeDistribution: [{ type: "fixed", value: 0 }],
         inflationAdjusted: true,
         userFraction: 0.6,
         discretionary: true,
@@ -121,19 +118,19 @@ export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
       {
         name: "streaming services",
         start: [{ type: "startWith", eventSeries: "salary" }],
-        duration: [{ type: "fixed", value: "40" }],
+        duration: [{ type: "fixed", value: 40 }],
         type: "expense",
         initialAmount: 500,
         changeAmtOrPct: "amount",
-        changeDistribution: [{ type: "fixed", value: "0" }],
+        changeDistribution: [{ type: "fixed", value: 0 }],
         inflationAdjusted: true,
         userFraction: 1.0,
         discretionary: true,
       },
       {
         name: "my investments",
-        start: [{ type: "uniform", lower: "2025", upper: "2030" }],
-        duration: [{ type: "fixed", value: "10" }],
+        start: [{ type: "uniform", lower: 2025, upper: 2030 }],
+        duration: [{ type: "fixed", value: 10 }],
         type: "invest",
         assetAllocation: [
           { type: "S&P 500 non-retirement", value: 0.6 },
@@ -148,8 +145,8 @@ export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
       },
       {
         name: "rebalance",
-        start: [{ type: "uniform", lower: "2025", upper: "2030" }],
-        duration: [{ type: "fixed", value: "10" }],
+        start: [{ type: "uniform", lower: 2025, upper: 2030 }],
+        duration: [{ type: "fixed", value: 10 }],
         type: "rebalance",
         assetAllocation: [
           { type: "S&P 500 non-retirement", value: 0.7 },

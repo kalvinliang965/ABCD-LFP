@@ -8,6 +8,9 @@ export default defineConfig(({ mode }) => {
   const config: UserConfigExport = {
     server: {
       port: parseInt(env.VITE_PORT, 10) || 5713,
+    },
+    preview: {
+      port: parseInt(env.VITE_PORT, 10) || 5713,
     }
   }
 
