@@ -154,7 +154,7 @@ export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
         ],
       },
     ]),
-    inflationAssumption: [{ type: "fixed", value: 0.03 }],
+    inflationAssumption: { type: "fixed", value: 0.03 },
     afterTaxContributionLimit: 7000,
     spendingStrategy: ["vacation", "streaming services"],
     expenseWithdrawalStrategy: [

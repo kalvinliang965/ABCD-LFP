@@ -287,7 +287,7 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
                 <PopoverBody>
                   <Text fontSize="sm">
                     Inflation rate:{" "}
-                    {scenario.inflationAssumption[0].value * 100}%
+                    {scenario.inflationAssumption.value * 100}%
                   </Text>
                 </PopoverBody>
               </PopoverContent>
