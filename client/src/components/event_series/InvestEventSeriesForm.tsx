@@ -57,7 +57,7 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
     
     const initialAllocations: { [key: string]: number } = {};
     nonPreTaxInvestments.forEach(inv => {
-      initialAllocations[inv.investmentType || `Investment ${inv.id}`] = 0;
+      initialAllocations[inv.id] = 0;
     });
     setAllocations(initialAllocations);
     setFinalAllocations(initialAllocations);
@@ -111,12 +111,12 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
         {nonPreTaxInvestments.map((inv) => (
           <FormControl key={inv.id} isRequired>
             <FormLabel>
-              {inv.investmentType || `Investment ${inv.id}`} (%)
+              {inv.id} (%)
             </FormLabel>
             <NumberInput
-              value={targetAllocations[inv.investmentType || `Investment ${inv.id}`] || 0}
+              value={targetAllocations[inv.id] || 0}
               onChange={(value) => handleAllocationChange(
-                inv.investmentType || `Investment ${inv.id}`,
+                inv.id,
                 parseFloat(value) || 0,
                 isFinal
               )}
@@ -144,6 +144,19 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
       return;
     }
 
+    //convert allocations to the correct format for ScenarioRaw
+    const assetAllocationArray = Object.entries(allocations).map(([type, value]) => ({
+      type,
+      value: value / 100 //divide by 100 to convert from percentage to decimal
+    }));
+
+    const assetAllocation2Array = useGlidePath 
+      ? Object.entries(finalAllocations).map(([type, value]) => ({
+          type,
+          value: value / 100 //divide by 100 to convert from percentage to decimal
+        }))
+      : [];
+
     const eventData = {
       type: "invest",
       name,
@@ -151,9 +164,11 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
       startYear,
       duration,
       maxCash: Number(maxCash) || 0,
-      assetAllocation: allocations,
+      assetAllocation: assetAllocationArray,
+      assetAllocation2: assetAllocation2Array,
       glidePath: useGlidePath,
-      ...(useGlidePath && { assetAllocation2: finalAllocations })
+      initialAmount: 0, //required by EventSeries type
+      inflationAdjusted: false //required by EventSeries type
     };
 
     if (onEventAdded) {
@@ -174,7 +189,7 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
     const equalShare = 100 / nonPreTaxInvestments.length;
     const initialAllocations: { [key: string]: number } = {};
     nonPreTaxInvestments.forEach(inv => {
-      initialAllocations[inv.investmentType || `Investment ${inv.id}`] = equalShare;
+      initialAllocations[inv.id] = equalShare;
     });
     setAllocations(initialAllocations);
     setFinalAllocations(initialAllocations);
