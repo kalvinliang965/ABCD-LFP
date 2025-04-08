@@ -121,6 +121,7 @@ const server = app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
 //KEEP FOR KATE THIS
+// // Connect to database and handle shutdown
 connect_database().catch((error) => {
   console.error("Failed to connect to database:", error);
   process.exit(1);

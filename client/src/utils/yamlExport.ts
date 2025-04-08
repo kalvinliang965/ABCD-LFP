@@ -14,8 +14,7 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
   // First, ensure all Sets are converted to Arrays
   const serializedScenario = serialize_scenario_for_api(scenario);
 
-  console.log("Investment Types:", serializedScenario.investmentTypes);
-  console.log("Asset Allocations:", serializedScenario.eventSeries.filter((e: any) => e.type === 'invest'));
+  console.log("inflation assumption:", serializedScenario.inflationAssumption);
 
   // Create a structured object that matches the expected YAML format
   const yamlObject: any = {
@@ -119,7 +118,7 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
       return baseEvent;
     }),
 
-    inflationAssumption: serializedScenario.inflationAssumption[0],
+    inflationAssumption: serializedScenario.inflationAssumption,
     afterTaxContributionLimit: serializedScenario.afterTaxContributionLimit,
     spendingStrategy: serializedScenario.spendingStrategy,
     expenseWithdrawalStrategy: serializedScenario.expenseWithdrawalStrategy,

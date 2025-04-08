@@ -28,16 +28,28 @@ import {
   Icon,
   Tooltip,
   Container,
+  Badge,
 } from "@chakra-ui/react";
 import { FiInfo, FiDollarSign, FiCalendar, FiArrowRight } from "react-icons/fi";
 import { motion } from "framer-motion";
+import rmdStrategyStorage from "../../services/rmdStrategyStorage";
 
 export interface RMDSettings {
-  enableRMD: boolean;
-  startAge: number;
-  accountPriority: string[];
-  availableAccounts: string[];
+  id?: string;
+//   enableRMD: boolean;
+  currentAge: number;
+  accountPriority: string[]; // Account IDs in priority order
+  availableAccounts: Array<{
+    id: string;
+    name: string;
+  }>; // Available accounts with ID and name
 }
+
+// Helper to get account name by ID
+const getAccountNameById = (accounts: Array<{id: string; name: string}>, id: string): string => {
+  const account = accounts.find(acc => acc.id === id);
+  return account ? account.name : id; // Fallback to ID if name not found
+};
 
 interface RMDSettingsFormProps {
   rmdSettings: RMDSettings;
@@ -48,7 +60,7 @@ interface RMDSettingsFormProps {
 
 const MotionBox = motion(Box);
 
-const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
+export const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
   rmdSettings,
   onChangeRMDSettings,
   onContinue,
@@ -61,47 +73,75 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const textColor = useColorModeValue("gray.600", "gray.400");
 
+  // Calculate if RMD is required based on age
+  const isRmdRequired = rmdSettings.currentAge >= 72;
+  
   const handleAddAccount = () => {
     if (selectedAccount && !rmdSettings.accountPriority.includes(selectedAccount)) {
-      const updatedPriority = [...rmdSettings.accountPriority, selectedAccount];
-      onChangeRMDSettings({
+      handleRMDSettingsChange({
         ...rmdSettings,
-        accountPriority: updatedPriority,
+        accountPriority: [...rmdSettings.accountPriority, selectedAccount],
       });
       setSelectedAccount("");
     }
   };
 
-  const handleRemoveAccount = (account: string) => {
-    const updatedPriority = rmdSettings.accountPriority.filter(
-      (acc) => acc !== account
-    );
-    onChangeRMDSettings({
+  const handleRemoveAccount = (accountId: string) => {
+    handleRMDSettingsChange({
       ...rmdSettings,
-      accountPriority: updatedPriority,
+      accountPriority: rmdSettings.accountPriority.filter((id) => id !== accountId),
     });
   };
 
-  const handleMoveAccount = (account: string, direction: "up" | "down") => {
-    const currentIndex = rmdSettings.accountPriority.indexOf(account);
-    if (
-      (direction === "up" && currentIndex > 0) ||
-      (direction === "down" && currentIndex < rmdSettings.accountPriority.length - 1)
-    ) {
-      const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-      const updatedPriority = [...rmdSettings.accountPriority];
-      updatedPriority.splice(currentIndex, 1);
-      updatedPriority.splice(newIndex, 0, account);
-      onChangeRMDSettings({
-        ...rmdSettings,
-        accountPriority: updatedPriority,
-      });
+  const handleMoveAccount = (accountId: string, direction: "up" | "down") => {
+    const currentIndex = rmdSettings.accountPriority.indexOf(accountId);
+    if (currentIndex === -1) return;
+
+    const newPriority = [...rmdSettings.accountPriority];
+    
+    if (direction === "up" && currentIndex > 0) {
+      // Swap with previous item
+      [newPriority[currentIndex - 1], newPriority[currentIndex]] = 
+      [newPriority[currentIndex], newPriority[currentIndex - 1]];
+    } else if (direction === "down" && currentIndex < newPriority.length - 1) {
+      // Swap with next item
+      [newPriority[currentIndex], newPriority[currentIndex + 1]] = 
+      [newPriority[currentIndex + 1], newPriority[currentIndex]];
     }
+
+    handleRMDSettingsChange({
+      ...rmdSettings,
+      accountPriority: newPriority,
+    });
   };
 
+  const handleRMDSettingsChange = (newSettings: RMDSettings) => {
+    // Log the updated settings
+    console.log("Updated RMD settings:", newSettings);
+    
+    // Save to localStorage immediately for auto-save functionality
+    try {
+      if (newSettings.id) {
+        rmdStrategyStorage.update(newSettings.id, newSettings);
+      } else {
+        // Only add to localStorage if this is the first change
+        const savedSettings = rmdStrategyStorage.add(newSettings);
+        // Update with the new ID
+        newSettings.id = savedSettings.id;
+      }
+    } catch (error) {
+      console.error("Error auto-saving to localStorage:", error);
+    }
+    
+    onChangeRMDSettings(newSettings);
+  };
+
+  // Get available accounts that aren't already in the priority list
   const availableAccountsToAdd = rmdSettings.availableAccounts.filter(
-    (account) => !rmdSettings.accountPriority.includes(account)
+    (account) => !rmdSettings.accountPriority.includes(account.id)
   );
+  
+  console.log("Available accounts to add:", availableAccountsToAdd);
 
   return (
     <Container maxW="4xl" py={8}>
@@ -160,59 +200,43 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
             </Alert>
 
             <VStack spacing={8} align="stretch">
-              <FormControl display="flex" alignItems="center" justifyContent="space-between">
-                <FormLabel htmlFor="enable-rmd" mb="0" fontWeight="medium">
-                  Enable RMD Calculations
-                </FormLabel>
-                <Switch
-                  id="enable-rmd"
-                  colorScheme="teal"
-                  size="lg"
-                  isChecked={rmdSettings.enableRMD}
-                  onChange={(e) =>
-                    onChangeRMDSettings({
-                      ...rmdSettings,
-                      enableRMD: e.target.checked,
-                    })
-                  }
-                />
-              </FormControl>
+              
 
-              {rmdSettings.enableRMD && (
+              {/* {rmdSettings.enableRMD && ( */}
                 <>
                   <Divider />
 
                   <FormControl>
                     <FormLabel display="flex" alignItems="center">
-                      RMD Start Age
+                      Your Current Age
                       <Tooltip
-                        label="The age at which you must begin taking RMDs. Current law requires starting at age 72."
+                        label="RMDs typically begin at age 72. This is your current age based on your birth year."
                         placement="right"
                         hasArrow
                       >
                         <Box display="inline-block">
-                            <Icon as={FiInfo} ml={2} color="blue.400" />
+                          <Icon as={FiInfo} ml={2} color="blue.400" />
                         </Box>
                       </Tooltip>
                     </FormLabel>
-                    <NumberInput
-                      min={70}
-                      max={100}
-                      value={rmdSettings.startAge}
-                      onChange={(_, value) =>
-                        onChangeRMDSettings({
-                          ...rmdSettings,
-                          startAge: value,
-                        })
+                    <HStack>
+                      <Text fontSize="lg" fontWeight="medium">{rmdSettings.currentAge}</Text>
+                      <Badge 
+                        colorScheme={isRmdRequired ? "red" : "green"}
+                        fontSize="sm"
+                        px={2}
+                        py={1}
+                        borderRadius="md"
+                      >
+                        {isRmdRequired ? "RMDs Required" : "RMDs Not Yet Required"}
+                      </Badge>
+                    </HStack>
+                    <Text fontSize="sm" color={textColor} mt={1}>
+                      {isRmdRequired 
+                        ? "You are 72 or older, so RMDs are required from your pre-tax retirement accounts."
+                        : `RMDs will be required when you reach age 72 (in ${72 - rmdSettings.currentAge} years).`
                       }
-                      maxW="200px"
-                    >
-                      <NumberInputField />
-                      <NumberInputStepper>
-                        <NumberIncrementStepper />
-                        <NumberDecrementStepper />
-                      </NumberInputStepper>
-                    </NumberInput>
+                    </Text>
                   </FormControl>
 
                   <Divider />
@@ -240,8 +264,8 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
                         isDisabled={availableAccountsToAdd.length === 0}
                       >
                         {availableAccountsToAdd.map((account) => (
-                          <option key={account} value={account}>
-                            {account}
+                          <option key={account.id} value={account.id}>
+                            {account.name} (ID: {account.id})
                           </option>
                         ))}
                       </Select>
@@ -262,9 +286,9 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
                         p={4}
                         borderRadius="md"
                       >
-                        {rmdSettings.accountPriority.map((account, index) => (
+                        {rmdSettings.accountPriority.map((accountId, index) => (
                           <HStack
-                            key={account}
+                            key={accountId}
                             justify="space-between"
                             p={2}
                             borderWidth="1px"
@@ -273,30 +297,33 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
                           >
                             <HStack>
                               <Text fontWeight="bold">{index + 1}.</Text>
-                              <Text>{account}</Text>
+                              <Text>{getAccountNameById(rmdSettings.availableAccounts, accountId)}</Text>
+                              <Badge colorScheme="blue" ml={2}>ID: {accountId}</Badge>
                             </HStack>
-                            <HStack spacing={2}>
-                              <Button
-                                size="sm"
-                                onClick={() => handleMoveAccount(account, "up")}
-                                isDisabled={index === 0}
-                                variant="ghost"
-                              >
-                                ↑
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => handleMoveAccount(account, "down")}
-                                isDisabled={index === rmdSettings.accountPriority.length - 1}
-                                variant="ghost"
-                              >
-                                ↓
-                              </Button>
+                            <HStack>
+                              {index > 0 && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleMoveAccount(accountId, "up")}
+                                  variant="ghost"
+                                >
+                                  ↑
+                                </Button>
+                              )}
+                              {index < rmdSettings.accountPriority.length - 1 && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleMoveAccount(accountId, "down")}
+                                  variant="ghost"
+                                >
+                                  ↓
+                                </Button>
+                              )}
                               <Button
                                 size="sm"
                                 colorScheme="red"
                                 variant="ghost"
-                                onClick={() => handleRemoveAccount(account)}
+                                onClick={() => handleRemoveAccount(accountId)}
                               >
                                 ✕
                               </Button>
@@ -305,13 +332,13 @@ const RMDSettingsForm: React.FC<RMDSettingsFormProps> = ({
                         ))}
                       </VStack>
                     ) : (
-                      <Text color={textColor}>
-                        No accounts added. Add accounts to set withdrawal priority.
+                      <Text color="gray.500" fontStyle="italic">
+                        No accounts selected for RMD priority
                       </Text>
                     )}
                   </Box>
                 </>
-              )}
+              {/* )} */}
             </VStack>
           </CardBody>
 

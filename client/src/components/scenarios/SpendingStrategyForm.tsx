@@ -16,12 +16,18 @@ import {
   Card,
   CardHeader,
   CardBody,
+  IconButton,
+  Tooltip,
+  Badge,
 } from "@chakra-ui/react";
 import { MdCheckCircle } from "react-icons/md";
-import { FaMoneyBillWave } from "react-icons/fa";
-
+import { FaMoneyBillWave, FaArrowUp, FaArrowDown, FaTimes } from "react-icons/fa";
+import spendingStrategyStorage from "../../services/spendingStrategyStorage";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { FiArrowRight } from "react-icons/fi";
 
 export interface SpendingStrategy {
+  id?: string;
   // This will be an array of expense names that are considered discretionary
   availableExpenses: string[];  // All available expenses
   selectedExpenses: string[];   // Selected discretionary expenses
@@ -42,6 +48,13 @@ export const SpendingStrategyForm: React.FC<SpendingStrategyFormProps> = ({
 }) => {
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
+  const listItemBg = useColorModeValue("gray.50", "gray.700");
+  const listItemHoverBg = useColorModeValue("gray.100", "gray.600");
+  
+  // Add useEffect to log the current spending strategy whenever it changes
+  useEffect(() => {
+    console.log("Current spending strategy:", spendingStrategy);
+  }, [spendingStrategy]);
   
   // Handle checkbox changes
   const handleExpenseToggle = (expenseName: string) => {
@@ -58,11 +71,135 @@ export const SpendingStrategyForm: React.FC<SpendingStrategyFormProps> = ({
       updatedSelectedExpenses = [...spendingStrategy.selectedExpenses, expenseName];
     }
     
-    onChangeSpendingStrategy({
+    const updatedStrategy = {
       ...spendingStrategy,
       selectedExpenses: updatedSelectedExpenses,
-    });
+    };
+    
+    // Log the updated strategy before sending it to parent
+    console.log("Updated spending strategy:", updatedStrategy);
+    
+    // Save to localStorage immediately for auto-save functionality
+    try {
+      if (updatedStrategy.id) {
+        spendingStrategyStorage.update(updatedStrategy.id, updatedStrategy);
+      } else {
+        // Only add to localStorage if this is the first change
+        if (updatedSelectedExpenses.length === 1 && !isSelected) {
+          const savedStrategy = spendingStrategyStorage.add(updatedStrategy);
+          // Update with the new ID
+          updatedStrategy.id = savedStrategy.id;
+        }
+      }
+    } catch (error) {
+      console.error("Error auto-saving to localStorage:", error);
+    }
+    
+    onChangeSpendingStrategy(updatedStrategy);
   };
+
+  // Handle drag and drop reordering
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return;
+    
+    const items = Array.from(spendingStrategy.selectedExpenses);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    const updatedStrategy = {
+      ...spendingStrategy,
+      selectedExpenses: items,
+    };
+    
+    // Save to localStorage
+    try {
+      if (updatedStrategy.id) {
+        spendingStrategyStorage.update(updatedStrategy.id, updatedStrategy);
+      }
+    } catch (error) {
+      console.error("Error auto-saving to localStorage:", error);
+    }
+    
+    onChangeSpendingStrategy(updatedStrategy);
+  };
+
+  // Move an expense up in priority
+  const moveUp = (index: number) => {
+    if (index <= 0) return;
+    
+    const newSelectedExpenses = [...spendingStrategy.selectedExpenses];
+    const temp = newSelectedExpenses[index];
+    newSelectedExpenses[index] = newSelectedExpenses[index - 1];
+    newSelectedExpenses[index - 1] = temp;
+    
+    const updatedStrategy = {
+      ...spendingStrategy,
+      selectedExpenses: newSelectedExpenses,
+    };
+    
+    // Save to localStorage
+    try {
+      if (updatedStrategy.id) {
+        spendingStrategyStorage.update(updatedStrategy.id, updatedStrategy);
+      }
+    } catch (error) {
+      console.error("Error auto-saving to localStorage:", error);
+    }
+    
+    onChangeSpendingStrategy(updatedStrategy);
+  };
+
+  // Move an expense down in priority
+  const moveDown = (index: number) => {
+    if (index >= spendingStrategy.selectedExpenses.length - 1) return;
+    
+    const newSelectedExpenses = [...spendingStrategy.selectedExpenses];
+    const temp = newSelectedExpenses[index];
+    newSelectedExpenses[index] = newSelectedExpenses[index + 1];
+    newSelectedExpenses[index + 1] = temp;
+    
+    const updatedStrategy = {
+      ...spendingStrategy,
+      selectedExpenses: newSelectedExpenses,
+    };
+    
+    // Save to localStorage
+    try {
+      if (updatedStrategy.id) {
+        spendingStrategyStorage.update(updatedStrategy.id, updatedStrategy);
+      }
+    } catch (error) {
+      console.error("Error auto-saving to localStorage:", error);
+    }
+    
+    onChangeSpendingStrategy(updatedStrategy);
+  };
+
+  // Remove an expense from the selected list
+  const removeExpense = (expenseName: string) => {
+    const updatedSelectedExpenses = spendingStrategy.selectedExpenses.filter(
+      (name) => name !== expenseName
+    );
+    
+    const updatedStrategy = {
+      ...spendingStrategy,
+      selectedExpenses: updatedSelectedExpenses,
+    };
+    
+    // Save to localStorage
+    try {
+      if (updatedStrategy.id) {
+        spendingStrategyStorage.update(updatedStrategy.id, updatedStrategy);
+      }
+    } catch (error) {
+      console.error("Error auto-saving to localStorage:", error);
+    }
+    
+    onChangeSpendingStrategy(updatedStrategy);
+  };
+
+  // Add this near the other variable declarations at the top of the component
+  const isButtonDisabled = spendingStrategy.availableExpenses.length !== spendingStrategy.selectedExpenses.length ;
 
   return (
     <Box maxW="800px" mx="auto" p={5}>
@@ -118,16 +255,83 @@ export const SpendingStrategyForm: React.FC<SpendingStrategyFormProps> = ({
             <Divider />
             
             <Box>
-              <Heading size="sm" mb={3}>Selected Discretionary Expenses:</Heading>
+              <Heading size="sm" mb={3}>Selected Discretionary Expenses: </Heading>
+              <Text mb={4}>The order represents priority — the higher the item, the earlier it will be reduced.</Text>
+              
               {spendingStrategy.selectedExpenses.length > 0 ? (
-                <List spacing={2}>
-                  {spendingStrategy.selectedExpenses.map((expense) => (
-                    <ListItem key={expense} display="flex" alignItems="center">
-                      <ListIcon as={MdCheckCircle} color="green.500" />
-                      {expense}
-                    </ListItem>
-                  ))}
-                </List>
+                <DragDropContext onDragEnd={handleDragEnd}>
+                  <Droppable droppableId="discretionary-expenses">
+                    {(provided) => (
+                      <List 
+                        spacing={2} 
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                      >
+                        {spendingStrategy.selectedExpenses.map((expense, index) => (
+                          <Draggable key={expense} draggableId={expense} index={index}>
+                            {(provided) => (
+                              <ListItem
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                display="flex"
+                                justifyContent="space-between"
+                                alignItems="center"
+                                p={3}
+                                bg={listItemBg}
+                                borderRadius="md"
+                                borderWidth="1px"
+                                borderColor={borderColor}
+                                mb={2}
+                                _hover={{ bg: listItemHoverBg }}
+                              >
+                                <Flex align="center">
+                                  <ListIcon as={MdCheckCircle} color="green.500" />
+                                  <Text fontWeight="medium">{expense}</Text>
+                                </Flex>
+                                <Flex>
+                                  <Tooltip label="Move up" placement="top">
+                                    <IconButton
+                                      aria-label="Move up"
+                                      icon={<FaArrowUp />}
+                                      size="sm"
+                                      variant="ghost"
+                                      isDisabled={index === 0}
+                                      onClick={() => moveUp(index)}
+                                      mr={1}
+                                    />
+                                  </Tooltip>
+                                  <Tooltip label="Move down" placement="top">
+                                    <IconButton
+                                      aria-label="Move down"
+                                      icon={<FaArrowDown />}
+                                      size="sm"
+                                      variant="ghost"
+                                      isDisabled={index === spendingStrategy.selectedExpenses.length - 1}
+                                      onClick={() => moveDown(index)}
+                                      mr={1}
+                                    />
+                                  </Tooltip>
+                                  <Tooltip label="Remove" placement="top">
+                                    <IconButton
+                                      aria-label="Remove expense"
+                                      icon={<FaTimes />}
+                                      size="sm"
+                                      variant="ghost"
+                                      colorScheme="red"
+                                      onClick={() => removeExpense(expense)}
+                                    />
+                                  </Tooltip>
+                                </Flex>
+                              </ListItem>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </List>
+                    )}
+                  </Droppable>
+                </DragDropContext>
               ) : (
                 <Text color="gray.500" fontStyle="italic">
                   No discretionary expenses selected
@@ -142,7 +346,31 @@ export const SpendingStrategyForm: React.FC<SpendingStrategyFormProps> = ({
         <Button onClick={onBack} size="lg" variant="outline">
           Back
         </Button>
-        <Button onClick={onContinue} size="lg" colorScheme="blue">
+        <Button 
+          onClick={onContinue} 
+          size="lg" 
+          colorScheme="blue"
+          isDisabled={isButtonDisabled}
+          rightIcon={<FiArrowRight />}
+          px={8}
+          borderRadius="lg"
+          bgGradient="linear(to-r, blue.400, purple.500)"
+          _hover={{
+            bgGradient: "linear(to-r, blue.500, purple.600)",
+            transform: "translateY(-2px)",
+            boxShadow: "lg",
+          }}
+          _disabled={{
+            bgGradient: "linear(to-r, gray.400, gray.500)",
+            opacity: 0.6,
+            cursor: "not-allowed",
+            _hover: {
+              transform: "none",
+              boxShadow: "none"
+            }
+          }}
+          transition="all 0.2s"
+        >
           Continue
         </Button>
       </Flex>
