@@ -141,7 +141,8 @@ export const WithdrawalStrategyForm: React.FC<WithdrawalStrategyFormProps> = ({
 
   // Check if the Continue button should be disabled
   // Enable the button only when at least one account has been selected
-  const isButtonDisabled = withdrawalStrategy.accountPriority.length === 0;
+  //console.log("getAvailableAccounts().length, withdrawalStrategy.accountPriority.length is ",getAvailableAccounts().length, withdrawalStrategy.accountPriority.length);
+  const isButtonDisabled = getAvailableAccounts().length !== 0;
 
   return (
     <Box maxW="800px" mx="auto" p={5}>

@@ -199,7 +199,7 @@ export const SpendingStrategyForm: React.FC<SpendingStrategyFormProps> = ({
   };
 
   // Add this near the other variable declarations at the top of the component
-  const isButtonDisabled = spendingStrategy.availableExpenses.length === spendingStrategy.selectedExpenses.length ;
+  const isButtonDisabled = spendingStrategy.availableExpenses.length !== spendingStrategy.selectedExpenses.length ;
 
   return (
     <Box maxW="800px" mx="auto" p={5}>
