@@ -51,7 +51,7 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
         inv => inv.taxStatus === selectedTaxStatus
       );
       
-      // Initialize allocations with empty values
+      //initialize allocations with empty values
       const initialAllocations: { [key: string]: number } = {};
       matchingInvestments.forEach(inv => {
         initialAllocations[inv.investmentType || `Investment ${inv.id}`] = 0;
@@ -137,6 +137,11 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
       return;
     }
 
+    const assetAllocationArray = Object.entries(allocations).map(([type, value]) => ({
+      type,
+      value: value / 100 //divide by 100 to convert from percentage to decimal
+    }));
+
     const eventData = {
       type: "rebalance",
       name,
@@ -144,7 +149,9 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
       startYear,
       duration,
       selectedTaxStatus,
-      assetAllocation: allocations
+      assetAllocation: assetAllocationArray,
+      initialAmount: 0, 
+      inflationAdjusted: false
     };
 
     if (onEventAdded) {

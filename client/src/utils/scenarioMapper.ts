@@ -144,10 +144,14 @@ export function map_form_to_scenario_raw(
   // Map events
   const eventSeries = new Set(
     addedEvents.map((event: any) => {
+      //convert startYear and duration objects to arrays as expected by ScenarioRaw
+      const startArray = event.startYear ? [event.startYear] : [];
+      const durationArray = event.duration ? [event.duration] : [];
+      
       const baseEvent = {
         name: event.name,
-        start: event.startYear || [],
-        duration: event.duration || [],
+        start: startArray,
+        duration: durationArray,
         type: event.type || "",
       };
 
