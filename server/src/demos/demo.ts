@@ -1,11 +1,15 @@
 // src/demo.ts
 
 // This file should contain functions demonstrating our parts
-import { create_federal_tax_service } from "./core/tax/FederalTaxService";
-import { getRMDFactorForAge } from "./services/RMDScraper"; // Import the RMD function
-import process_rmds from "./core/simulation/logic/ProcessRMD";
-import { SimulationState } from "./core/simulation/SimulationState";
-import { TaxStatus } from "./core/Enums";
+import { create_federal_tax_service } from "../core/tax/FederalTaxService";
+// import { getRMDFactorForAge } from "./services/RMDScraper"; // Import the RMD function
+import process_income from "../core/simulation/logic/ProcessIncome";
+import process_rmds from "../core/simulation/logic/ProcessRMD";
+import { TaxStatus } from "../core/Enums";
+import { SimulationState } from "../core/simulation/SimulationState";
+import { create_simulation_engine } from "../core/simulation/SimulationEngine";
+import { state_tax_yaml_string } from "../services/StateYamlParser";
+import { scenario_yaml_string } from "../services/ScenarioYamlParser";
 
 async function scrapping_demo() {
     console.log("Scrapping demo");
@@ -72,7 +76,12 @@ async function testProcessRMD() {
   console.log("=== End Process RMD Test ===\n");
 }
 
+async function simulation_engine_demo() {
+  const simulation_engine = await create_simulation_engine(scenario_yaml_string, state_tax_yaml_string);
+
+}
 export {
     scrapping_demo,
-    testProcessRMD
+    testProcessRMD,
+    simulation_engine_demo
 }

@@ -5,7 +5,6 @@ import { connect_database, disconnect_database } from "./db/connections";
 import { api_config } from "./config/api";
 import eventSeriesRoutes from "./routes/eventSeriesRoutes";
 import investmentRoutes from "./routes/investmentRoutes";
-import { scrapping_demo, testProcessRMD } from "./demo";
 
 import passport from "passport";
 import userRoutes from "./routes/userRoutes";
@@ -13,6 +12,7 @@ import authRoutes from "./routes/authRoutes";
 import "./auth/passport"; // Import passport configuration
 import investmentTypeRoutes from "./routes/InvestmentType.routes";
 import scenarioRoutes from "./routes/scenarioRoutes";
+import { simulation_engine_demo } from "./demos/demo";
 const port = api_config.PORT;
 const app = express();
 
@@ -168,6 +168,4 @@ process.on("SIGTERM", terminate);
 // // Call this function before or after scrapping_demo()
 // testRMDScraper();
 
-scrapping_demo();
-//testProcessRMD();
-//scrapping_demo();
+// simulation_engine_demo();

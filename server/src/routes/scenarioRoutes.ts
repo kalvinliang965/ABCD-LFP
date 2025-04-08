@@ -12,8 +12,10 @@ router.post("/", async (req: Request, res: Response) => {
 
   const scenarioRaw = create_scenario_raw_yaml(yamlString);
 
-  console.log("scenarioRaw", scenarioRaw);
-  //res.status(201).json(scenarioRaw);
+  console.log("scenarioRaw: ", scenarioRaw);
+  console.log("DONE");
+  return res.status(201).json(scenarioRaw);
+
 });
 
 export default router;

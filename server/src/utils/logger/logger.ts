@@ -1,4 +1,20 @@
+import path from 'path';
 import winston from 'winston';
+import fs from "fs";
+
+// create logs folder
+const project_root = path.join(__dirname, `../../../`);
+const logsDir = path.join(project_root, 'logs');
+console.log(logsDir);
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+  console.log("A logs folder been created at", logsDir)
+}
+
+const generate_filename = (model: string) => {
+    const date = new Date();
+    return `${date.toISOString().split('T')[0]}_${model}.log`;
+}
 
 const base_format = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
@@ -23,11 +39,11 @@ export const simulation_logger = winston.createLogger({
   format: winston.format.combine(
     base_format,
     winston.format.label({ label: 'SIMULATION' }),
-    winston.format.json(),
     winston.format.prettyPrint(),
   ),
   transports: [
     new winston.transports.Console(),
+    new winston.transports.File({ filename: path.join(__dirname, 'logs', generate_filename("simulation"))}),
   ],
 });
 
@@ -41,9 +57,3 @@ export const tax_logger = winston.createLogger({
     new winston.transports.Console(),
   ],
 });
-
-
-const generate_filename = (model: string) => {
-    const date = new Date();
-    return `${date.toISOString().split('T')[0]}_${model}.log`;
-}
