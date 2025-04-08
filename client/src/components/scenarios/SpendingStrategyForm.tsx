@@ -24,6 +24,7 @@ import { MdCheckCircle } from "react-icons/md";
 import { FaMoneyBillWave, FaArrowUp, FaArrowDown, FaTimes } from "react-icons/fa";
 import spendingStrategyStorage from "../../services/spendingStrategyStorage";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { FiArrowRight } from "react-icons/fi";
 
 export interface SpendingStrategy {
   id?: string;
@@ -197,6 +198,9 @@ export const SpendingStrategyForm: React.FC<SpendingStrategyFormProps> = ({
     onChangeSpendingStrategy(updatedStrategy);
   };
 
+  // Add this near the other variable declarations at the top of the component
+  const isButtonDisabled = spendingStrategy.availableExpenses.length === spendingStrategy.selectedExpenses.length ;
+
   return (
     <Box maxW="800px" mx="auto" p={5}>
       <Card
@@ -342,7 +346,31 @@ export const SpendingStrategyForm: React.FC<SpendingStrategyFormProps> = ({
         <Button onClick={onBack} size="lg" variant="outline">
           Back
         </Button>
-        <Button onClick={onContinue} size="lg" colorScheme="blue">
+        <Button 
+          onClick={onContinue} 
+          size="lg" 
+          colorScheme="blue"
+          isDisabled={isButtonDisabled}
+          rightIcon={<FiArrowRight />}
+          px={8}
+          borderRadius="lg"
+          bgGradient="linear(to-r, blue.400, purple.500)"
+          _hover={{
+            bgGradient: "linear(to-r, blue.500, purple.600)",
+            transform: "translateY(-2px)",
+            boxShadow: "lg",
+          }}
+          _disabled={{
+            bgGradient: "linear(to-r, gray.400, gray.500)",
+            opacity: 0.6,
+            cursor: "not-allowed",
+            _hover: {
+              transform: "none",
+              boxShadow: "none"
+            }
+          }}
+          transition="all 0.2s"
+        >
           Continue
         </Button>
       </Flex>

@@ -279,7 +279,7 @@ function NewScenarioPage() {
   const handle_continue_to_spending_strategy = () => {
     // Get all expenses from added events
     const allExpenses = addedEvents
-      .filter((event) => event.type === "expense")
+      .filter((event) => event.type === "expense" && event.discretionary === true)
       .map((event) => event.name);
 
     setSpendingStrategy({

@@ -205,7 +205,7 @@ export function map_form_to_scenario_raw(
     afterTaxContributionLimit: additionalSettings.afterTaxContributionLimit,
     spendingStrategy: spendingStrategy.selectedExpenses || [],
     expenseWithdrawalStrategy: withdrawalStrategy.accountPriority || [],
-    RMDStrategy: rmdSettings.enableRMD ? rmdSettings.accountPriority : [],
+    RMDStrategy: rmdSettings.accountPriority || [],
     RothConversionOpt: rothConversionStrategy.roth_conversion_opt,
     RothConversionStart: rothConversionStrategy.roth_conversion_start,
     RothConversionEnd: rothConversionStrategy.roth_conversion_end,
