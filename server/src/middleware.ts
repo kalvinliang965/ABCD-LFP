@@ -9,13 +9,14 @@ import MongoStore from "connect-mongo";
 import { database_config } from "./config/database";
 import { api_config } from "./config/api";
 import passport from "passport";
-
-const sessionStore = MongoStore.create({ mongoUrl: database_config.MONGO_URL});
+let sessionStore: MongoStore;
 
 function registerGlobalMiddleWare(app: Express) {
     console.log("Registering global middleware");
 
     const minute = 60 * 1000;
+    const sessionStore = MongoStore.create({ mongoUrl: database_config.MONGO_URL});
+
 
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: false }));

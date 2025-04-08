@@ -46,6 +46,7 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
     type: "fixed",
     value: undefined,
   });
+  const [changeAmtOrPct, setChangeAmtOrPct] = useState<"amount" | "percent">("amount");
   const [inflationAdjusted, setInflationAdjusted] = useState(false);
   const [isSocialSecurity, setIsSocialSecurity] = useState(false);
   const [userPercentage, setUserPercentage] = useState(100);
@@ -64,6 +65,29 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    //create the changeDistribution based on the annualChange type
+    let changeDistribution;
+    
+    if (annualChange.type === "fixed") {
+      changeDistribution = [{ 
+        type: "fixed", 
+        value: changeAmtOrPct === "percent" ? (annualChange.value || 0) / 100 : annualChange.value || 0 
+      }];
+    } else if (annualChange.type === "uniform") {
+      changeDistribution = [{ 
+        type: "uniform", 
+        lower: changeAmtOrPct === "percent" ? (annualChange.min || 0) / 100 : annualChange.min || 0, 
+        upper: changeAmtOrPct === "percent" ? (annualChange.max || 0) / 100 : annualChange.max || 0 
+      }];
+    } else if (annualChange.type === "normal") {
+      changeDistribution = [{ 
+        type: "normal", 
+        mean: changeAmtOrPct === "percent" ? (annualChange.mean || 0) / 100 : annualChange.mean || 0, 
+        stdev: changeAmtOrPct === "percent" ? (annualChange.stdDev || 0) / 100 : annualChange.stdDev || 0 
+      }];
+    }
+    
     const eventData = {
       type: "income",
       name,
@@ -72,6 +96,8 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
       duration,
       initialAmount: Number(amount) || 0,
       annualChange,
+      changeAmtOrPct,
+      changeDistribution,
       inflationAdjusted,
       userPercentage,
       spousePercentage,
@@ -94,6 +120,7 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
     setStartYear({ type: "fixed", value: new Date().getFullYear() });
     setDuration({ type: "fixed", value: 1 });
     setAnnualChange({ type: "fixed", value: undefined });
+    setChangeAmtOrPct("amount");
   };
 
   return (
@@ -136,9 +163,6 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
                 case "fixed":
                   setAnnualChange({ type: "fixed", value: undefined });
                   break;
-                case "fixedPercent":
-                  setAnnualChange({ type: "fixedPercent", value: undefined });
-                  break;
                 case "uniform":
                   setAnnualChange({ type: "uniform", min: undefined, max: undefined });
                   break;
@@ -148,98 +172,168 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
               }
             }}
           >
-            <option value="fixed">Fixed Amount</option>
-            <option value="fixedPercent">Fixed Percentage</option>
+            <option value="fixed">Fixed</option>
             <option value="uniform">Uniform Distribution</option>
             <option value="normal">Normal Distribution</option>
           </Select>
         </FormControl>
         {annualChange.type === "fixed" && (
-          <FormControl isRequired>
-            <FormLabel>Annual Change ($)</FormLabel>
-            <InputGroup>
-              <InputLeftElement pointerEvents="none" color="gray.500" children="$" />
-            <Input
-              type="number"
-              value={annualChange.value ?? ""}
-              onChange={(e) =>
-                setAnnualChange({ type: "fixed", value: parseInt(e.target.value) })
-              }
-                placeholder="0"
-              min="0"
-              step="1"
-                pl={7}
-            />
-            </InputGroup>
-          </FormControl>
-        )}
-        {annualChange.type === "fixedPercent" && (
-          <FormControl isRequired>
-            <FormLabel>Annual Change (%)</FormLabel>
-            <Input
-              type="number"
-              value={annualChange.value ?? ""}
-              onChange={(e) =>
-                setAnnualChange({ type: "fixedPercent", value: parseInt(e.target.value) })
-              }
-              min="0"
-              step="1"
-            />
-          </FormControl>
+          <>
+            <FormControl>
+              <FormLabel>Change Type</FormLabel>
+              <HStack spacing={4}>
+                <Button
+                  size="sm"
+                  colorScheme={changeAmtOrPct === "amount" ? "blue" : "gray"}
+                  onClick={() => setChangeAmtOrPct("amount")}
+                >
+                  Amount ($)
+                </Button>
+                <Button
+                  size="sm"
+                  colorScheme={changeAmtOrPct === "percent" ? "blue" : "gray"}
+                  onClick={() => setChangeAmtOrPct("percent")}
+                >
+                  Percentage (%)
+                </Button>
+              </HStack>
+            </FormControl>
+            <FormControl isRequired>
+              <FormLabel>Annual Change {changeAmtOrPct === "amount" ? "($)" : "(%)"}</FormLabel>
+              <InputGroup>
+                {changeAmtOrPct === "amount" && (
+                  <InputLeftElement pointerEvents="none" color="gray.500" children="$" />
+                )}
+                <Input
+                  type="number"
+                  value={annualChange.value ?? ""}
+                  onChange={(e) =>
+                    setAnnualChange({ type: "fixed", value: parseInt(e.target.value) })
+                  }
+                  placeholder="0"
+                  min="0"
+                  step="1"
+                  pl={changeAmtOrPct === "amount" ? 7 : 4}
+                />
+              </InputGroup>
+            </FormControl>
+          </>
         )}
         {annualChange.type === "uniform" && (
           <Stack spacing={4}>
-            <FormControl isRequired>
-              <FormLabel>Minimum Change ($)</FormLabel>
-              <Input
-                type="number"
-                value={annualChange.min ?? ""}
-                onChange={(e) =>
-                  setAnnualChange({ ...annualChange, min: parseInt(e.target.value) })
-                }
-                min="0"
-                step="1"
-              />
+            <FormControl>
+              <FormLabel>Change Type</FormLabel>
+              <HStack spacing={4}>
+                <Button
+                  size="sm"
+                  colorScheme={changeAmtOrPct === "amount" ? "blue" : "gray"}
+                  onClick={() => setChangeAmtOrPct("amount")}
+                >
+                  Amount ($)
+                </Button>
+                <Button
+                  size="sm"
+                  colorScheme={changeAmtOrPct === "percent" ? "blue" : "gray"}
+                  onClick={() => setChangeAmtOrPct("percent")}
+                >
+                  Percentage (%)
+                </Button>
+              </HStack>
             </FormControl>
             <FormControl isRequired>
-              <FormLabel>Maximum Change ($)</FormLabel>
-              <Input
-                type="number"
-                value={annualChange.max ?? ""}
-                onChange={(e) =>
-                  setAnnualChange({ ...annualChange, max: parseInt(e.target.value) })
-                }
-                min="0"
-                step="1"
-              />
+              <FormLabel>Minimum Change {changeAmtOrPct === "amount" ? "($)" : "(%)"}</FormLabel>
+              <InputGroup>
+                {changeAmtOrPct === "amount" && (
+                  <InputLeftElement pointerEvents="none" color="gray.500" children="$" />
+                )}
+                <Input
+                  type="number"
+                  value={annualChange.min ?? ""}
+                  onChange={(e) =>
+                    setAnnualChange({ ...annualChange, min: parseInt(e.target.value) })
+                  }
+                  min="0"
+                  step="1"
+                  pl={changeAmtOrPct === "amount" ? 7 : 4}
+                />
+              </InputGroup>
+            </FormControl>
+            <FormControl isRequired>
+              <FormLabel>Maximum Change {changeAmtOrPct === "amount" ? "($)" : "(%)"}</FormLabel>
+              <InputGroup>
+                {changeAmtOrPct === "amount" && (
+                  <InputLeftElement pointerEvents="none" color="gray.500" children="$" />
+                )}
+                <Input
+                  type="number"
+                  value={annualChange.max ?? ""}
+                  onChange={(e) =>
+                    setAnnualChange({ ...annualChange, max: parseInt(e.target.value) })
+                  }
+                  min="0"
+                  step="1"
+                  pl={changeAmtOrPct === "amount" ? 7 : 4}
+                />
+              </InputGroup>
             </FormControl>
           </Stack>
         )}
         {annualChange.type === "normal" && (
           <Stack spacing={4}>
-            <FormControl isRequired>
-              <FormLabel>Mean Change ($)</FormLabel>
-              <Input
-                type="number"
-                value={annualChange.mean ?? ""}
-                onChange={(e) =>
-                  setAnnualChange({ ...annualChange, mean: parseInt(e.target.value) })
-                }
-                min="0"
-                step="1"
-              />
+            <FormControl>
+              <FormLabel>Change Type</FormLabel>
+              <HStack spacing={4}>
+                <Button
+                  size="sm"
+                  colorScheme={changeAmtOrPct === "amount" ? "blue" : "gray"}
+                  onClick={() => setChangeAmtOrPct("amount")}
+                >
+                  Amount ($)
+                </Button>
+                <Button
+                  size="sm"
+                  colorScheme={changeAmtOrPct === "percent" ? "blue" : "gray"}
+                  onClick={() => setChangeAmtOrPct("percent")}
+                >
+                  Percentage (%)
+                </Button>
+              </HStack>
             </FormControl>
             <FormControl isRequired>
-              <FormLabel>Standard Deviation ($)</FormLabel>
-              <Input
-                type="number"
-                value={annualChange.stdDev ?? ""}
-                onChange={(e) =>
-                  setAnnualChange({ ...annualChange, stdDev: parseInt(e.target.value) })
-                }
-                min="0"
-                step="1"
-              />
+              <FormLabel>Mean Change {changeAmtOrPct === "amount" ? "($)" : "(%)"}</FormLabel>
+              <InputGroup>
+                {changeAmtOrPct === "amount" && (
+                  <InputLeftElement pointerEvents="none" color="gray.500" children="$" />
+                )}
+                <Input
+                  type="number"
+                  value={annualChange.mean ?? ""}
+                  onChange={(e) =>
+                    setAnnualChange({ ...annualChange, mean: parseInt(e.target.value) })
+                  }
+                  min="0"
+                  step="1"
+                  pl={changeAmtOrPct === "amount" ? 7 : 4}
+                />
+              </InputGroup>
+            </FormControl>
+            <FormControl isRequired>
+              <FormLabel>Standard Deviation {changeAmtOrPct === "amount" ? "($)" : "(%)"}</FormLabel>
+              <InputGroup>
+                {changeAmtOrPct === "amount" && (
+                  <InputLeftElement pointerEvents="none" color="gray.500" children="$" />
+                )}
+                <Input
+                  type="number"
+                  value={annualChange.stdDev ?? ""}
+                  onChange={(e) =>
+                    setAnnualChange({ ...annualChange, stdDev: parseInt(e.target.value) })
+                  }
+                  min="0"
+                  step="1"
+                  pl={changeAmtOrPct === "amount" ? 7 : 4}
+                />
+              </InputGroup>
             </FormControl>
           </Stack>
         )}
