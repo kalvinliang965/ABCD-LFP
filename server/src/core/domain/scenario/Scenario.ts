@@ -24,6 +24,7 @@ import { AccountManager, create_account_manager } from "../AccountManager";
 import { AccountMap } from "../AccountManager";
 import { create_investment_type_manager, InvestmentTypeManager } from "../InvestmentTypeManager";
 import { dev } from "../../../config/environment";
+import { create_event_manager, EventManager } from "../EventManager";
 
 function parse_birth_years(birthYears: Array<number>): Array<number> {
   if (birthYears.length > 2 || birthYears.length == 0) {
@@ -142,10 +143,7 @@ export interface Scenario {
   user_life_expectancy: number;
   spouse_life_expectancy?: number;
   investment_type_manager: InvestmentTypeManager;
-  //! chen changed the type from any to Event[]
-  event_series: Array<Event>;
-  mandatory_expenses: Array<SpendingEvent>;
-  discretionary_expenses: Array<SpendingEvent>;
+  event_manager: EventManager;
   inflation_assumption: ValueGenerator;
   after_tax_contribution_limit: number;
   spending_strategy: Array<string>;
@@ -168,16 +166,7 @@ export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenar
     const [user_birth_year, spouse_birth_year] = parse_birth_years(
       scenario_raw.birthYears
     );
-    const [user_life_expectancy, spouse_life_expectancy] =
-      parse_life_expectancy(scenario_raw.lifeExpectancy);
-
-
-    const events = parse_events(scenario_raw.eventSeries);
-    const mandatory_expenses = get_mandatory_expenses(events);
-    const discretionary_expenses = get_sorted_discretionary_expenses(
-      events,
-      scenario_raw.spendingStrategy
-    );
+    const [user_life_expectancy, spouse_life_expectancy] = parse_life_expectancy(scenario_raw.lifeExpectancy);
 
     const inflation_assumption: ValueGenerator = parse_inflation_assumption(
       scenario_raw.inflationAssumption
@@ -196,7 +185,7 @@ export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenar
     const financialGoal: number = scenario_raw.financialGoal;
     const residenceState: StateType = parse_state_type(scenario_raw.residenceState);
 
-
+    const event_manager = create_event_manager(scenario_raw.eventSeries);
     const investment_type_manager = create_investment_type_manager(scenario_raw.investmentTypes);
     const account_manager = create_account_manager(scenario_raw.investments);
 
@@ -214,6 +203,7 @@ export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenar
     }
 
     return {
+      event_manager,
       account_manager,
       investment_type_manager,
       name: scenario_raw.name,
@@ -222,9 +212,6 @@ export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenar
       spouse_birth_year,
       user_life_expectancy,
       spouse_life_expectancy,
-      event_series: events,
-      mandatory_expenses,
-      discretionary_expenses,
       inflation_assumption,
       after_tax_contribution_limit,
       spending_strategy,

@@ -1,9 +1,9 @@
-import { create_expense_event_raw } from "../../raw/event_raw/expense_event_raw";
-import { detect_event_cycle } from "../../EventManager";
-import { EventUnionRaw } from "../../raw/event_raw/event_raw";
+import { create_expense_event_raw, streaming_services_expense_one } from "../../raw/event_raw/expense_event_raw";
+import { create_event_manager, detect_event_cycle } from "../../EventManager";
+import { EventUnionRaw, salary_income_one } from "../../raw/event_raw/event_raw";
 
 
-const createMockEvent = (
+const create_mock_event = (
     name: string, 
     dependency_type: "startWith" | "endWith" | "none",
     target_event?:string
@@ -31,55 +31,68 @@ const createMockEvent = (
 }
 describe("EventManager", () => {
 
+    describe("clone", () => {
+        it('should create independent copy', () => {
+            const events = new Set<EventUnionRaw>([
+                salary_income_one,
+            ])
+            const original = create_event_manager(events);
+            const cloned = original.clone();
+            cloned._income_event.clear();
+            expect(original._income_event.size).not.toBe(0);
+        });
+        
+    });
+
     describe("cycle", () => {
         it("should detect cycle", () => {
             const events = new Set<EventUnionRaw>([
-                createMockEvent("A", "startWith", "B"),
-                createMockEvent("B", "startWith", "A"),
+                create_mock_event("A", "startWith", "B"),
+                create_mock_event("B", "startWith", "A"),
             ])
             expect(detect_event_cycle(events)).toBe(true)
         });
 
         it('should detect indirect cycle', () => {
             const events = new Set<EventUnionRaw>([
-            createMockEvent('A', 'startWith', 'B'),
-            createMockEvent('B', 'startWith', 'C'),
-            createMockEvent('C', 'startWith', 'A')
+            create_mock_event('A', 'startWith', 'B'),
+            create_mock_event('B', 'startWith', 'C'),
+            create_mock_event('C', 'startWith', 'A')
             ]);
             expect(detect_event_cycle(events)).toBe(true);
         });
         
         it('should return false for no cycle', () => {
             const events = new Set<EventUnionRaw>([
-                createMockEvent('A', 'startWith', 'B'),
-                createMockEvent('B', 'none'),
-                createMockEvent('C', 'endWith', 'B')
+                create_mock_event('A', 'startWith', 'B'),
+                create_mock_event('B', 'none'),
+                create_mock_event('C', 'endWith', 'B')
             ]);
             expect(detect_event_cycle(events)).toBe(false);
         });
 
         it('should handle single node', () => {
             const events = new Set<EventUnionRaw>([
-                createMockEvent('A', 'none')
+                create_mock_event('A', 'none')
             ]);
             expect(detect_event_cycle(events)).toBe(false);
         });
         
         it('should throw on invalid dependency', () => {
             const events = new Set<EventUnionRaw>([
-            createMockEvent('A', 'startWith', 'B'),
-            createMockEvent('C', 'none')
+            create_mock_event('A', 'startWith', 'B'),
+            create_mock_event('C', 'none')
             ]);
             expect(() => detect_event_cycle(events)).toThrow('Target event B not found');
         });
         
         it('should handle complex non-cyclic graph', () => {
             const events = new Set<EventUnionRaw>([
-                createMockEvent('A', 'startWith', 'B'),
-                createMockEvent('B', 'startWith', 'C'),
-                createMockEvent('C', 'endWith', 'D'),
-                createMockEvent('D', 'none'),
-                createMockEvent('E', 'endWith', 'D')
+                create_mock_event('A', 'startWith', 'B'),
+                create_mock_event('B', 'startWith', 'C'),
+                create_mock_event('C', 'endWith', 'D'),
+                create_mock_event('D', 'none'),
+                create_mock_event('E', 'endWith', 'D')
             ]);
             expect(detect_event_cycle(events)).toBe(false);
         });

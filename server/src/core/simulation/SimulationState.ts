@@ -14,6 +14,7 @@ import { create_yearly_records } from "./YearlyTaxRecords";
 import { AccountManager } from "../domain/AccountManager";
 import { InvestmentTypeManager } from "../domain/InvestmentTypeManager";
 import { State } from "js-yaml";
+import { EventManager } from "../domain/EventManager";
 export type EventMap = Map<string, Event>;
 
 export interface PersonDetails {
@@ -23,7 +24,6 @@ export interface PersonDetails {
 }
 
 export interface SimulationState {
-  events: Array<Event>;
   inflation_factor: number;
   roth_conversion_opt: boolean;
   roth_conversion_start: number;
@@ -48,28 +48,21 @@ export interface SimulationState {
   federal_tax_service: FederalTaxService;
   state_tax_service: StateTaxService;
   advance_year(): void;
-  account_manager: AccountManager,
-  events_by_type: {
-    income: EventMap;
-    expense: EventMap;
-    invest: EventMap;
-    rebalance: EventMap;
-  };
   spending_strategy: Array<string>;
   expense_withrawal_strategy: Array<string>;
   process_events(): void;
-  mandatory_expenses: SpendingEvent[];
-  discretionary_expenses: SpendingEvent[];
   investment_type_manager: InvestmentTypeManager
+  event_manager: EventManager,
+  account_manager: AccountManager,
 }
 
 
-//更新所有Expense的amount
-function update_all_expenses(state: SimulationState): void {
-  for (const expense of state.discretionary_expenses) {
-    update_expense_amount(expense, state.get_current_year(), state.inflation_factor);
-  }
-}
+// //更新所有Expense的amount
+// function update_all_expenses(state: SimulationState): void {
+//   for (const expense of state.discretionary_expenses) {
+//     update_expense_amount(expense, state.get_current_year(), state.inflation_factor);
+//   }
+// }
 
 //更新mandatory和discretionary
 
@@ -136,9 +129,6 @@ export async function create_simulation_state(
     // "dummy node"
     yearly_records.initialize_record(previous_year);
 
-    // Organize events by type - scenario.eventSeries is already processed in create_scenario
-    const [income_events, expense_events, investment_events, rebalance_events] =
-      organize_events_by_type(scenario.event_series);
     let inflation_factor = scenario.inflation_assumption.sample();
 
     // Create person details
@@ -157,22 +147,24 @@ export async function create_simulation_state(
     let early_withdrawal_penalty = 0;
     // Create the simulation state object
     // clone to prevent refetching from database
+    
+    // manager
+    const event_manager = scenario.event_manager.clone();
+    const account_manager = scenario.account_manager.clone();
     const investment_type_manager = scenario.investment_type_manager.clone();
+
+    // service
     const cloned_federal_tax_service = federal_tax_service.clone();
     const cloned_state_tax_service = state_tax_service.clone();
     // Account and event organization
-    const account_manager = scenario.account_manager.clone();
 
     const state: SimulationState = {
-      events: scenario.event_series,
       inflation_factor,
       roth_conversion_opt: scenario.roth_conversion_opt,
       roth_conversion_start: scenario.roth_conversion_start,
       roth_conversion_end: scenario.roth_conversion_end,
       spending_strategy: scenario.spending_strategy,
       expense_withrawal_strategy: scenario.expense_withrawal_strategy,
-      mandatory_expenses: scenario.mandatory_expenses,
-      discretionary_expenses: scenario.discretionary_expenses,
       roth_conversion_strategy: scenario.roth_conversion_strategy,
       user,
       spouse,
@@ -267,16 +259,12 @@ export async function create_simulation_state(
           tax_filing_status = TaxFilingStatus.SINGLE;
         }
       }, 
-      events_by_type: {
-        income: income_events,
-        expense: expense_events,
-        invest: investment_events,
-        rebalance: rebalance_events,
-      },
+      event_manager,
       investment_type_manager,
+      account_manager,
+      
       federal_tax_service: cloned_federal_tax_service,
       state_tax_service: cloned_state_tax_service,
-      account_manager,
     };
 
     return state;

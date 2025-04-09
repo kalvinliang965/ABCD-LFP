@@ -1,3 +1,4 @@
+import { Cloneable } from "../../../utils/helper";
 import  {create_value_generator,  ValueGenerator } from "../../../utils/math/ValueGenerator";
 import { ChangeType, DistributionType, StatisticType } from "../../Enums";
 import { EventRaw } from "../raw/event_raw/event_raw";
@@ -198,7 +199,7 @@ function parse_expected_annual_change(
   }
 }
 
-interface Event {
+interface Event extends Cloneable<Event> {
   name: string;
   start: number;
   duration: number;

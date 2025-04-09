@@ -6,6 +6,10 @@ import create_rebalance_event, { RebalanceEvent } from "./event/RebalanceEvent";
 import { InvestEvent } from "./event/InvestEvent";
 import { dev } from "../../config/environment";
 import { simulation_logger } from "../../utils/logger/logger";
+import exp from "constants";
+import { EventUnion } from "./event/Event";
+import { clone_map } from "../../utils/helper";
+import { Investment } from "../../db/models/investments";
 
 export type InvestEventMap = Map<string, InvestEvent>;
 export type IncomeEventMap = Map<string, IncomeEvent>;
@@ -41,11 +45,36 @@ function parse_events(
 }
 
 export interface EventManager {
-
+    print: () => void;
+    clone: () => EventManager;
+    _income_event: IncomeEventMap,
+    _expense_event: ExpenseEventMap,
+    _invest_event: InvestEventMap,
+    _rebalance_event: RebalanceEventMap,
 }
 
+function create_event_manager_clone(
+    income_event: IncomeEventMap,
+    expense_event: ExpenseEventMap,
+    invest_event: InvestEventMap,
+    rebalance_event: RebalanceEventMap,
+): EventManager {
 
-export function create_event_manager(event_series: Set<EventUnionRaw>) {
+    return {
+        _income_event: income_event,
+        _expense_event: expense_event,
+        _invest_event: invest_event,
+        _rebalance_event: rebalance_event,
+        print: () => console.log("Hello"),
+        clone: () => create_event_manager_clone(
+            clone_map(income_event),
+            clone_map(expense_event),
+            clone_map(invest_event),
+            clone_map(rebalance_event),
+        )
+    }
+}
+export function create_event_manager(event_series: Set<EventUnionRaw>): EventManager {
 
     try {
         // Sanity Check
@@ -61,6 +90,7 @@ export function create_event_manager(event_series: Set<EventUnionRaw>) {
         }
         const [income_event, expense_event, invest_event, rebalance_event] = parse_events(event_series);
         simulation_logger.info("Successfully created event manager");
+        return create_event_manager_clone(income_event, expense_event, invest_event, rebalance_event);
     } catch(error) {
         simulation_logger.error("Failed to create the event manager", {
             error: error instanceof Error? error.stack: error,

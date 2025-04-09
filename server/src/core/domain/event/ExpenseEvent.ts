@@ -1,3 +1,4 @@
+import { Cloneable } from "../../../utils/helper";
 import { ValueGenerator } from "../../../utils/math/ValueGenerator";
 import { ChangeType } from "../../Enums";
 import { ExpenseEventRaw } from "../raw/event_raw/expense_event_raw";
@@ -9,7 +10,7 @@ import {
   parse_expected_annual_change,
 } from "./Event";
 
-export interface ExpenseEvent extends Event {
+export interface ExpenseEvent extends Event, Cloneable<ExpenseEvent> {
   initial_amount: number;
   change_type: ChangeType;
   expected_annual_change: ValueGenerator;

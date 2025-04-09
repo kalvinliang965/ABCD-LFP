@@ -1,7 +1,8 @@
+import { Cloneable } from "../../../utils/helper";
 import { RebalanceEventRaw } from "../raw/event_raw/rebalance_event_raw";
 import { Event, parse_duration, parse_start_year } from "./Event";
 
-export interface RebalanceEvent extends Event {
+export interface RebalanceEvent extends Event, Cloneable<RebalanceEvent> {
   asset_allocation: Map<string, number>;
   clone(): RebalanceEvent;
 }

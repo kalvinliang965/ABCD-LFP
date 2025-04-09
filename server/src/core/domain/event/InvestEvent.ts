@@ -1,7 +1,8 @@
 import { InvestEventRaw } from "../raw/event_raw/investment_event_raw";
 import { Event, parse_duration, parse_start_year } from "./Event";
+import { Cloneable } from "../../../utils/helper";
 
-export interface InvestEvent extends Event {
+export interface InvestEvent extends Event, Cloneable<InvestEvent> {
   max_cash: number;
   asset_allocation: Map<string, number>;
   asset_allocation2: Map<string, number>;
