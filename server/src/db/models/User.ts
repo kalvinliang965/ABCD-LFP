@@ -49,7 +49,7 @@ const UserSchema = new Schema({
     required: function(this: any): boolean {
       return !this.googleId; // Password required only if not using Google auth
     },
-    minlength: 6
+    minlength: 1
   },
   googleId: {
     type: String,
@@ -102,23 +102,23 @@ const UserSchema = new Schema({
 
 // Hash password before saving
 UserSchema.pre('save', async function(next) {
-  const user = this;
-  
-  // Only hash the password if it's modified or new
-  if (!user.isModified('password')) return next();
+  // Only hash the password if it has been modified (or is new)
+  if (!this.isModified('password')) return next();
   
   try {
     // Check if password exists
-    if (!user.password) {
+    if (!this.password) {
       return next(new Error('Password is required'));
     }
     
+    // Generate a salt
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(user.password, salt);
-    user.password = hashedPassword;
+    // Hash the password along with the new salt
+    const hashedPassword = await bcrypt.hash(this.password, salt);
+    this.password = hashedPassword;
     next();
   } catch (error) {
-    next(error as mongoose.CallbackError);
+    next(error as Error);
   }
 });
 

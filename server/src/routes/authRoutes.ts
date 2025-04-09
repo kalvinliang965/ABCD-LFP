@@ -1,8 +1,13 @@
 import express from "express";
 import passport from "passport";
 import { client_confg } from "../config/client";
+import { login, signup } from '../controllers/authController';
 
 const router = express.Router();
+
+// Add traditional login/signup routes
+router.post('/login', login);
+router.post('/signup', signup);
 
 // Google OAuth login route
 router.get(
@@ -26,12 +31,17 @@ router.get(
 
 // Logout route
 router.get("/logout", (req, res) => {
-  req.logout((err) => {
-    if (err) {
-      return res.status(500).json({ error: "Logout failed" });
-    }
-    res.status(200).json({ message: "Logged out successfully" });
-  });
+  if (req.logout) {
+    req.logout((err) => {
+      if (err) {
+        console.error('Error during logout:', err);
+        return res.status(500).json({ error: 'Logout failed' });
+      }
+      res.redirect('/');
+    });
+  } else {
+    res.redirect('/');
+  }
 });
 
 // Check if user is authenticated

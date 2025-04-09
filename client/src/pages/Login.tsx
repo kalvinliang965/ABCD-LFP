@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./Login.css";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { FaGoogle } from "react-icons/fa"; // 导入Google图标
 import { Box, Button, Center, Container, Heading, Text, VStack, useColorModeValue } from '@chakra-ui/react';
@@ -82,19 +82,55 @@ const Login: React.FC = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post(`${appConfig.api.baseURL}/api/login}`, {
-        username: email,
+      console.log("Attempting login with:", { email }); // Log the attempt
+      
+      const response = await axios.post(`${appConfig.api.baseURL}/auth/login`, {
+        email,
         password,
+      }, {
+        withCredentials: true // Add this line
       });
 
       if (response.data.success) {
-        // 使用 React Router 的导航方法
-        navigate("/dashboard");
+        localStorage.setItem('token', response.data.token);
+        navigate(response.data.redirectUrl || "/dashboard");
       } else {
-        console.error("登录失败");
+        console.error("Login failed");
       }
     } catch (error) {
-      console.error("发生错误:", error);
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message || "Login failed.";
+        alert(message);
+      } else {
+        // fallback for unexpected errors
+        alert("An unexpected error occurred.");
+      }
+    }
+  };
+
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    const username = (e.currentTarget.elements.namedItem('register-username') as HTMLInputElement).value;
+    const email = (e.currentTarget.elements.namedItem('register-email') as HTMLInputElement).value;
+    const password = (e.currentTarget.elements.namedItem('register-password') as HTMLInputElement).value;
+    
+    try {
+      const response = await axios.post(`${appConfig.api.baseURL}/auth/signup`, {
+        name: username,
+        email,
+        password
+      });
+      
+      if (response.data.success) {
+        localStorage.setItem('token', response.data.token);
+        
+        navigate(response.data.redirectUrl || "/dashboard");
+      } else {
+        console.error("Signup failed");
+      }
+    } catch (error) {
+      console.error("Error:", error);
     }
   };
 
@@ -165,7 +201,7 @@ const Login: React.FC = () => {
       </div>
 
       <div className="container b-container" id="b-container">
-        <form className="form" id="b-form" autoComplete="off">
+        <form className="form" id="b-form" onSubmit={handleSignup} autoComplete="off">
           <h2 className="form_title title">Create Account</h2>
 
           <span className="form_span">Use email for registration</span>

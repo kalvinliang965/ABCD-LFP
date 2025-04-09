@@ -378,14 +378,12 @@ function NewScenarioPage() {
       const yaml = convert_scenario_to_yaml(scenarioRaw);
       const savedScenario = await scenarioApi.create(yaml); // 这里需要修改，因为scenarioRaw是一个ScenarioRaw对象，而scenarioApi.create需要一个string。
       console.log("Scenario saved to backend:", savedScenario);
- 
-      console.log("Scenario saved to backend:", savedScenario);
+
       // Clean investment type data from localStorage
       investmentTypeStorage.clear();
     //need to check what is the correct way to clear the local storage
       clearLocalStorage();
       // Show success toast and navigate to scenarios page
-      console.log("Showing success toast...");
       toast({
         title: "Scenario Created",
         description: "Your scenario has been created successfully.",

@@ -62,4 +62,6 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
     console.error('Auth middleware error:', error);
     res.status(401).json({ message: 'Not authorized, token failed' });
   }
-}; 
+};
+
+export const authenticateJWT = protect; 

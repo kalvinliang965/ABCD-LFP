@@ -1,24 +1,30 @@
 import express from "express";
 import User from "../db/models/User";
-import { 
-  getUserProfile, 
-  updateUserProfile, 
-  registerUser, 
-  loginUser 
-} from '../controllers/user.controller';
+// import { 
+//   getUserProfile, 
+//   updateUserProfile, 
+//   registerUser, 
+//   loginUser 
+// } from '../controllers/user.controller';
 import { protect } from '../middleware/auth.middleware';
 import mongoose from 'mongoose';
 import { Request, Response } from 'express';
+import { getCurrentUser, changePassword, getUserProfile, updateUserProfile, signup, 
+  loginUser  } from '../controllers/authController';
+import { authenticateJWT } from '../middleware/auth.middleware';
 
 const router = express.Router();
 
 // Public routes
-router.post('/register', registerUser);
+router.post('/register', signup);
 router.post('/login', loginUser);
 
 // Protected routes
-router.get('/profile', protect, getUserProfile);
-router.put('/profile', protect, updateUserProfile);
+router.use(authenticateJWT);
+
+router.get('/me', getCurrentUser);
+router.put('/profile', updateUserProfile);
+router.post('/change-password', changePassword);
 
 // Get current user
 router.get("/api/current_user", (req, res) => {
