@@ -7,6 +7,7 @@ import { StandardDeduction, create_standard_deductions } from "../core/tax/Stand
 import { save_bracket } from "../db/repositories/TaxBracketRepository";
 import { save_standard_deduction } from "../db/repositories/StandardDeductionRepository";
 
+import { tax_logger } from "../utils/logger/logger";
 
 const SINGLE_TABLE: number = 0;
 const MARRIED_TABLE: number = 1;

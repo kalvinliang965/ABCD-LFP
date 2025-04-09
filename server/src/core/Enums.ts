@@ -1,9 +1,9 @@
 
 export function parse_taxpayer_type(type: string) {
     switch(type) {
-        case "SINGLE":
+        case "individual":
             return TaxFilingStatus.SINGLE;
-        case "MARRIED":
+        case "couple":
             return TaxFilingStatus.MARRIED;
         default:
             console.error("Invalid tax payer type");
@@ -11,8 +11,8 @@ export function parse_taxpayer_type(type: string) {
     }
 }
 export enum TaxFilingStatus {
-    SINGLE = "SINGLE",
-    MARRIED = "MARRIED",
+    SINGLE = "individual",
+    MARRIED = "couple",
 }
 
 export const enum IncomeType {

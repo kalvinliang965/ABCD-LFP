@@ -1,6 +1,8 @@
 import path from 'path';
 import winston from 'winston';
 import fs from "fs";
+import { debug } from 'console';
+import { dev } from '../../config/environment';
 
 // create logs folder
 const project_root = path.join(__dirname, `../../../`);
@@ -35,25 +37,47 @@ export const route_logger = winston.createLogger({
 });
 
 export const simulation_logger = winston.createLogger({
-  level: 'debug', 
+  level: dev.is_dev?'debug': "info",
   format: winston.format.combine(
     base_format,
     winston.format.label({ label: 'SIMULATION' }),
-    winston.format.prettyPrint(),
+    winston.format.json(),
   ),
   transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: path.join(__dirname, 'logs', generate_filename("simulation"))}),
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.printf(({ level, message, timestamp, label }) => {
+          return `[${label}] ${timestamp} ${level}: ${message}`;
+        })
+      )
+    }),
+    new winston.transports.File({ 
+      filename: path.join(logsDir, generate_filename("simulation")),
+      level: dev.is_dev?'debug': "info",
+    }),
   ],
 });
 
 export const tax_logger = winston.createLogger({
-  level: 'info',
+  level: dev.is_dev?'debug': "info",
   format: winston.format.combine(
     base_format,
     winston.format.label({ label: 'TAX' }),
+    winston.format.json(),
   ),
   transports: [
-    new winston.transports.Console(),
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.printf(({ level, message, timestamp, label }) => {
+          return `[${label}] ${timestamp} ${level}: ${message}`;
+        })
+      ),
+    }),
+    new winston.transports.File({
+      filename: path.join(logsDir, generate_filename("tax")),
+      level: dev.is_dev? "debug": "info",
+    })
   ],
 });

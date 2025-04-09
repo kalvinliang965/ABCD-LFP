@@ -1,35 +1,65 @@
 import express from "express";
 import "./config/environment"; // load environment variables
-import { registerGlobalMiddleWare, sessionStore } from "./middleware";
+import { initialize_middlewares, sessionStore } from "./middleware";
 import { connect_database, disconnect_database } from "./db/connections";
 import { api_config } from "./config/api";
-import eventSeriesRoutes from "./routes/eventSeriesRoutes";
-import investmentRoutes from "./routes/investmentRoutes";
-
-import passport from "passport";
-import userRoutes from "./routes/userRoutes";
-import authRoutes from "./routes/authRoutes";
-import "./auth/passport"; // Import passport configuration
-import investmentTypeRoutes from "./routes/InvestmentType.routes";
-import scenarioRoutes from "./routes/scenarioRoutes";
 import { simulation_engine_demo } from "./demos/demo";
+import { Server } from "http";
+import { initialize_route as initialize_routes } from "./routes";
+
+
+// Graceful shutdown
+async function initialize_graceful_shutdown(
+  server: Server,
+) {
+    const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
+
+    signals.forEach(signal => {
+      process.on(signal, async() => {
+        console.log(`Recieved ${signal} shutting down...`);
+        try {
+          await disconnect_database();
+          await new Promise(resolve => server.close(resolve));
+
+          console.log("Graceful shutdown complete");
+          process.exit(0);
+        } catch (error) {
+          console.log("Error during termiantion: ", error);
+          process.exit(1); // exit with error
+        }
+      })
+    })
+}
+
 const port = api_config.PORT;
 const app = express();
 
-// Register middleware
-registerGlobalMiddleWare(app);
+async function initialize_application() {
+  // Register middleware
+  initialize_middlewares(app)
+  initialize_routes(app)
+  await connect_database();
 
-// Initialize Passport
-app.use(passport.initialize());
-app.use(passport.session());
+  // run demo code below
+  await simulation_engine_demo();
+}
 
-// Register routes
-app.use("/api/eventSeries", eventSeriesRoutes);
-app.use("/api/investments", investmentRoutes);
-app.use("/api/investmentTypes", investmentTypeRoutes);
-app.use("/api/users", userRoutes);
-app.use("/auth", authRoutes);
-app.use("/api/scenarios", scenarioRoutes);
+function start_server() {
+  // Start server
+  const server = app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+  initialize_graceful_shutdown(server);
+}
+
+initialize_application()
+  .then(start_server)
+  .catch(error => {
+    console.error("Failed to initialize application:", error);
+    process.exit(1);
+  })
+
+
 
 // // Add a specific route for YAML files
 // app.post('/api/yaml', async (req, res) => {
@@ -97,63 +127,8 @@ app.use("/api/scenarios", scenarioRoutes);
 //   }
 // });
 
-// Basic health check route
-app.get("/", (req, res) => {
-  res.json({ status: "ok", message: "Server is running" });
-});
 
-// 登录路由
-app.post("/api/login", (req, res) => {
-  const { username, password } = req.body;
-  console.log("收到登录请求:", { username, password }); // 添加日志
 
-  // 这里暂时跳过验证逻辑
-  // 直接返回成功响应
-  res.json({
-    success: true,
-    message: "登录成功",
-    redirectUrl: "/dashboard", // 前端将使用这个URL进行重定向
-  });
-});
-
-// Start server
-const server = app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
-//KEEP FOR KATE THIS
-// // Connect to database and handle shutdown
-connect_database().catch((error) => {
-  console.error("Failed to connect to database:", error);
-  process.exit(1);
-});
-
-// Graceful shutdown
-async function terminate() {
-  try {
-    console.log("Terminating server...");
-
-    // // sessionStore
-    // if (sessionStore) {
-    //     console.log("Closing session store...");
-    //     sessionStore.close();
-    // }
-
-    await disconnect_database();
-    console.log("Server terminated successfully");
-    // exit process if not in test environment
-    if (process.env.NODE_ENV !== "test") {
-      process.exit(0); // exit gracefully
-    }
-
-    await new Promise((resolve) => server.close(resolve));
-  } catch (error) {
-    console.log("Error during termiantion: ", error);
-    process.exit(1); // exit with error
-  }
-}
-
-process.on("SIGINT", terminate);
-process.on("SIGTERM", terminate);
 
 // // Add this near the end of your file, before scrapping_demo()
 // function testRMDScraper() {
@@ -165,7 +140,3 @@ process.on("SIGTERM", terminate);
 //   console.log("--- End RMD Scraper Test ---\n");
 // }
 
-// // Call this function before or after scrapping_demo()
-// testRMDScraper();
-
-// simulation_engine_demo();

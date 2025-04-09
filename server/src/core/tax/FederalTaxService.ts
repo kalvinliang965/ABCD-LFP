@@ -10,55 +10,85 @@ import { load_capital_gains_brackets, load_taxable_income_brackets } from "../..
 import { load_standard_deduction } from "../../db/repositories/StandardDeductionRepository";
 import { IncomeType, TaxFilingStatus } from "../Enums";
 import { tax_config } from "../../config/tax";
-    
+ 
+import { tax_logger } from "../../utils/logger/logger";
+
 async function initialize_taxable_income_bracket(): Promise<TaxBrackets> {
     try {
+        tax_logger.debug("Loading taxable income brackets from database...");
         const taxable_income_bracket_list = await load_taxable_income_brackets(); 
         if (taxable_income_bracket_list.length) {
+            tax_logger.debug("Successfully loaded taxable income brackets from database");
             const gains = create_tax_brackets();
             taxable_income_bracket_list.forEach((ti) => {
                 const { min, max, rate, income_type, taxpayer_type } = ti;
                 if (income_type != IncomeType.TAXABLE_INCOME) {
-                    console.error("initialize_taxable_income_bracket() loadded wrong data");
+                    tax_logger.error(
+                        "initialize_taxable_income_bracket() loadded wrong data",
+                        {
+                            expect: IncomeType.TAXABLE_INCOME,
+                            actual: income_type,
+                            taxpayer_type,
+                        }
+                    );
                     process.exit(1);
                 }
                 gains.add_bracket(min, max, rate, taxpayer_type);
             })
             return gains;
         }
+        tax_logger.info("No local taxable income brackets found, fetching from remote API....");
         const gains = await fetch_and_parse_taxable_income(tax_config.FEDERAL_TAX_URL);
+        tax_logger.info("Successfully fetched taxable income brackets from remote API");
         return gains;
     } catch (error) {
+        tax_logger.error("Failed to initialize taxable income brackets", {
+            error: error instanceof Error? error.stack: error
+        });
         throw new Error(`Error in initializing taxable income bracket ${error}`);
     }
 }
 
 async function initialize_capital_gains_bracket(): Promise<TaxBrackets> {
     try {
+        tax_logger.debug("Loading capital gains brackets from database...");
         const capital_gains_bracket_list = await load_capital_gains_brackets(); 
         if (capital_gains_bracket_list.length) {
+            tax_logger.debug("Successfully loaded capital gains brackets from database");
             const gains = create_tax_brackets();
             capital_gains_bracket_list.forEach((cg) => {
                 const { min, max, rate, income_type, taxpayer_type } = cg;
                 if (income_type != IncomeType.CAPITAL_GAINS) {
-                    console.error("initialize_capital_gains_bracket() loadded wrong data");
+                    tax_logger.error(
+                        "initialize_capital_gains_bracket() loadded wrong data", {
+                            expect: IncomeType.CAPITAL_GAINS,
+                            actual: income_type,
+                            taxpayer_type,
+                        });
                     process.exit(1);
                 }
                 gains.add_bracket(min, max, rate, taxpayer_type);
             })
             return gains;
         }
+        tax_logger.info("No local capital gains brackets found, fetching from remote API...");
         const gains = await fetch_and_parse_capital_gains(tax_config.CAPITAL_GAINS_URL);
+        tax_logger.info("Successfully fetched capital gains brackets from remote API");
         return gains;
     } catch (error) {
+        tax_logger.error("Failed to initialize capital gains brackets", {
+            error: error instanceof Error? error.stack: error,
+        });
         throw new Error(`Error in initializing capital gains bracket ${error}`);
     }
 }
 
 async function initialize_standard_deductions_info(): Promise<StandardDeduction> {
     try {
+        tax_logger.debug("Loading standard deduction info");
         const standard_deduction_list = await load_standard_deduction();
         if (standard_deduction_list.length > 0) {
+            tax_logger.debug("Successfully loaded standard deduction info from database");
             const deductions = create_standard_deductions();
             standard_deduction_list.forEach((deduction) => {
                 const { amount, taxpayer_type }  = deduction;
@@ -66,10 +96,14 @@ async function initialize_standard_deductions_info(): Promise<StandardDeduction>
             });
             return deductions;
         }
-        //console.log("standard deduction is not in database");
+        tax_logger.info("No local standard deduction info found, fetching from remote API....");
         const deductions = await fetch_and_parse_standard_deduction(tax_config.STD_DEDUCTION_URL);
+        tax_logger.info("Successfully fetched standard deduction info from remote API");
         return deductions;
     } catch (error) {
+        tax_logger.error("Failed to initialize capital gains brackets", {
+            error: error instanceof Error? error.stack: error,
+        });
         throw new Error("Error in initializing standard deductions info");
     }
 }
@@ -91,7 +125,7 @@ export function create_federal_service_wo(
     standard_deductions: StandardDeduction
 ): FederalTaxService {
 
-        //console.log("Federal Tax data successfully initialize");
+        // these are for debugging purposes
         const print_taxable_income_bracket = () =>  {
             console.log("TAXABLE INCOME BRACKETS!!!");
             console.log(taxable_income_bracket.to_string());
@@ -167,9 +201,16 @@ export function create_federal_service_wo(
 }
 
 export async function create_federal_tax_service() : Promise<FederalTaxService> {
-    try {        
+    try { 
+        tax_logger.debug("Initializing federal tax data...");
+        
+        tax_logger.debug("scraping taxable income bracket...");
         const taxable_income_bracket = await initialize_taxable_income_bracket();
+
+        tax_logger.debug("scraping capital gains bracket..");
         const capital_gains_bracket = await initialize_capital_gains_bracket();
+
+        tax_logger.debug("scraping standard deduction...");
         const standard_deductions = await initialize_standard_deductions_info();
         return create_federal_service_wo(taxable_income_bracket, capital_gains_bracket, standard_deductions);
     } catch (error) {

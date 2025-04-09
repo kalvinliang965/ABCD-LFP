@@ -26,92 +26,92 @@ tax_brackets:
   - min: 0
     max: 8500
     rate: 0.04
-    taxpayer_type: "SINGLE"
+    taxpayer_type: "individual"
       
   - min: 8501
     max: 11700
     rate: 0.045
-    taxpayer_type: "SINGLE"
+    taxpayer_type: "individual"
       
   - min: 11701
     max: 13900
     rate: 0.0525
-    taxpayer_type: "SINGLE"
+    taxpayer_type: "individual"
   
   - min: 13901
     max: 80650
     rate: 0.0585
-    taxpayer_type: "SINGLE"
+    taxpayer_type: "individual"
   
   - min: 80651
     max: 215400
     rate: 0.0625
-    taxpayer_type: "SINGLE"
+    taxpayer_type: "individual"
   
   - min: 215401
     max: 1077550
     rate: 0.0685
-    taxpayer_type: "SINGLE"
+    taxpayer_type: "individual"
   
   - min: 1077551
     max: 5000000
     rate: 0.0965
-    taxpayer_type: "SINGLE"
+    taxpayer_type: "individual"
   
   - min: 5000001
     max: 25000000
     rate: 0.103
-    taxpayer_type: "SINGLE"
+    taxpayer_type: "individual"
   
   - min: 25000001
     max: null  # No upper limit
     rate: 0.109
-    taxpayer_type: "SINGLE"
+    taxpayer_type: "individual"
 
   - min: 0
     max: 17150
     rate: 0.04
-    taxpayer_type: "MARRIED"
+    taxpayer_type: "couple"
   
   - min: 17151
     max: 23600
     rate: 0.045
-    taxpayer_type: "MARRIED"
+    taxpayer_type: "couple"
   
   - min: 23601
     max: 27900
     rate: 0.0525
-    taxpayer_type: "MARRIED"
+    taxpayer_type: "couple"
   
   - min: 27901
     max: 161550
     rate: 0.0585
-    taxpayer_type: "MARRIED"
+    taxpayer_type: "couple"
   
   - min: 161551
     max: 323200
     rate: 0.0625
-    taxpayer_type: "MARRIED"
+    taxpayer_type: "couple"
   
   - min: 323201
     max: 2155350
     rate: 0.0685
-    taxpayer_type: "MARRIED"
+    taxpayer_type: "couple"
   
   - min: 2155351
     max: 5000000
     rate: 0.0965
-    taxpayer_type: "MARRIED"
+    taxpayer_type: "couple"
   
   - min: 5000001
     max: 25000000
     rate: 0.103
-    taxpayer_type: "MARRIED"
+    taxpayer_type: "couple"
   
   - min: 25000001
     max: null
     rate: 0.109
-    taxpayer_type: "MARRIED"
+    taxpayer_type: "couple"
 `
 export function create_state_tax__raw_yaml(yaml_string: string): Array<StateTaxYAML> {
   try {

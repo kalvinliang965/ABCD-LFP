@@ -9,9 +9,12 @@ import MongoStore from "connect-mongo";
 import { database_config } from "./config/database";
 import { api_config } from "./config/api";
 import passport from "passport";
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+
+
 let sessionStore: MongoStore;
 
-function registerGlobalMiddleWare(app: Express) {
+function initialize_middlewares(app: Express) {
     console.log("Registering global middleware");
 
     const minute = 60 * 1000;
@@ -47,6 +50,28 @@ function registerGlobalMiddleWare(app: Express) {
     }));
     app.use(passport.initialize());
     app.use(passport.session());
+    passport.use(
+        new GoogleStrategy(
+          {
+            clientID: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            callbackURL: "/auth/google/callback",
+          },
+          async (accessToken, refreshToken, profile, done) => {
+            // You would query your DB here and find or create the user
+            return done(null, profile); // Store the whole profile or a user object
+          }
+        )
+      );
+      
+      // Optional if using sessions
+      passport.serializeUser((user, done) => {
+        done(null, user); // Or user.id if storing user in DB
+      });
+      
+      passport.deserializeUser((obj: any, done) => {
+        done(null, obj);
+    });
     // profiling
     app.use((req, res, next) => {
         const start = process.hrtime(); // High-resolution time
@@ -61,4 +86,4 @@ function registerGlobalMiddleWare(app: Express) {
     console.log("Finish registering global middleware");
 }
 
-export { sessionStore, registerGlobalMiddleWare }
+export { sessionStore, initialize_middlewares }
