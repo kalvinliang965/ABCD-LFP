@@ -1,6 +1,6 @@
 // Simple manual test for ProcessIncome
 
-import process_income from '../core/simulation/logic/ProcessIncome';
+import run_income_event from '../core/simulation/logic/RunIncomeEvent';
 import { ChangeType } from '../core/Enums';
 
 
@@ -53,7 +53,7 @@ const testState = {
 };
 
 // ✅ Run process_income exactly as your function expects
-const totalIncome = process_income(testState);
+const totalIncome = run_income_event(testState);
 
 console.log("✅ Total Income:", totalIncome.toFixed(2));
 console.log("💰 Ordinary Income:", testState.ordinaryIncome?.toFixed(2));

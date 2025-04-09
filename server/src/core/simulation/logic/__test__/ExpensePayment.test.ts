@@ -8,7 +8,7 @@ import {
 import {
   IncomeEventRaw,
   ExpenseEventRaw,
-  InvestmentEventRaw,
+  InvestEventRaw,
   RebalanceEventRaw,
 } from "../../../domain/raw/event_raw/event_raw";
 import { InvestmentRaw } from "../../../domain/raw/investment_raw";
@@ -301,7 +301,7 @@ export function convert_yaml_to_scenario_raw(parsedYaml: any): ScenarioRaw {
 
   // (5) 处理 eventSeries
   const eventSeriesSet = new Set<
-    IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw
+    IncomeEventRaw | ExpenseEventRaw | InvestEventRaw | RebalanceEventRaw
   >();
   if (Array.isArray(parsedYaml.eventSeries)) {
     parsedYaml.eventSeries.forEach((eventObj: any) => {
@@ -348,7 +348,7 @@ export function convert_yaml_to_scenario_raw(parsedYaml: any): ScenarioRaw {
         if (eventObj.assetAllocation2) {
           allocation2Map = objectToMap(eventObj.assetAllocation2);
         }
-        const investRaw: InvestmentEventRaw = {
+        const investRaw: InvestEventRaw = {
           name: eventObj.name,
           start: startMap,
           duration: durationMap,

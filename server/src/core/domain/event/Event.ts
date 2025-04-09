@@ -1,6 +1,10 @@
 import  {create_value_generator,  ValueGenerator } from "../../../utils/math/ValueGenerator";
 import { ChangeType, DistributionType, StatisticType } from "../../Enums";
 import { EventRaw } from "../raw/event_raw/event_raw";
+import { ExpenseEvent } from "./ExpenseEvent";
+import { IncomeEvent } from "./IncomeEvent";
+import { InvestEvent } from "./InvestEvent";
+import { RebalanceEvent } from "./RebalanceEvent";
 
 // Map to store the event start years during processing
 let _event_start_years = new Map<string, number>();
@@ -201,6 +205,8 @@ interface Event {
   type: string;
   clone(): Event;
 }
+
+export type EventUnion = IncomeEvent | ExpenseEvent | InvestEvent | RebalanceEvent;
 
 export {
   parse_duration,

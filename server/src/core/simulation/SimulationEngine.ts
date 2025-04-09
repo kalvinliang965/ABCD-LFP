@@ -8,7 +8,8 @@ import { create_federal_tax_service, FederalTaxService } from "../tax/FederalTax
 import { create_state_tax_service_yaml, create_state_tax_service_db, StateTaxService } from "../tax/StateTaxService";
 import { create_scenario_raw_yaml } from '../../services/ScenarioYamlParser';
 import { ScenarioRaw } from '../domain/raw/scenario_raw';
-
+import run_income_event from './logic/RunIncomeEvent';
+ 
 export interface SimulationEngine {
     run: (num_simulations: number) => Promise<SimulationResult[]>;
 }
@@ -23,16 +24,18 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
     // Create tax services
     try {
         // initialize scenario object
-        simulation_logger.info("parsing scenario_yaml file...");
+        simulation_logger.debug("parsing scenario_yaml file...");
         const scenario_raw: ScenarioRaw = create_scenario_raw_yaml(scenario_yaml);
-        
-        simulation_logger.info("initializing scenario object...")
+        simulation_logger.info("Successfully parse scenario yaml");
+
+        simulation_logger.debug("initializing scenario object...")
         scenario = await create_scenario(scenario_raw);
+        simulation_logger.info("Successfully initiliaze scenario objecct");
 
         // initialize federal tax service
-        simulation_logger.info("initializing federal tax service...");
+        simulation_logger.debug("initializing federal tax service...");
         federal_tax_service = await create_federal_tax_service();
-        
+        simulation_logger.info("Successfully initialize federal tax service");
         
         // TODO: fix this later. if yaml file is given we assume user 
         // want to update the tax info for that state
@@ -45,57 +48,78 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
             simulation_logger.info("initializing state tax service from db....");
             state_tax_service = await create_state_tax_service_db(scenario.residence_state); 
         }
-        
-        simulation_logger.info("simulation engine initialized successfully");
+        simulation_logger.info("Successfully initialize state tax service");
+        simulation_logger.info("Successfully initialize simulation engine");
     } catch (error) {
-        console.error(`Failed to setup the simulation engine: ${error instanceof Error? error.message: error}`);
+        simulation_logger.error(
+            `Failed to setup the simulation engine`,
+            {error:  error instanceof Error? error.stack: error}
+        );
         process.exit(1);
     }
     
     // we will be using this one for now
-    async function run_demo(num_simulations: number): Promise<SimulationResult[]> {
-        const res: SimulationResult[] = [];
-        for (let i = 0; i < num_simulations; i++) {
-            const simulation_state = await create_simulation_state(scenario, federal_tax_service, state_tax_service); 
-            const simulation_result = create_simulation_result();
-            // Run the simulation synchronously.
-            while (should_continue(simulation_state)) {
-                simulate_year(simulation_state, simulation_result);
-                simulation_state.advance_year();
-            }
-            res.push(simulation_result);
-        }
-        return res;
-    }
-
     async function run(num_simulations: number): Promise<SimulationResult[]> {
-        const simulation_promises: Promise<SimulationResult>[] = Array.from(
-            {length: num_simulations}, // length of the array
-             (_, i) => {
-
-                return new Promise<SimulationResult>(async (resolve) => {
-                    const simulation_state = await create_simulation_state(scenario, federal_tax_service, state_tax_service); 
-                    const simulation_result = create_simulation_result();
-                    // Run the simulation synchronously.
-                    while (should_continue(simulation_state)) {
-                        simulate_year(simulation_state, simulation_result);
-                        simulation_state.advance_year();
-                    }
-                    resolve(simulation_result);
-                });
+        const res: SimulationResult[] = [];
+        simulation_logger.info("Simulation started with config: ", {
+            scenario: scenario,
         });
-
-        const res = await Promise.all(simulation_promises);
+        let i = 0
+        let simulation_state;
+        let simulation_result;
+        try {
+            for (; i < num_simulations; i++) {
+                simulation_state = await create_simulation_state(scenario, federal_tax_service, state_tax_service); 
+                simulation_result = create_simulation_result();
+                // Run the simulation synchronously.
+                while (should_continue(simulation_state)) {
+                    simulate_year(simulation_state, simulation_result);
+                    simulation_state.advance_year();
+                }
+                simulation_logger.info(
+                    `${i} simulation completed`,
+                    {
+                        simulaiton_result: simulation_result,
+                    }
+                )
+                res.push(simulation_result);
+            }
+        } catch (error) {
+            simulation_logger.error(
+                `Error occurred running ${i}th simulation`,
+                {
+                    simulation_state: simulation_state,
+                    simulation_result: simulation_result,
+                    error: error instanceof Error? error.stack: error
+                }
+            )
+        }
+        simulation_logger.info("Successfully running all simulation")
         return res;
-
     }
+
+
 
     function simulate_year(simulation_state: SimulationState, simulation_result: SimulationResult ) {
-        if (simulation_state.roth_conversion_opt) {
-            process_roth_conversion(simulation_state);
+        try {
+            simulation_logger.debug(
+                "Simulating new year", 
+                {
+                    simulation_state: simulation_state,
+                }
+            ); 
+            
+            run_income_event(simulation_state);
+            simulation_logger.debug("Running income events")
+
+            if (simulation_state.roth_conversion_opt) {
+                process_roth_conversion(simulation_state);
+            }
+            update_investment(simulation_state);
+            simulation_result.update(simulation_state);
+        } catch (error) {
+            throw error
         }
-        update_investment(simulation_state);
-        simulation_result.update(simulation_state);
     }
 
     function should_continue(simulation_state: SimulationState):boolean {
@@ -103,7 +127,31 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
     }
 
     return {
-        run: run_demo,
+        run,
     }
 
 }
+
+
+
+    // async function run(num_simulations: number): Promise<SimulationResult[]> {
+    //     const simulation_promises: Promise<SimulationResult>[] = Array.from(
+    //         {length: num_simulations}, // length of the array
+    //          (_, i) => {
+
+    //             return new Promise<SimulationResult>(async (resolve) => {
+    //                 const simulation_state = await create_simulation_state(scenario, federal_tax_service, state_tax_service); 
+    //                 const simulation_result = create_simulation_result();
+    //                 // Run the simulation synchronously.
+    //                 while (should_continue(simulation_state)) {
+    //                     simulate_year(simulation_state, simulation_result);
+    //                     simulation_state.advance_year();
+    //                 }
+    //                 resolve(simulation_result);
+    //             });
+    //     });
+
+    //     const res = await Promise.all(simulation_promises);
+    //     return res;
+
+    // }

@@ -3,7 +3,7 @@
 // This file should contain functions demonstrating our parts
 import { create_federal_tax_service } from "../core/tax/FederalTaxService";
 // import { getRMDFactorForAge } from "./services/RMDScraper"; // Import the RMD function
-import process_income from "../core/simulation/logic/ProcessIncome";
+import run_income_event from "../core/simulation/logic/RunIncomeEvent";
 import process_rmds from "../core/simulation/logic/ProcessRMD";
 import { TaxStatus } from "../core/Enums";
 import { SimulationState } from "../core/simulation/SimulationState";

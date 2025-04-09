@@ -1,4 +1,4 @@
-import process_income from '../ProcessIncome';
+import run_income_event from '../RunIncomeEvent';
 import { SimulationState } from '../../SimulationState';
 import { TaxStatus } from '../../../Enums';
 
@@ -108,7 +108,7 @@ describe('ProcessIncome', () => {
     };
 
     // Act
-    const result = await process_income(mockState);
+    const result = await run_income_event(mockState);
 
     // Assert
     // Cash should generate $200 (10000 * 0.02)
@@ -171,7 +171,7 @@ describe('ProcessIncome', () => {
     };
 
     // Act
-    const result = await process_income(mockState);
+    const result = await run_income_event(mockState);
 
     // Assert
     // Bonds should generate $1000 fixed amount
@@ -217,7 +217,7 @@ describe('ProcessIncome', () => {
     };
 
     // Act
-    const result = await process_income(mockState);
+    const result = await run_income_event(mockState);
 
     // Assert
     // Muni bonds should generate $900 (30000 * 0.03) but it's tax exempt
@@ -249,7 +249,7 @@ describe('ProcessIncome', () => {
     };
 
     // Act
-    const result = await process_income(mockState);
+    const result = await run_income_event(mockState);
 
     // Assert
     expect(result).toBe(0);

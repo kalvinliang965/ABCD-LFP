@@ -1,6 +1,7 @@
 import { InvestmentType } from "./investment/InvestmentType";
 import { create_investment_type } from "./investment/InvestmentType";
 import { InvestmentTypeRaw } from "./raw/investment_type_raw";
+import { dev } from "../../config/environment";
 
 export type InvestmentTypeMap = Map<string, InvestmentType>;
 

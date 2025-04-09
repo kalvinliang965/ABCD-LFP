@@ -1,7 +1,7 @@
 import { InvestmentRaw } from "./investment_raw";
 import { IncomeEventRaw } from "./event_raw/income_event_raw";
 import { ExpenseEventRaw } from "./event_raw/expense_event_raw";
-import { InvestmentEventRaw } from "./event_raw/investment_event_raw";
+import { InvestEventRaw } from "./event_raw/investment_event_raw";
 import { RebalanceEventRaw } from "./event_raw/rebalance_event_raw";
 import {
   cash_investment_one,
@@ -36,7 +36,7 @@ export interface ScenarioRaw {
   investmentTypes: Set<InvestmentTypeRaw>
   investments: Set<InvestmentRaw>;
   eventSeries: Set<
-    IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw
+    IncomeEventRaw | ExpenseEventRaw | InvestEventRaw | RebalanceEventRaw
   >;
   inflationAssumption: Map<string, number>;
   afterTaxContributionLimit: number;
@@ -81,7 +81,7 @@ export const scenario_one = create_scenario_raw(
   ]),
 
   new Set<
-    IncomeEventRaw | InvestmentEventRaw | ExpenseEventRaw | RebalanceEventRaw
+    IncomeEventRaw | InvestEventRaw | ExpenseEventRaw | RebalanceEventRaw
   >([
     salary_income_one,
     food_expense_one,
@@ -114,7 +114,7 @@ export function create_scenario_raw(
   investmentTypes: Set<InvestmentTypeRaw>,
   investments: Set<InvestmentRaw>,
   eventSeries: Set<
-    IncomeEventRaw | InvestmentEventRaw | ExpenseEventRaw | RebalanceEventRaw
+    IncomeEventRaw | InvestEventRaw | ExpenseEventRaw | RebalanceEventRaw
   >,
   inflationAssumption: Map<string, any>,
   afterTaxContributionLimit: number,

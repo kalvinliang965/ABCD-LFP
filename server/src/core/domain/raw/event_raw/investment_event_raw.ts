@@ -1,14 +1,14 @@
 
 import { EventRaw } from "./event_raw";
 
-export type InvestmentEventRaw = EventRaw & {
+export type InvestEventRaw = EventRaw & {
   assetAllocation: Map<string, number>;
   assetAllocation2: Map<string, number>;
   glidePath: boolean;
   maxCash: number;
 };
 
-export const my_investments_investment_one: InvestmentEventRaw = create_invest_event_raw(
+export const my_investments_investment_one: InvestEventRaw = create_invest_event_raw(
     "my investments",
     new Map<string, any>([
         ["type", "uniform"],
@@ -40,7 +40,7 @@ export function create_invest_event_raw(
     glidePath: boolean,
     assetAllocation2: Map<string, number>,
     maxCash: number
-): InvestmentEventRaw {
+): InvestEventRaw {
 
     return {
         name,

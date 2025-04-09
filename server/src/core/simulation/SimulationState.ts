@@ -58,7 +58,6 @@ export interface SimulationState {
   spending_strategy: Array<string>;
   expense_withrawal_strategy: Array<string>;
   process_events(): void;
-  cash: Investment;
   mandatory_expenses: SpendingEvent[];
   discretionary_expenses: SpendingEvent[];
   investment_type_manager: InvestmentTypeManager
@@ -165,7 +164,6 @@ export async function create_simulation_state(
     const account_manager = scenario.account_manager.clone();
 
     const state: SimulationState = {
-      cash: scenario.cash,
       events: scenario.event_series,
       inflation_factor,
       roth_conversion_opt: scenario.roth_conversion_opt,

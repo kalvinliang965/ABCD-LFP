@@ -9,7 +9,7 @@ import {
   parse_expected_annual_change,
 } from "./Event";
 
-interface IncomeEvent extends Event {
+export interface IncomeEvent extends Event {
   initial_amount: number;
   change_type: ChangeType;
   expected_annual_change: ValueGenerator;

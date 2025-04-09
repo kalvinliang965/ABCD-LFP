@@ -12,10 +12,6 @@ import {
 } from "../../Enums";
 import { create_investment, Investment } from "../investment/Investment";
 import { Event, process_event_dependencies } from "../event/Event";
-import create_income_event from "../event/IncomeEvent";
-import create_expense_event, { ExpenseEvent } from "../event/ExpenseEvent";
-import create_investment_event from "../event/InvestmentEvent";
-import create_rebalance_event from "../event/RebalanceEvent";
 import {
   get_discretionary_expenses,
   get_mandatory_expenses,
@@ -23,11 +19,11 @@ import {
 } from "../../simulation/logic/ExpenseHelper";
 import { ScenarioRaw } from "../raw/scenario_raw";
 import { InvestmentRaw } from "../raw/investment_raw";
-import {ExpenseEventRaw, IncomeEventRaw, InvestmentEventRaw, RebalanceEventRaw} from "../raw/event_raw/event_raw"
 import { TaxStatus, parse_state_type, parse_taxpayer_type } from "../../Enums";
 import { AccountManager, create_account_manager } from "../AccountManager";
 import { AccountMap } from "../AccountManager";
 import { create_investment_type_manager, InvestmentTypeManager } from "../InvestmentTypeManager";
+import { dev } from "../../../config/environment";
 
 function parse_birth_years(birthYears: Array<number>): Array<number> {
   if (birthYears.length > 2 || birthYears.length == 0) {
@@ -138,70 +134,6 @@ function parse_inflation_assumption(
   }
 }
 
-// ! Chen made this function to parse events
-function parse_events(
-  eventSeries: Set<
-    IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw
-  >
-): Event[] {
-  let events: Event[] = [];
-
-  if (eventSeries && eventSeries.size > 0) {
-    const rawEvents = Array.from(eventSeries);
-
-    // Process dependencies to resolve start years that depend on other events
-    process_event_dependencies(rawEvents);
-
-    // Process each type of event
-    events = rawEvents.map((rawEvent) => {
-      switch (rawEvent.type) {
-        case "income":
-          return create_income_event(rawEvent as IncomeEventRaw);
-        case "expense":
-          return create_expense_event(rawEvent as ExpenseEventRaw);
-        case "invest":
-          return create_investment_event(rawEvent as InvestmentEventRaw);
-        case "rebalance":
-          return create_rebalance_event(rawEvent as RebalanceEventRaw);
-        default:
-          throw new Error(`Unknown event type: ${rawEvent.type}`);
-      }
-    });
-  }
-
-  return events;
-}
-
-export function sort_expenses_by_strategy(
-  expenses: SpendingEvent[],
-  strategy: string[]
-): SpendingEvent[] {
-  const priorityMap = new Map<string, number>();
-
-  strategy.forEach((name, index) => {
-    priorityMap.set(name, index);
-  });
-
-  return [...expenses].sort((a, b) => {
-    const priorityA = priorityMap.has(a.name)
-      ? priorityMap.get(a.name)!
-      : Number.MAX_SAFE_INTEGER;
-    const priorityB = priorityMap.has(b.name)
-      ? priorityMap.get(b.name)!
-      : Number.MAX_SAFE_INTEGER;
-    return priorityA - priorityB;
-  });
-}
-
-function get_sorted_discretionary_expenses(
-  events: Event[],
-  strategy: string[]
-): SpendingEvent[] {
-
-  const unsorted_discretionary_expenses = get_discretionary_expenses(events);
-  return sort_expenses_by_strategy(unsorted_discretionary_expenses, strategy);
-}
-
 export interface Scenario {
   name: string;
   tax_filing_status: TaxFilingStatus;
@@ -210,7 +142,6 @@ export interface Scenario {
   user_life_expectancy: number;
   spouse_life_expectancy?: number;
   investment_type_manager: InvestmentTypeManager;
-  investments: Array<Investment>;
   //! chen changed the type from any to Event[]
   event_series: Array<Event>;
   mandatory_expenses: Array<SpendingEvent>;
@@ -227,50 +158,8 @@ export interface Scenario {
   financialGoal: number;
   residence_state: StateType;
   account_manager: AccountManager
-  cash: Investment;
 }
 
-// Parse investments by tax status
-function parse_investments(
-  investments: Investment[]
-): [Investment, AccountMap, AccountMap, AccountMap] {
-  let cash_account = undefined;
-  const non_retirement_account = new Map<string, Investment>();
-  const pre_tax_account = new Map<string, Investment>();
-  const after_tax_account = new Map<string, Investment>();
-
-  for (const investment of investments) {
-    switch (investment.taxStatus) {
-      case TaxStatus.NON_RETIREMENT:
-        if (investment.id == "cash") {
-          cash_account = investment;
-        } else {
-          non_retirement_account.set(investment.id, investment);
-        }
-        break;
-      case TaxStatus.PRE_TAX:
-        pre_tax_account.set(investment.id, investment);
-        break;
-      case TaxStatus.AFTER_TAX:
-        after_tax_account.set(investment.id, investment);
-        break;
-      default:
-        throw new Error(`Invalid tax status: ${investment.taxStatus}`);
-    }
-  }
-
-  if (!cash_account) {
-    console.log("cash investment not found");
-    process.exit(1);
-  }
-
-  return [
-    cash_account,
-    non_retirement_account,
-    pre_tax_account,
-    after_tax_account,
-  ];
-}
 export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenario> {
   try {
     const taxfilingStatus: TaxFilingStatus = parse_taxpayer_type(
@@ -282,11 +171,6 @@ export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenar
     const [user_life_expectancy, spouse_life_expectancy] =
       parse_life_expectancy(scenario_raw.lifeExpectancy);
 
-    const investments: Array<Investment> = Array.from(
-      scenario_raw.investments
-    ).map(
-      (investment: InvestmentRaw): Investment => create_investment(investment)
-    );
 
     const events = parse_events(scenario_raw.eventSeries);
     const mandatory_expenses = get_mandatory_expenses(events);
@@ -312,29 +196,25 @@ export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenar
     const financialGoal: number = scenario_raw.financialGoal;
     const residenceState: StateType = parse_state_type(scenario_raw.residenceState);
 
-    // Process investments - scenario.investments is already processed in create_scenario
-    const [cash, non_retirement, pre_tax, after_tax] = parse_investments(
-      investments
-    );
 
     const investment_type_manager = create_investment_type_manager(scenario_raw.investmentTypes);
-
+    const account_manager = create_account_manager(scenario_raw.investments);
 
     // Sanity check
-    for (const investment of investments) {
-      if (!investment_type_manager.has(investment.investment_type)) {
-        console.log(`investment type ${investment.investment_type} does not exist`);
-        process.exit(1);
-      }
+    if (dev.is_dev) {
+        const investments: Array<Investment> = Array.from(scenario_raw.investments).map(
+            (investment: InvestmentRaw): Investment => create_investment(investment)
+        );
+        for (const investment of investments) {
+            if (!investment_type_manager.has(investment.investment_type)) {
+                console.log(`investment type ${investment.investment_type} does not exist`);
+                process.exit(1);
+            }
+        }
     }
 
     return {
-      cash,
-      account_manager: create_account_manager(
-        non_retirement,
-        pre_tax,
-        after_tax
-      ),
+      account_manager,
       investment_type_manager,
       name: scenario_raw.name,
       tax_filing_status: taxfilingStatus,
@@ -342,7 +222,6 @@ export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenar
       spouse_birth_year,
       user_life_expectancy,
       spouse_life_expectancy,
-      investments,
       event_series: events,
       mandatory_expenses,
       discretionary_expenses,
