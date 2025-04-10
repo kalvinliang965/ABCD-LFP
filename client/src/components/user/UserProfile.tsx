@@ -103,6 +103,7 @@ const UserProfile: React.FC = () => {
   // Define fetchUserProfile outside useEffect so it can be called elsewhere
   const fetchUserProfile = async () => {
     try {
+      console.log("usere is ", user);
       setIsLoading(true);
       
       // Try to get user data from the API directly
@@ -111,7 +112,7 @@ const UserProfile: React.FC = () => {
       
       if (token) {
         // If we have a token, use it to fetch user data
-        const response = await axios.get(`${API_URL}/api/users/me`, {
+        const response = await axios.get(`${API_URL}/users/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         profileData = response.data;
@@ -121,6 +122,7 @@ const UserProfile: React.FC = () => {
       }
       
       console.log("profileData is ", profileData);
+      console.log("user is ", user);
       
       if (profileData) {
         setUserData({
@@ -276,6 +278,7 @@ const UserProfile: React.FC = () => {
 
   // Show error if there was a problem fetching data
   if (!user) {
+    console.log("user2 is ", user);
     return (
       <Box p={5} textAlign="center">
         <Text fontSize="xl">No profile data available.</Text>

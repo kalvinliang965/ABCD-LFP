@@ -7,6 +7,8 @@ interface DecodedToken {
   email: string;
   iat: number;
   exp: number;
+  userId: string;
+  _id: string;
 }
 
 interface User {
@@ -23,6 +25,9 @@ declare global {
     }
   }
 }
+
+// Make sure this matches exactly what's in your .env file
+const JWT_SECRET = process.env.JWT_SECRET || 'jwt_secret';
 
 export const protect = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -41,23 +46,29 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
       return res.status(401).json({ message: 'Not authorized, no token' });
     }
     
-    // Verify token
-    const decoded = jwt.verify(
-      token, 
-      process.env.JWT_SECRET || 'your-secret-key'
-    ) as DecodedToken;
+    console.log('Token received:', token.substring(0, 10) + '...');
     
-    // Find user
-    const user = await User.findById(decoded.id).select('-password');
-    
-    if (!user) {
-      return res.status(401).json({ message: 'Not authorized, user not found' });
+    try {
+      // Verify token
+      const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
+      console.log('Token decoded successfully:', decoded);
+      
+      // Find user - try both userId and _id
+      const user = await User.findById(decoded.userId || decoded._id || decoded.id);
+      
+      if (!user) {
+        console.log('User not found for decoded token:', decoded);
+        return res.status(401).json({ message: 'Not authorized, user not found' });
+      }
+      
+      // Add user to request
+      req.user = user;
+      
+      next();
+    } catch (jwtError) {
+      console.error('JWT verification error:', jwtError);
+      return res.status(401).json({ message: 'Not authorized, token invalid' });
     }
-    
-    // Add user to request
-    req.user = user;
-    
-    next();
   } catch (error) {
     console.error('Auth middleware error:', error);
     res.status(401).json({ message: 'Not authorized, token failed' });

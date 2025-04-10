@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
 // Get JWT secret from environment variables or use a default (for development only)
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret'
+const JWT_SECRET = process.env.JWT_SECRET || 'jwt_secret'
 
 /**
  * Authentication Controllers
