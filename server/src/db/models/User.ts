@@ -17,11 +17,7 @@ export interface UserDocument extends Document {
     createdAt: Date;
     sharedWith: mongoose.Types.ObjectId[];
   }>;
-  yamlFiles: Array<{
-    name: string;
-    content: string;
-    createdAt: Date;
-  }>;
+
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -78,22 +74,6 @@ const UserSchema = new Schema({
           ref: "User",
         },
       ],
-    },
-  ],
-  yamlFiles: [
-    {
-      name: {
-        type: String,
-        required: true,
-      },
-      content: {
-        type: String,
-        required: true,
-      },
-      createdAt: {
-        type: Date,
-        default: Date.now,
-      },
     },
   ],
 }, {

@@ -49,7 +49,6 @@ interface UserData {
   email: string;
   googleId: string;
   scenarios: Scenario[];
-  yamlFiles: YamlFile[];
 }
 
 // Interface for scenario data
@@ -63,16 +62,8 @@ interface Scenario {
   permissions?: string;
 }
 
-// Interface for YAML file data
-interface YamlFile {
-  _id: string;
-  name: string;
-  content: string;
-  createdAt: Date;
-}
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3346';
 // API base URL
-const API_BASE_URL = API_URL;
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3346';
 
 const UserProfile: React.FC = () => {
   const navigate = useNavigate();
@@ -86,13 +77,11 @@ const UserProfile: React.FC = () => {
     name: '',
     email: '',
     profilePicture: '',
-    yamlFiles: [] as YamlFile[],
     scenarios: [] as Scenario[]
   });
   
   // Modal states
   const { isOpen: isEditProfileOpen, onOpen: onEditProfileOpen, onClose: onEditProfileClose } = useDisclosure();
-  const { isOpen: isUploadYamlOpen, onOpen: onUploadYamlOpen, onClose: onUploadYamlClose } = useDisclosure();
   const { isOpen: isShareScenarioOpen, onOpen: onShareScenarioOpen, onClose: onShareScenarioClose } = useDisclosure();
   
   // Form states
@@ -100,9 +89,7 @@ const UserProfile: React.FC = () => {
   const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(null);
   const [shareEmail, setShareEmail] = useState<string>("");
   const [sharePermission, setSharePermission] = useState<string>("read");
-  const [yamlFileName, setYamlFileName] = useState<string>("");
-  const [yamlContent, setYamlContent] = useState<string>("");
-
+  
   // Add these state variables back
   const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
   const { isOpen: isEditModalOpen, onOpen: onEditModalOpen, onClose: onEditModalClose } = useDisclosure();
@@ -123,7 +110,6 @@ const UserProfile: React.FC = () => {
         name: profileData.name || '',
         email: profileData.email || '',
         profilePicture: profileData.profilePicture || '',
-        yamlFiles: profileData.yamlFiles || [],
         scenarios: profileData.scenarios || []
       });
       console.log(profileData);
@@ -170,7 +156,6 @@ const UserProfile: React.FC = () => {
         name: updatedProfile.name,
         email: updatedProfile.email,
         profilePicture: updatedProfile.profilePicture,
-        yamlFiles: updatedProfile.yamlFiles,
         scenarios: updatedProfile.scenarios
       });
       
@@ -200,104 +185,6 @@ const UserProfile: React.FC = () => {
       });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // Handle upload YAML
-  const handleUploadYaml = async () => {
-    if (yamlFileName && yamlContent) {
-      try {
-        setIsLoading(true);
-        //await axios.put(`${import.meta.env.VITE_API_URL}/api/users/profile`
-        
-        // Use axios to post to your backend API
-        const response = await axios.post(
-          `${import.meta.env.VITE_API_URL}/api/yaml`, // Changed from /api/users/yaml to /api/yaml
-          {
-            name: yamlFileName,
-            content: yamlContent
-          },
-          { withCredentials: true }
-        );
-        
-        // Update the local state with the new YAML file
-        if (response.data) {
-          setUserData({
-            ...userData,
-            yamlFiles: [...userData.yamlFiles, response.data]
-          });
-          
-          // Or fetch the updated user data
-          fetchUserProfile();
-        }
-        
-        // Reset form and close modal
-        setYamlFileName("");
-        setYamlContent("");
-        onUploadYamlClose();
-        
-        toast({
-          title: "YAML file uploaded",
-          description: "Your YAML file has been successfully uploaded.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      } catch (error) {
-        console.error("Error uploading YAML:", error);
-        toast({
-          title: "Upload failed",
-          description: "Failed to upload YAML file",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    } else {
-      toast({
-        title: "Missing information",
-        description: "Please provide both a file name and content",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
-  // Handle delete YAML
-  const handleDeleteYaml = async (fileId: string) => {
-    if (user) {
-      try {
-        await axios.delete(`${API_BASE_URL}/api/yaml/${fileId}`, {
-          data: { userId: user.googleId },
-          withCredentials: true
-        });
-        
-        // Update the local state
-        setUserData({
-          ...userData,
-          yamlFiles: userData.yamlFiles.filter(file => file._id !== fileId)
-        });
-        
-        toast({
-          title: "YAML file deleted",
-          description: "Your YAML file has been successfully deleted.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      } catch (err: any) {
-        console.error("Error deleting YAML:", err);
-        toast({
-          title: "Delete failed",
-          description: err.response?.data?.message || "Failed to delete YAML file",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
     }
   };
 
@@ -410,8 +297,8 @@ const UserProfile: React.FC = () => {
             mr={4} 
           />
           <VStack align="flex-start" spacing={1}>
-            <Heading size="lg">{user.name}</Heading>
-            <Text color={textColor}>{user.email}</Text>
+            <Heading size="xl">{user.name}</Heading>
+            <Text fontSize="lg" color={textColor}>{user.email}</Text>
           </VStack>
         </Flex>
         <HStack spacing={4} mt={{ base: 4, md: 0 }}>
@@ -419,6 +306,7 @@ const UserProfile: React.FC = () => {
             leftIcon={<FaEdit />} 
             colorScheme="blue" 
             variant="outline"
+            size="lg"
             onClick={() => {
               setEditName(user.name);
               onEditProfileOpen();
@@ -426,28 +314,34 @@ const UserProfile: React.FC = () => {
           >
             Edit Profile
           </Button>
-          <Button 
-            leftIcon={<FaFileUpload />} 
-            colorScheme="green" 
-            onClick={onUploadYamlOpen}
-          >
-            Upload YAML
-          </Button>
         </HStack>
       </Flex>
 
       {/* Tabs for different sections */}
       <Tabs colorScheme="blue" variant="enclosed">
         <TabList>
-          <Tab fontSize="lg" fontWeight="medium">My Scenarios</Tab>
-          <Tab fontSize="lg" fontWeight="medium">YAML Files</Tab>
-          <Tab fontSize="lg" fontWeight="medium">Shared With Me</Tab>
+          <Tab 
+            fontSize="xl" 
+            fontWeight="semibold" 
+            py={4} 
+            px={6}
+          >
+            My Scenarios
+          </Tab>
+          <Tab 
+            fontSize="xl" 
+            fontWeight="semibold" 
+            py={4} 
+            px={6}
+          >
+            Shared With Me
+          </Tab>
         </TabList>
 
         <TabPanels>
           {/* My Scenarios Tab */}
           <TabPanel>
-            <Heading size="md" mb={4}>My Financial Scenarios</Heading>
+            <Heading size="lg" mb={5}>My Financial Scenarios</Heading>
             {!user.scenarios || user.scenarios.length === 0 ? (
               <Text>You haven't created any scenarios yet.</Text>
             ) : (
@@ -456,7 +350,7 @@ const UserProfile: React.FC = () => {
                   <Card key={scenario._id} bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor}>
                     <CardHeader>
                       <Flex justify="space-between" align="center">
-                        <Heading size="sm">{scenario.name}</Heading>
+                        <Heading size="md">{scenario.name}</Heading>
                         <HStack>
                           <IconButton
                             aria-label="Share scenario"
@@ -478,7 +372,7 @@ const UserProfile: React.FC = () => {
                       </Flex>
                     </CardHeader>
                     <CardBody pt={0}>
-                      <Text fontSize="sm" color={textColor} mb={3}>
+                      <Text fontSize="md" color={textColor} mb={3}>
                         {scenario.description || "No description available"}
                       </Text>
                       
@@ -488,63 +382,12 @@ const UserProfile: React.FC = () => {
                             Shared with:
                           </Text>
                           {scenario.sharedWith.map(user => (
-                            <Badge key={user._id} mr={1} mb={1} colorScheme="purple" fontSize="xs">
+                            <Badge key={user._id} mr={1} mb={1} colorScheme="purple" fontSize="sm">
                               {user.name || user.email}
                             </Badge>
                           ))}
                         </Box>
                       )}
-                    </CardBody>
-                  </Card>
-                ))}
-              </SimpleGrid>
-            )}
-          </TabPanel>
-
-          {/* YAML Files Tab */}
-          <TabPanel>
-            <Heading size="md" mb={4}>YAML Files</Heading>
-            {!user.yamlFiles || user.yamlFiles.length === 0 ? (
-              <Text>You haven't uploaded any YAML files yet.</Text>
-            ) : (
-              <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={5}>
-                {user.yamlFiles.map(file => (
-                  <Card key={file._id} bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor}>
-                    <CardHeader>
-                      <Flex justify="space-between" align="center">
-                        <Heading size="sm">{file.name}</Heading>
-                        <HStack>
-                          <Tooltip label="View Content">
-                            <IconButton
-                              aria-label="View file"
-                              icon={<FaFileAlt />}
-                              size="sm"
-                              colorScheme="blue"
-                              variant="ghost"
-                            />
-                          </Tooltip>
-                          <Tooltip label="Delete File">
-                            <IconButton
-                              aria-label="Delete file"
-                              icon={<FaTrash />}
-                              size="sm"
-                              colorScheme="red"
-                              variant="ghost"
-                              onClick={() => handleDeleteYaml(file._id)}
-                            />
-                          </Tooltip>
-                        </HStack>
-                      </Flex>
-                    </CardHeader>
-                    <CardBody pt={0}>
-                      <Text fontSize="sm" color={textColor} mb={2}>
-                        {file.content.length > 100 
-                          ? `${file.content.substring(0, 100)}...` 
-                          : file.content}
-                      </Text>
-                      <Text fontSize="xs" color={textColor} mt={2}>
-                        Size: {file.content.length} characters
-                      </Text>
                     </CardBody>
                   </Card>
                 ))}
@@ -582,45 +425,6 @@ const UserProfile: React.FC = () => {
             </Button>
             <Button colorScheme="blue" onClick={handleSubmit}>
               Save
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Upload YAML Modal */}
-      <Modal isOpen={isUploadYamlOpen} onClose={onUploadYamlClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Upload YAML File</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <FormControl mb={4}>
-              <FormLabel>File Name</FormLabel>
-              <Input 
-                value={yamlFileName} 
-                onChange={(e) => setYamlFileName(e.target.value)} 
-                placeholder="e.g., california_tax_rates.yaml"
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>YAML Content</FormLabel>
-              <Input
-                as="textarea"
-                height="200px"
-                value={yamlContent}
-                onChange={(e) => setYamlContent(e.target.value)}
-                placeholder="Paste your YAML content here..."
-                p={2}
-                fontFamily="monospace"
-              />
-            </FormControl>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onUploadYamlClose}>
-              Cancel
-            </Button>
-            <Button colorScheme="green" onClick={handleUploadYaml}>
-              Upload
             </Button>
           </ModalFooter>
         </ModalContent>
