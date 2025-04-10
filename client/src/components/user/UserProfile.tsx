@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-//import { API_URL } from "../../services/api"; 
+import { API_URL } from '../../services/api';
 import {
   Box,
   Heading,
@@ -72,7 +72,7 @@ const UserProfile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
-  // Replace mock data with state that will be populated from backend
+  
   const [userData, setUserData] = useState({
     name: '',
     email: '',
@@ -104,15 +104,37 @@ const UserProfile: React.FC = () => {
   const fetchUserProfile = async () => {
     try {
       setIsLoading(true);
-      const profileData = await userService.getProfile();
       
-      setUserData({
-        name: profileData.name || '',
-        email: profileData.email || '',
-        profilePicture: profileData.profilePicture || '',
-        scenarios: profileData.scenarios || []
-      });
-      console.log(profileData);
+      // Try to get user data from the API directly
+      const token = localStorage.getItem('token');
+      let profileData;
+      
+      if (token) {
+        // If we have a token, use it to fetch user data
+        const response = await axios.get(`${API_URL}/api/users/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        profileData = response.data;
+      } else {
+        // Otherwise try to use the userService (which might use cookies)
+        profileData = await userService.getProfile();
+      }
+      
+      console.log("profileData is ", profileData);
+      
+      if (profileData) {
+        setUserData({
+          name: profileData.name || '',
+          email: profileData.email || '',
+          profilePicture: profileData.profilePicture || '',
+          scenarios: profileData.scenarios || []
+        });
+        
+        // Update the auth context if needed
+        if (updateUser && !user) {
+          updateUser(profileData);
+        }
+      }
     } catch (error) {
       console.error('Error fetching user profile:', error);
       toast({
@@ -129,10 +151,9 @@ const UserProfile: React.FC = () => {
 
   // Then in your useEffect
   useEffect(() => {
-    if (user) {
-      fetchUserProfile();
-    }
-  }, [user, toast]);
+    // Always try to fetch the profile, even if user is null
+    fetchUserProfile();
+  }, [toast]); // Remove user dependency to always fetch
 
   // Handle return to dashboard
   const handleReturnToDashboard = () => {
@@ -174,6 +195,7 @@ const UserProfile: React.FC = () => {
         duration: 5000,
         isClosable: true,
       });
+      navigate('/dashboard');
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -292,13 +314,14 @@ const UserProfile: React.FC = () => {
         <Flex align="center" mb={{ base: 4, md: 0 }}>
           <Avatar 
             size="xl" 
-            name={user.name} 
-            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`} 
+            name={userData.name} 
+            src={userData.profilePicture} 
             mr={4} 
+            icon={<FaUser fontSize="2rem" />}
           />
           <VStack align="flex-start" spacing={1}>
-            <Heading size="xl">{user.name}</Heading>
-            <Text fontSize="lg" color={textColor}>{user.email}</Text>
+            <Heading size="xl">{userData.name}</Heading>
+            <Text fontSize="lg" color={textColor}>{userData.email}</Text>
           </VStack>
         </Flex>
         <HStack spacing={4} mt={{ base: 4, md: 0 }}>
@@ -308,7 +331,7 @@ const UserProfile: React.FC = () => {
             variant="outline"
             size="lg"
             onClick={() => {
-              setEditName(user.name);
+              setEditName(userData.name);
               onEditProfileOpen();
             }}
           >
@@ -342,11 +365,11 @@ const UserProfile: React.FC = () => {
           {/* My Scenarios Tab */}
           <TabPanel>
             <Heading size="lg" mb={5}>My Financial Scenarios</Heading>
-            {!user.scenarios || user.scenarios.length === 0 ? (
+            {!userData.scenarios || userData.scenarios.length === 0 ? (
               <Text>You haven't created any scenarios yet.</Text>
             ) : (
               <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={5}>
-                {user.scenarios.map(scenario => (
+                {userData.scenarios.map(scenario => (
                   <Card key={scenario._id} bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor}>
                     <CardHeader>
                       <Flex justify="space-between" align="center">

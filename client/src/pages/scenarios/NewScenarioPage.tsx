@@ -190,9 +190,9 @@ function NewScenarioPage() {
   };
 
   const handleDeleteEvent = async (id: string): Promise<void> => {
-    setAddedEvents((prev) =>
-      prev.filter((event) => (event.id || event._id) !== id)
-    );
+      setAddedEvents((prev) =>
+        prev.filter((event) => (event.id || event._id) !== id)
+      );
   };
 
   //! don't touch
@@ -384,15 +384,15 @@ function NewScenarioPage() {
     //need to check what is the correct way to clear the local storage
       clearLocalStorage();
       // Show success toast and navigate to scenarios page
-      toast({
-        title: "Scenario Created",
-        description: "Your scenario has been created successfully.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
+    toast({
+      title: "Scenario Created",
+      description: "Your scenario has been created successfully.",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
       console.log("Attempting to navigate to /scenarios...");
-      navigate("/scenarios");
+    navigate("/scenarios");
       console.log("Navigation function called");
 
     // After successfully saving the complete scenario
@@ -722,12 +722,12 @@ function NewScenarioPage() {
   if (step === "investments") {
     return (
       <Box position="relative" zIndex={10} width="100%" height="100%">
-        <InvestmentsForm
-          investmentsConfig={investmentsConfig}
-          onChangeInvestmentsConfig={setInvestmentsConfig}
+      <InvestmentsForm
+        investmentsConfig={investmentsConfig}
+        onChangeInvestmentsConfig={setInvestmentsConfig}
           onContinue={handle_continue_to_rmd_settings}
           onBack={handle_to_investment_types}
-        />
+      />
       </Box>
     );
   }
@@ -770,7 +770,7 @@ function NewScenarioPage() {
 
   // Withdrawal Strategy Form
   if (step === "withdrawalStrategy") {
-    return (
+                  return (
       <WithdrawalStrategyForm
         withdrawalStrategy={withdrawalStrategy}
         onChangeWithdrawalStrategy={setWithdrawalStrategy}
