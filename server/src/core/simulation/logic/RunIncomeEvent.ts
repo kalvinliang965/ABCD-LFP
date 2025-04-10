@@ -2,92 +2,62 @@
 
 import { ChangeType } from "../../Enums";
 import { SimulationState } from "../SimulationState";
-import { Event as DomainEvent } from "../../domain/event/Event";
-import { Scenario } from "../../domain/scenario/Scenario";
-import ValueGenerator from "../../../utils/math/ValueGenerator";
+import { simulation_logger } from "../../../utils/logger/logger";
 
 
 // run income events, adding the income to cash investment
+// note: tax is calculate in another step
 export default async function run_income_event(
   state: SimulationState
-): Promise<number> {
-  let total_income_for_year = 0;
-  const currentYear = state.get_current_year();
-  
-  const userAlive = state.user.is_alive();
-  const spouseAlive = state.spouse?.is_alive() || false;
+) {
+  const current_year = state.get_current_year();
+  const spouse_alive = state.spouse?.is_alive() || false;
   // Identify income events that are active in the current year
-  const activeIncomeEvents: DomainEvent[] = [];
-  for (const [_, event] of state.events_by_type.income) {
-    if (is_event_active(event, currentYear)) {
-      activeIncomeEvents.push(event);
-    }
-  }
+  const active_income_events = state.event_manager.get_active_income_event(current_year);
+  simulation_logger.debug(`${active_income_events.length} active income event is retrieved`);
   
   // Process income from events
-  for (const event of activeIncomeEvents) {
-    // Add event income to total
-    const eventIncome = (event as any).amount || 0;
-    total_income_for_year += eventIncome;
+  for (const event of active_income_events) {
     
-    // Track income for tax purposes
-    if ((event as any).is_qualified) {
-      (state as any).incr_qualified_dividends(eventIncome);
+    // step a: update the initial amount field for this event for next year
+    const initial_amount = event.initial_amount;
+    const annual_change = event.expected_annual_change.sample();
+    const change_type = event.change_type;
+    let change;
+    if (change_type === ChangeType.FIXED) {
+      change = annual_change;
+    } else if (change_type === ChangeType.PERCENTAGE) {
+      change = annual_change * initial_amount
     } else {
-      (state as any).incr_ordinary_income(eventIncome);
+      simulation_logger.error(`event ${event.name} contain invalid change_type ${event.change_type}`)
+      throw new Error(`Invalid Change type ${change_type}`);
     }
-  }
-  
-  return total_income_for_year;
-}
+    let current_amount = initial_amount + change;
+    // update the event
+    event.initial_amount = current_amount;
 
-
-function calculate_investment_income(investment: any): number {
-  const investmentType = investment.investment_type;
-  const value = investment.value;
-  
-  // Handle string investment types (from YAML)
-  if (typeof investmentType === 'string') {
-    // Default behavior for string investment types
-    // You might want to implement a mapping from string types to income rates
-    return 0;
-  }
-  
-  if (!investmentType || !investmentType.incomeDistribution) {
-    return 0;
-  }
-  
-  const distributionType = investmentType.incomeDistribution.get('type');
-  
-  if (distributionType === 'fixed') {
-    const incomeValue = investmentType.incomeDistribution.get('value');
+    // step b: adjust for inflation
+    if (event.inflation_adjusted) {
+      current_amount *= (1 + state.inflation_factor);  
+    }
+    let user_gains=current_amount;
     
-    if (investmentType.incomeAmtOrPct === 'percent') {
-      // Percentage-based income
-      return value * incomeValue;
-    } else {
-      // Fixed amount income
-      return incomeValue;
+    // step c: ignore spouse portion
+    if (spouse_alive) {
+      user_gains *= event.user_fraction;
     }
+
+    // step d: add income to cash investment
+    state.account_manager.cash.incr_value(user_gains);
+
+    // step e: update total cur_year_income
+    state.incr_ordinary_income(user_gains);
+
+    // step f: update total cur year social security bennefit income.
+    if (event.social_security) {
+      state.incr_social_security_income(user_gains);
+    }
+
   }
-  
-  // For other distribution types (normal, etc.), implement as needed
-  return 0;
 }
 
-
-function is_event_active(event: any, year: number): boolean {
-  const startYear = event.start_year || 0;
-  const endYear = event.end_year || Infinity;
-  
-  return year >= startYear && year <= endYear;
-}
-
-interface IncomeEvent {
-  id: string;
-  name: string;
-  start_year: number;
-  end_year: number;
-  amount: number;
-  is_qualified: boolean;
-}

@@ -6,15 +6,19 @@ import create_rebalance_event, { RebalanceEvent } from "./event/RebalanceEvent";
 import { InvestEvent } from "./event/InvestEvent";
 import { dev } from "../../config/environment";
 import { simulation_logger } from "../../utils/logger/logger";
-import exp from "constants";
-import { EventUnion } from "./event/Event";
 import { clone_map } from "../../utils/helper";
-import { Investment } from "../../db/models/investments";
+import { EventUnion } from "./event/Event";
 
 export type InvestEventMap = Map<string, InvestEvent>;
 export type IncomeEventMap = Map<string, IncomeEvent>;
 export type RebalanceEventMap = Map<string, RebalanceEvent>;
 export type ExpenseEventMap = Map<string, ExpenseEvent>;
+
+function is_event_active(event: EventUnion, year: number): boolean {
+  const startYear = event.start || 0;
+  const endYear = event.start + event.duration;
+  return year >= startYear && year <= endYear;
+}
 
 function parse_events(
   eventSeries: Set<EventUnionRaw>
@@ -47,6 +51,7 @@ function parse_events(
 export interface EventManager {
     print: () => void;
     clone: () => EventManager;
+    get_active_income_event: (year: number) => Array<IncomeEvent>;
     _income_event: IncomeEventMap,
     _expense_event: ExpenseEventMap,
     _invest_event: InvestEventMap,
@@ -65,6 +70,8 @@ function create_event_manager_clone(
         _expense_event: expense_event,
         _invest_event: invest_event,
         _rebalance_event: rebalance_event,
+        get_active_income_event: (year: number) => Array.from(income_event.values())
+                                .filter((event: IncomeEvent) => is_event_active(event, year)),
         print: () => console.log("Hello"),
         clone: () => create_event_manager_clone(
             clone_map(income_event),
@@ -75,19 +82,17 @@ function create_event_manager_clone(
     }
 }
 export function create_event_manager(event_series: Set<EventUnionRaw>): EventManager {
-
     try {
         // Sanity Check
-        if (dev.is_dev) {
-            if (detect_event_cycle(event_series)) {
-                simulation_logger.error(
-                    "Detected cycle inside event series.",
-                    {
-                        event_series: event_series,
-                    }
-                )
-            }    
-        }
+        if (detect_event_cycle(event_series)) {
+            simulation_logger.error(
+                "Detected cycle inside event series.",
+                {
+                    event_series: event_series,
+                }
+            )
+            throw new Error("Failed to create event manager. Cycle detected");
+        }    
         const [income_event, expense_event, invest_event, rebalance_event] = parse_events(event_series);
         simulation_logger.info("Successfully created event manager");
         return create_event_manager_clone(income_event, expense_event, invest_event, rebalance_event);
