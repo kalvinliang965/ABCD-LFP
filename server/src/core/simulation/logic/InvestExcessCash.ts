@@ -3,6 +3,7 @@
 import { SimulationState } from '../SimulationState';
 import { Scenario } from '../../domain/scenario/Scenario';
 import { Investment } from '../../domain/investment/Investment';
+import { simulation_logger } from '../../../utils/logger/logger';
 
 //get current invest event for the given year
 function getCurrentInvestEvent(
@@ -55,7 +56,9 @@ export function investExcessCash(
 	state: SimulationState,
 	scenario: Scenario
 ): void {
+
 	//get current invest event for this year
+
 	const investEvent = getCurrentInvestEvent(state, state.get_current_year());
 	
 	//if no investment event is active, do nothing
@@ -65,7 +68,6 @@ export function investExcessCash(
 	
 	//calculate excess cash above the maximum cash threshold
 	const excessCash = state.cash.get_value() - investEvent.max_cash;
-	
 	//if no excess cash, do nothing
 	if (excessCash <= 0) {
 		return;

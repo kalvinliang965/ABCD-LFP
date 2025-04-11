@@ -2,7 +2,7 @@ import { SimulationState } from "./SimulationState"
 
 export interface SimulationResult {
     update(simulation_state: SimulationState): void,
-    success_probability(): number,
+    success_probability(): number, // -> financial goal, if financial goal is met that year
 } 
 
 export function create_simulation_result(): SimulationResult {

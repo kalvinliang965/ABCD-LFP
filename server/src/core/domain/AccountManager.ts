@@ -49,10 +49,10 @@ function parse_investments(
 }
 
 export interface AccountManager {
-    readonly cash: Investment,
-    readonly non_retirement: AccountMap;
-    readonly pre_tax: AccountMap;
-    readonly after_tax: AccountMap;
+    cash: Investment,
+    non_retirement: AccountMap;
+    pre_tax: AccountMap;
+    after_tax: AccountMap;
     clone(): AccountManager;
 } 
 

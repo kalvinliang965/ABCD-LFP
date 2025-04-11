@@ -72,6 +72,7 @@ function create_event_manager_clone(
         _rebalance_event: rebalance_event,
         get_active_income_event: (year: number) => Array.from(income_event.values())
                                 .filter((event: IncomeEvent) => is_event_active(event, year)),
+                                
         print: () => console.log("Hello"),
         clone: () => create_event_manager_clone(
             clone_map(income_event),
@@ -97,6 +98,7 @@ export function create_event_manager(event_series: Set<EventUnionRaw>): EventMan
         simulation_logger.info("Successfully created event manager");
         return create_event_manager_clone(income_event, expense_event, invest_event, rebalance_event);
     } catch(error) {
+        console.error(error instanceof Error? error.stack: error);
         simulation_logger.error("Failed to create the event manager", {
             error: error instanceof Error? error.stack: error,
         });
