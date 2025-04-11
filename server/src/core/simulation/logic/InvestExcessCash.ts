@@ -2,7 +2,6 @@ import { SimulationState } from '../SimulationState';
 import { Scenario } from '../../domain/scenario/Scenario';
 import { Investment } from '../../domain/investment/Investment';
 import { simulation_logger } from '../../../utils/logger/logger';
-import { TaxStatus } from '../../Enums';
 
 /* investing excess cash according to event's asset allocation
  * after-tax contributions do not exceed the inflation-adjusted limit
