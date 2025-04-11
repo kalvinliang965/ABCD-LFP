@@ -81,7 +81,7 @@ function initialize_middlewares(app: Express) {
           console.log(`${req.method} ${req.url} took ${elapsedMs.toFixed(2)}ms`);
         });
         next();
-      });
+    });
       
     console.log("Finish registering global middleware");
 }
