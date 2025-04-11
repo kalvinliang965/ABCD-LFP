@@ -17,6 +17,7 @@ export const create_tax_info = (): TaxInfo => {
   let capital_gains = 0;
   let social_security = 0;
   let after_tax_contribution = 0;
+  let early_withdrawal_penalty = 0;
 
   return {
     get_ordinary_income: () => ordinary_income,

@@ -11,7 +11,7 @@ import { load_standard_deduction } from "../../db/repositories/StandardDeduction
 import { IncomeType, TaxFilingStatus } from "../Enums";
 import { tax_config } from "../../config/tax";
  
-import { tax_logger } from "../../utils/logger/logger";
+import { simulation_logger, tax_logger } from "../../utils/logger/logger";
 
 async function initialize_taxable_income_bracket(): Promise<TaxBrackets> {
     try {
@@ -113,6 +113,9 @@ export interface FederalTaxService {
     print_capital_gains_bracket(): void;
     print_standard_deductions_info(): void;
     adjust_for_inflation(rate: number): void;
+    find_prev_bracket(rate: number, income_type: IncomeType, status: TaxFilingStatus): TaxBracket;
+    find_prev_rate(income: number, income_type: IncomeType, status: TaxFilingStatus): number;
+    find_prev_deduction(status: TaxFilingStatus): number;
     find_bracket(rate: number, income_type: IncomeType, status: TaxFilingStatus): TaxBracket;
     find_rate(income: number, income_type: IncomeType, status: TaxFilingStatus): number;
     find_deduction(status: TaxFilingStatus): number;
@@ -125,79 +128,157 @@ export function create_federal_service_wo(
     standard_deductions: StandardDeduction
 ): FederalTaxService {
 
-        // these are for debugging purposes
-        const print_taxable_income_bracket = () =>  {
-            console.log("TAXABLE INCOME BRACKETS!!!");
-            console.log(taxable_income_bracket.to_string());
-        }
-        const print_capital_gains_bracket = () => {
-            console.log("CAPITAL GAINS BRACKETS");
-            console.log(capital_gains_bracket.to_string());
+    // contain tax info from previous year
+    let prev_taxable_income_bracket: TaxBrackets;
+    let prev_capital_gains_bracket: TaxBrackets;
+    let prev_standard_deductions: StandardDeduction;
+
+    // these are for debugging purposes
+    const print_taxable_income_bracket = () =>  {
+        console.log("TAXABLE INCOME BRACKETS!!!");
+        console.log(taxable_income_bracket.to_string());
+    }
+    const print_capital_gains_bracket = () => {
+        console.log("CAPITAL GAINS BRACKETS");
+        console.log(capital_gains_bracket.to_string());
+    }
+    const print_standard_deductions_info = () => {
+        console.log("STANDARD DEDUCTION INFO");
+        console.log(standard_deductions.to_string());
+    }
+
+    const adjust_for_inflation = (rate: number) => {
+        
+        prev_taxable_income_bracket = taxable_income_bracket.clone();
+        prev_capital_gains_bracket = capital_gains_bracket.clone();
+        prev_standard_deductions = standard_deductions.clone();
+
+        taxable_income_bracket.adjust_for_inflation(rate);
+        capital_gains_bracket.adjust_for_inflation(rate);
+        standard_deductions.adjust_for_inflation(rate);
+    }
+
+    // find bracket from previous year
+    const find_prev_bracket = (rate: number, income_type: IncomeType, status: TaxFilingStatus): TaxBracket => {
+        if (
+            prev_taxable_income_bracket == undefined ||
+            prev_capital_gains_bracket == undefined || 
+            prev_standard_deductions == undefined
+        ) {
+            simulation_logger.error("Retrieving previous data, but not avilable yet")
+            throw new Error("Previous year data not available");
         }
 
-        const print_standard_deductions_info = () => {
-            console.log("STANDARD DEDUCTION INFO");
-            console.log(standard_deductions.to_string());
+        try {
+            switch(income_type) {
+                case IncomeType.CAPITAL_GAINS:
+                    return prev_capital_gains_bracket.find_bracket(rate, status);
+                case IncomeType.TAXABLE_INCOME:
+                    return prev_taxable_income_bracket.find_bracket(rate, status);
+
+                default:
+                    throw new Error(`Failed to find bracket due to invalid income type ${income_type}`);
+            } 
+        } catch(error) {
+            throw error;
         }
+    }
 
-        const adjust_for_inflation = (rate: number) => {
-            taxable_income_bracket.adjust_for_inflation(rate);
-            capital_gains_bracket.adjust_for_inflation(rate);
-            standard_deductions.adjust_for_inflation(rate);
+    const find_prev_rate = (income: number, income_type: IncomeType, status: TaxFilingStatus): number => {
+        if (
+            prev_taxable_income_bracket == undefined ||
+            prev_capital_gains_bracket == undefined || 
+            prev_standard_deductions == undefined
+        ) {
+            simulation_logger.error("Retrieving previous data, but not avilable yet")
+            throw new Error("Previous year data not available");
         }
-
-        const find_bracket = (rate: number, income_type: IncomeType, status: TaxFilingStatus): TaxBracket => {
-            try {
-                switch(income_type) {
-                    case IncomeType.CAPITAL_GAINS:
-                        return capital_gains_bracket.find_bracket(rate, status);
-                    case IncomeType.TAXABLE_INCOME:
-                        return taxable_income_bracket.find_bracket(rate, status);
-
-                    default:
-                        throw new Error(`Failed to find bracket due to invalid income type ${income_type}`);
-                } 
-            } catch(error) {
-                throw error;
+        try {
+            switch(income_type) {
+                case IncomeType.CAPITAL_GAINS:
+                    return prev_capital_gains_bracket.find_rate(income, status);
+                case IncomeType.TAXABLE_INCOME:
+                    return prev_taxable_income_bracket.find_rate(income, status);
+                default:
+                    throw new Error(`find_rate() invalid income type: ${income_type}`);
             }
+        } catch (error) {
+            throw new Error(`Failed to find income ${income} for ${income_type} and ${status} because ${error instanceof Error? error.message : error}`);
         }
+    }
 
-        const find_rate = (income: number, income_type: IncomeType, status: TaxFilingStatus): number => {
-            try {
-                switch(income_type) {
-                    case IncomeType.CAPITAL_GAINS:
-                        return capital_gains_bracket.find_rate(income, status);
-                    case IncomeType.TAXABLE_INCOME:
-                        return taxable_income_bracket.find_rate(income, status);
-                    default:
-                        throw new Error(`find_rate() invalid income type: ${income_type}`);
-                }
-            } catch (error) {
-                throw new Error(`Failed to find income ${income} for ${income_type} and ${status} because ${error instanceof Error? error.message : error}`);
-            }
+    const find_prev_deduction = (status: TaxFilingStatus): number => {
+        if (
+            prev_taxable_income_bracket == undefined ||
+            prev_capital_gains_bracket == undefined || 
+            prev_standard_deductions == undefined
+        ) {
+            simulation_logger.error("Retrieving previous data, but not avilable yet")
+            throw new Error("Previous year data not available");
         }
+        try {
+            return prev_standard_deductions.find_deduction(status);
+        } catch (error) {
+            throw error;
+        }
+    }
 
-        const find_deduction = (status: TaxFilingStatus): number => {
-            try {
-                return standard_deductions.find_deduction(status);
-            } catch (error) {
-                throw error;
-            }
+    // find bracket for current year
+    const find_bracket = (rate: number, income_type: IncomeType, status: TaxFilingStatus): TaxBracket => {
+        try {
+            switch(income_type) {
+                case IncomeType.CAPITAL_GAINS:
+                    return capital_gains_bracket.find_bracket(rate, status);
+                case IncomeType.TAXABLE_INCOME:
+                    return taxable_income_bracket.find_bracket(rate, status);
+
+                default:
+                    throw new Error(`Failed to find bracket due to invalid income type ${income_type}`);
+            } 
+        } catch(error) {
+            throw error;
         }
-        return {
-            print_taxable_income_bracket,
-            print_capital_gains_bracket,
-            print_standard_deductions_info,
-            adjust_for_inflation,
-            find_bracket,
-            find_rate,
-            find_deduction,
-            clone: () => create_federal_service_wo(
-                taxable_income_bracket.clone(),
-                capital_gains_bracket.clone(),
-                standard_deductions.clone(),
-            )
-        };
+    }
+
+    const find_rate = (income: number, income_type: IncomeType, status: TaxFilingStatus): number => {
+        try {
+            switch(income_type) {
+                case IncomeType.CAPITAL_GAINS:
+                    return capital_gains_bracket.find_rate(income, status);
+                case IncomeType.TAXABLE_INCOME:
+                    return taxable_income_bracket.find_rate(income, status);
+                default:
+                    throw new Error(`find_rate() invalid income type: ${income_type}`);
+            }
+        } catch (error) {
+            throw new Error(`Failed to find income ${income} for ${income_type} and ${status} because ${error instanceof Error? error.message : error}`);
+        }
+    }
+
+    const find_deduction = (status: TaxFilingStatus): number => {
+        try {
+            return standard_deductions.find_deduction(status);
+        } catch (error) {
+            throw error;
+        }
+    }
+    return {
+        print_taxable_income_bracket,
+        print_capital_gains_bracket,
+        print_standard_deductions_info,
+        adjust_for_inflation,
+        find_prev_bracket,
+        find_prev_rate,
+        find_prev_deduction,
+        find_bracket,
+        find_rate,
+        find_deduction,
+        clone: () => create_federal_service_wo(
+            taxable_income_bracket.clone(),
+            capital_gains_bracket.clone(),
+            standard_deductions.clone(),
+        )
+    };
 }
 
 export async function create_federal_tax_service() : Promise<FederalTaxService> {

@@ -1,7 +1,7 @@
 // FederalTaxService.test.ts
-import { StandardDeduction } from '../StandardDeduction';
+import { create_standard_deductions, StandardDeduction } from '../StandardDeduction';
 import { load_standard_deduction } from '../../../db/repositories/StandardDeductionRepository';
-import { TaxBrackets } from '../TaxBrackets';
+import { create_tax_brackets, TaxBrackets } from '../TaxBrackets';
 import { TaxFilingStatus, IncomeType } from '../../Enums';
 import { FederalTaxService, create_federal_tax_service } from '../FederalTaxService';
 import { load_capital_gains_brackets, load_taxable_income_brackets } from '../../../db/repositories/TaxBracketRepository';
@@ -198,4 +198,89 @@ describe("FederalTaxService", () => {
         });
 
     })
+    describe("FederalTaxService Year-over-Year Tests", () => {
+        let service: FederalTaxService;
+        
+        beforeEach(async () => {
+          const mock_taxable_brackets = create_tax_brackets();
+          mock_taxable_brackets.add_bracket(0, 10000, 0.10, TaxFilingStatus.SINGLE);
+          mock_taxable_brackets.add_bracket(10001, 40000, 0.20, TaxFilingStatus.SINGLE);
+          mock_taxable_brackets.add_bracket(40001, Infinity, 0.30, TaxFilingStatus.SINGLE);
+
+          const mock_capital_gains_brackets = create_tax_brackets();
+          mock_capital_gains_brackets.add_bracket(0, 5000, 0.05, TaxFilingStatus.SINGLE);
+          mock_capital_gains_brackets.add_bracket(5001, Infinity, 0.15, TaxFilingStatus.SINGLE);
+          
+
+          const mock_deductions = create_standard_deductions();
+          mock_deductions.add_deduction(12000, TaxFilingStatus.SINGLE);
+          mock_deductions.add_deduction(24000, TaxFilingStatus.MARRIED);
+          
+          service = create_federal_service_wo(
+            mock_taxable_brackets,
+            mock_capital_gains_brackets,
+            mock_deductions
+          )
+        });
+      
+        describe("Inflation Adjustment and Previous Year Data", () => {
+          it("should retain previous year's brackets after inflation adjustment", () => {
+            const pre_adjustment_rate = service.find_rate(5000, IncomeType.TAXABLE_INCOME, TaxFilingStatus.SINGLE);
+            
+            service.adjust_for_inflation(0.03);
+            
+            expect(service.find_rate(5000, IncomeType.TAXABLE_INCOME, TaxFilingStatus.SINGLE)).toBeCloseTo(pre_adjustment_rate * (1 + 0.03));
+            const prev_rate = service.find_prev_rate(5000, IncomeType.TAXABLE_INCOME, TaxFilingStatus.SINGLE);
+            expect(prev_rate).toEqual(pre_adjustment_rate);
+          });
+      
+          it("should calculate capital gains using previous year's brackets", () => {
+            const initialRate = service.find_rate(3000, IncomeType.CAPITAL_GAINS, TaxFilingStatus.SINGLE);
+            service.adjust_for_inflation(0.05);
+            expect(service.find_prev_rate(3000, IncomeType.CAPITAL_GAINS, TaxFilingStatus.SINGLE)).toEqual(initialRate);
+          });
+      
+          it("should maintain independent brackets after cloning", () => {
+            const clonedService = service.clone();
+            service.adjust_for_inflation(0.05);
+            expect(clonedService.find_bracket(0.3, IncomeType.TAXABLE_INCOME, TaxFilingStatus.SINGLE))
+              .not.toEqual(service.find_bracket(0.3, IncomeType.TAXABLE_INCOME, TaxFilingStatus.SINGLE));
+          });
+        });
+      
+        describe("Boundary Conditions", () => {
+          it("should handle income at bracket boundaries", () => {
+            expect(service.find_rate(10000, IncomeType.TAXABLE_INCOME, TaxFilingStatus.SINGLE)).toEqual(0.10);
+            expect(service.find_rate(10001, IncomeType.TAXABLE_INCOME, TaxFilingStatus.SINGLE)).toEqual(0.20);
+          });
+      
+          it("should handle infinite upper bounds", () => {
+            expect(service.find_rate(100000, IncomeType.TAXABLE_INCOME, TaxFilingStatus.SINGLE)).toEqual(0.30);
+          });
+        });
+      
+        describe("Error Handling", () => {
+          it("should throw when accessing previous data without adjustment", () => {
+            expect(() => service.find_prev_deduction(TaxFilingStatus.SINGLE))
+              .toThrow("Previous year data not available");
+          });
+      
+          it("should validate income type during bracket lookup", () => {
+            expect(() => service.find_bracket(0.1, "INVALID_TYPE" as IncomeType, TaxFilingStatus.SINGLE))
+              .toThrow("invalid income type");
+          });
+        });
+      });
+      
+      describe("Database Initialization Edge Cases", () => {
+        it("should handle corrupted database entries", async () => {
+          (load_taxable_income_brackets as jest.Mock).mockResolvedValueOnce([
+            { income_type: "INVALID_TYPE", taxpayer_type: TaxFilingStatus.SINGLE }
+          ]);
+          const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+          const exitSpy = jest.spyOn(process, 'exit').mockImplementation();
+          await create_federal_tax_service();
+          expect(exitSpy).toHaveBeenCalledWith(1);
+        });
+      });
 });

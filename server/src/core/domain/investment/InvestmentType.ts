@@ -60,7 +60,8 @@ function create_investment_type(raw_data: InvestmentTypeRaw): InvestmentType {
     const expected_annual_income = parse_distribution(raw_data.incomeDistribution);
     const taxability = raw_data.taxability;
     
-    let [annual_return, annual_income] = [expected_annual_return.sample(), expected_annual_income.sample()];
+    // annual income should always be positive...
+    let [annual_return, annual_income] = [expected_annual_return.sample(), Math.abs(expected_annual_income.sample())];
     return {
       name: raw_data.name,
       description: raw_data.description,
@@ -71,7 +72,7 @@ function create_investment_type(raw_data: InvestmentTypeRaw): InvestmentType {
       taxability,
       expense_ratio: raw_data.expenseRatio,
       resample_annual_values: () => {
-        [annual_return, annual_income] = [expected_annual_return.sample(), expected_annual_income.sample()];
+        [annual_return, annual_income] = [expected_annual_return.sample(), Math.abs(expected_annual_income.sample())];
       },
       clone: () => create_investment_type(raw_data),
       _expected_annual_income: expected_annual_income, // should not be use. ONLY for testing

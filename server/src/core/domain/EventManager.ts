@@ -4,7 +4,6 @@ import create_expense_event, { ExpenseEvent } from "./event/ExpenseEvent";
 import create_invest_event from "./event/InvestEvent";
 import create_rebalance_event, { RebalanceEvent } from "./event/RebalanceEvent";
 import { InvestEvent } from "./event/InvestEvent";
-import { dev } from "../../config/environment";
 import { simulation_logger } from "../../utils/logger/logger";
 import { clone_map } from "../../utils/helper";
 import { EventUnion } from "./event/Event";

@@ -35,13 +35,13 @@ describe("Investment Equality", () => {
   it("should return false for different distribution types", () => {
     const params = new Map([[StatisticType.VALUE, 5]]);
     const gen1 = create_value_generator(DistributionType.FIXED, params);
-    const gen2 = create_value_generator(DistributionType.UNIFORM, params); // 错误类型
+    const gen2 = create_value_generator(DistributionType.UNIFORM, params);
     expect(gen1.equal(gen2)).toBe(false);
   });
   it("should detect extra parameters", () => {
-    const params1 = new Map([[StatisticType.LOWER, 0]]);             // 缺少 UPPER
+    const params1 = new Map([[StatisticType.LOWER, 0]]);         
     const params2 = new Map([[StatisticType.LOWER, 0], [StatisticType.UPPER, 1]]);
-    const gen1 = create_value_generator(DistributionType.UNIFORM, params1); // 会抛错，但这里测试参数数量
+    const gen1 = create_value_generator(DistributionType.UNIFORM, params1);
     const gen2 = create_value_generator(DistributionType.UNIFORM, params2);
     expect(gen1.equal(gen2)).toBe(false);
   });
@@ -54,11 +54,11 @@ describe("Investment Equality", () => {
   });
 
   it("should detect floating point differences", () => {
-    const params1 = new Map([[StatisticType.VALUE, 0.1 + 0.2]]);  // ≈0.30000000000000004
+    const params1 = new Map([[StatisticType.VALUE, 0.1 + 0.2]]);
     const params2 = new Map([[StatisticType.VALUE, 0.3]]);
     const gen1 = create_value_generator(DistributionType.FIXED, params1);
     const gen2 = create_value_generator(DistributionType.FIXED, params2);
-    expect(gen1.equal(gen2)).toBe(false); // 预期失败，除非实现近似比较
+    expect(gen1.equal(gen2)).toBe(false); 
   });
   it("should ignore parameter order", () => {
     const params1 = new Map([[StatisticType.MEAN, 10], [StatisticType.STDEV, 2]]);
@@ -71,7 +71,6 @@ describe("Investment Equality", () => {
 })
 
 describe("Investment Type Parameter Validation", () => {
-  // 参数化测试模板
   const testGeneratorParams = (
     description: string,
     config: {
@@ -82,7 +81,6 @@ describe("Investment Type Parameter Validation", () => {
     }
   ) => {
     test(description, () => {
-      // 1. 准备测试数据
       const rawData: InvestmentTypeRaw = {
         name: "Param Test",
         description: "Parameter Validation Test",
@@ -143,9 +141,7 @@ describe("Investment Type Parameter Validation", () => {
   );
 });
 
-// 补充边界测试
 test("should handle edge cases", () => {
-  // 测试零值
   const zeroRaw: InvestmentTypeRaw = {
     name: "Zero Test",
     description: "Zero Value Test",
@@ -172,13 +168,12 @@ test("should handle edge cases", () => {
   expect(result._expected_annual_return.sample()).toBe(0);
 });
 
-// 错误处理测试
 test("should throw on invalid parameters", () => {
   const invalidRaw: InvestmentTypeRaw = {
     name: "Invalid Test",
     description: "Missing Parameter Test",
     returnAmtOrPct: "fixed",
-    returnDistribution: new Map<string, any>([["type", "fixed"]]), // 缺少value参数
+    returnDistribution: new Map<string, any>([["type", "fixed"]]), 
     expenseRatio: 0,
     incomeAmtOrPct: "percent",
     incomeDistribution: new Map<string, any>([

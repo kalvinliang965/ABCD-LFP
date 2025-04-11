@@ -11,7 +11,6 @@ import {
   TaxFilingStatus,
 } from "../../Enums";
 import { create_investment, Investment } from "../investment/Investment";
-import { Event, process_event_dependencies } from "../event/Event";
 import {
   get_discretionary_expenses,
   get_mandatory_expenses,

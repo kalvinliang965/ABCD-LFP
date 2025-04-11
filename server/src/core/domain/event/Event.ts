@@ -10,57 +10,6 @@ import { RebalanceEvent } from "./RebalanceEvent";
 // Map to store the event start years during processing
 let _event_start_years = new Map<string, number>();
 
-/**11
- * Process a collection of events to resolve their start years including dependencies
- * @param events Collection of events to process
- * @returns Map of event names to their resolved start years
- */
-function process_event_dependencies(events: EventRaw[]): Map<string, number> {
-  _event_start_years = new Map<string, number>();
-
-  // First pass: Process events with fixed, uniform, or normal start years
-  for (const event of events) {
-    if (
-      event.start.get("type") !== "startWith" &&
-      event.start.get("type") !== "startAfter"
-    ) {
-      const startYear = parse_start_year(event.start);
-      _event_start_years.set(event.name, startYear);
-    }
-  }
-
-  // Second pass: Resolve dependencies
-  let hasUnresolvedDependencies = true;
-  let iterations = 0;
-  const MAX_ITERATIONS = 100; // Safety to prevent infinite loop
-
-  while (hasUnresolvedDependencies && iterations < MAX_ITERATIONS) {
-    hasUnresolvedDependencies = false;
-    iterations++;
-
-    for (const event of events) {
-      // Skip events already processed
-      if (_event_start_years.has(event.name)) continue;
-
-      try {
-        const startYear = parse_start_year(event.start);
-        _event_start_years.set(event.name, startYear);
-      } catch (error) {
-        // Still has dependencies that aren't resolved
-        hasUnresolvedDependencies = true;
-      }
-    }
-  }
-
-  if (iterations >= MAX_ITERATIONS) {
-    throw new Error(
-      "Circular dependencies detected in event series or dependencies couldn't be resolved"
-    );
-  }
-
-  return new Map(_event_start_years);
-}
-
 function parse_start_year(start: Map<string, any>): number {
   switch (start.get("type")) {
     case "fixed":
@@ -213,6 +162,5 @@ export {
   parse_duration,
   parse_start_year,
   parse_expected_annual_change,
-  process_event_dependencies,
   Event,
 };

@@ -194,6 +194,7 @@ export function create_tax_brackets(): TaxBrackets {
                     )
                 });
             });
+
             return cloned;
         }
     };
