@@ -7,9 +7,6 @@ import { IncomeEvent } from "./IncomeEvent";
 import { InvestEvent } from "./InvestEvent";
 import { RebalanceEvent } from "./RebalanceEvent";
 
-// Map to store the event start years during processing
-let _event_start_years = new Map<string, number>();
-
 function parse_start_year(start: Map<string, any>): number {
   switch (start.get("type")) {
     case "fixed":
@@ -33,36 +30,6 @@ function parse_start_year(start: Map<string, any>): number {
           [StatisticType.STDEV, start.get("stdev")],
         ])
       ).sample();
-    case "startWith":
-      const referencedEventName = start.get("eventSeries");
-      if (!referencedEventName) {
-        throw new Error("No eventSeries name specified for startWith type");
-      }
-      const startYear = _event_start_years.get(referencedEventName);
-      if (startYear === undefined) {
-        throw new Error(
-          `Referenced event '${referencedEventName}' not found or its start year is not yet determined`
-        );
-      }
-      return startYear;
-    case "startAfter":
-      const afterEventName = start.get("eventSeries");
-      if (!afterEventName) {
-        throw new Error("No eventSeries name specified for startAfter type");
-      }
-      const refStartYear = _event_start_years.get(afterEventName);
-      if (refStartYear === undefined) {
-        throw new Error(
-          `Referenced event '${afterEventName}' not found or its start year is not yet determined`
-        );
-      }
-      // We need to find the duration of the referenced event
-      // Since this requires additional context not available in this function,
-      // a separate function would be needed to fully implement this.
-      // For now, just adding a placeholder error.
-      throw new Error(
-        "startAfter implementation requires duration information"
-      );
     default:
       throw new Error("Invalid start year type");
   }

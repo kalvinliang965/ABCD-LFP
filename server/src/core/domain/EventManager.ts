@@ -6,6 +6,7 @@ import create_rebalance_event, { RebalanceEvent } from "./event/RebalanceEvent";
 import { InvestEvent } from "./event/InvestEvent";
 import { simulation_logger } from "../../utils/logger/logger";
 import { clone_map } from "../../utils/helper";
+import Deque from "double-ended-queue";
 import { EventUnion } from "./event/Event";
 
 export type InvestEventMap = Map<string, InvestEvent>;
@@ -19,8 +20,8 @@ function is_event_active(event: EventUnion, year: number): boolean {
   return year >= startYear && year <= endYear;
 }
 
-function parse_events(
-  eventSeries: Set<EventUnionRaw>
+function differentiate_events(
+    eventSeries: Array<EventUnion>
 ): [IncomeEventMap, ExpenseEventMap, InvestEventMap, RebalanceEventMap] {
     const income_event_map = new Map<string, IncomeEvent>();
     const expense_event_map = new Map<string, ExpenseEvent>();
@@ -29,16 +30,16 @@ function parse_events(
     for (const event of eventSeries) {
         switch (event.type) {
             case "income":
-                income_event_map.set(event.name, create_income_event(event as IncomeEventRaw));
+                income_event_map.set(event.name, event as IncomeEvent);
                 break;
             case "expense":
-                expense_event_map.set(event.name, create_expense_event(event as ExpenseEventRaw));
+                expense_event_map.set(event.name, event as ExpenseEvent);
                 break;
             case "invest":
-                invest_event_map.set(event.name, create_invest_event(event as InvestEventRaw));
+                invest_event_map.set(event.name, event as InvestEvent);
                 break;
             case "rebalance":
-                rebalance_event_map.set(event.name, create_rebalance_event(event as RebalanceEventRaw));
+                rebalance_event_map.set(event.name, event as RebalanceEvent);
                 break;
             default:
                 throw new Error(`Unknown event type: ${event.type}`);
@@ -86,19 +87,118 @@ function create_event_manager_clone(
         )
     }
 }
+
+function resolve_event(event: EventUnionRaw): EventUnion {
+    switch (event.type) {
+        case "income":
+            return create_income_event(event as IncomeEventRaw);
+        case "expense":
+            return create_expense_event(event as ExpenseEventRaw);
+        case "invest":
+            return create_invest_event(event as InvestEventRaw);
+        case "rebalance":
+            return create_rebalance_event(event as RebalanceEventRaw);
+        default:
+            throw new Error(`Unknown event type: ${event.type}`);
+    }
+}
+
+export function resolve_event_chain(
+    event_series: Set<EventUnionRaw>
+  ): Array<EventUnion> {
+    const event_map = new Map<string, EventUnionRaw>();
+    const adj = new Map<string, string[]>();
+    const in_degree = new Map<string, number>();
+    const processing_queue = new Deque<string>();
+    const resolved_events: EventUnion[] = [];
+  
+    try {
+      // initialize the graph
+      for (const event of event_series) {
+        if (event_map.has(event.name)) {
+            simulation_logger.error(`Duplicate event name: ${event.name}`);
+            throw new Error(`Duplicate event name: ${event.name}`);
+        }
+        
+        event_map.set(event.name, event);
+        const startType = event.start.get("type");
+        if (startType === "startWith" || startType === "endWith") {
+          const dependencyName = event.start.get("eventSeries");
+          if (!dependencyName) {
+            simulation_logger.error(`Event ${event.name} missing eventSeries`);
+            throw new Error(`Event ${event.name} missing eventSeries`);
+          }
+          if (!adj.has(dependencyName)) {
+            adj.set(dependencyName, []);
+          }
+          adj.get(dependencyName)!.push(event.name);
+          in_degree.set(event.name, (in_degree.get(event.name) || 0) + 1);
+        } 
+        // no dependency
+        else {
+          processing_queue.push(event.name);
+          in_degree.set(event.name, 0);
+        }
+      }
+  
+      let processed_count = 0;
+      while (!processing_queue.isEmpty()) {
+        const current_event_name = processing_queue.shift()!;
+        const current_event = event_map.get(current_event_name);
+        if (!current_event) {
+            simulation_logger.error(`Event ${current_event} not registered`);
+            throw new Error(`Event ${current_event_name} not registered`);
+        }
+        
+        const resolved_event = resolve_event(current_event)
+        resolved_events.push(resolved_event);
+        processed_count++;
+  
+        adj.get(current_event_name)?.forEach(dependent_event_name => {
+            const updated_degree = in_degree.get(dependent_event_name)! - 1;
+            in_degree.set(dependent_event_name, updated_degree);
+            if (updated_degree === 0) {
+                const dependent_event = event_map.get(dependent_event_name)!;
+                if (dependent_event.start.get("type")! === "startWith") {
+                    dependent_event.start = new Map<string, any>([
+                        ["type", "fixed"],
+                        ["value", resolved_event.start],
+                    ])
+                } 
+                // endWith
+                else {
+                    dependent_event.start = new Map<string, any>([
+                        ["type", "fixed"],
+                        ["value", resolved_event.start + resolved_event.duration],
+                    ])
+                }
+                processing_queue.push(dependent_event_name);
+            }
+        });
+      }
+  
+      // Sanity check
+      if (processed_count !== event_series.size) {
+        // const unresolved = [...event_series].filter(
+        //   e => resolved_events.map((el) => el.name).includes(e)
+        // );
+        // throw new Error(`Unresolvable event chain. Processed: ${processed_count}, Unresolved events: ${unresolved.map(e => e.name).join(", ")}`);
+        throw new Error(`Unresolvable event chain.`);
+      }
+  
+      return resolved_events;
+    } catch (error) {
+      simulation_logger.error("Event chain resolution failed", {
+        error: error instanceof Error ? error.message : error
+      });
+      throw error;
+    }
+  }
+
 export function create_event_manager(event_series: Set<EventUnionRaw>): EventManager {
     try {
-        // Sanity Check
-        if (detect_event_cycle(event_series)) {
-            simulation_logger.error(
-                "Detected cycle inside event series.",
-                {
-                    event_series: event_series,
-                }
-            )
-            throw new Error("Failed to create event manager. Cycle detected");
-        }    
-        const [income_event, expense_event, invest_event, rebalance_event] = parse_events(event_series);
+        const resolve_event = resolve_event_chain(event_series);
+        const [income_event, expense_event, invest_event, rebalance_event] = differentiate_events(resolve_event);
         simulation_logger.info("Successfully created event manager");
         return create_event_manager_clone(income_event, expense_event, invest_event, rebalance_event);
     } catch(error) {
@@ -109,105 +209,3 @@ export function create_event_manager(event_series: Set<EventUnionRaw>): EventMan
         throw new Error(`Failed to create the event manager ${error instanceof Error? error.message: error}`);
     }
 }
-
-
-// DSU algo
-export function detect_event_cycle(event_series: Set<EventUnionRaw>): boolean {
-    const mp = new Map<string, EventUnionRaw>();
-    const Parent = new Map<string, string>();
-    const Size = new Map<string, number>();
-
-    // init 
-    for (const event of event_series) {
-        Parent.set(event.name, event.name);
-        Size.set(event.name, 1);
-        mp.set(event.name, event);
-    }    
-    
-    function find_root(node: string) {
-        const root = Parent.get(node);
-        if (!root) {
-            console.error(`detect_event_cycle: ndoe ${node} root doesnt exist`);
-            process.exit(1);
-        }
-        // compression
-        while (Parent.get(node) != root ) {
-            const nxt = Parent.get(node);
-            if (!nxt) {
-                console.error(`detect_event_cycle: ndoe ${nxt} root doesnt exist`);
-                process.exit(1);
-            }
-            Parent.set(node, root);
-            node = nxt;
-        }
-        return root;
-    }
-    function unify(p: EventUnionRaw, q: EventUnionRaw): boolean {        
-        let [pr, qr] = [find_root(p.name), find_root(q.name)];
-        if (pr == qr) {
-            return false
-        }
-        const [pr_size, qr_size] = [Size.get(pr), Size.get(qr)];
-        if (pr_size == undefined || qr_size == undefined) {
-            console.error("Node size not defined");
-            process.exit(1);
-        }
-        if (pr_size < qr_size) {
-            [pr, qr] = [qr, pr];
-        }
-        Parent.set(qr, pr);
-        Size.set(pr, pr_size + qr_size);
-        return true;
-    }
-    for (const event of event_series) {
-        const start_type = event.start.get("type");
-        if (!start_type) {
-            console.error("Event dont have start type");
-            process.exit(1);
-        }
-        if (start_type === "startWith" || start_type === "endWith") {
-            const to_event_name = event.start.get("eventSeries");
-            if (!to_event_name) {
-                throw new Error(`Missing eventSeries in ${event.name}`);
-            }
-            const to_event = mp.get(to_event_name);
-            if (!to_event) {
-                throw new Error(`Target event ${to_event_name} not found`);
-            }
-            if (!unify(event, to_event)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-// export function sort_expenses_by_strategy(
-//     expenses: SpendingEvent[],
-//     strategy: string[]
-//   ): SpendingEvent[] {
-//     const priorityMap = new Map<string, number>();
-  
-//     strategy.forEach((name, index) => {
-//       priorityMap.set(name, index);
-//     });
-  
-//     return [...expenses].sort((a, b) => {
-//       const priorityA = priorityMap.has(a.name)
-//         ? priorityMap.get(a.name)!
-//         : Number.MAX_SAFE_INTEGER;
-//       const priorityB = priorityMap.has(b.name)
-//         ? priorityMap.get(b.name)!
-//         : Number.MAX_SAFE_INTEGER;
-//       return priorityA - priorityB;
-//     });
-//   }
-  
-//   function get_sorted_discretionary_expenses(
-//     events: Event[],
-//     strategy: string[]
-//   ): SpendingEvent[] {
-  
-//     const unsorted_discretionary_expenses = get_discretionary_expenses(events);
-//     return sort_expenses_by_strategy(unsorted_discretionary_expenses, strategy);
-//   }
