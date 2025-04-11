@@ -51,6 +51,8 @@ export interface EventManager {
     print: () => void;
     clone: () => EventManager;
     get_active_income_event: (year: number) => Array<IncomeEvent>;
+    get_active_invest_event: (year: number) => Array<InvestEvent>;
+    get_active_rebalance_event: (year: number) => Array<RebalanceEvent>;
     _income_event: IncomeEventMap,
     _expense_event: ExpenseEventMap,
     _invest_event: InvestEventMap,
@@ -71,7 +73,10 @@ function create_event_manager_clone(
         _rebalance_event: rebalance_event,
         get_active_income_event: (year: number) => Array.from(income_event.values())
                                 .filter((event: IncomeEvent) => is_event_active(event, year)),
-                                
+        get_active_invest_event: (year: number) => Array.from(invest_event.values())
+                                .filter((event: InvestEvent) => is_event_active(event, year)),
+        get_active_rebalance_event: (year: number) => Array.from(rebalance_event.values())
+                                .filter((event: RebalanceEvent) => is_event_active(event, year)),
         print: () => console.log("Hello"),
         clone: () => create_event_manager_clone(
             clone_map(income_event),

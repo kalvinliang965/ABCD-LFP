@@ -73,7 +73,7 @@ export const userService = {
       const token = localStorage.getItem('token');
       
       // If using session-based auth with cookies, just use withCredentials
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/users/me`, {
         withCredentials: true,
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });

@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Flex,
   IconButton,
@@ -14,6 +14,7 @@ import {
   useBreakpointValue,
 } from "@chakra-ui/react";
 import { FaSun, FaMoon, FaUser } from "react-icons/fa";
+import { useAuth } from "../contexts/AuthContext";
 
 /**
  * AI prompt : I need a header component to show the title and the user menu, and in this component, I need to use the chakra ui to switch the color mode, and I need to use the avatar to show the user icon, and I need to use the menu to show the user menu
@@ -30,12 +31,30 @@ const Header: React.FC<HeaderProps> = ({
   // Get colors based on current color mode
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
+  // Get navigate function for routing
+  const navigate = useNavigate();
+  // Get auth context for logout
+  const { logout } = useAuth();
 
   // Responsive values for the header's left margin to align with content
   const marginLeft = useBreakpointValue({
     base: "0",
     md: "70px", // Should match the sidebar width
   });
+
+  // Handle logout
+  const handleLogout = () => {
+    // Call logout function from auth context
+    if (logout) {
+      logout();
+    }
+    
+    // Clear any stored tokens
+    localStorage.removeItem('token');
+    
+    // Navigate to login page
+    navigate('/login');
+  };
 
   return (
     <Flex
@@ -81,7 +100,7 @@ const Header: React.FC<HeaderProps> = ({
             {/* Link to user profile page */}
             <MenuItem as={Link} to="/profile">Profile</MenuItem>
             {/* Logout option */}
-            <MenuItem>Logout</MenuItem>
+            <MenuItem onClick={handleLogout}>Logout</MenuItem>
           </MenuList>
         </Menu>
       </Flex>

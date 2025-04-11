@@ -26,6 +26,8 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
+  isAuthenticated: boolean;
+  setAuthToken: (token: string) => void;
   checkAuthStatus: () => Promise<void>;
   logout: () => Promise<void>;
   loginWithGoogle: () => void;
@@ -55,6 +57,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const setAuthToken = (token: string) => {
+    localStorage.setItem('token', token);
+  }; 
+
   const loginWithGoogle = () => {
     window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
   };
@@ -78,16 +84,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     checkAuthStatus();
   }, []);
 
+  const contextValue: AuthContextType = {
+    user,
+    loading,
+    error,
+    isAuthenticated: !!user,
+    setAuthToken,
+    checkAuthStatus,
+    logout,
+    loginWithGoogle,
+    updateUser
+  };
+
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      error, 
-      checkAuthStatus, 
-      logout, 
-      loginWithGoogle,
-      updateUser 
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
 import { ChakraProvider, extendTheme, ColorModeScript, Text } from "@chakra-ui/react";
 import { EventSeriesProvider } from "./contexts/EventSeriesContext";
@@ -7,6 +7,8 @@ import PrivateRoute from './components/common/PrivateRoute';
 import Login from './pages/Login';
 import { Flex, Spinner } from '@chakra-ui/react';
 import AppRoutes from "./routes";
+import axios from 'axios';
+import { API_URL } from './services/api';
 
 // Custom theme with color mode config
 const theme = extendTheme({
@@ -60,6 +62,20 @@ const theme = extendTheme({
 });
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Set default auth header for all requests
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      setIsAuthenticated(true);
+    }
+    setIsLoading(false);
+  }, []);
+
   return (
     <ChakraProvider theme={theme}>
       <ColorModeScript initialColorMode={theme.config.initialColorMode} />
