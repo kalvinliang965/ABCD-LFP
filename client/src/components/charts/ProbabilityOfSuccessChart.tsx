@@ -9,32 +9,34 @@ interface ProbabilityOfSuccessChartProps {
     probabilities: number[];
   };
   title?: string;
-  subtitle?: string;
   loading?: boolean;
+  dollarValueType?: 'today' | 'future';
 }
 
 const ProbabilityOfSuccessChart: React.FC<ProbabilityOfSuccessChartProps> = ({
   data,
   title = 'Probability of Success Over Time',
-  subtitle = 'Percentage of simulations meeting financial goals',
-  loading = false
+  loading = false,
+  dollarValueType = 'today'
 }) => {
   // Generate mock data if no data is provided
+  //for chart 1, the parameters are:
+  //years: 
+  //probabilities: 
   const mockData = {
     years: [],
     probabilities: []
   };
 
   // Use provided data or fallback to mock data
-  console.log("in ProbabilityOfSuccessChart, data is", data)
+  
   const chartData = data || mockData;
-  console.log("in ProbabilityOfSuccessChart, chartData is", chartData)
-
+  
   // Configure chart options
   const options = {
     title: {
       text: title,
-      subtext: subtitle,
+      
       left: 'center'
     },
     tooltip: {
@@ -42,7 +44,7 @@ const ProbabilityOfSuccessChart: React.FC<ProbabilityOfSuccessChartProps> = ({
       formatter: function(params: any) {
         const year = params[0].axisValue;
         const probability = params[0].data.toFixed(1);
-        return `Year: ${year}<br/>Probability of Success: ${probability}%`;
+        return `Year: ${year}<br/>Probability of Success: ${probability}%<br/>Values in: ${dollarValueType === 'today' ? "Today's Dollars" : "Future Dollars"}`;
       }
     },
     xAxis: {
@@ -94,22 +96,6 @@ const ProbabilityOfSuccessChart: React.FC<ProbabilityOfSuccessChartProps> = ({
               }
             ]
           }
-        },
-        markLine: {
-          data: [
-            {
-              name: 'Target Success Rate',
-              yAxis: 80,
-              lineStyle: {
-                color: '#5cb85c',
-                type: 'dashed'
-              },
-              label: {
-                formatter: 'Target: 80%',
-                position: 'end'
-              }
-            }
-          ]
         }
       }
     ],
@@ -136,10 +122,16 @@ const ProbabilityOfSuccessChart: React.FC<ProbabilityOfSuccessChartProps> = ({
         style={{ height: '400px' }} 
         showLoading={loading}
       />
+      <Text fontSize="lg" mt={2} color="gray.600" textAlign="center">
+        {dollarValueType === 'future' && " Values are shown in future dollars."}
+        {dollarValueType === 'today' && " Values are shown in today's dollars."}
+      </Text>
+
       <Text fontSize="sm" mt={2} color="gray.600" textAlign="center">
         This chart shows the probability of meeting your financial goals over time based on simulation results.
         A higher percentage indicates a greater likelihood of success.
       </Text>
+
     </Box>
   );
 };

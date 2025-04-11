@@ -41,7 +41,7 @@ const SimulationResults: React.FC = () => {
   // New state variables for chart selection
   const [showChartSelection, setShowChartSelection] = useState(true);
   const [selectedCharts, setSelectedCharts] = useState<string[]>(['probabilityOfSuccess']);
-  const [dollarValueType, setDollarValueType] = useState<string>('today');
+  const [dollarValueType, setDollarValueType] = useState<'today' | 'future'>('today');
   
   // TODO: Replace with actual API call when ready
   // Right now use mock data
@@ -138,7 +138,7 @@ const SimulationResults: React.FC = () => {
               Choose how dollar values should be displayed in the charts.
             </Text>
             <RadioGroup 
-              onChange={setDollarValueType} 
+              onChange={(val) => setDollarValueType(val as 'today' | 'future')} 
               value={dollarValueType}
               colorScheme="blue"
             >
@@ -173,14 +173,16 @@ const SimulationResults: React.FC = () => {
             <Text mb={4} fontSize = "lg">
               This analysis shows the likelihood of meeting your financial goals over time based on 
               the simulation results. A higher probability indicates a greater chance of success.
+              {dollarValueType === 'future' && " Values are shown in future dollars."}
+              {dollarValueType === 'today' && " Values are shown in today's dollars."}
             </Text>
             
             <ProbabilityOfSuccessChart 
               data={simulationData?.probabilityOfSuccess} 
-              
+              dollarValueType={dollarValueType}
               loading={loading}
             />
-            console.log("in simulationData?.probabilityOfSuccess", simulationData?.probabilityOfSuccess)
+            
           </Box>
         )}
         
@@ -196,9 +198,9 @@ const SimulationResults: React.FC = () => {
           
           <Button 
             colorScheme="blue" 
-            onClick={() => navigate(`/scenarios/${scenarioId}`)}
+            onClick={() => navigate(`/dashboard`)}
           >
-            Back to Scenario
+            Back to Dashboard
           </Button>
         </Flex>
       </>
@@ -207,7 +209,7 @@ const SimulationResults: React.FC = () => {
   
   return (
     <Container maxW="container.xl" py={8}>
-      <Heading as="h1" mb={6}>Simulation Results</Heading>
+      <Heading as="h1" mb={6}>Simulation Results for {scenarioId} </Heading>
       
       {error && (
         <Alert status="error" mb={6}>
