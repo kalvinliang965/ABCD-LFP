@@ -210,7 +210,7 @@ const Sidebar: React.FC = () => {
           <NavItem
             icon={FaChartLine}
             to="/simulation/results"
-            isActive={location.pathname === "/simulation/results"}
+            isActive={location.pathname === "/simulation/results" || location.pathname.includes("/scenarios/")}
             sidebarOpen={sidebarOpen}
           >
             Results & Charts
