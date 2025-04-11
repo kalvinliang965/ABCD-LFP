@@ -3,38 +3,76 @@ import { StateType, TaxFilingStatus } from "../Enums";
 import { create_tax_brackets, TaxBracketSet } from "./TaxBrackets";
 import { TaxBrackets, TaxBracket } from "./TaxBrackets";
 import { load_state_taxable_income_brackets, save_state_tax_bracket, has_state_data } from "../../db/repositories/StateTaxBracketRepository";
+import { simulation_logger } from "../../utils/logger/logger";
 
 export interface StateTaxService {
     adjust_for_inflation(rate: number): void;
+    find_prev_rate(income: number, status: TaxFilingStatus): number;
+    find_prev_bracket(rate: number, status: TaxFilingStatus): TaxBracket;
     find_rate(income: number, status: TaxFilingStatus): number;
     find_bracket(rate: number, status: TaxFilingStatus): TaxBracket;
     clone(): StateTaxService;
 }
 
-export function create_state_tax_service_wo(taxable_income_bracket: TaxBrackets): StateTaxService {
-        const adjust_for_inflation = (rate: number) => {
-            taxable_income_bracket.adjust_for_inflation(rate);
+export function create_state_tax_service_wo(
+    taxable_income_bracket: TaxBrackets
+): StateTaxService {
+    let prev_taxable_income_bracket: TaxBrackets;
+
+    const adjust_for_inflation = (rate: number) => {
+        
+        prev_taxable_income_bracket = taxable_income_bracket.clone();
+
+        taxable_income_bracket.adjust_for_inflation(rate);
+    }
+    const find_prev_rate = (income: number, status: TaxFilingStatus): number => {
+        if (
+            prev_taxable_income_bracket == undefined
+        ) {
+            simulation_logger.error("Retrieving previous data, but not avilable yet")
+            throw new Error("Previous year data not available");
         }
-        const find_rate = (income: number, status: TaxFilingStatus): number => {
-            try {
-                return taxable_income_bracket.find_rate(income, status);
-            } catch (error) {
-                throw new Error(`Failed to find rate for income ${income} and ${status} because ${error instanceof Error? error.message : error}`);
-            }
+        try {
+            return prev_taxable_income_bracket.find_rate(income, status);
+        } catch (error) {
+            throw new Error(`Failed to find rate for income ${income} and ${status} because ${error instanceof Error? error.message : error}`);
         }
-        const find_bracket = (rate: number, status: TaxFilingStatus): TaxBracket => {
-            try {
-                return taxable_income_bracket.find_bracket(rate, status);
-            } catch(error) {
-                throw error;
-            }
+    }
+    const find_prev_bracket = (rate: number, status: TaxFilingStatus): TaxBracket => {
+        if (
+            prev_taxable_income_bracket == undefined
+        ) {
+            simulation_logger.error("Retrieving previous data, but not avilable yet")
+            throw new Error("Previous year data not available");
         }
-        return {
-            adjust_for_inflation,
-            find_rate,
-            find_bracket,
-            clone: () => create_state_tax_service_wo(taxable_income_bracket.clone())
+        try {
+            return prev_taxable_income_bracket.find_bracket(rate, status);
+        } catch(error) {
+            throw error;
         }
+    }
+    const find_rate = (income: number, status: TaxFilingStatus): number => {
+        try {
+            return taxable_income_bracket.find_rate(income, status);
+        } catch (error) {
+            throw new Error(`Failed to find rate for income ${income} and ${status} because ${error instanceof Error? error.message : error}`);
+        }
+    }
+    const find_bracket = (rate: number, status: TaxFilingStatus): TaxBracket => {
+        try {
+            return taxable_income_bracket.find_bracket(rate, status);
+        } catch(error) {
+            throw error;
+        }
+    }
+    return {
+        adjust_for_inflation,
+        find_prev_rate,
+        find_prev_bracket,
+        find_rate,
+        find_bracket,
+        clone: () => create_state_tax_service_wo(taxable_income_bracket.clone())
+    }
 }
 
 export async function create_state_tax_service_yaml(resident_state: StateType , yaml_string: string) {

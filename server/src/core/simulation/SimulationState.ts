@@ -10,11 +10,11 @@ import {
 } from "../tax/StateTaxService";
 import { Event } from "../domain/event/Event";
 import { SpendingEvent, update_expense_amount } from "./logic/ExpenseHelper";
-import { create_yearly_records } from "./YearlyTaxRecords";
 import { AccountManager } from "../domain/AccountManager";
 import { InvestmentTypeManager } from "../domain/InvestmentTypeManager";
 import { State } from "js-yaml";
 import { EventManager } from "../domain/EventManager";
+import UserTaxData, { create_user_tax_data } from "./UserTaxData";
 export type EventMap = Map<string, Event>;
 
 export interface PersonDetails {
@@ -32,15 +32,7 @@ export interface SimulationState {
   user: PersonDetails;
   spouse?: PersonDetails;
   get_tax_filing_status(): TaxFilingStatus;
-  get_ordinary_income(): number;
-  get_capital_gains_income(): number;
-  get_social_security_income(): number;
-  get_after_tax_contribution(): number;
-  get_after_tax_contribution_limit(): number;
-  incr_ordinary_income(amt: number): void;
-  incr_capital_gains_income(amt: number): void;
-  incr_social_security_income(amt: number): void;
-  incr_after_tax_contribution(amt: number): void;
+  user_tax_data: UserTaxData;
   get_current_year(): number;
   get_financial_goal(): number;
   get_early_withdrawal_penalty(): number;
@@ -120,14 +112,10 @@ export async function create_simulation_state(
   try {
     const start_year: number = new Date().getFullYear();
     let current_year: number = start_year;
-    const previous_year: number = current_year - 1;
     const is_married = scenario.tax_filing_status === TaxFilingStatus.MARRIED;
     let tax_filing_status = scenario.tax_filing_status;
 
-    // contian tax info of given year
-    const yearly_records = create_yearly_records()
-    // "dummy node"
-    yearly_records.initialize_record(previous_year);
+    const user_tax_data = create_user_tax_data();
 
     let inflation_factor = scenario.inflation_assumption.sample();
 
@@ -177,79 +165,16 @@ export async function create_simulation_state(
       
       },
 
-      // Income getters and setters
+      // get current tax info
+      user_tax_data,
       get_tax_filing_status: () => tax_filing_status,
       get_financial_goal: () => scenario.financialGoal,
-      // get current tax info
-      get_ordinary_income: () => {
-        const record = yearly_records.get_record(current_year);
-        if (!record) {
-          console.error(`Getting ordinary income but record at ${current_year} is not initialize`)
-          process.exit(1);
-        }
-        return record.get_ordinary_income();
-      },
-      get_capital_gains_income: () => {
-        const record = yearly_records.get_record(current_year);
-        if (!record) {
-          console.error(`Gretting capital gains income but record at ${current_year} is not initialize`);
-          process.exit(1);
-        }
-        return record.get_capital_gains_income();
-      },
-      get_social_security_income: () => {
-        const record = yearly_records.get_record(current_year);
-        if (!record) {
-          console.error(`Getting social security income but record at ${current_year} is not initialize`);
-          process.exit(1);
-        }
-        return record.get_social_security_income();
-      },
-      get_after_tax_contribution: () => {
-        const record = yearly_records.get_record(current_year);
-        if (!record) {
-          console.error(`Getting after tax contribution but record at ${current_year} is not initialize`);
-          process.exit(1);
-        }
-        return record.get_after_tax_contribution();
-      },
-      get_after_tax_contribution_limit: () => scenario.after_tax_contribution_limit,
-      incr_ordinary_income: (amt: number) => {
-        const record = yearly_records.get_record(current_year);
-        if (!record) {
-          console.error(`incrementing ordinary income but record at ${current_year} is not initialize`);
-          process.exit(1);
-        }
-        return record.incr_ordinary_income(amt);
-      },
-      incr_capital_gains_income: (amt: number) => {
-        const record = yearly_records.get_record(current_year);
-        if (!record) {
-          console.error(`incrementing security income but record at ${current_year} is not initialize`);
-          process.exit(1);
-        }
-        return record.incr_capital_gains_income(amt);
-      },
-      incr_social_security_income: (amt: number) => {
-        const record = yearly_records.get_record(current_year);
-        if (!record) {
-          console.error(`incrementing social security income but record at ${current_year} is not initialize`);
-          process.exit(1);
-        }
-        return record.incr_social_security_income(amt);
-      },
-      incr_after_tax_contribution: (amt: number) => {
-        const record = yearly_records.get_record(current_year);
-        if (!record) {
-          console.error(`incrementing after tax contribution but record at ${current_year} is not initialize`);
-          process.exit(1);
-        }
-        return record.incr_after_tax_contribution(amt);
-      },
-
+      
       get_current_year: () => current_year,
+
       advance_year: () => {
         current_year++;
+        user_tax_data.advance_year();
         const annual_inflation_rate = scenario.inflation_assumption.sample();
         inflation_factor *= 1 + annual_inflation_rate;
         cloned_federal_tax_service.adjust_for_inflation(annual_inflation_rate);
