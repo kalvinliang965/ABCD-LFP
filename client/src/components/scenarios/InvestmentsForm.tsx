@@ -119,8 +119,6 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
     const typeId = e.target.value;
-    const selectedType = investmentTypes.find((type) => type.name === typeId);
-    const typeName = selectedType?.name || "";
 
     set_new_investment({
       ...newInvestment,
@@ -150,6 +148,52 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     });
   };
 
+  // AI-generated code
+  // Add function to check if investment type is Cash (case insensitive)
+  const is_cash_investment = (investmentType: string): boolean => {
+    return investmentType.toLowerCase() === "cash";
+  };
+
+  // AI-generated code
+  // Check if current selection is valid based on Cash rule
+  const is_valid_investment_combination = (): boolean => {
+    if (!newInvestment.investmentType) return true;
+
+    // If investment type is Cash, it must be in non-retirement
+    if (
+      is_cash_investment(newInvestment.investmentType) &&
+      newInvestment.taxStatus !== "non-retirement"
+    ) {
+      return false;
+    }
+
+    // AI-generated code
+    // Check if investment type already exists under the selected tax status
+    if (
+      investment_type_exists_under_tax_status(
+        newInvestment.investmentType,
+        newInvestment.taxStatus
+      )
+    ) {
+      return false;
+    }
+
+    return true;
+  };
+
+  // AI-generated code
+  // Check if investment type already exists under the selected tax status
+  const investment_type_exists_under_tax_status = (
+    investmentType: string,
+    taxStatus: string
+  ): boolean => {
+    return investmentsConfig.investments.some(
+      (investment) =>
+        investment.investmentType === investmentType &&
+        investment.taxStatus === taxStatus
+    );
+  };
+
   const handle_add_investment = () => {
     // Validate
     const newErrors: typeof errors = {};
@@ -160,6 +204,43 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
 
     if (newInvestment.value <= 0) {
       newErrors.value = "Value must be greater than zero";
+    }
+
+    // AI-generated code
+    // Check Cash investment tax status validation
+    if (
+      is_cash_investment(newInvestment.investmentType) &&
+      newInvestment.taxStatus !== "non-retirement"
+    ) {
+      toast({
+        title: "Invalid combination",
+        description:
+          "Cash investments can only be placed in non-retirement accounts",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top-right",
+      });
+      return;
+    }
+
+    // AI-generated code
+    // Check if investment type already exists under the selected tax status
+    if (
+      investment_type_exists_under_tax_status(
+        newInvestment.investmentType,
+        newInvestment.taxStatus
+      )
+    ) {
+      toast({
+        title: "Duplicate investment",
+        description: `${newInvestment.investmentType} already added under this tax status`,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top-right",
+      });
+      return;
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -343,13 +424,9 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
               >
                 Go Back to Create Investment Types
               </Button>
-              {(import.meta.env.MODE === "development") && (
-                <Button
-                  colorScheme="blue"
-                  onClick={onContinue}
-                  ml={4}
-                >
-                 Skip 
+              {import.meta.env.MODE === "development" && (
+                <Button colorScheme="blue" onClick={onContinue} ml={4}>
+                  Skip
                 </Button>
               )}
             </CardBody>
@@ -449,12 +526,12 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
                     <Icon as={FiList} color="blue.500" boxSize={5} />
                   </Flex>
                   <Text fontSize="sm" fontWeight="medium" color={statTextColor}>
-                    Investment Types
+                    Possible Investment Types
                   </Text>
                 </HStack>
                 <Heading size="lg" fontWeight="bold">
                   {investmentsConfig.investments.length} /{" "}
-                  {investmentTypes.length}
+                  {investmentTypes.length * 3 - 2}
                 </Heading>
               </Box>
 
@@ -880,7 +957,10 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
                       colorScheme="blue"
                       onClick={handle_add_investment}
                       size="lg"
-                      disabled={investmentTypes.length === 0}
+                      disabled={
+                        investmentTypes.length === 0 ||
+                        !is_valid_investment_combination()
+                      }
                       px={8}
                       fontWeight="bold"
                     >
@@ -901,6 +981,41 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
                   investment types first.
                 </Text>
               )}
+
+              {/* AI-generated code */}
+              {/* Show warning if Cash is selected with non-compatible tax status */}
+              {is_cash_investment(newInvestment.investmentType) &&
+                newInvestment.taxStatus !== "non-retirement" && (
+                  <Text
+                    color="red.500"
+                    fontSize="sm"
+                    mt={4}
+                    textAlign="center"
+                    fontWeight="medium"
+                  >
+                    Cash investments can only be placed in non-retirement
+                    accounts
+                  </Text>
+                )}
+
+              {/* AI-generated code */}
+              {/* Show warning if investment type already exists under the selected tax status */}
+              {newInvestment.investmentType &&
+                investment_type_exists_under_tax_status(
+                  newInvestment.investmentType,
+                  newInvestment.taxStatus
+                ) && (
+                  <Text
+                    color="red.500"
+                    fontSize="sm"
+                    mt={4}
+                    textAlign="center"
+                    fontWeight="medium"
+                  >
+                    {newInvestment.investmentType} already added under this tax
+                    status
+                  </Text>
+                )}
             </Box>
           </CardBody>
 
