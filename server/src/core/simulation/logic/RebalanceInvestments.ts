@@ -122,7 +122,7 @@ export function rebalance_investments(
 			
 			//update capital gains income if in non-retirement account
 			if (account_type === TaxStatus.NON_RETIREMENT) {
-				state.user_tax_data.incr_cur_capital_gains(capital_gain);
+				state.user_tax_data.incr_cur_year_gains(capital_gain);
 			}
 			
 			simulation_logger.debug(`Sale: ${investment_id} (${account_type}) -> Amount: ${amount_to_sell}, Capital Gain: ${capital_gain}, New Value: ${investment.get_value()}, Cash Balance: ${state.account_manager.cash.get_value()}`);

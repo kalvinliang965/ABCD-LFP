@@ -1,10 +1,11 @@
 import { create_investment_type, InvestmentType } from "./InvestmentType";
 import { ChangeType, TaxStatus } from "../../Enums";
 import { InvestmentRaw } from "../raw/investment_raw";
+import { Cloneable } from "../../../utils/helper";
 /**
  * Public information about an investment
  */
-export interface Investment {
+export interface Investment extends Cloneable<Investment> {
   id: string;
   taxStatus: TaxStatus;
   investment_type: string;

@@ -23,11 +23,11 @@
  * }
  */
 
+import TaxBracket from "../../../db/models/tax_bracket";
+import { simulation_logger } from "../../../utils/logger/logger";
+import { ExpenseEvent } from "../../domain/event/ExpenseEvent";
+import { IncomeType, TaxStatus } from "../../Enums";
 import { SimulationState } from "../SimulationState";
-import {
-  withdraw_from_investments,
-  calculate_detailed_expense_amount,
-} from "./ExpenseHelper";
 
 /**
  * Process mandatory expense events and previous year's taxes for the current year
@@ -38,90 +38,113 @@ import {
  * @returns boolean
  */
 export function pay_mandatory_expenses(state: SimulationState): boolean {
-  // SEQUENTIAL THINKING STEP 1: 获取已预处理的强制性支出列表
-  // 这些支出已经按当前年份进行了筛选，并已经应用了通货膨胀调整
-  const currentYear = state.get_current_year();
-  const mandatoryExpenses = state.mandatory_expenses; //这个得到的是没有更新amount的mandatoryExpenses
+  const cur_simulation_year = state.get_current_year();
+  
 
-  // totalMandatoryExpenseAmount 是所有强制性支出的总和
-  let totalMandatoryExpenseAmount = 0;
+  // step a: calculate previous year's federal and state income tax
+  // using data from preivous year
+  
+  // in our application, 85 percent of SS are only subject to federal tax
+  const fed_taxable_income = state.user_tax_data.get_cur_fed_taxable_income();
+  simulation_logger.debug(`previous year total income: ${state.user_tax_data.get_prev_year_income}`);
+  simulation_logger.debug(`previous year early withdrawal: ${state.user_tax_data.get_prev_year_early_withdrawal()}`);
+  simulation_logger.debug(`federal taxable income: ${fed_taxable_income}`);
 
-  // 处理强制性支出
-  for (const expense of mandatoryExpenses) {
-    totalMandatoryExpenseAmount += calculate_detailed_expense_amount(
-      expense,
-      currentYear
-    );
-  }
+  const state_taxable_income = state.user_tax_data.get_cur_year_income();
+  simulation_logger.debug(`state taxable income: ${state_taxable_income}`);
 
-  console.log("totalMandatoryExpenseAmount", totalMandatoryExpenseAmount);
+  const standard_deduction = state.federal_tax_service.find_deduction(state.get_tax_filing_status());
+  simulation_logger.debug(`Standard deduction: ${standard_deduction}`)
 
-  // SEQUENTIAL THINKING STEP 5: Check if additional withdrawals are needed
-  //因为cash已经算好了 - tax后的价格，所以我们按道理来说不应该再去计算tax，直接用cashValue - totalMandatoryExpenseAmount
-  const cashValue = state.cash.get_value();
-  console.log("此时我们有cashValue", cashValue);
-  const totalWithdrawalAmount = Math.max(
+  const fed_tax = fed_taxable_income * state.federal_tax_service.find_rate(fed_taxable_income, IncomeType.TAXABLE_INCOME, state.get_tax_filing_status()) - standard_deduction;
+  const state_tax = state_taxable_income * state.state_tax_service.find_rate(state_taxable_income, state.get_tax_filing_status());
+  simulation_logger.debug(`federal tax: ${fed_tax}`);
+  simulation_logger.debug(`state tax: ${state_tax}`);
+
+  // step b: calculate previous year's capital gains
+  // if capital gains is negative, we move on
+  let capital_gain_tax = Math.max(
+    state.user_tax_data.get_prev_year_gains(),
     0,
-    (totalMandatoryExpenseAmount - cashValue)
   );
-
-  console.log("那么我们totalWithdrawalAmount需要", totalWithdrawalAmount);
-  //如果我们的cash可以cover所有强制性支出，那么我们就不需要再进行任何操作
-  //更新cash的value
-  if (totalWithdrawalAmount == 0) {
-    state.cash.incr_value(-totalMandatoryExpenseAmount);
-    return true;
-  } else {
-    // 我们的钱不够cover，所以需要从其他地方获取资金
-    //同时我们要清空cash的value
-    state.cash.incr_value(-cashValue);
-    console.log("我们清空了cash的value", state.cash.get_value());
-    const withdrawalResult = withdraw_from_investments(
-      state,
-      totalWithdrawalAmount
-    );
-    //在这种情况下，我们无论如何都会更新capital_gains_income和ordinary_income还有early_withdrawal_penalty| 但是否破产取决于unfunded是否为0
-    return withdrawalResult.unfunded == 0;
+  simulation_logger.debug(`capital gains: ${capital_gain_tax}`);
+  if (capital_gain_tax != 0) {
+    const capital_gain_rate = state.federal_tax_service
+            .find_rate(capital_gain_tax, IncomeType.CAPITAL_GAINS, state.get_tax_filing_status());
+    capital_gain_tax *= capital_gain_rate; 
   }
-}
+  simulation_logger.debug(`capital gains tax: ${capital_gain_tax}`);
 
-      // process_tax: () => {
-        // try {
-        //   const standard_deduction =
-        //     federal_tax_service.find_deduction(tax_filing_status);
-        //   const taxable_income =
-        //     ordinary_income +
-        //     capital_gains_income -
-        //     0.15 * social_security_income -
-        //     standard_deduction;
-        //   const federal_taxable_income_tax =
-        //     taxable_income *
-        //     federal_tax_service.find_rate(
-        //       taxable_income,
-        //       IncomeType.TAXABLE_INCOME,
-        //       tax_filing_status
-        //     );
-        //   const state_taxable_income_tax =
-        //     taxable_income *
-        //     state_tax_service.find_rate(taxable_income, tax_filing_status);
-        //   const federal_capital_gains_tax =
-        //     capital_gains_income *
-        //     federal_tax_service.find_rate(
-        //       capital_gains_income,
-        //       IncomeType.CAPITAL_GAINS,
-        //       tax_filing_status
-        //     );
-        //   cash.incr_value(
-        //     taxable_income -
-        //       federal_capital_gains_tax -
-        //       federal_taxable_income_tax -
-        //       state_taxable_income_tax
-        //   );
-        // } catch (error) {
-        //   throw new Error(
-        //     `Failed to process tax ${
-        //       error instanceof Error ? error.message : error
-        //     }`
-        //   );
-        // }
-      // },
+  // step c: calculate previous year withdrawal tax 
+  // we assume 10% early withdrawal
+  const withdrawal_tax = state.user_tax_data.get_prev_year_early_withdrawal() * 0.10;
+  simulation_logger.debug(`withdrawal tax: ${withdrawal_tax}`);
+
+  // step d: calculate total amount P = sum of mandatory expense in current year + previous year tax
+  let mandatory_expenses = 0;
+  state.event_manager
+    .get_active_mandatory_event(cur_simulation_year)
+    .forEach((event: ExpenseEvent) => mandatory_expenses += state.event_manager.get_initial_amount(event));
+  
+  simulation_logger.debug(`total mandatory expenses: ${mandatory_expenses}`);
+  const total_amount = mandatory_expenses + fed_tax + state_tax + withdrawal_tax + capital_gain_tax;
+  simulation_logger.debug(`total amount we have to pay (including tax): ${mandatory_expenses}`);
+
+  // step e: total withdrawal amount W = P - (amount of cash)
+  const withdrawal_amount = total_amount - state.account_manager.cash.get_value();
+  simulation_logger.debug(`withdrawal amount: ${withdrawal_amount}`);
+
+  // step f:
+  // get active mandatory expense
+  // const mandatoryExpenses = state.mandatory_expenses; //这个得到的是没有更新amount的mandatoryExpenses
+
+  let withdrawaled=0;
+  const investments = state.account_manager.all;
+  for (const inv_id of state.expense_withrawal_strategy) {
+    
+
+    // withdrawaled enough money
+    if (withdrawaled > withdrawal_amount) {
+      return true;
+    }
+
+    if (!investments.has(inv_id)) {
+      simulation_logger.error(`Investment "${inv_id}" does not exist`);
+      throw new Error(`Investment "${inv_id}" does not exist`)
+    }
+    const investment = investments.get(inv_id)!;
+    const purchase_price = investment.get_cost_basis();
+    simulation_logger.debug(`investment purchase price: ${purchase_price}`);
+
+    
+    const going_to_withdraw = Math.min(withdrawal_amount - withdrawaled, purchase_price);
+
+    simulation_logger.debug(`going to withdraw ${going_to_withdraw} from ${inv_id}`);
+    investment.incr_cost_basis(-going_to_withdraw);
+
+    // not pre tax retirement accont
+    // we have to calculate capital gains
+    if (investment.taxStatus != TaxStatus.PRE_TAX) {
+      const capital_gains = investment.get_value() - going_to_withdraw;
+      state.user_tax_data.incr_cur_year_gains(capital_gains);
+    } 
+    
+    if (investment.taxStatus === TaxStatus.PRE_TAX) {
+      state.user_tax_data.incr_cur_year_income(going_to_withdraw);
+    }
+    
+    // update withrawal
+    if (
+      state.user.get_age() < 59 && (
+        investment.taxStatus === TaxStatus.PRE_TAX || 
+        investment.taxStatus === TaxStatus.AFTER_TAX
+    )) {
+      state.user_tax_data.incr_year_early_withdrawal(going_to_withdraw);
+    }
+    
+    withdrawaled += going_to_withdraw;
+    simulation_logger.debug(`recieved ${going_to_withdraw} from selling ${investment.id}`)
+  }
+
+  return false;
+}
