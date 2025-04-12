@@ -60,13 +60,15 @@ export default async function run_income_event(
     state.account_manager.cash.incr_value(user_gains);
 
     // step e: update total cur_year_income
-    state.incr_ordinary_income(user_gains);
+    state.user_tax_data.incr_cur_year_income(user_gains);
 
     // step f: update total cur year social security bennefit income.
     if (event.social_security) {
-      state.incr_social_security_income(user_gains);
+      state.user_tax_data.incr_social_security(user_gains);
     }
 
+    // update income breakdown in event manager
+    state.event_manager.update_income_breakdown(event.name, user_gains);
   }
 }
 

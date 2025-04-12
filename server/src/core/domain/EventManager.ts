@@ -57,6 +57,16 @@ export interface EventManager {
     _expense_event: ExpenseEventMap,
     _invest_event: InvestEventMap,
     _rebalance_event: RebalanceEventMap,
+    get_income_breakdown: () => Record<string, number>;
+    update_income_breakdown: (eventName: string, amount: number) => void;
+    reset_income_breakdown: () => void;
+    get_expense_breakdown: () => Record<string, number>;
+    update_expense_breakdown: (eventName: string, amount: number) => void;
+    reset_expense_breakdown: () => void;
+    get_total_expenses: () => { mandatory: number; discretionary: number };
+    update_total_expenses: (mandatory: number, discretionary: number) => void;
+    get_last_year_tax_totals: () => { total: number } | undefined;
+    update_last_year_tax_totals: (total: number) => void;
 }
 
 function create_event_manager_clone(
@@ -65,6 +75,10 @@ function create_event_manager_clone(
     invest_event: InvestEventMap,
     rebalance_event: RebalanceEventMap,
 ): EventManager {
+    const income_breakdown: Record<string, number> = {};
+    const expense_breakdown: Record<string, number> = {};
+    let total_expenses = { mandatory: 0, discretionary: 0 };
+    let last_year_tax_totals: { total: number } | undefined;
 
     return {
         _income_event: income_event,
@@ -77,6 +91,29 @@ function create_event_manager_clone(
                                 .filter((event: InvestEvent) => is_event_active(event, year)),
         get_active_rebalance_event: (year: number) => Array.from(rebalance_event.values())
                                 .filter((event: RebalanceEvent) => is_event_active(event, year)),
+        get_income_breakdown: () => income_breakdown,
+        update_income_breakdown: (eventName: string, amount: number) => {
+            income_breakdown[eventName] = (income_breakdown[eventName] || 0) + amount;
+        },
+        reset_income_breakdown: () => {
+            Object.keys(income_breakdown).forEach(key => delete income_breakdown[key]);
+        },
+        get_expense_breakdown: () => expense_breakdown,
+        update_expense_breakdown: (eventName: string, amount: number) => {
+            expense_breakdown[eventName] = (expense_breakdown[eventName] || 0) + amount;
+        },
+        reset_expense_breakdown: () => {
+            Object.keys(expense_breakdown).forEach(key => delete expense_breakdown[key]);
+        },
+        get_total_expenses: () => total_expenses,
+        update_total_expenses: (mandatory: number, discretionary: number) => {
+            total_expenses = { mandatory, discretionary };
+        },
+        get_last_year_tax_totals: () => last_year_tax_totals,
+        update_last_year_tax_totals: (total: number) => {
+            last_year_tax_totals = { total };
+        },
+        print: () => console.log("Hello"),
         clone: () => create_event_manager_clone(
             clone_map(income_event),
             clone_map(expense_event),
