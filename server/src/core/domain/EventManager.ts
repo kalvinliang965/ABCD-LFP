@@ -49,7 +49,6 @@ function differentiate_events(
 }
 
 export interface EventManager {
-    print: () => void;
     clone: () => EventManager;
     get_active_income_event: (year: number) => Array<IncomeEvent>;
     get_active_invest_event: (year: number) => Array<InvestEvent>;
@@ -78,7 +77,6 @@ function create_event_manager_clone(
                                 .filter((event: InvestEvent) => is_event_active(event, year)),
         get_active_rebalance_event: (year: number) => Array.from(rebalance_event.values())
                                 .filter((event: RebalanceEvent) => is_event_active(event, year)),
-        print: () => console.log("Hello"),
         clone: () => create_event_manager_clone(
             clone_map(income_event),
             clone_map(expense_event),
