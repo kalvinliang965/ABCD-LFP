@@ -119,8 +119,24 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
 
   // Reset active step when edit mode changes
   useEffect(() => {
-    setActiveStep(isEditMode ? 3 : 0);
+    // Always set to step 3 (Review) when in edit mode
+    if (isEditMode) {
+      setActiveStep(3);
+    } else {
+      setActiveStep(0);
+    }
   }, [isEditMode, setActiveStep]);
+
+  // Make sure step is properly reset when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      // When modal opens, set appropriate step based on mode
+      setActiveStep(isEditMode ? 3 : 0);
+    } else {
+      // When modal closes, reset step to 0 for next time
+      setActiveStep(0);
+    }
+  }, [isOpen, isEditMode, setActiveStep]);
 
   // Add toast at component level
   const toast = useToast();
@@ -305,11 +321,13 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
 
   // Reset form when modal is closed
   const handleModalClose = () => {
-    // Only reset if not in edit mode to prevent resetting when closing during edit
+    // Only reset form data if not in edit mode
     if (!isEditMode) {
       setFormData(defaultFormValues);
-      setActiveStep(0);
     }
+    // Always reset step to initial value based on mode
+    // This ensures next time modal opens, it starts at correct step
+    setActiveStep(0);
     onClose();
   };
 
