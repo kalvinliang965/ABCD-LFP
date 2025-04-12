@@ -204,28 +204,42 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
   };
 
   const handle_edit_click = (name: string) => {
-    const typeToEdit = investmentTypes.find((type) => type.name === name);
-    if (typeToEdit) {
-      console.log("Found investment type to edit:", typeToEdit);
+    // Get the latest data directly from storage instead of the local state
+    const typeFromStorage = investmentTypeStorage.get_by_name(name);
+
+    if (typeFromStorage) {
+      console.log(
+        "Found investment type to edit from storage:",
+        typeFromStorage
+      );
 
       // Ensure typeToEdit has valid returnDistribution and incomeDistribution arrays
       const editableType = {
-        ...typeToEdit,
+        ...typeFromStorage,
         returnDistribution:
-          Array.isArray(typeToEdit.returnDistribution) &&
-          typeToEdit.returnDistribution.length > 0
-            ? typeToEdit.returnDistribution
+          Array.isArray(typeFromStorage.returnDistribution) &&
+          typeFromStorage.returnDistribution.length > 0
+            ? typeFromStorage.returnDistribution
             : [{ type: "fixed", value: 0 }],
         incomeDistribution:
-          Array.isArray(typeToEdit.incomeDistribution) &&
-          typeToEdit.incomeDistribution.length > 0
-            ? typeToEdit.incomeDistribution
+          Array.isArray(typeFromStorage.incomeDistribution) &&
+          typeFromStorage.incomeDistribution.length > 0
+            ? typeFromStorage.incomeDistribution
             : [{ type: "fixed", value: 0 }],
       };
 
       console.log("Prepared investment type for editing:", editableType);
       set_type_to_edit(editableType);
       onEditOpen();
+    } else {
+      toast({
+        title: "Error",
+        description: `Could not find investment type: ${name}`,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top-right",
+      });
     }
   };
 

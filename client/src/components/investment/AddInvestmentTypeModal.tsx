@@ -139,161 +139,169 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
     taxability: true,
   };
 
+  // Function to convert initialData to form data format
+  const convert_initial_data_to_form = (
+    data: InvestmentTypeRaw
+  ): InvestmentTypeForm => {
+    // Check if return distribution array exists and has content
+    if (
+      !data.returnDistribution ||
+      !Array.isArray(data.returnDistribution) ||
+      data.returnDistribution.length === 0
+    ) {
+      data.returnDistribution = [{ type: DistributionType.FIXED, value: 0 }];
+    }
+
+    // Check if income distribution array exists and has content
+    if (
+      !data.incomeDistribution ||
+      !Array.isArray(data.incomeDistribution) ||
+      data.incomeDistribution.length === 0
+    ) {
+      data.incomeDistribution = [{ type: DistributionType.FIXED, value: 0 }];
+    }
+
+    // Normalize distribution type (handles case sensitivity)
+    const normalizeType = (type: string): string => {
+      if (typeof type !== "string") return DistributionType.FIXED;
+      const lowerType = type.toLowerCase();
+      return lowerType === "normal"
+        ? DistributionType.NORMAL
+        : DistributionType.FIXED;
+    };
+
+    // Extract values from return distribution
+    const returnDistItem = data.returnDistribution[0] || {};
+    const returnType = normalizeType(returnDistItem.type);
+
+    // Determine which key to use for the value
+    const returnRateKey =
+      returnType === DistributionType.FIXED ? "value" : "mean";
+
+    // Get the value, handling different possible key names
+    let returnRateValue = null;
+    if (returnDistItem[returnRateKey] !== undefined) {
+      returnRateValue = returnDistItem[returnRateKey];
+    } else if (
+      returnDistItem["value"] !== undefined &&
+      returnType === DistributionType.FIXED
+    ) {
+      returnRateValue = returnDistItem["value"];
+    } else if (
+      returnDistItem["mean"] !== undefined &&
+      returnType === DistributionType.NORMAL
+    ) {
+      returnRateValue = returnDistItem["mean"];
+    }
+
+    // Convert to string and handle percentage display
+    const returnRate =
+      returnRateValue !== null && returnRateValue !== undefined
+        ? data.returnAmtOrPct === ValueInputMode.PERCENT
+          ? (parseFloat(returnRateValue.toString()) * 100).toString()
+          : returnRateValue.toString()
+        : "0";
+
+    // Handle standard deviation similarly
+    let returnRateStdDevValue = null;
+    if (returnType === DistributionType.NORMAL) {
+      if (returnDistItem["stdev"] !== undefined) {
+        returnRateStdDevValue = returnDistItem["stdev"];
+      }
+    }
+
+    const returnRateStdDev =
+      returnRateStdDevValue !== null && returnRateStdDevValue !== undefined
+        ? data.returnAmtOrPct === ValueInputMode.PERCENT
+          ? (parseFloat(returnRateStdDevValue.toString()) * 100).toString()
+          : returnRateStdDevValue.toString()
+        : undefined;
+
+    // Extract values from income distribution - same approach as return
+    const incomeDistItem = data.incomeDistribution[0] || {};
+    const dividendType = normalizeType(incomeDistItem.type);
+
+    const dividendRateKey =
+      dividendType === DistributionType.FIXED ? "value" : "mean";
+
+    // Get the value, handling different possible key names
+    let dividendRateValue = null;
+    if (incomeDistItem[dividendRateKey] !== undefined) {
+      dividendRateValue = incomeDistItem[dividendRateKey];
+    } else if (
+      incomeDistItem["value"] !== undefined &&
+      dividendType === DistributionType.FIXED
+    ) {
+      dividendRateValue = incomeDistItem["value"];
+    } else if (
+      incomeDistItem["mean"] !== undefined &&
+      dividendType === DistributionType.NORMAL
+    ) {
+      dividendRateValue = incomeDistItem["mean"];
+    }
+
+    const dividendRate =
+      dividendRateValue !== null && dividendRateValue !== undefined
+        ? data.incomeAmtOrPct === ValueInputMode.PERCENT
+          ? (parseFloat(dividendRateValue.toString()) * 100).toString()
+          : dividendRateValue.toString()
+        : "0";
+
+    // Handle dividend standard deviation similarly
+    let dividendRateStdDevValue = null;
+    if (dividendType === DistributionType.NORMAL) {
+      if (incomeDistItem["stdev"] !== undefined) {
+        dividendRateStdDevValue = incomeDistItem["stdev"];
+      }
+    }
+
+    const dividendRateStdDev =
+      dividendRateStdDevValue !== null && dividendRateStdDevValue !== undefined
+        ? data.incomeAmtOrPct === ValueInputMode.PERCENT
+          ? (parseFloat(dividendRateStdDevValue.toString()) * 100).toString()
+          : dividendRateStdDevValue.toString()
+        : undefined;
+
+    // Parse expense ratio as a percentage (multiply by 100 for display)
+    const expenseRatioValue =
+      data.expenseRatio !== undefined && data.expenseRatio !== null
+        ? (parseFloat(data.expenseRatio.toString()) * 100).toString()
+        : "0";
+
+    return {
+      name: data.name || "",
+      description: data.description || "",
+      returnType: returnType,
+      returnRate: returnRate,
+      returnInputMode: data.returnAmtOrPct || ValueInputMode.PERCENT,
+      returnRateStdDev: returnRateStdDev,
+      expenseRatio: expenseRatioValue,
+      dividendType: dividendType,
+      dividendRate: dividendRate,
+      dividendInputMode: data.incomeAmtOrPct || ValueInputMode.PERCENT,
+      dividendRateStdDev: dividendRateStdDev,
+      taxability: data.taxability !== undefined ? data.taxability : true,
+    };
+  };
+
   // Initialize form data with initialData if provided
   const [formData, setFormData] = useState<InvestmentTypeForm>(() => {
     if (initialData) {
-      // Check if return distribution array exists and has content
-      if (
-        !initialData.returnDistribution ||
-        !Array.isArray(initialData.returnDistribution) ||
-        initialData.returnDistribution.length === 0
-      ) {
-        initialData.returnDistribution = [
-          { type: DistributionType.FIXED, value: 0 },
-        ];
-      }
-
-      // Check if income distribution array exists and has content
-      if (
-        !initialData.incomeDistribution ||
-        !Array.isArray(initialData.incomeDistribution) ||
-        initialData.incomeDistribution.length === 0
-      ) {
-        initialData.incomeDistribution = [
-          { type: DistributionType.FIXED, value: 0 },
-        ];
-      }
-
-      // Normalize distribution type (handles case sensitivity)
-      const normalizeType = (type: string): string => {
-        if (typeof type !== "string") return DistributionType.FIXED;
-        const lowerType = type.toLowerCase();
-        return lowerType === "normal"
-          ? DistributionType.NORMAL
-          : DistributionType.FIXED;
-      };
-
-      // Extract values from return distribution
-      const returnDistItem = initialData.returnDistribution[0] || {};
-      const returnType = normalizeType(returnDistItem.type);
-
-      // Determine which key to use for the value
-      const returnRateKey =
-        returnType === DistributionType.FIXED ? "value" : "mean";
-
-      // Get the value, handling different possible key names
-      let returnRateValue = null;
-      if (returnDistItem[returnRateKey] !== undefined) {
-        returnRateValue = returnDistItem[returnRateKey];
-      } else if (
-        returnDistItem["value"] !== undefined &&
-        returnType === DistributionType.FIXED
-      ) {
-        returnRateValue = returnDistItem["value"];
-      } else if (
-        returnDistItem["mean"] !== undefined &&
-        returnType === DistributionType.NORMAL
-      ) {
-        returnRateValue = returnDistItem["mean"];
-      }
-
-      // Convert to string and handle percentage display
-      const returnRate =
-        returnRateValue !== null && returnRateValue !== undefined
-          ? initialData.returnAmtOrPct === ValueInputMode.PERCENT
-            ? (parseFloat(returnRateValue.toString()) * 100).toString()
-            : returnRateValue.toString()
-          : "0";
-
-      // Handle standard deviation similarly
-      let returnRateStdDevValue = null;
-      if (returnType === DistributionType.NORMAL) {
-        if (returnDistItem["stdev"] !== undefined) {
-          returnRateStdDevValue = returnDistItem["stdev"];
-        }
-      }
-
-      const returnRateStdDev =
-        returnRateStdDevValue !== null && returnRateStdDevValue !== undefined
-          ? initialData.returnAmtOrPct === ValueInputMode.PERCENT
-            ? (parseFloat(returnRateStdDevValue.toString()) * 100).toString()
-            : returnRateStdDevValue.toString()
-          : undefined;
-
-      // Extract values from income distribution - same approach as return
-      const incomeDistItem = initialData.incomeDistribution[0] || {};
-      const dividendType = normalizeType(incomeDistItem.type);
-
-      const dividendRateKey =
-        dividendType === DistributionType.FIXED ? "value" : "mean";
-
-      // Get the value, handling different possible key names
-      let dividendRateValue = null;
-      if (incomeDistItem[dividendRateKey] !== undefined) {
-        dividendRateValue = incomeDistItem[dividendRateKey];
-      } else if (
-        incomeDistItem["value"] !== undefined &&
-        dividendType === DistributionType.FIXED
-      ) {
-        dividendRateValue = incomeDistItem["value"];
-      } else if (
-        incomeDistItem["mean"] !== undefined &&
-        dividendType === DistributionType.NORMAL
-      ) {
-        dividendRateValue = incomeDistItem["mean"];
-      }
-
-      const dividendRate =
-        dividendRateValue !== null && dividendRateValue !== undefined
-          ? initialData.incomeAmtOrPct === ValueInputMode.PERCENT
-            ? (parseFloat(dividendRateValue.toString()) * 100).toString()
-            : dividendRateValue.toString()
-          : "0";
-
-      // Handle dividend standard deviation similarly
-      let dividendRateStdDevValue = null;
-      if (dividendType === DistributionType.NORMAL) {
-        if (incomeDistItem["stdev"] !== undefined) {
-          dividendRateStdDevValue = incomeDistItem["stdev"];
-        }
-      }
-
-      const dividendRateStdDev =
-        dividendRateStdDevValue !== null &&
-        dividendRateStdDevValue !== undefined
-          ? initialData.incomeAmtOrPct === ValueInputMode.PERCENT
-            ? (parseFloat(dividendRateStdDevValue.toString()) * 100).toString()
-            : dividendRateStdDevValue.toString()
-          : undefined;
-
-      // Parse expense ratio as a percentage (multiply by 100 for display)
-      const expenseRatioValue =
-        initialData.expenseRatio !== undefined &&
-        initialData.expenseRatio !== null
-          ? (parseFloat(initialData.expenseRatio.toString()) * 100).toString()
-          : "0";
-
-      const result = {
-        name: initialData.name || "",
-        description: initialData.description || "",
-        returnType: returnType,
-        returnRate: returnRate,
-        returnInputMode: initialData.returnAmtOrPct || ValueInputMode.PERCENT,
-        returnRateStdDev: returnRateStdDev,
-        expenseRatio: expenseRatioValue,
-        dividendType: dividendType,
-        dividendRate: dividendRate,
-        dividendInputMode: initialData.incomeAmtOrPct || ValueInputMode.PERCENT,
-        dividendRateStdDev: dividendRateStdDev,
-        taxability:
-          initialData.taxability !== undefined ? initialData.taxability : true,
-      };
-
-      return result;
+      return convert_initial_data_to_form(initialData);
     }
-
     return defaultFormValues;
   });
+
+  // Update form data when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      console.log("Updating form data from initialData:", initialData);
+      setFormData(convert_initial_data_to_form(initialData));
+    } else if (!isEditMode) {
+      // Only reset to default if not in edit mode
+      setFormData(defaultFormValues);
+    }
+  }, [initialData, isEditMode]);
 
   // Reset form when modal is closed
   const handleModalClose = () => {
