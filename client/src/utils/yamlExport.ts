@@ -16,65 +16,99 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
 
   console.log("inflation assumption:", serializedScenario.inflationAssumption);
 
+  // Helper function to ensure numbers are parsed correctly
+  const ensure_number = (val: any): any => {
+    if (val === null || val === undefined) return val;
+    if (typeof val === "string") {
+      // Try to convert string to number if it looks like a number
+      const num = Number(val);
+      return !isNaN(num) ? num : val;
+    }
+    return val;
+  };
+
+  // Recursive function to process all values in an object
+  const process_values = (obj: any): any => {
+    if (obj === null || obj === undefined) return obj;
+
+    if (Array.isArray(obj)) {
+      return obj.map((item) => process_values(item));
+    }
+
+    if (typeof obj === "object") {
+      const result: any = {};
+      for (const key in obj) {
+        result[key] = process_values(obj[key]);
+      }
+      return result;
+    }
+
+    return ensure_number(obj);
+  };
+
   // Create a structured object that matches the expected YAML format
   const yamlObject: any = {
     // Add comment header with version information
     // Special formatting for the header comments
     name: serializedScenario.name,
     maritalStatus: serializedScenario.martialStatus, //fix spelling issue in original data
-    birthYears: serializedScenario.birthYears,
-    lifeExpectancy: serializedScenario.lifeExpectancy,
+    birthYears: serializedScenario.birthYears.map(ensure_number),
+    lifeExpectancy: serializedScenario.lifeExpectancy.map(process_values),
 
     // Convert array of investment types to the expected format
-    investmentTypes: serializedScenario.investmentTypes.map((invType: any) => ({
-      name: invType.name,
-      description: invType.description,
-      returnAmtOrPct: invType.returnAmtOrPct,
-      returnDistribution: invType.returnDistribution[0],
-      expenseRatio: invType.expenseRatio,
-      incomeAmtOrPct: invType.incomeAmtOrPct,
-      incomeDistribution: invType.incomeDistribution[0] ,
-      taxability: invType.taxability,
-    })),
+    investmentTypes: serializedScenario.investmentTypes.map((invType: any) => {
+      return process_values({
+        name: invType.name,
+        description: invType.description,
+        returnAmtOrPct: invType.returnAmtOrPct,
+        returnDistribution: process_values(invType.returnDistribution[0]),
+        expenseRatio: ensure_number(invType.expenseRatio),
+        incomeAmtOrPct: invType.incomeAmtOrPct,
+        incomeDistribution: process_values(invType.incomeDistribution[0]),
+        taxability: invType.taxability,
+      });
+    }),
 
     // Convert investments to the expected format
-    investments: serializedScenario.investments.map((inv: any) => ({
-      investmentType: inv.investmentType,
-      value: inv.value,
-      taxStatus: inv.taxStatus,
-      id: inv.id,
-    })),
+    investments: serializedScenario.investments.map((inv: any) =>
+      process_values({
+        investmentType: inv.investmentType,
+        value: ensure_number(inv.value),
+        taxStatus: inv.taxStatus,
+        id: inv.id,
+      })
+    ),
 
     // Convert event series to the expected format
     eventSeries: serializedScenario.eventSeries.map((event: any) => {
       const baseEvent = {
         name: event.name,
-        start: event.start[0],
-        duration: event.duration[0],
+        start: process_values(event.start[0]),
+        duration: process_values(event.duration[0]),
         type: event.type,
       };
 
       // Add type-specific properties based on event type
       if (event.type === "income") {
-        return {
+        return process_values({
           ...baseEvent,
-          initialAmount: event.initialAmount,
+          initialAmount: ensure_number(event.initialAmount),
           changeAmtOrPct: event.changeAmtOrPct,
-          changeDistribution: event.changeDistribution[0],
+          changeDistribution: process_values(event.changeDistribution[0]),
           inflationAdjusted: event.inflationAdjusted,
-          userFraction: event.userFraction,
+          userFraction: ensure_number(event.userFraction),
           socialSecurity: event.socialSecurity,
-        };
+        });
       } else if (event.type === "expense") {
-        return {
+        return process_values({
           ...baseEvent,
-          initialAmount: event.initialAmount,
+          initialAmount: ensure_number(event.initialAmount),
           changeAmtOrPct: event.changeAmtOrPct,
-          changeDistribution: event.changeDistribution[0],
+          changeDistribution: process_values(event.changeDistribution[0]),
           inflationAdjusted: event.inflationAdjusted,
-          userFraction: event.userFraction,
+          userFraction: ensure_number(event.userFraction),
           discretionary: event.discretionary,
-        };
+        });
       } else if (event.type === "invest") {
         // Convert assetAllocation format from array to object
         const assetAllocation: Record<string, number> = {};
@@ -82,58 +116,65 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
 
         if (Array.isArray(event.assetAllocation)) {
           event.assetAllocation.forEach((allocation: any) => {
-            assetAllocation[allocation.type] = allocation.value;
+            assetAllocation[allocation.type] = ensure_number(allocation.value);
           });
         }
 
         if (Array.isArray(event.assetAllocation2)) {
           event.assetAllocation2.forEach((allocation: any) => {
-            assetAllocation2[allocation.type] = allocation.value;
+            assetAllocation2[allocation.type] = ensure_number(allocation.value);
           });
         }
 
-        return {
+        return process_values({
           ...baseEvent,
           assetAllocation,
           glidePath: event.glidePath,
           assetAllocation2: event.glidePath ? assetAllocation2 : undefined,
-          maxCash: event.maxCash,
-        };
+          maxCash: ensure_number(event.maxCash),
+        });
       } else if (event.type === "rebalance") {
         // Convert assetAllocation format from array to object
         const assetAllocation: Record<string, number> = {};
 
         if (Array.isArray(event.assetAllocation)) {
           event.assetAllocation.forEach((allocation: any) => {
-            assetAllocation[allocation.type] = allocation.value;
+            assetAllocation[allocation.type] = ensure_number(allocation.value);
           });
         }
 
-        return {
+        return process_values({
           ...baseEvent,
           assetAllocation,
-        };
+        });
       }
 
       return baseEvent;
     }),
 
-    inflationAssumption: serializedScenario.inflationAssumption,
-    afterTaxContributionLimit: serializedScenario.afterTaxContributionLimit,
+    inflationAssumption: process_values(serializedScenario.inflationAssumption),
+    afterTaxContributionLimit: ensure_number(
+      serializedScenario.afterTaxContributionLimit
+    ),
     spendingStrategy: serializedScenario.spendingStrategy,
     expenseWithdrawalStrategy: serializedScenario.expenseWithdrawalStrategy,
     RMDStrategy: serializedScenario.RMDStrategy,
     RothConversionOpt: serializedScenario.RothConversionOpt,
-    RothConversionStart: serializedScenario.RothConversionStart,
-    RothConversionEnd: serializedScenario.RothConversionEnd,
+    RothConversionStart: ensure_number(serializedScenario.RothConversionStart),
+    RothConversionEnd: ensure_number(serializedScenario.RothConversionEnd),
     RothConversionStrategy: serializedScenario.RothConversionStrategy,
-    financialGoal: serializedScenario.financialGoal,
+    financialGoal: ensure_number(serializedScenario.financialGoal),
     residenceState: serializedScenario.residenceState,
   };
 
   console.log("yamlObject", yamlObject);
 
-  return dump(yamlObject);
+  // Pass skipInvalid:false to ensure valid YAML and noQuotes:true to ensure strings are properly quoted only when needed
+  return dump(yamlObject, {
+    skipInvalid: false,
+    noCompatMode: true,
+    lineWidth: -1, // Don't wrap lines
+  });
 }
 
 /**
