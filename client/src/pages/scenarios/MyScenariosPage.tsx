@@ -21,7 +21,10 @@ import { SAMPLE_SCENARIOS } from "../../types/scenario"; //! temporary
 import { Link as RouterLink } from "react-router-dom";
 import { ScenarioRaw } from "../../types/Scenarios";
 import { scenarioApi } from "../../services/scenario";
-import { convert_scenario_to_yaml, download_scenario_as_yaml } from "../../utils/yamlExport";
+import {
+  convert_scenario_to_yaml,
+  download_scenario_as_yaml,
+} from "../../utils/yamlExport";
 
 const MyScenariosPage: React.FC = () => {
   const headingColor = useColorModeValue("gray.700", "white");
@@ -34,11 +37,10 @@ const MyScenariosPage: React.FC = () => {
 
   const handle_sample_scenario = async (scenario: ScenarioRaw) => {
     try {
-      console.log("Scenario to create:", scenario);
       // Download the scenario as YAML before creating it
       const yaml = convert_scenario_to_yaml(scenario);
       const savedScenario = await scenarioApi.create(yaml);
-      console.log("Scenario created:", savedScenario);
+      console.log("yaml in myScenariosPage:", yaml);
     } catch (error) {
       console.error("Error creating scenario:", error);
     }

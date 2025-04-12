@@ -17,7 +17,9 @@ import { InvestmentTypesForm } from "../../components/scenarios/InvestmentTypesF
 import AdditionalSettingsForm, {
   AdditionalSettingsConfig,
 } from "../../components/scenarios/AdditionalSettingsForm";
-import RothConversionOptimizerForm, { RothConversionStrategy } from "../../components/scenarios/RothConversionForm";
+import RothConversionOptimizerForm, {
+  RothConversionStrategy,
+} from "../../components/scenarios/RothConversionForm";
 import ScenarioTypeSelector, {
   ScenarioCreationType,
 } from "../../components/scenarios/ScenarioTypeSelector";
@@ -43,7 +45,6 @@ import { withdrawalStrategyApi } from "../../services/withdrawalStrategyApi";
 import withdrawalStrategyStorage from "../../services/withdrawalStrategyStorage";
 import rmdStrategyStorage from "../../services/rmdStrategyStorage";
 import lifeExpectancyStorage from "../../services/lifeExpectancyStorage";
-import { FaLeaf } from "react-icons/fa";
 import { scenarioApi } from "../../services/scenario";
 import { convert_scenario_to_yaml } from "../../utils/yamlExport";
 
@@ -123,7 +124,8 @@ function NewScenarioPage() {
       accountPriority: [],
     });
 
-  const [rothConversionStrategy, setRothConversionStrategy] = useState<RothConversionStrategy>({
+  const [rothConversionStrategy, setRothConversionStrategy] =
+    useState<RothConversionStrategy>({
       roth_conversion_start: 0,
       roth_conversion_end: 0,
       roth_conversion_opt: false,
@@ -153,15 +155,16 @@ function NewScenarioPage() {
   };
 
   //! check if the user choose IMPORT_YAML, then jump to yamlImport step.
-  const handle_yaml_import_complete = (data: any) => {
+  const handle_yaml_import_complete = async (data:any) => {
     investmentTypeStorage.clear();
-    // Here you would process the imported data
-    // For now, we'll just show a success message and redirect
-    //! need to write a function to handle the imported data. send it to the backend. let the backend generate the ID and save it to the database.
-    //TODO:
-
-    // Clean investment type data from localStorage
-    investmentTypeStorage.clear();
+    // const yaml = convert_scenario_to_yaml(data.data);
+    // console.log("NewScenarioPage: yaml:", yaml);
+    try {
+      const savedScenario = await scenarioApi.create(data.rawYaml);
+      console.log("Scenario created:", savedScenario);
+    } catch (error) {
+      console.error("Error creating scenario:", error);
+    }
 
     toast({
       title: "Import Successful",
@@ -190,9 +193,9 @@ function NewScenarioPage() {
   };
 
   const handleDeleteEvent = async (id: string): Promise<void> => {
-      setAddedEvents((prev) =>
-        prev.filter((event) => (event.id || event._id) !== id)
-      );
+    setAddedEvents((prev) =>
+      prev.filter((event) => (event.id || event._id) !== id)
+    );
   };
 
   //! don't touch
@@ -241,21 +244,24 @@ function NewScenarioPage() {
     // Calculate current age based on birth year
     const currentYear = new Date().getFullYear();
     const currentAge = currentYear - scenarioDetails.userBirthYear;
-    
+
     console.log("Investments before filtering:", investmentsConfig.investments);
-    
+
     // Change this filter to match the actual tax status value
-    const preTaxInvestments = investmentsConfig.investments
-      .filter((inv) => {
-        console.log("Investment tax status:", inv.taxStatus);
-        // Check for both possible formats to be safe
-        return inv.taxStatus === "pre-tax" || inv.taxStatus === "PRE_TAX_RETIREMENT";
-      });
-    
+    const preTaxInvestments = investmentsConfig.investments.filter((inv) => {
+      console.log("Investment tax status:", inv.taxStatus);
+      // Check for both possible formats to be safe
+      return (
+        inv.taxStatus === "pre-tax" || inv.taxStatus === "PRE_TAX_RETIREMENT"
+      );
+    });
+
     // Map to the format needed for RMDSettings
     const preTaxAccounts = preTaxInvestments.map((inv) => ({
       id: inv.id || `inv-${Math.random().toString(36).substring(2, 9)}`,
-      name: inv.investmentType || `Investment ${inv.id || Math.random().toString(36).substring(2, 9)}`
+      name:
+        inv.investmentType ||
+        `Investment ${inv.id || Math.random().toString(36).substring(2, 9)}`,
     }));
 
     console.log("Filtered pre-tax accounts:", preTaxAccounts);
@@ -266,20 +272,22 @@ function NewScenarioPage() {
       currentAge: currentAge, // Set the calculated current age
       availableAccounts: preTaxAccounts,
     });
-    
+
     console.log("RMD Settings after update:", {
       ...rmdSettings,
       currentAge: currentAge,
-      availableAccounts: preTaxAccounts
+      availableAccounts: preTaxAccounts,
     });
-    
+
     setStep("rmdSettings");
   };
 
   const handle_continue_to_spending_strategy = () => {
     // Get all expenses from added events
     const allExpenses = addedEvents
-      .filter((event) => event.type === "expense" && event.discretionary === true)
+      .filter(
+        (event) => event.type === "expense" && event.discretionary === true
+      )
       .map((event) => event.name);
 
     setSpendingStrategy({
@@ -297,18 +305,20 @@ function NewScenarioPage() {
   const handle_continue_to_withdrawal_strategy = () => {
     // Get all accounts from investments with their IDs
     //console.log("Investments:", investmentsConfig.investments);
-    const allAccounts = investmentsConfig.investments.map(inv => ({
+    const allAccounts = investmentsConfig.investments.map((inv) => ({
       id: inv.id || `inv-${Math.random().toString(36).substring(2, 9)}`,
-      name: inv.investmentType || `Investment ${inv.id || Math.random().toString(36).substring(2, 9)}`
+      name:
+        inv.investmentType ||
+        `Investment ${inv.id || Math.random().toString(36).substring(2, 9)}`,
     }));
-    
+
     console.log("Available accounts for withdrawal:", allAccounts);
-    
+
     setWithdrawalStrategy({
       availableAccounts: allAccounts,
       accountPriority: withdrawalStrategy.accountPriority || [],
     });
-    
+
     setStep("withdrawalStrategy");
   };
 
@@ -324,8 +334,6 @@ function NewScenarioPage() {
 
   //* the final step
   const handle_finish_scenario = async () => {
-
-
     // Map form data to ScenarioRaw
     const scenarioRaw = map_form_to_scenario_raw(
       scenarioDetails,
@@ -363,10 +371,10 @@ function NewScenarioPage() {
     });
     console.log("Inflation Assumption");
     console.log("type:", scenarioRaw.inflationAssumption["type"]);
-    console.log("value: ",scenarioRaw.inflationAssumption["value"]);
+    console.log("value: ", scenarioRaw.inflationAssumption["value"]);
     console.log("min", scenarioRaw.inflationAssumption["min"]);
     console.log("max:", scenarioRaw.inflationAssumption["max"]);
-    console.log("mean: ",scenarioRaw.inflationAssumption["mean"]);
+    console.log("mean: ", scenarioRaw.inflationAssumption["mean"]);
     console.log("stdev", scenarioRaw.inflationAssumption["stdev"]);
     console.log("Financial Goal:", scenarioRaw.financialGoal);
     console.log("Complete ScenarioRaw Object:", scenarioRaw);
@@ -381,22 +389,21 @@ function NewScenarioPage() {
 
       // Clean investment type data from localStorage
       investmentTypeStorage.clear();
-    //need to check what is the correct way to clear the local storage
+      //need to check what is the correct way to clear the local storage
       clearLocalStorage();
       // Show success toast and navigate to scenarios page
-    toast({
-      title: "Scenario Created",
-      description: "Your scenario has been created successfully.",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
+      toast({
+        title: "Scenario Created",
+        description: "Your scenario has been created successfully.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
       console.log("Attempting to navigate to /scenarios...");
-    navigate("/scenarios");
+      navigate("/scenarios");
       console.log("Navigation function called");
 
-    // After successfully saving the complete scenario
-
+      // After successfully saving the complete scenario
     } catch (error) {
       console.error("Error saving scenario:", error);
       toast({
@@ -440,7 +447,7 @@ function NewScenarioPage() {
   //       const savedStrategy = await spendingStrategyApi.create(spendingStrategy);
   //       setSpendingStrategy(savedStrategy);
   //     }
-      
+
   //     // Also save to localStorage
   //     if (spendingStrategy.id) {
   //       spendingStrategyStorage.update(spendingStrategy.id, spendingStrategy);
@@ -451,7 +458,7 @@ function NewScenarioPage() {
   //         setSpendingStrategy(savedLocalStrategy);
   //       }
   //     }
-      
+
   //     toast({
   //       title: "Spending strategy saved",
   //       status: "success",
@@ -460,7 +467,7 @@ function NewScenarioPage() {
   //     });
   //   } catch (error) {
   //     console.error("Error saving spending strategy:", error);
-      
+
   //     // If API fails, still try to save to localStorage
   //     try {
   //       if (spendingStrategy.id) {
@@ -469,7 +476,7 @@ function NewScenarioPage() {
   //         const savedLocalStrategy = spendingStrategyStorage.add(spendingStrategy);
   //         setSpendingStrategy(savedLocalStrategy);
   //       }
-        
+
   //       toast({
   //         title: "Spending strategy saved locally",
   //         description: "Could not connect to server, saved to browser storage",
@@ -515,7 +522,10 @@ function NewScenarioPage() {
     if (savedStrategies.length > 0) {
       // Use the most recent one
       setWithdrawalStrategy(savedStrategies[savedStrategies.length - 1]);
-      console.log("Loaded withdrawal strategy from localStorage:", savedStrategies[savedStrategies.length - 1]);
+      console.log(
+        "Loaded withdrawal strategy from localStorage:",
+        savedStrategies[savedStrategies.length - 1]
+      );
     }
   }, []);
 
@@ -529,15 +539,19 @@ function NewScenarioPage() {
       //   const savedStrategy = await withdrawalStrategyApi.create(withdrawalStrategy);
       //   setWithdrawalStrategy(savedStrategy);
       // }
-      
+
       // Only use localStorage
       if (withdrawalStrategy.id) {
-        withdrawalStrategyStorage.update(withdrawalStrategy.id, withdrawalStrategy);
+        withdrawalStrategyStorage.update(
+          withdrawalStrategy.id,
+          withdrawalStrategy
+        );
       } else {
-        const savedLocalStrategy = withdrawalStrategyStorage.add(withdrawalStrategy);
+        const savedLocalStrategy =
+          withdrawalStrategyStorage.add(withdrawalStrategy);
         setWithdrawalStrategy(savedLocalStrategy);
       }
-      
+
       toast({
         title: "Withdrawal strategy saved locally",
         status: "success",
@@ -557,13 +571,13 @@ function NewScenarioPage() {
   };
 
   // Add this near your other useEffects
-// useEffect(() => {
-//   console.log("investmentsConfig changed:", investmentsConfig);
-//   console.log("Number of investments:", investmentsConfig.investments.length);
-//   console.log("Pre-tax investments:", investmentsConfig.investments.filter(
-//     inv => inv.taxStatus === "PRE_TAX_RETIREMENT"
-//   ));
-// }, [investmentsConfig]);
+  // useEffect(() => {
+  //   console.log("investmentsConfig changed:", investmentsConfig);
+  //   console.log("Number of investments:", investmentsConfig.investments.length);
+  //   console.log("Pre-tax investments:", investmentsConfig.investments.filter(
+  //     inv => inv.taxStatus === "PRE_TAX_RETIREMENT"
+  //   ));
+  // }, [investmentsConfig]);
 
   // // Inside the NewScenarioPage component, add this function
   // const saveRMDStrategy = async () => {
@@ -575,7 +589,7 @@ function NewScenarioPage() {
   //       const savedSettings = rmdStrategyStorage.add(rmdSettings);
   //       setRmdSettings(savedSettings);
   //     }
-      
+
   //     toast({
   //       title: "RMD settings saved locally",
   //       status: "success",
@@ -607,7 +621,10 @@ function NewScenarioPage() {
     if (savedSettings.length > 0) {
       // Use the most recent one
       setRmdSettings(savedSettings[savedSettings.length - 1]);
-      console.log("Loaded RMD settings from localStorage:", savedSettings[savedSettings.length - 1]);
+      console.log(
+        "Loaded RMD settings from localStorage:",
+        savedSettings[savedSettings.length - 1]
+      );
     }
   }, []);
 
@@ -616,12 +633,15 @@ function NewScenarioPage() {
     try {
       // Only use localStorage
       if (lifeExpectancyConfig.id) {
-        lifeExpectancyStorage.update(lifeExpectancyConfig.id, lifeExpectancyConfig);
+        lifeExpectancyStorage.update(
+          lifeExpectancyConfig.id,
+          lifeExpectancyConfig
+        );
       } else {
         const savedConfig = lifeExpectancyStorage.add(lifeExpectancyConfig);
         setLifeExpectancyConfig(savedConfig);
       }
-      
+
       toast({
         title: "Life expectancy settings saved locally",
         status: "success",
@@ -722,12 +742,12 @@ function NewScenarioPage() {
   if (step === "investments") {
     return (
       <Box position="relative" zIndex={10} width="100%" height="100%">
-      <InvestmentsForm
-        investmentsConfig={investmentsConfig}
-        onChangeInvestmentsConfig={setInvestmentsConfig}
+        <InvestmentsForm
+          investmentsConfig={investmentsConfig}
+          onChangeInvestmentsConfig={setInvestmentsConfig}
           onContinue={handle_continue_to_rmd_settings}
           onBack={handle_to_investment_types}
-      />
+        />
       </Box>
     );
   }
@@ -770,7 +790,7 @@ function NewScenarioPage() {
 
   // Withdrawal Strategy Form
   if (step === "withdrawalStrategy") {
-                  return (
+    return (
       <WithdrawalStrategyForm
         withdrawalStrategy={withdrawalStrategy}
         onChangeWithdrawalStrategy={setWithdrawalStrategy}
