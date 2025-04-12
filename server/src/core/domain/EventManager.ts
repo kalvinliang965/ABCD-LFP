@@ -49,7 +49,6 @@ function differentiate_events(
 }
 
 export interface EventManager {
-    print: () => void;
     clone: () => EventManager;
     get_active_income_event: (year: number) => Array<IncomeEvent>;
     get_active_invest_event: (year: number) => Array<InvestEvent>;
