@@ -384,7 +384,7 @@ function NewScenarioPage() {
     // Send scenario to backend using scenarioApi
     try {
       const yaml = convert_scenario_to_yaml(scenarioRaw);
-      const savedScenario = await scenarioApi.create(yaml); // 这里需要修改，因为scenarioRaw是一个ScenarioRaw对象，而scenarioApi.create需要一个string。
+      const savedScenario = await scenarioApi.create(yaml); 
       console.log("Scenario saved to backend:", savedScenario);
 
       // Clean investment type data from localStorage
