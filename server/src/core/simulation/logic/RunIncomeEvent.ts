@@ -21,35 +21,10 @@ export default async function run_income_event(
     simulation_logger.debug(`run income event ${event.name}`);
 
     // step a: update the initial amount field for this event for next year
-    const initial_amount = event.initial_amount;
-    simulation_logger.debug(`initial amount: ${initial_amount}`);
-    const annual_change = event.expected_annual_change.sample();
-    simulation_logger.debug(`annual change: ${annual_change}`);
-    const change_type = event.change_type;
-    simulation_logger.debug(`change type: ${change_type}`);
-    let change;
-    if (change_type === ChangeType.FIXED) {
-      change = annual_change;
-    } else if (change_type === ChangeType.PERCENTAGE) {
-      change = annual_change * initial_amount
-    } else {
-      simulation_logger.error(`event ${event.name} contain invalid change_type ${event.change_type}`)
-      throw new Error(`Invalid Change type ${change_type}`);
-    }
-    let current_amount = initial_amount + change;
-    // update the event
-    event.initial_amount = current_amount;
-    simulation_logger.debug(`Updated amount: ${current_amount}`);
+    let user_gains=state.event_manager.get_initial_amount(event);
 
-    // step b: adjust for inflation
-    if (event.inflation_adjusted) {
-      simulation_logger.debug(`Event is inflation adjusted with inflation factor: ${state.inflation_factor}`);
-      current_amount *= (1 + state.inflation_factor);  
-    }
-
-    // if both are alive, we use the entire amount
-    let user_gains=current_amount;
     // step c: ignore spouse portion if they died
+    // if both are alive, we use the entire amount
     if (!spouse_alive) {
       simulation_logger.debug(`Spouse is not alive. User own ${event.user_fraction} of the event`);
       user_gains *= event.user_fraction;
@@ -64,7 +39,7 @@ export default async function run_income_event(
 
     // step f: update total cur year social security bennefit income.
     if (event.social_security) {
-      state.user_tax_data.incr_social_security(user_gains);
+      state.user_tax_data.incr_cur_year_ss(user_gains);
     }
 
     // update income breakdown in event manager

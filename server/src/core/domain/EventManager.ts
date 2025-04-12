@@ -8,6 +8,7 @@ import { simulation_logger } from "../../utils/logger/logger";
 import { clone_map } from "../../utils/helper";
 import Deque from "double-ended-queue";
 import { EventUnion } from "./event/Event";
+import { ChangeType } from "../Enums";
 
 export type InvestEventMap = Map<string, InvestEvent>;
 export type IncomeEventMap = Map<string, IncomeEvent>;
@@ -53,10 +54,12 @@ export interface EventManager {
     get_active_income_event: (year: number) => Array<IncomeEvent>;
     get_active_invest_event: (year: number) => Array<InvestEvent>;
     get_active_rebalance_event: (year: number) => Array<RebalanceEvent>;
-    _income_event: IncomeEventMap,
-    _expense_event: ExpenseEventMap,
-    _invest_event: InvestEventMap,
-    _rebalance_event: RebalanceEventMap,
+    get_active_mandatory_event: (year: number) => Array<ExpenseEvent>;
+    get_active_non_discretionary_event: (year: number) => Array<ExpenseEvent>;
+    income_event: IncomeEventMap,
+    expense_event: ExpenseEventMap,
+    invest_event: InvestEventMap,
+    rebalance_event: RebalanceEventMap,
     get_income_breakdown: () => Record<string, number>;
     update_income_breakdown: (eventName: string, amount: number) => void;
     reset_income_breakdown: () => void;
@@ -67,6 +70,7 @@ export interface EventManager {
     update_total_expenses: (mandatory: number, discretionary: number) => void;
     get_last_year_tax_totals: () => { total: number } | undefined;
     update_last_year_tax_totals: (total: number) => void;
+    get_initial_amount: (event: ExpenseEvent | IncomeEvent) => number;
 }
 
 function create_event_manager_clone(
@@ -81,16 +85,20 @@ function create_event_manager_clone(
     let last_year_tax_totals: { total: number } | undefined;
 
     return {
-        _income_event: income_event,
-        _expense_event: expense_event,
-        _invest_event: invest_event,
-        _rebalance_event: rebalance_event,
+        income_event,
+        expense_event,
+        invest_event,
+        rebalance_event,
         get_active_income_event: (year: number) => Array.from(income_event.values())
                                 .filter((event: IncomeEvent) => is_event_active(event, year)),
         get_active_invest_event: (year: number) => Array.from(invest_event.values())
                                 .filter((event: InvestEvent) => is_event_active(event, year)),
         get_active_rebalance_event: (year: number) => Array.from(rebalance_event.values())
                                 .filter((event: RebalanceEvent) => is_event_active(event, year)),
+        get_active_mandatory_event: (year: number) => Array.from(expense_event.values())
+                                .filter((event: ExpenseEvent) => is_event_active(event, year) && event.discretionary == false),
+        get_active_non_discretionary_event: (year: number) => Array.from(expense_event.values())
+                                .filter((event: ExpenseEvent) => is_event_active(event, year) && event.discretionary == true),
         get_income_breakdown: () => income_breakdown,
         update_income_breakdown: (eventName: string, amount: number) => {
             income_breakdown[eventName] = (income_breakdown[eventName] || 0) + amount;
@@ -113,7 +121,29 @@ function create_event_manager_clone(
         update_last_year_tax_totals: (total: number) => {
             last_year_tax_totals = { total };
         },
-        print: () => console.log("Hello"),
+        get_initial_amount(event: IncomeEvent | ExpenseEvent) {
+            simulation_logger.debug(`Updating event ${event.name}...`);
+            const initial_amount = event.initial_amount;
+            simulation_logger.debug(`initial amount: ${initial_amount}`);
+            const annual_change = event.expected_annual_change.sample();
+            simulation_logger.debug(`annual change: ${annual_change}`);
+            const change_type = event.change_type;
+            simulation_logger.debug(`change type: ${change_type}`);
+            let change;
+            if (change_type === ChangeType.FIXED) {
+            change = annual_change;
+            } else if (change_type === ChangeType.PERCENTAGE) {
+            change = annual_change * initial_amount
+            } else {
+            simulation_logger.error(`event ${event.name} contain invalid change_type ${event.change_type}`)
+            throw new Error(`Invalid Change type ${change_type}`);
+            }
+            let current_amount = initial_amount + change;
+            // update the event
+            event.initial_amount = current_amount;
+            simulation_logger.debug(`Updated amount: ${current_amount}`);
+            return current_amount;
+        },
         clone: () => create_event_manager_clone(
             clone_map(income_event),
             clone_map(expense_event),
