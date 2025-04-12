@@ -187,17 +187,6 @@ const Sidebar: React.FC = () => {
           </NavItem>
         </NavGroup>
 
-        <NavGroup title="Scenario Builder" sidebarOpen={sidebarOpen}>
-          <NavItem
-            icon={FaMoneyBillWave}
-            to="/builder/investments"
-            isActive={location.pathname.startsWith("/builder/investments")}
-            sidebarOpen={sidebarOpen}
-          >
-            Investments
-          </NavItem>
-        </NavGroup>
-
         <NavGroup title="Simulation" sidebarOpen={sidebarOpen}>
           <NavItem
             icon={FaPlay}
