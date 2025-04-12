@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.post("/", async (req: Request, res: Response) => {
   const yamlString = req.body;
-  console.log("scenario", yamlString);
+  console.log("scenario\n", yamlString);
   console.log("type of scenario", typeof yamlString);
 
   const scenarioRaw = create_scenario_raw_yaml(yamlString);

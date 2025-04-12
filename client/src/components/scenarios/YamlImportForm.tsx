@@ -33,6 +33,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import yaml from "js-yaml";
 
 export interface YamlImportFormProps {
   onImportComplete: (data: any) => void;
@@ -139,27 +140,34 @@ const YamlImportForm: React.FC<YamlImportFormProps> = ({
     set_is_loading(true);
 
     try {
-      // Here you would implement the actual file parsing and API call
-      // For now, we'll just simulate a successful import
       const reader = new FileReader();
 
       reader.onload = (event) => {
         if (event.target?.result) {
-          // In a real implementation, you would parse the YAML and validate it
-          // For now, just simulate successful import
-          setTimeout(() => {
+          try {
+            // 读取文件内容
+            const yamlContent = event.target.result as string;
+
+            // 使用yaml库解析内容
+            const parsedData = yaml.load(yamlContent);
+
+            // 记录原始内容和解析后的数据用于调试
+            console.log("YAML原始内容:", yamlContent);
+            console.log("YAML解析后数据:", parsedData);
+
+            // 发送解析后的数据
             onImportComplete({
               success: true,
               message: "File imported successfully",
-              // Mock imported data
-              data: {
-                name: file.name.replace(/\.(yaml|yml)$/, ""),
-                // Other mock data would go here
-              },
+              data: parsedData,
+              rawYaml: yamlContent, // 保留原始内容以备调试
             });
-
+          } catch (parseError) {
+            console.error("YAML解析错误:", parseError);
+            throw new Error("Invalid YAML format");
+          } finally {
             set_is_loading(false);
-          }, 1000);
+          }
         }
       };
 
