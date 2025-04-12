@@ -39,6 +39,7 @@ import {
   Tag,
   VStack,
   HStack,
+  useToast,
 } from "@chakra-ui/react";
 import { InvestmentTypeRaw } from "../../types/Scenarios";
 import { DistributionType } from "../../types/Enum";
@@ -82,6 +83,7 @@ interface AddInvestmentTypeModalProps {
   onSave: (investmentType: InvestmentTypeRaw) => void;
   initialData?: InvestmentTypeRaw; // Added for edit mode
   isEditMode?: boolean; // Flag to indicate if in edit mode
+  existingTypes?: InvestmentTypeRaw[]; // Add this line to include existing types
 }
 
 // Create the component
@@ -91,6 +93,7 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
   onSave,
   initialData,
   isEditMode = false,
+  existingTypes = [], // Default to empty array if not provided
 }) => {
   // Define the steps
   const steps = [
@@ -118,6 +121,9 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
   useEffect(() => {
     setActiveStep(isEditMode ? 3 : 0);
   }, [isEditMode, setActiveStep]);
+
+  // Add toast at component level
+  const toast = useToast();
 
   // Default empty form values
   const defaultFormValues: InvestmentTypeForm = {
@@ -376,9 +382,36 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
 
   const handleSave = () => {
     try {
+      // First check if name already exists
+      const trimmedName = formData.name.trim();
+      const nameLowerCase = trimmedName.toLowerCase();
+
+      // Only check for duplicates if not in edit mode or if name has changed in edit mode
+      if (
+        !isEditMode ||
+        (initialData && initialData.name?.toLowerCase() !== nameLowerCase)
+      ) {
+        const nameExists = existingTypes.some(
+          (type) => type.name.trim().toLowerCase() === nameLowerCase
+        );
+
+        if (nameExists) {
+          // Show error toast
+          toast({
+            title: "Investment Type Already Exists",
+            description: `An investment type with the name "${trimmedName}" already exists.`,
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+            position: "top-right",
+          });
+          return; // Don't proceed with save
+        }
+      }
+
       // Convert form data to InvestmentTypeRaw format
       const investmentType: InvestmentTypeRaw = {
-        name: formData.name,
+        name: trimmedName, // Use trimmed name
         description: formData.description,
         returnAmtOrPct: formData.returnInputMode,
         expenseRatio: parseFloat(formData.expenseRatio) / 100, // Convert from percentage to decimal

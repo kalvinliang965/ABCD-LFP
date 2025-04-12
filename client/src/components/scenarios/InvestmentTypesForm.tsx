@@ -276,6 +276,10 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
     setSearchQuery(e.target.value);
   };
 
+  const has_cash_investment_type = () => {
+    return investmentTypes.some((type) => type.name.toLowerCase() === "cash");
+  };
+
   const get_distribution_display = (
     distribution: Array<{ [key: string]: any }>
   ) => {
@@ -289,7 +293,22 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
     return `${value.toFixed(2)}%`;
   };
 
-  const can_continue = investmentTypes.length > 0;
+  const can_continue = investmentTypes.length > 0 && has_cash_investment_type();
+
+  const handle_continue_click = () => {
+    if (!has_cash_investment_type()) {
+      toast({
+        title: "Cash Investment Type Required",
+        description: "You must have Cash as investment type",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+        position: "top-right",
+      });
+      return;
+    }
+    onContinue();
+  };
 
   // Filter investment types based on search query
   const filtered_investment_types = investmentTypes.filter((type) =>
@@ -718,7 +737,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                 <Button
                   rightIcon={<Icon as={FiChevronRight} />}
                   colorScheme="blue"
-                  onClick={onContinue}
+                  onClick={handle_continue_click}
                   isDisabled={!can_continue}
                   size="lg"
                   shadow="md"
@@ -732,7 +751,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                 >
                   Continue to Investments
                 </Button>
-                {(import.meta.env.MODE === "development") && (
+                {import.meta.env.MODE === "development" && (
                   <Button
                     rightIcon={<Icon as={FiChevronRight} />}
                     colorScheme="blue"
@@ -773,10 +792,18 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
               <Icon as={InfoIcon} color={accentColor} mr={2} />
               <Heading size="sm">Tips for Investment Types</Heading>
             </Flex>
-            <Text fontSize="sm" color="gray.600">
+            <Text fontSize="sm" color="gray.600" mb={2}>
               Create different investment types with varied risk profiles.
               Consider adding tax-exempt options for retirement accounts and
               taxable options for brokerage accounts.
+            </Text>
+            <Text
+              fontSize="sm"
+              fontWeight="medium"
+              color={!has_cash_investment_type() ? "red.500" : "blue.500"}
+            >
+              Note: You must have a "Cash" investment type to proceed to the
+              next step.
             </Text>
           </MotionCard>
         )}
@@ -787,6 +814,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
         isOpen={isOpen}
         onClose={handle_modal_close}
         onSave={handle_save_investment_type}
+        existingTypes={investmentTypes}
       />
 
       {/* Edit Investment Type Modal */}
@@ -796,6 +824,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
         onSave={handle_save_investment_type}
         initialData={typeToEdit || undefined}
         isEditMode={true}
+        existingTypes={investmentTypes}
       />
 
       {/* Confirmation Dialog for Delete */}
