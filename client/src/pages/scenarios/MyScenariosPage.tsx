@@ -20,7 +20,7 @@ import { ScenarioDetailCard } from "../../components/scenarios";
 import { SAMPLE_SCENARIOS } from "../../types/scenario"; //! temporary
 import { Link as RouterLink } from "react-router-dom";
 import { ScenarioRaw } from "../../types/Scenarios";
-import { scenarioApi } from "../../services/scenario";
+import { scenarioYAMLService } from "../../services/scenarioYAML";
 import {
   convert_scenario_to_yaml,
   download_scenario_as_yaml,
@@ -39,7 +39,7 @@ const MyScenariosPage: React.FC = () => {
     try {
       // Download the scenario as YAML before creating it
       const yaml = convert_scenario_to_yaml(scenario);
-      const savedScenario = await scenarioApi.create(yaml);
+      const savedScenario = await scenarioYAMLService.create(yaml);
       console.log("yaml in myScenariosPage:", yaml);
     } catch (error) {
       console.error("Error creating scenario:", error);
