@@ -14,8 +14,10 @@ if (!fs.existsSync(logsDir)) {
 }
 
 const generate_filename = (model: string) => {
-    const date = new Date();
-    return `${date.toISOString().split('T')[0]}_${model}.log`;
+  const date = new Date();
+  const isoString = date.toISOString();
+  const timestamp = isoString.slice(0, 19).replace(/[:T]/g, '-');
+  return `${timestamp}_${model}.log`;
 }
 
 const base_format = winston.format.combine(
@@ -23,21 +25,9 @@ const base_format = winston.format.combine(
   winston.format.errors({ stack: true })
 );
 
-export const route_logger = winston.createLogger({
-  level: 'http', 
-  format: winston.format.combine(
-    base_format,
-    winston.format.label({ label: 'ROUTE' }),
-    winston.format.metadata({ fillExcept: ['message', 'level', 'timestamp', 'label'] }),
-    // we can add more
-  ),
-  transports: [
-    new winston.transports.Console(),
-  ],
-});
-
+let level = dev.is_dev?'debug': "info";
 export const simulation_logger = winston.createLogger({
-  level: dev.is_dev?'debug': "info",
+  level,
   format: winston.format.combine(
     base_format,
     winston.format.label({ label: 'SIMULATION' }),
@@ -45,6 +35,7 @@ export const simulation_logger = winston.createLogger({
   ),
   transports: [
     new winston.transports.Console({
+      level,
       format: winston.format.combine(
         winston.format.colorize(),
         winston.format.printf(({ level, message, timestamp, label }) => {
@@ -54,30 +45,7 @@ export const simulation_logger = winston.createLogger({
     }),
     new winston.transports.File({ 
       filename: path.join(logsDir, generate_filename("simulation")),
-      level: dev.is_dev?'debug': "info",
+      level,
     }),
-  ],
-});
-
-export const tax_logger = winston.createLogger({
-  level: dev.is_dev?'debug': "info",
-  format: winston.format.combine(
-    base_format,
-    winston.format.label({ label: 'TAX' }),
-    winston.format.json(),
-  ),
-  transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.printf(({ level, message, timestamp, label }) => {
-          return `[${label}] ${timestamp} ${level}: ${message}`;
-        })
-      ),
-    }),
-    new winston.transports.File({
-      filename: path.join(logsDir, generate_filename("tax")),
-      level: dev.is_dev? "debug": "info",
-    })
   ],
 });

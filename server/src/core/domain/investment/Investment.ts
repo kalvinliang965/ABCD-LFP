@@ -7,7 +7,7 @@ import { Cloneable } from "../../../utils/helper";
  */
 export interface Investment extends Cloneable<Investment> {
   id: string;
-  taxStatus: TaxStatus;
+  tax_status: TaxStatus;
   investment_type: string;
   get_value(): number;
   get_cost_basis(): number;
@@ -23,18 +23,18 @@ export interface Investment extends Cloneable<Investment> {
 export function create_investment(raw_data: InvestmentRaw): Investment {
   try {
     const investment_type = raw_data.investmentType;
-    let taxStatus: TaxStatus;
+    let tax_status: TaxStatus;
 
     // Convert string to TaxStatus enum
     switch (raw_data.taxStatus) {
       case "non-retirement":
-        taxStatus = TaxStatus.NON_RETIREMENT;
+        tax_status = TaxStatus.NON_RETIREMENT;
         break;
       case "pre-tax":
-        taxStatus = TaxStatus.PRE_TAX;
+        tax_status = TaxStatus.PRE_TAX;
         break;
       case "after-tax":
-        taxStatus = TaxStatus.AFTER_TAX;
+        tax_status = TaxStatus.AFTER_TAX;
         break;
       default:
         throw new Error(`Invalid tax status: ${raw_data.taxStatus}`);
@@ -45,14 +45,14 @@ export function create_investment(raw_data: InvestmentRaw): Investment {
     let value = raw_data.value;
     const investment = {
       investment_type,
-      taxStatus,
+      tax_status,
       id: raw_data.id,
       get_value: () => value,
       get_cost_basis: () => cost_basis,
       incr_value: (amt: number) => (value += amt),
       incr_cost_basis: (amt: number) => (cost_basis += amt),
       is_retirement: () =>
-        taxStatus === TaxStatus.AFTER_TAX || taxStatus === TaxStatus.PRE_TAX,
+        tax_status === TaxStatus.AFTER_TAX || tax_status === TaxStatus.PRE_TAX,
       clone: () => create_investment(raw_data),
     };
 

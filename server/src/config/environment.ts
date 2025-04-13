@@ -6,5 +6,5 @@ import path from "path";
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 export const dev = {
-    is_dev: process.env.ENV === "development",
+    is_dev: process.env.NODE_ENV === "development",
 }

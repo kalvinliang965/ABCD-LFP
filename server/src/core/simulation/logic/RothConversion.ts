@@ -2,6 +2,8 @@
 import { SimulationState } from "../SimulationState";
 import { IncomeType, TaxStatus } from "../../Enums";
 import { AccountMap } from "../../domain/AccountManager";
+import { simulation_logger } from "../../../utils/logger/logger";
+import { state } from "@stdlib/random-base-normal";
 
 function transfer_investment(
     roth_conversion_strategy: string[], 
@@ -21,7 +23,7 @@ function transfer_investment(
         }
         if (!target_pool.has(label)) {
             const cloned_investment = from_investment.clone();
-            cloned_investment.taxStatus = TaxStatus.AFTER_TAX
+            cloned_investment.tax_status = TaxStatus.AFTER_TAX
             target_pool.set(label, cloned_investment);
         }
         const to_investment = target_pool.get(label);
@@ -35,25 +37,26 @@ function transfer_investment(
 
 function process_roth_conversion(simulation_state: SimulationState) {
     if (!simulation_state.roth_conversion_opt) {
-        console.error("roth conversion is not enabled");
+        simulation_logger.debug("roth conversion is not enabled");
         return;
     }
     if (simulation_state.get_current_year() < simulation_state.roth_conversion_start 
         || simulation_state.get_current_year() > simulation_state.roth_conversion_end) {
-            console.log("not within roth conversion time frame");
+            simulation_logger.debug("not within roth conversion time frame");
         return;
     }
-    const income = simulation_state.user_tax_data.get_cur_year_income(); 
-                    + simulation_state.user_tax_data.get_cur_year_gains();
-    const taxable_income = income - 0.15 * simulation_state.user_tax_data.get_cur_year_ss();
+
+    const income = simulation_state.user_tax_data.get_cur_year_income() 
+    const taxable_income = income - 0.15 * simulation_state.user_tax_data.get_cur_year_ss()
     const current_bracket = simulation_state
                     .federal_tax_service
                     .find_bracket(taxable_income, IncomeType.TAXABLE_INCOME, simulation_state.get_tax_filing_status());
+    const standard_deduction = simulation_state
+                                    .federal_tax_service
+                                    .find_deduction(simulation_state.get_tax_filing_status());
     const upper = current_bracket.max;
-    const transfer_amt = upper - taxable_income;
-    
+    const transfer_amt = upper - (taxable_income - standard_deduction);
     // does not go into annual contribution for after tax
-
     if (transfer_amt > 0) {
         transfer_investment(
             simulation_state.roth_conversion_strategy,

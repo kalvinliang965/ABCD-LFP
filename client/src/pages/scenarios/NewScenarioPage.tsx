@@ -195,7 +195,7 @@ function NewScenarioPage() {
   };
 
   //! check if the user choose IMPORT_YAML, then jump to yamlImport step.
-  const handle_yaml_import_complete = async (data:any) => {
+  const handle_yaml_import_complete = async (data: any) => {
     investmentTypeStorage.clear();
     // const yaml = convert_scenario_to_yaml(data.data);
     // console.log("NewScenarioPage: yaml:", yaml);
@@ -281,11 +281,22 @@ function NewScenarioPage() {
   };
 
   const handle_to_roth_conversion_optimizer = async () => {
-    const allAccounts = investmentsConfig.investments.map(
+    // AI-generated code
+    // Filter investments to only include those with tax status "pre-tax" or "PRE_TAX_RETIREMENT"
+    const preTaxInvestments = investmentsConfig.investments.filter(
       (inv) =>
-        inv.investmentType ||
-        `Investment ${inv.id || Math.random().toString(36).substr(2, 9)}`
+        inv.taxStatus === "pre-tax" || inv.taxStatus === "PRE_TAX_RETIREMENT"
     );
+
+    const allAccounts = preTaxInvestments.map((inv) => ({
+      id: inv.id || `inv-${Math.random().toString(36).substring(2, 9)}`,
+      name:
+        inv.investmentType ||
+        `Investment ${inv.id || Math.random().toString(36).substr(2, 9)}`,
+    }));
+
+    console.log("Pre-tax accounts for Roth conversion:", allAccounts);
+
     setRothConversionStrategy({
       roth_conversion_opt: false,
       roth_conversion_start: new Date().getFullYear(),
