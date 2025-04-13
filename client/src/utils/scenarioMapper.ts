@@ -199,7 +199,7 @@ export function map_form_to_scenario_raw(
   // Return the final ScenarioRaw object
   return {
     name: scenarioDetails.name,
-    martialStatus: scenarioDetails.type === "couple" ? "couple" : "individual",
+    maritalStatus: scenarioDetails.type === "couple" ? "couple" : "individual",
     birthYears,
     lifeExpectancy,
     investmentTypes,
