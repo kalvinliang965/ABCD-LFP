@@ -1,9 +1,9 @@
-
 import { Router, Application } from "express";
 import eventSeriesRoutes from "./eventSeriesRoutes";
 import investmentRoutes from "./investmentRoutes";
 import authRoutes from "./authRoutes";
 import userRoutes from "./userRoutes";
+import scenarioYAMLRoutes from "./scenarioYAMLRoutes";
 import scenarioRoutes from "./scenarioRoutes";
 import investmentTypeRoutes from "./InvestmentType.routes";
 
@@ -15,6 +15,7 @@ export function initialize_route(app: Application) {
     router.use("/api/investmentTypes", investmentTypeRoutes);
     router.use("/api/users", userRoutes);
     router.use("/api/scenarios", scenarioRoutes);
+    router.use("/api/yaml", scenarioYAMLRoutes);
     router.use("/auth", authRoutes);
     // Basic health check route
     router.get("/", (req, res) => {

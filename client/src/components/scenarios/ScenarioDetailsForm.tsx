@@ -411,10 +411,7 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                             <NumberInput
                               min={1900}
                               max={new Date().getFullYear()}
-                              value={
-                                scenarioDetails.spouseBirthYear ||
-                                new Date().getFullYear() - 30
-                              }
+                              value={scenarioDetails.spouseBirthYear}
                               onChange={(_, value) =>
                                 onChangeScenarioDetails({
                                   ...scenarioDetails,

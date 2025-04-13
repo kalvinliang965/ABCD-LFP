@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Box, Text, useToast, Button, HStack } from "@chakra-ui/react";
 import { useEventSeries } from "../../contexts/EventSeriesContext";
 import { useNavigate } from "react-router-dom";
@@ -45,8 +45,10 @@ import { withdrawalStrategyApi } from "../../services/withdrawalStrategyApi";
 import withdrawalStrategyStorage from "../../services/withdrawalStrategyStorage";
 import rmdStrategyStorage from "../../services/rmdStrategyStorage";
 import lifeExpectancyStorage from "../../services/lifeExpectancyStorage";
-import { scenarioApi } from "../../services/scenario";
+import { scenarioYAMLService } from "../../services/scenarioYAML";
 import { convert_scenario_to_yaml } from "../../utils/yamlExport";
+import use_draft_saver from "../../utils/useDraftSaver";
+import { create_draft_state_helper } from "../../utils/draftStateHelper";
 
 function NewScenarioPage() {
   //! belong to Kate, don't touch
@@ -134,6 +136,35 @@ function NewScenarioPage() {
     });
   //! don't touch
 
+  //draft saver hook
+  const { scenario_id, save_draft, error } = use_draft_saver();
+
+  //create the draft state helper
+  const get_current_draft_state = useCallback(
+    create_draft_state_helper({
+      scenario_details: scenarioDetails,
+      life_expectancy_config: lifeExpectancyConfig,
+      investments_config: investmentsConfig,
+      additional_settings: additionalSettings,
+      rmd_settings: rmdSettings,
+      spending_strategy: spendingStrategy,
+      withdrawal_strategy: withdrawalStrategy,
+      roth_conversion_strategy: rothConversionStrategy,
+      added_events: addedEvents,
+    }),
+    [
+      scenarioDetails,
+      lifeExpectancyConfig,
+      investmentsConfig,
+      additionalSettings,
+      rmdSettings,
+      spendingStrategy,
+      withdrawalStrategy,
+      rothConversionStrategy,
+      addedEvents,
+    ]
+  );
+
   // *this part is called by who? check the type.
   // *this part only has two values, FROM_SCRATCH and IMPORT_YAML.
   //! if the user choose IMPORT_YAML, then jump to yamlImport step.
@@ -144,6 +175,15 @@ function NewScenarioPage() {
     );
     investmentTypeStorage.clear();
     clearLocalStorage();
+    //clear the current scenario ID when starting a new scenario
+    localStorage.removeItem('current_scenario_id');
+    
+    //reset withdrawal strategy to initial state
+    setWithdrawalStrategy({
+      availableAccounts: [],
+      accountPriority: [],
+    });
+    
     if (type === ScenarioCreationType.FROM_SCRATCH) {
       console.log("NewScenarioPage: Changing step to 'Scenario_name&type'");
       setStep("Scenario_name&type");
@@ -160,7 +200,7 @@ function NewScenarioPage() {
     // const yaml = convert_scenario_to_yaml(data.data);
     // console.log("NewScenarioPage: yaml:", yaml);
     try {
-      const savedScenario = await scenarioApi.create(data.rawYaml);
+      const savedScenario = await scenarioYAMLService.create(data.rawYaml);
       console.log("Scenario created:", savedScenario);
     } catch (error) {
       console.error("Error creating scenario:", error);
@@ -205,26 +245,42 @@ function NewScenarioPage() {
   // };
   //! don't touch
 
-  const handle_to_life_expectancy = () => {
-    setStep("lifeExpectancy");
+  const handle_to_life_expectancy = async () => {
+    try {
+      await save_draft(get_current_draft_state());
+      console.log("Draft saved when moving to life expectancy");
+      setStep("lifeExpectancy");
+    } catch (err) {
+      console.error("Error saving draft:", err);
+    }
   };
 
   const handle_to_Scenario_name_type = () => {
     setStep("Scenario_name&type");
   };
 
-  const handle_to_investments = () => {
-    // Log investment types before clearing
-    console.log("Investment types", investmentTypeStorage.get_all());
-    setStep("investments");
+  const handle_to_investments = async () => {
+    try {
+      await save_draft(get_current_draft_state());
+      console.log("Draft saved when moving to investments");
+      setStep("investments");
+    } catch (err) {
+      console.error("Error saving draft:", err);
+    }
   };
 
   const handle_to_investment_types = async () => {
-    await saveLifeExpectancyConfig();
-    setStep("investmentTypes");
+    try {
+      await save_draft(get_current_draft_state());
+      console.log("Draft saved when moving to investment types");
+      await saveLifeExpectancyConfig();
+      setStep("investmentTypes");
+    } catch (err) {
+      console.error("Error saving draft:", err);
+    }
   };
 
-  const handle_to_roth_conversion_optimizer = () => {
+  const handle_to_roth_conversion_optimizer = async () => {
     // AI-generated code
     // Filter investments to only include those with tax status "pre-tax" or "PRE_TAX_RETIREMENT"
     const preTaxInvestments = investmentsConfig.investments.filter(
@@ -248,10 +304,16 @@ function NewScenarioPage() {
       availableAccounts: allAccounts,
       accountPriority: rothConversionStrategy.accountPriority || [],
     });
-    setStep("rothConversionOptimizer");
+
+    try {
+      await save_draft(get_current_draft_state());
+      setStep("rothConversionOptimizer");
+    } catch (err) {
+      console.error("Error saving draft:", err);
+    }
   };
 
-  const handle_continue_to_rmd_settings = () => {
+  const handle_continue_to_rmd_settings = async () => {
     // Calculate current age based on birth year
     const currentYear = new Date().getFullYear();
     const currentAge = currentYear - scenarioDetails.userBirthYear;
@@ -290,10 +352,15 @@ function NewScenarioPage() {
       availableAccounts: preTaxAccounts,
     });
 
-    setStep("rmdSettings");
+    try {
+      await save_draft(get_current_draft_state());
+      setStep("rmdSettings");
+    } catch (err) {
+      console.error("Error saving draft:", err);
+    }
   };
 
-  const handle_continue_to_spending_strategy = () => {
+  const handle_continue_to_spending_strategy = async () => {
     // Get all expenses from added events
     const allExpenses = addedEvents
       .filter(
@@ -306,36 +373,67 @@ function NewScenarioPage() {
       selectedExpenses: spendingStrategy.selectedExpenses || [],
     });
 
-    setStep("spendingStrategy");
+    try {
+      await save_draft(get_current_draft_state());
+      setStep("spendingStrategy");
+    } catch (err) {
+      console.error("Error saving draft:", err);
+    }
   };
 
-  const handle_to_additional_settings = () => {
-    setStep("additionalSettings");
+  const handle_to_additional_settings = async () => {
+    try {
+      await save_draft(get_current_draft_state());
+      setStep("additionalSettings");
+    } catch (err) {
+      console.error("Error saving draft:", err);
+    }
   };
 
-  const handle_continue_to_withdrawal_strategy = () => {
-    // Get all accounts from investments with their IDs
-    //console.log("Investments:", investmentsConfig.investments);
-    const allAccounts = investmentsConfig.investments.map((inv) => ({
-      id: inv.id || `inv-${Math.random().toString(36).substring(2, 9)}`,
-      name:
-        inv.investmentType ||
-        `Investment ${inv.id || Math.random().toString(36).substring(2, 9)}`,
-    }));
+  const handle_continue_to_withdrawal_strategy = async () => {
+    try {
+      // Save RMD settings to localStorage first
+      if (rmdSettings.id) {
+        rmdStrategyStorage.update(rmdSettings.id, rmdSettings);
+      } else {
+        const savedSettings = rmdStrategyStorage.add(rmdSettings);
+        setRmdSettings(savedSettings);
+      }
 
-    console.log("Available accounts for withdrawal:", allAccounts);
+      // Save the current draft state with RMD settings
+      await save_draft(get_current_draft_state());
+      
+      // Get all accounts from investments with their IDs
+      const allAccounts = investmentsConfig.investments.map((inv) => ({
+        id: inv.id || `inv-${Math.random().toString(36).substring(2, 9)}`,
+        name:
+          inv.investmentType ||
+          `Investment ${inv.id || Math.random().toString(36).substring(2, 9)}`,
+      }));
 
-    setWithdrawalStrategy({
-      availableAccounts: allAccounts,
-      accountPriority: withdrawalStrategy.accountPriority || [],
-    });
+      console.log("Available accounts for withdrawal:", allAccounts);
 
-    setStep("withdrawalStrategy");
+      setWithdrawalStrategy({
+        availableAccounts: allAccounts,
+        accountPriority: withdrawalStrategy.accountPriority || [],
+      });
+
+      setStep("withdrawalStrategy");
+    } catch (err) {
+      console.error("Error saving draft:", err);
+    }
   };
 
   const handle_continue_from_withdrawal_strategy = async () => {
-    await saveWithdrawalStrategy();
-    setStep("eventSelection");
+    try {
+      //save to localStorage first
+      await saveWithdrawalStrategy();
+      //then save to database draft
+      await save_draft(get_current_draft_state());
+      setStep("eventSelection");
+    } catch (err) {
+      console.error("Error saving draft:", err);
+    }
   };
 
   const handle_to_spending_strategy = () => {
@@ -362,7 +460,7 @@ function NewScenarioPage() {
     console.log("============== Final ScenarioRaw Object ==============");
     console.log("Basic Info:", {
       name: scenarioRaw.name,
-      martialStatus: scenarioRaw.martialStatus,
+      maritalStatus: scenarioRaw.maritalStatus,
       birthYears: scenarioRaw.birthYears,
       residenceState: scenarioRaw.residenceState,
     });
@@ -391,17 +489,23 @@ function NewScenarioPage() {
     console.log("Complete ScenarioRaw Object:", scenarioRaw);
     console.log("=====================================================");
 
-    // AI-generated code
-    // Send scenario to backend using scenarioApi
     try {
+      // Save final state (not draft)
+      await save_draft(get_current_draft_state(), false);
+      console.log("Complete scenario saved to database");
+
+      // Then convert to YAML and send to backend
       const yaml = convert_scenario_to_yaml(scenarioRaw);
-      const savedScenario = await scenarioApi.create(yaml);
-      console.log("Scenario saved to backend:", savedScenario);
+      const savedScenario = await scenarioYAMLService.create(yaml); 
+      console.log("Scenario saved to backend as YAML:", savedScenario);
 
       // Clean investment type data from localStorage
       investmentTypeStorage.clear();
       //need to check what is the correct way to clear the local storage
       clearLocalStorage();
+      //clear the current scenario ID when finishing
+      localStorage.removeItem('current_scenario_id');
+      
       // Show success toast and navigate to scenarios page
       toast({
         title: "Scenario Created",
@@ -410,9 +514,7 @@ function NewScenarioPage() {
         duration: 3000,
         isClosable: true,
       });
-      console.log("Attempting to navigate to /scenarios...");
       navigate("/scenarios");
-      console.log("Navigation function called");
 
       // After successfully saving the complete scenario
     } catch (error) {
@@ -432,6 +534,8 @@ function NewScenarioPage() {
     setScenarioDetails((prev) => ({
       ...prev,
       type: value as ScenarioType,
+      //initialize spouse birth year with a default value when switching to couple
+      spouseBirthYear: value === "couple" ? prev.userBirthYear : undefined
     }));
 
     // Update spouse expectancy type if needed
@@ -444,74 +548,13 @@ function NewScenarioPage() {
     }
   };
 
+  const handle_change_scenario_details = (details: ScenarioDetails) => {
+    setScenarioDetails(details);
+  };
+
   const handle_back_to_rmd = () => {
     setStep("rmdSettings");
   };
-  //! don't touch
-
-  // const saveSpendingStrategy = async () => {
-  //   try {
-  //     // Save to API
-  //     if (spendingStrategy.id) {
-  //       await spendingStrategyApi.update(spendingStrategy.id, spendingStrategy);
-  //     } else {
-  //       const savedStrategy = await spendingStrategyApi.create(spendingStrategy);
-  //       setSpendingStrategy(savedStrategy);
-  //     }
-
-  //     // Also save to localStorage
-  //     if (spendingStrategy.id) {
-  //       spendingStrategyStorage.update(spendingStrategy.id, spendingStrategy);
-  //     } else {
-  //       const savedLocalStrategy = spendingStrategyStorage.add(spendingStrategy);
-  //       // Update with the ID generated by localStorage if we didn't get one from the API
-  //       if (!spendingStrategy.id) {
-  //         setSpendingStrategy(savedLocalStrategy);
-  //       }
-  //     }
-
-  //     toast({
-  //       title: "Spending strategy saved",
-  //       status: "success",
-  //       duration: 3000,
-  //       isClosable: true,
-  //     });
-  //   } catch (error) {
-  //     console.error("Error saving spending strategy:", error);
-
-  //     // If API fails, still try to save to localStorage
-  //     try {
-  //       if (spendingStrategy.id) {
-  //         spendingStrategyStorage.update(spendingStrategy.id, spendingStrategy);
-  //       } else {
-  //         const savedLocalStrategy = spendingStrategyStorage.add(spendingStrategy);
-  //         setSpendingStrategy(savedLocalStrategy);
-  //       }
-
-  //       toast({
-  //         title: "Spending strategy saved locally",
-  //         description: "Could not connect to server, saved to browser storage",
-  //         status: "warning",
-  //         duration: 5000,
-  //         isClosable: true,
-  //       });
-  //     } catch (localError) {
-  //       console.error("Error saving to localStorage:", localError);
-  //       toast({
-  //         title: "Error saving spending strategy",
-  //         description: "Please try again later",
-  //         status: "error",
-  //         duration: 5000,
-  //         isClosable: true,
-  //       });
-  //     }
-  //   }
-  // };
-
-  // const handle_continue_from_spending_strategy = async () => {
-  //   await saveSpendingStrategy();
-  //   setStep("withdrawalStrategy");
-  // };
 
   // Add this function to clear localStorage when a scenario is completed
   const clearLocalStorage = () => {
@@ -543,14 +586,6 @@ function NewScenarioPage() {
   // Add this function to NewScenarioPage.tsx
   const saveWithdrawalStrategy = async () => {
     try {
-      // Skip API calls for now
-      // if (withdrawalStrategy.id) {
-      //   await withdrawalStrategyApi.update(withdrawalStrategy.id, withdrawalStrategy);
-      // } else {
-      //   const savedStrategy = await withdrawalStrategyApi.create(withdrawalStrategy);
-      //   setWithdrawalStrategy(savedStrategy);
-      // }
-
       // Only use localStorage
       if (withdrawalStrategy.id) {
         withdrawalStrategyStorage.update(
@@ -581,49 +616,6 @@ function NewScenarioPage() {
     }
   };
 
-  // Add this near your other useEffects
-  // useEffect(() => {
-  //   console.log("investmentsConfig changed:", investmentsConfig);
-  //   console.log("Number of investments:", investmentsConfig.investments.length);
-  //   console.log("Pre-tax investments:", investmentsConfig.investments.filter(
-  //     inv => inv.taxStatus === "PRE_TAX_RETIREMENT"
-  //   ));
-  // }, [investmentsConfig]);
-
-  // // Inside the NewScenarioPage component, add this function
-  // const saveRMDStrategy = async () => {
-  //   try {
-  //     // Only use localStorage
-  //     if (rmdSettings.id) {
-  //       rmdStrategyStorage.update(rmdSettings.id, rmdSettings);
-  //     } else {
-  //       const savedSettings = rmdStrategyStorage.add(rmdSettings);
-  //       setRmdSettings(savedSettings);
-  //     }
-
-  //     toast({
-  //       title: "RMD settings saved locally",
-  //       status: "success",
-  //       duration: 3000,
-  //       isClosable: true,
-  //     });
-  //   } catch (error) {
-  //     console.error("Error saving RMD settings:", error);
-  //     toast({
-  //       title: "Error saving RMD settings",
-  //       description: "Please try again later",
-  //       status: "error",
-  //       duration: 5000,
-  //       isClosable: true,
-  //     });
-  //   }
-  // };
-
-  // Update the handle_continue_from_rmd_settings function
-  // const handle_continue_from_rmd_settings = async () => {
-  //   await saveRMDStrategy();
-  //   handle_continue_to_withdrawal_strategy();
-  // };
 
   // Add a useEffect to load RMD settings from localStorage
   useEffect(() => {
@@ -701,7 +693,7 @@ function NewScenarioPage() {
         <ScenarioDetailsForm
           scenarioDetails={scenarioDetails}
           onChangeScenarioType={handle_change_scenario_type}
-          onChangeScenarioDetails={setScenarioDetails}
+          onChangeScenarioDetails={handle_change_scenario_details}
           onContinue={handle_to_life_expectancy}
           onBack={handle_to_type_selection}
         />
