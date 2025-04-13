@@ -22,6 +22,7 @@ import {
 } from '@chakra-ui/react';
 import ProbabilityOfSuccessChart from '../components/charts/ProbabilityOfSuccessChart';
 import StackedBarChart from '../components/charts/StackedBarChart';
+import ShadedLineChart from '../components/charts/ShadedLineChart';
 import { useParams, useNavigate } from 'react-router-dom';
 
 // Define chart types
@@ -233,6 +234,61 @@ const SimulationResults: React.FC = () => {
           // Convert maps to the format needed for charts
           const years = Array.from(mockInvestmentMap.keys()).sort();
           
+          // Generate mock probability range data for the shaded line chart
+          const mockProbabilityRanges = {
+            totalInvestments: generateMockProbabilityRangeData(500000, 0.06, 0.15, true),
+            totalIncome: generateMockProbabilityRangeData(120000, 0.03, 0.08),
+            totalExpenses: generateMockProbabilityRangeData(80000, 0.025, 0.05),
+            earlyWithdrawalTax: generateMockProbabilityRangeData(5000, 0.02, 0.2),
+            discretionaryExpensesPct: generateMockProbabilityRangeData(50, 0.01, 0.1)
+          };
+          
+          // Helper function to generate mock probability range data
+          function generateMockProbabilityRangeData(
+            baseValue: number, 
+            growthRate: number, 
+            volatility: number,
+            hasGoal: boolean = false
+          ) {
+            const years = Array.from(mockInvestmentMap.keys()).sort();
+            const median: number[] = [];
+            const range10_90: [number[], number[]] = [[], []];
+            const range20_80: [number[], number[]] = [[], []];
+            const range30_70: [number[], number[]] = [[], []];
+            const range40_60: [number[], number[]] = [[], []];
+            
+            for (let i = 0; i < years.length; i++) {
+              const yearValue = baseValue * Math.pow(1 + growthRate, i);
+              const yearVolatility = volatility * Math.sqrt(i + 1);
+              
+              median.push(yearValue);
+              
+              range10_90[0].push(yearValue * (1 - 1.65 * yearVolatility));
+              range10_90[1].push(yearValue * (1 + 1.65 * yearVolatility));
+              
+              range20_80[0].push(yearValue * (1 - 1.28 * yearVolatility));
+              range20_80[1].push(yearValue * (1 + 1.28 * yearVolatility));
+              
+              range30_70[0].push(yearValue * (1 - 0.84 * yearVolatility));
+              range30_70[1].push(yearValue * (1 + 0.84 * yearVolatility));
+              
+              range40_60[0].push(yearValue * (1 - 0.52 * yearVolatility));
+              range40_60[1].push(yearValue * (1 + 0.52 * yearVolatility));
+            }
+            
+            return {
+              years,
+              median,
+              ranges: {
+                range10_90: [range10_90[0], range10_90[1]],
+                range20_80: [range20_80[0], range20_80[1]],
+                range30_70: [range30_70[0], range30_70[1]],
+                range40_60: [range40_60[0], range40_60[1]]
+              },
+              goal: hasGoal ? baseValue * 1.5 : undefined
+            };
+          }
+          
           setSimulationData({
             probabilityOfSuccess: probabilityArrayData,
             medianOrAverageValues: {
@@ -242,7 +298,8 @@ const SimulationResults: React.FC = () => {
                 income: convertMapToDataItems(mockIncomeMap, 'income'),
                 expenses: convertMapToDataItems(mockExpenseMap, 'expense')
               }
-            }
+            },
+            probabilityRanges: mockProbabilityRanges
           });
           
           setLoading(false);
@@ -368,6 +425,22 @@ const SimulationResults: React.FC = () => {
               onAggregationTypeChange={setAggregationType}
               aggregationThreshold={aggregationThreshold}
               onAggregationThresholdChange={setAggregationThreshold}
+            />
+          </Box>
+        )}
+        
+        {selectedCharts.includes('probabilityRanges') && (
+          <Box mb={8}>
+            <Heading as="h2" size="lg" mb={4}>Probability Ranges Over Time</Heading>
+            <Text mb={4} fontSize="lg">
+              This chart shows the probability ranges for various financial metrics over time.
+              The shaded regions represent different probability ranges from the simulation results.
+            </Text>
+            
+            <ShadedLineChart 
+              data={simulationData?.probabilityRanges}
+              loading={loading}
+              dollarValueType={dollarValueType}
             />
           </Box>
         )}
