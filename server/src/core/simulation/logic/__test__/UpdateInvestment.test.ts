@@ -8,15 +8,15 @@ import { Investment } from '../../../domain/investment/Investment';
 import { TaxFilingStatus } from '../../../Enums';
 
 const non_retirement_300_non_tax_exempt = create_investment(incr_300_init_300_investment_one);
-non_retirement_300_non_tax_exempt.taxStatus = TaxStatus.NON_RETIREMENT;
+non_retirement_300_non_tax_exempt.tax_status = TaxStatus.NON_RETIREMENT;
 non_retirement_300_non_tax_exempt.incr_value = jest.fn()
 
 const non_retirement_300_tax_exempt = create_investment(incr_300_init_300_investment_two);
-non_retirement_300_tax_exempt.taxStatus = TaxStatus.NON_RETIREMENT;
+non_retirement_300_tax_exempt.tax_status = TaxStatus.NON_RETIREMENT;
 non_retirement_300_tax_exempt.incr_value = jest.fn()
 
 const pre_tax_300_non_tax_exempt = create_investment(incr_300_init_300_investment_one);
-pre_tax_300_non_tax_exempt.taxStatus = TaxStatus.PRE_TAX;
+pre_tax_300_non_tax_exempt.tax_status = TaxStatus.PRE_TAX;
 pre_tax_300_non_tax_exempt.incr_value = jest.fn()
 
 

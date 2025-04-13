@@ -19,7 +19,7 @@ function parse_investments(
 
   for (const investment of investments) {
     all.set(investment.id, investment);
-    switch (investment.taxStatus) {
+    switch (investment.tax_status) {
       case TaxStatus.NON_RETIREMENT:
         if (investment.id === "cash") {
           cash_account = investment;
@@ -34,7 +34,7 @@ function parse_investments(
         after_tax_account.set(investment.id, investment);
         break;
       default:
-        throw new Error(`Invalid tax status: ${investment.taxStatus}`);
+        throw new Error(`Invalid tax status: ${investment.tax_status}`);
     }
   }
 
@@ -58,6 +58,7 @@ export interface AccountManager {
     pre_tax: AccountMap;
     after_tax: AccountMap;
     all: AccountMap;
+    get_net_worth: () => number;
     clone(): AccountManager;
 } 
 
@@ -68,6 +69,13 @@ function create_account_manager_clone(cash: Investment, non_retirement: AccountM
         pre_tax,
         after_tax,
         all,
+        get_net_worth: () => {
+          let res = 0;
+          all.forEach((inv: Investment) => {
+            res += inv.get_cost_basis();
+          })
+          return res;
+        },
         clone: () => create_account_manager_clone(
             cash.clone(),
             clone_map(non_retirement),

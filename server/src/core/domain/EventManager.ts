@@ -15,7 +15,7 @@ export type IncomeEventMap = Map<string, IncomeEvent>;
 export type RebalanceEventMap = Map<string, RebalanceEvent>;
 export type ExpenseEventMap = Map<string, ExpenseEvent>;
 
-function is_event_active(event: EventUnion, year: number): boolean {
+export function is_event_active(event: EventUnion, year: number): boolean {
   const startYear = event.start || 0;
   const endYear = event.start + event.duration;
   return year >= startYear && year <= endYear;
@@ -55,7 +55,7 @@ export interface EventManager {
     get_active_invest_event: (year: number) => Array<InvestEvent>;
     get_active_rebalance_event: (year: number) => Array<RebalanceEvent>;
     get_active_mandatory_event: (year: number) => Array<ExpenseEvent>;
-    get_active_non_discretionary_event: (year: number) => Array<ExpenseEvent>;
+    get_active_discretionary_event: (year: number) => Array<ExpenseEvent>;
     income_event: IncomeEventMap,
     expense_event: ExpenseEventMap,
     invest_event: InvestEventMap,
@@ -70,7 +70,7 @@ export interface EventManager {
     update_total_expenses: (mandatory: number, discretionary: number) => void;
     get_last_year_tax_totals: () => { total: number } | undefined;
     update_last_year_tax_totals: (total: number) => void;
-    get_initial_amount: (event: ExpenseEvent | IncomeEvent) => number;
+    update_initial_amount: (event: ExpenseEvent | IncomeEvent) => number;
 }
 
 function create_event_manager_clone(
@@ -97,7 +97,7 @@ function create_event_manager_clone(
                                 .filter((event: RebalanceEvent) => is_event_active(event, year)),
         get_active_mandatory_event: (year: number) => Array.from(expense_event.values())
                                 .filter((event: ExpenseEvent) => is_event_active(event, year) && event.discretionary == false),
-        get_active_non_discretionary_event: (year: number) => Array.from(expense_event.values())
+        get_active_discretionary_event: (year: number) => Array.from(expense_event.values())
                                 .filter((event: ExpenseEvent) => is_event_active(event, year) && event.discretionary == true),
         get_income_breakdown: () => income_breakdown,
         update_income_breakdown: (eventName: string, amount: number) => {
@@ -121,7 +121,7 @@ function create_event_manager_clone(
         update_last_year_tax_totals: (total: number) => {
             last_year_tax_totals = { total };
         },
-        get_initial_amount(event: IncomeEvent | ExpenseEvent) {
+        update_initial_amount(event: IncomeEvent | ExpenseEvent) {
             simulation_logger.debug(`Updating event ${event.name}...`);
             const initial_amount = event.initial_amount;
             simulation_logger.debug(`initial amount: ${initial_amount}`);

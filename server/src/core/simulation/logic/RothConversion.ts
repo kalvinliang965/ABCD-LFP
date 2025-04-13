@@ -21,7 +21,7 @@ function transfer_investment(
         }
         if (!target_pool.has(label)) {
             const cloned_investment = from_investment.clone();
-            cloned_investment.taxStatus = TaxStatus.AFTER_TAX
+            cloned_investment.tax_status = TaxStatus.AFTER_TAX
             target_pool.set(label, cloned_investment);
         }
         const to_investment = target_pool.get(label);

@@ -42,7 +42,7 @@ export function rebalance_investments(
 			continue;
 		}
 		
-		account_type = first_investment.taxStatus;
+		account_type = first_investment.tax_status;
 		
 		//verify all other investments are in the same account type
 		for (const investment_id of investment_ids.slice(1)) {
@@ -50,7 +50,7 @@ export function rebalance_investments(
 			                  scenario.account_manager.non_retirement.get(investment_id) || 
 			                  scenario.account_manager.pre_tax.get(investment_id);
 			
-			if (!investment || investment.taxStatus !== account_type) {
+			if (!investment || investment.tax_status !== account_type) {
 				simulation_logger.error(`Investment ${investment_id} is not in ${account_type} account type`);
 				continue;
 			}
@@ -62,7 +62,7 @@ export function rebalance_investments(
 			const investment = scenario.account_manager.after_tax.get(investment_id) || 
 			                   scenario.account_manager.non_retirement.get(investment_id) || 
 			                  scenario.account_manager.pre_tax.get(investment_id);
-			if (investment && investment.taxStatus === account_type) {
+			if (investment && investment.tax_status === account_type) {
 				investments.set(investment_id, investment);
 			}
 		}

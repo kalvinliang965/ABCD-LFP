@@ -48,7 +48,7 @@ export default function update_investment(simulation_state: SimulationState) {
             }
 
             // step b and validating
-            switch (investment.taxStatus) {
+            switch (investment.tax_status) {
                 case TaxStatus.NON_RETIREMENT:
                     // add income to curYearIncome
                     if (investment_type.taxability) {
@@ -60,7 +60,7 @@ export default function update_investment(simulation_state: SimulationState) {
                 case TaxStatus.PRE_TAX:
                     break;
                 default:
-                    console.error(`Invalid account type: ${investment.taxStatus}`);
+                    console.error(`Invalid account type: ${investment.tax_status}`);
             }
             const investment_previous_value = investment.get_value();
             //steps c: add income to value of investment

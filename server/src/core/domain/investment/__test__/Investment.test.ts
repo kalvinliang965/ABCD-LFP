@@ -24,7 +24,7 @@ describe("create_investment", () => {
       ["after-tax", TaxStatus.AFTER_TAX]
     ])("should convert %s tax status correctly", (input, expected) => {
       const investment = create_investment({ ...baseRawData, taxStatus: input });
-      expect(investment.taxStatus).toBe(expected);
+      expect(investment.tax_status).toBe(expected);
     });
   
     // Test invalid tax status handling

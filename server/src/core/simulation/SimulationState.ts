@@ -1,6 +1,6 @@
 import { Investment } from "../domain/investment/Investment";
 import { Scenario } from "../domain/scenario/Scenario";
-import { TaxFilingStatus} from "../Enums";
+import { IncomeType, TaxFilingStatus} from "../Enums";
 import {
   FederalTaxService,
   create_federal_tax_service,
@@ -15,6 +15,7 @@ import { InvestmentTypeManager } from "../domain/InvestmentTypeManager";
 import { State } from "js-yaml";
 import { EventManager } from "../domain/EventManager";
 import UserTaxData, { create_user_tax_data } from "./UserTaxData";
+import { simulation_logger } from "../../utils/logger/logger";
 export type EventMap = Map<string, Event>;
 
 export interface PersonDetails {
@@ -34,6 +35,7 @@ export interface SimulationState {
   get_tax_filing_status(): TaxFilingStatus;
   user_tax_data: UserTaxData;
   get_current_year(): number;
+  get_start_year(): number;
   get_financial_goal(): number;
   get_early_withdrawal_penalty(): number;
   incr_early_withdrawal_penalty(amt: number): void;
@@ -46,48 +48,7 @@ export interface SimulationState {
   investment_type_manager: InvestmentTypeManager
   event_manager: EventManager,
   account_manager: AccountManager,
-}
-
-
-// //更新所有Expense的amount
-// function update_all_expenses(state: SimulationState): void {
-//   for (const expense of state.discretionary_expenses) {
-//     update_expense_amount(expense, state.get_current_year(), state.inflation_factor);
-//   }
-// }
-
-//更新mandatory和discretionary
-
-
-// Organize events by type into maps for easier access
-function organize_events_by_type(
-  events: Event[]
-): [EventMap, EventMap, EventMap, EventMap] {
-  const income_events = new Map<string, Event>();
-  const expense_events = new Map<string, Event>();
-  const investment_events = new Map<string, Event>();
-  const rebalance_events = new Map<string, Event>();
-
-  for (const event of events) {
-    switch (event.type) {
-      case "income":
-        income_events.set(event.name, event);
-        break;
-      case "expense":
-        expense_events.set(event.name, event);
-        break;
-      case "invest":
-        investment_events.set(event.name, event);
-        break;
-      case "rebalance":
-        rebalance_events.set(event.name, event);
-        break;
-      default:
-        throw new Error(`Invalid event type: ${event.type}`);
-    }
-  }
-
-  return [income_events, expense_events, investment_events, rebalance_events];
+  process_tax(): number,
 }
 
 // Create person details object
@@ -171,6 +132,7 @@ export async function create_simulation_state(
       get_financial_goal: () => scenario.financialGoal,
       
       get_current_year: () => current_year,
+      get_start_year:() => start_year,
 
       advance_year: () => {
         current_year++;
@@ -190,6 +152,51 @@ export async function create_simulation_state(
       
       federal_tax_service: cloned_federal_tax_service,
       state_tax_service: cloned_state_tax_service,
+
+      process_tax: (): number => {
+        simulation_logger.debug("Processing tax...");
+        // step a: calculate previous year's federal and state income tax
+        // using data from preivous year
+        // in our application, 85 percent of SS are only subject to federal tax
+        const fed_taxable_income = state.user_tax_data.get_cur_fed_taxable_income();
+        simulation_logger.debug(`previous year total income: ${state.user_tax_data.get_prev_year_income}`);
+        simulation_logger.debug(`previous year early withdrawal: ${state.user_tax_data.get_prev_year_early_withdrawal()}`);
+        simulation_logger.debug(`federal taxable income: ${fed_taxable_income}`);
+
+        const state_taxable_income = state.user_tax_data.get_cur_year_income();
+        simulation_logger.debug(`state taxable income: ${state_taxable_income}`);
+
+        const standard_deduction = state.federal_tax_service.find_deduction(state.get_tax_filing_status());
+        simulation_logger.debug(`Standard deduction: ${standard_deduction}`)
+
+        const fed_tax = fed_taxable_income * state.federal_tax_service.find_rate(fed_taxable_income, IncomeType.TAXABLE_INCOME, state.get_tax_filing_status()) - standard_deduction;
+        const state_tax = state_taxable_income * state.state_tax_service.find_rate(state_taxable_income, state.get_tax_filing_status());
+        simulation_logger.debug(`federal tax: ${fed_tax}`);
+        simulation_logger.debug(`state tax: ${state_tax}`);
+
+        // step b: calculate previous year's capital gains
+        // if capital gains is negative, we move on
+        let capital_gain_tax = Math.max(
+          state.user_tax_data.get_prev_year_gains(),
+          0,
+        );
+        simulation_logger.debug(`capital gains: ${capital_gain_tax}`);
+        if (capital_gain_tax != 0) {
+          const capital_gain_rate = state.federal_tax_service
+                  .find_rate(capital_gain_tax, IncomeType.CAPITAL_GAINS, state.get_tax_filing_status());
+          capital_gain_tax *= capital_gain_rate; 
+        }
+        simulation_logger.debug(`capital gains tax: ${capital_gain_tax}`);
+
+        // step c: calculate previous year withdrawal tax 
+        // we assume 10% early withdrawal
+        const withdrawal_tax = state.user_tax_data.get_prev_year_early_withdrawal() * 0.10;
+        simulation_logger.debug(`withdrawal tax: ${withdrawal_tax}`);
+
+        const total_tax = fed_tax + state_tax + withdrawal_tax + capital_gain_tax;
+        simulation_logger.info(`Successfully process tax for ${state.get_current_year() - 1}: ${total_tax}`)
+        return total_tax
+      }
     };
 
     return state;
