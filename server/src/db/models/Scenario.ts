@@ -60,8 +60,8 @@ interface EventSeries {
 
 //scenario interface
 interface IScenario extends Document {
-  userId: mongoose.Types.ObjectId;
-  isDraft: boolean;
+  userId: mongoose.Types.ObjectId; //user id
+  isDraft: boolean; //the boolean to indicate whether the scenario is complete or in progress
   name: string;
   maritalStatus: 'couple' | 'individual';
   birthYears: number[];
