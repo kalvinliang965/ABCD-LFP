@@ -52,7 +52,7 @@ export default function update_investment(simulation_state: SimulationState) {
                 case TaxStatus.NON_RETIREMENT:
                     // add income to curYearIncome
                     if (investment_type.taxability) {
-                        simulation_state.incr_ordinary_income(annual_income);
+                        simulation_state.user_tax_data.incr_cur_year_income(annual_income);
                     }
                     break;
                 case TaxStatus.AFTER_TAX:
@@ -69,7 +69,7 @@ export default function update_investment(simulation_state: SimulationState) {
             const avg = (investment.get_value() + investment_previous_value) / 2
             const expense = avg * investment_type.expense_ratio;
             investment.incr_value(-1 * expense);
-            simulation_state.incr_capital_gains_income(annual_gains);
+            simulation_state.user_tax_data.incr_cur_year_gains(annual_gains);
         }
     }
 }

@@ -43,9 +43,9 @@ function process_roth_conversion(simulation_state: SimulationState) {
             console.log("not within roth conversion time frame");
         return;
     }
-    const income = simulation_state.get_ordinary_income() 
-                    + simulation_state.get_capital_gains_income();
-    const taxable_income = income - 0.15 * simulation_state.get_social_security_income();
+    const income = simulation_state.user_tax_data.get_cur_year_income(); 
+                    + simulation_state.user_tax_data.get_cur_year_gains();
+    const taxable_income = income - 0.15 * simulation_state.user_tax_data.get_cur_year_ss();
     const current_bracket = simulation_state
                     .federal_tax_service
                     .find_bracket(taxable_income, IncomeType.TAXABLE_INCOME, simulation_state.get_tax_filing_status());
@@ -61,7 +61,7 @@ function process_roth_conversion(simulation_state: SimulationState) {
             simulation_state.account_manager.pre_tax,
             simulation_state.account_manager.after_tax
         );
-        simulation_state.incr_ordinary_income(transfer_amt);
+        simulation_state.user_tax_data.incr_cur_year_income(transfer_amt);
     }
 }
 

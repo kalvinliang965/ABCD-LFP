@@ -289,12 +289,12 @@ export function withdraw_from_investments(
       console.log("此时amountToWithdraw", amountToWithdraw);
       investment.incr_value(-amountToWithdraw);
       console.log("此时investment的value", investment.get_value());
-      state.incr_capital_gains_income(capitalGain);
+      state.user_tax_data.incr_cur_year_gains(capitalGain);
       
     } else if (accountType === TaxStatus.PRE_TAX) {
       console.log("此时accountType是pre-tax", accountType);
       investment.incr_value(-amountToWithdraw);
-      state.incr_ordinary_income(amountToWithdraw);
+      state.user_tax_data.incr_cur_year_income(amountToWithdraw);
       console.log("此时investment的value", investment.get_value());
     }
 
