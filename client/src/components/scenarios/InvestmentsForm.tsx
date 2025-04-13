@@ -99,6 +99,31 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     load_investment_types();
   }, []);
 
+  // AI-generated code
+  // Check if a Cash investment exists in the user's investments
+  const cash_investment_exists = (): boolean => {
+    return investmentsConfig.investments.some(
+      (investment) => investment.investmentType.toLowerCase() === "cash"
+    );
+  };
+
+  // AI-generated code
+  // Handle continue button click with Cash investment validation
+  const handle_continue = () => {
+    if (!cash_investment_exists()) {
+      toast({
+        title: "Cash investment required",
+        description: "You must add a Cash investment before continuing",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+        position: "top-right",
+      });
+      return;
+    }
+    onContinue();
+  };
+
   const load_investment_types = () => {
     const types = investmentTypeStorage.get_all();
     set_investment_types(types);
@@ -561,6 +586,35 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
                 Configure your investment portfolio by adding different types of
                 investments. You can add multiple investments of the same type.
               </Text>
+
+              {/* AI-generated code */}
+              {/* Cash requirement notice */}
+              {!cash_investment_exists() && (
+                <Box
+                  mb={6}
+                  p={4}
+                  borderWidth="1px"
+                  borderColor="orange.300"
+                  bg="orange.50"
+                  borderRadius="md"
+                  _dark={{
+                    borderColor: "orange.600",
+                    bg: "orange.900",
+                  }}
+                >
+                  <Flex alignItems="center">
+                    <Icon as={FiInfo} color="orange.500" boxSize={5} mr={3} />
+                    <Text
+                      fontWeight="medium"
+                      color="orange.700"
+                      _dark={{ color: "orange.300" }}
+                    >
+                      A Cash investment is required before you can continue.
+                      Please add at least one Cash investment to your portfolio.
+                    </Text>
+                  </Flex>
+                </Box>
+              )}
 
               {/* Investment Cards */}
               {investmentsConfig.investments.length > 0 ? (
@@ -1034,11 +1088,17 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
               <Text color="gray.500" fontSize="sm">
                 {investmentsConfig.investments.length} investment
                 {investmentsConfig.investments.length !== 1 ? "s" : ""} added
+                {investmentsConfig.investments.length > 0 &&
+                  !cash_investment_exists() && (
+                    <Text as="span" color="red.500" ml={2} fontWeight="medium">
+                      (Cash investment required)
+                    </Text>
+                  )}
               </Text>
               <Button
                 colorScheme="blue"
                 size="lg"
-                onClick={onContinue}
+                onClick={handle_continue}
                 isDisabled={investmentsConfig.investments.length === 0}
                 px={8}
                 rightIcon={<Icon as={FiChevronRight} />}
