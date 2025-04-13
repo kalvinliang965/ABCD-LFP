@@ -101,12 +101,11 @@ export async function create_state_tax_service_db(entered_resident_state: StateT
         if (!await has_state_data(entered_resident_state)) {
             throw new Error(`DB does not contain data for ${entered_resident_state}`);
         } else {
-            console.log("TEST");
             const tax_bracket_list = await load_state_taxable_income_brackets(entered_resident_state);
             tax_bracket_list.forEach((ti) => {
                 const { min, max, rate, taxpayer_type, resident_state } = ti;
                 if (resident_state != entered_resident_state) {
-                    console.error("load_state_taxable_income_brackets() loadded wrong data");
+                    simulation_logger.error("load_state_taxable_income_brackets() loadded wrong data");
                     process.exit(1);
                 }
                 taxable_income_bracket.add_bracket(min, max, rate, taxpayer_type);
