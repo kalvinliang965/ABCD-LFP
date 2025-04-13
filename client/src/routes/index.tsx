@@ -8,6 +8,7 @@ import UserProfile from "../components/user/UserProfile";
 
 // Pages
 import Login from "../pages/Login";
+import SimulationResultsPage from "../pages/SimulationResultsPage";
 
 const AppRoutes = () => {
   return (
@@ -30,6 +31,9 @@ const AppRoutes = () => {
 
       {/* User profile route - for viewing and editing user profile */}
       <Route path="/profile" element={<UserProfile />} />
+
+      {/* Simulation results route - for viewing simulation results */}
+      <Route path="/scenarios/:scenarioId/results" element={<SimulationResultsPage />} />
     </Routes>
   );
 };
