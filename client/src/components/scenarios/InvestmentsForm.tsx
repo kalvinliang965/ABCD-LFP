@@ -364,6 +364,21 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     }
   };
 
+  // AI-generated code
+  // Get icon based on tax status instead of investment type
+  const get_tax_status_icon = (status: TaxStatus) => {
+    switch (status) {
+      case "non-retirement":
+        return FiDollarSign;
+      case "pre-tax":
+        return FiAward;
+      case "after-tax":
+        return FiBriefcase;
+      default:
+        return FiInfo;
+    }
+  };
+
   //! no need for this function
   const get_investment_icon = (type: string) => {
     switch (type) {
@@ -658,8 +673,8 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
                             justifyContent="center"
                           >
                             <Icon
-                              as={get_investment_icon(
-                                investment.investmentType
+                              as={get_tax_status_icon(
+                                investment.taxStatus as TaxStatus
                               )}
                               color={`${get_tax_status_color(
                                 investment.taxStatus as TaxStatus
