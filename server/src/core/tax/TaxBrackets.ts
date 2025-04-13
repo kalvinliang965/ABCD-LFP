@@ -15,7 +15,8 @@ export interface TaxBrackets {
     adjust_for_inflation: (rate: number) => void;
     to_string: () => string;
     find_highest_bracket: (status: TaxFilingStatus) => TaxBracket | undefined;
-    find_bracket(rate: number, status: TaxFilingStatus): TaxBracket;
+    find_bracket_with_rate(rate: number, status: TaxFilingStatus): TaxBracket;
+    find_bracket_with_income(income: number, status: TaxFilingStatus): TaxBracket;
     get_rates(status: TaxFilingStatus): ReadonlyTaxBracketSet;
     clone(): TaxBrackets;
 };
@@ -55,11 +56,18 @@ export function create_tax_brackets(): TaxBrackets {
     }
 
     const find_rate = (income: number, status: TaxFilingStatus): number => {
+        try {
+            return find_bracket_with_income(income, status).rate;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    const find_bracket_with_income = (income: number, status: TaxFilingStatus): TaxBracket  => {
         const bracketSet = brackets.get(status); 
         if (!bracketSet) {
             throw new Error(`Invalid TaxFilingStatus: ${status}`);
         }
-
         const N: number = bracketSet.length; 
         let [l, r] = [0, N - 1];
         while (l <= r) {
@@ -70,17 +78,17 @@ export function create_tax_brackets(): TaxBrackets {
             } else if (income > bracket.max) {
                 l = m + 1;
             } else {
-                return bracket.rate;
+                return bracket;
             }
         }
         // There should always exist a rate for income.
         // The table should cover all range.
-        console.error(`Invalid bracket data for ${status} status`);
+        console.error(`Invalid bracket data for ${status} status, looking bracket with income ${income}`);
         console.error(to_string());
         process.exit(1);
     }
 
-    const find_bracket = (rate: number, status: TaxFilingStatus): TaxBracket => {
+    const find_bracket_with_rate = (rate: number, status: TaxFilingStatus): TaxBracket => {
         const bracketSet = brackets.get(status); 
         if (!bracketSet) {
             throw new Error(`Invalid TaxFilingStatus: ${status}`);
@@ -101,7 +109,7 @@ export function create_tax_brackets(): TaxBrackets {
 
         // There should always exist a range for an income.
         // The table should cover all range.
-        console.error(`Invalid bracket data for ${status} status`);
+        console.error(`Invalid bracket data for ${status} status, looking bracket with rate ${rate}`);
         console.error(to_string());
         process.exit(1);
     }
@@ -110,8 +118,24 @@ export function create_tax_brackets(): TaxBrackets {
         for (const bracketSet of brackets.values()) {
             for (const bracket of bracketSet) {
                 bracket.min = Math.round(bracket.min * (1 + rate));
-                bracket.max = Math.round(bracket.max * (1 + rate));
+                
+                if (bracket.max !== Infinity) {
+                    bracket.max = Math.round(bracket.max * (1 + rate));
+                }
             }
+            bracketSet.sort((a, b) => a.min - b.min);
+
+            for (let i = 0; i < bracketSet.length - 1; i++) {
+                const current = bracketSet[i];
+                const next = bracketSet[i + 1];
+                current.max = next.min - 1;
+                if (current.max < current.min) {
+                    next.min = current.min + 1;
+                    current.max = next.min - 1;
+                }
+            }
+            const lastBracket = bracketSet[bracketSet.length - 1];
+            lastBracket.max = Infinity;
         }
     }
 
@@ -174,7 +198,8 @@ export function create_tax_brackets(): TaxBrackets {
         to_string,
         find_highest_bracket,
         find_highest_brackets,
-        find_bracket,
+        find_bracket_with_rate,
+        find_bracket_with_income,
         get_rates,
         clone: (): TaxBrackets => {
             const cloned = create_tax_brackets()

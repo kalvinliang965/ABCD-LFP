@@ -138,7 +138,7 @@ function create_event_manager_clone(
             simulation_logger.error(`event ${event.name} contain invalid change_type ${event.change_type}`)
             throw new Error(`Invalid Change type ${change_type}`);
             }
-            let current_amount = initial_amount + change;
+            let current_amount = Math.round(initial_amount + change);
             // update the event
             event.initial_amount = current_amount;
             simulation_logger.debug(`Updated amount: ${current_amount}`);

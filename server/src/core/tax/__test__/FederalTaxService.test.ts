@@ -51,17 +51,17 @@ describe("FederalTaxService", () => {
 
             describe("find_bracket", () => {
                 it("should handle taxable income type", () => {
-                    service.find_bracket(0.05, IncomeType.TAXABLE_INCOME, TaxFilingStatus.SINGLE);
-                    expect(mock_taxable_income_bracket.find_bracket).toHaveBeenCalledWith(0.05, TaxFilingStatus.SINGLE);
+                    service.find_bracket_with_rate(0.05, IncomeType.TAXABLE_INCOME, TaxFilingStatus.SINGLE);
+                    expect(mock_taxable_income_bracket.find_bracket_with_rate).toHaveBeenCalledWith(0.05, TaxFilingStatus.SINGLE);
                 });
 
                 it("should handle capital gains type", () => {
-                    service.find_bracket(0.10, IncomeType.CAPITAL_GAINS, TaxFilingStatus.MARRIED);
-                    expect(mock_capital_gains_bracket.find_bracket).toHaveBeenCalledWith(0.10, TaxFilingStatus.MARRIED);
+                    service.find_bracket_with_rate(0.10, IncomeType.CAPITAL_GAINS, TaxFilingStatus.MARRIED);
+                    expect(mock_capital_gains_bracket.find_bracket_with_rate).toHaveBeenCalledWith(0.10, TaxFilingStatus.MARRIED);
                 });
 
                 it("should throw for invalid income type", () => {
-                    expect(() => service.find_bracket(0.3, "INVALID" as IncomeType, TaxFilingStatus.SINGLE))
+                    expect(() => service.find_bracket_with_rate(0.3, "INVALID" as IncomeType, TaxFilingStatus.SINGLE))
                     .toThrow("invalid income type");
                 });
             });
@@ -243,8 +243,8 @@ describe("FederalTaxService", () => {
           it("should maintain independent brackets after cloning", () => {
             const clonedService = service.clone();
             service.adjust_for_inflation(0.05);
-            expect(clonedService.find_bracket(0.3, IncomeType.TAXABLE_INCOME, TaxFilingStatus.SINGLE))
-              .not.toEqual(service.find_bracket(0.3, IncomeType.TAXABLE_INCOME, TaxFilingStatus.SINGLE));
+            expect(clonedService.find_bracket_with_rate(0.3, IncomeType.TAXABLE_INCOME, TaxFilingStatus.SINGLE))
+              .not.toEqual(service.find_bracket_with_rate(0.3, IncomeType.TAXABLE_INCOME, TaxFilingStatus.SINGLE));
           });
         });
       
@@ -266,7 +266,7 @@ describe("FederalTaxService", () => {
           });
       
           it("should validate income type during bracket lookup", () => {
-            expect(() => service.find_bracket(0.1, "INVALID_TYPE" as IncomeType, TaxFilingStatus.SINGLE))
+            expect(() => service.find_bracket_with_rate(0.1, "INVALID_TYPE" as IncomeType, TaxFilingStatus.SINGLE))
               .toThrow("invalid income type");
           });
         });

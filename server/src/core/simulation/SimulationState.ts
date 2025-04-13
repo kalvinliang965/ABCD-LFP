@@ -204,7 +204,7 @@ export async function create_simulation_state(
         // using data from preivous year
         // in our application, 85 percent of SS are only subject to federal tax
         const fed_taxable_income = state.user_tax_data.get_cur_fed_taxable_income();
-        simulation_logger.debug(`previous year total income: ${state.user_tax_data.get_prev_year_income}`);
+        simulation_logger.debug(`previous year total income: ${state.user_tax_data.get_prev_year_income()}`);
         simulation_logger.debug(`previous year early withdrawal: ${state.user_tax_data.get_prev_year_early_withdrawal()}`);
         simulation_logger.debug(`federal taxable income: ${fed_taxable_income}`);
 
