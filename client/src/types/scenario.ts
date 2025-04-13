@@ -6,7 +6,7 @@ export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
   // Update SAMPLE_SCENARIOS to conform to ScenarioRaw interface
   {
     name: "Chen's Retirement Planning Scenario",
-    martialStatus: "couple",
+    maritalStatus: "couple",
     birthYears: [1985, 1987],
     lifeExpectancy: [
       { type: "fixed", value: 80 },
