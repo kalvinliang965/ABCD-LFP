@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Heading,
@@ -9,24 +9,33 @@ import {
   Icon,
   Badge,
   useColorModeValue,
+  useToast,
 } from "@chakra-ui/react";
 import {
   FaInfoCircle,
   FaPlus,
   FaPlayCircle,
   FaRegLightbulb,
+  FaEdit,
 } from "react-icons/fa";
 import { ScenarioDetailCard } from "../../components/scenarios";
 import { SAMPLE_SCENARIOS } from "../../types/scenario"; //! temporary
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { ScenarioRaw } from "../../types/Scenarios";
 import { scenarioYAMLService } from "../../services/scenarioYAML";
+import { scenario_service } from "../../services/scenarioService";
 import {
   convert_scenario_to_yaml,
   download_scenario_as_yaml,
 } from "../../utils/yamlExport";
 
 const MyScenariosPage: React.FC = () => {
+  const [drafts, setDrafts] = useState<any[]>([]);
+  const [actualScenarios, setActualScenarios] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const toast = useToast();
+  const navigate = useNavigate();
+  
   const headingColor = useColorModeValue("gray.700", "white");
   const noteColor = useColorModeValue("blue.700", "blue.200");
   const noteBgColor = useColorModeValue("blue.50", "blue.900");
@@ -34,6 +43,53 @@ const MyScenariosPage: React.FC = () => {
   const bgColor = useColorModeValue("white", "gray.800");
   const cardBgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
+
+  useEffect(() => {
+    fetchDrafts();
+    fetchActualScenarios();
+
+    // Cleanup function
+    return () => {
+      setDrafts([]);
+      setActualScenarios([]);
+    };
+  }, []);
+
+  const fetchDrafts = async () => {
+    try {
+      setLoading(true);
+      const draftScenarios = await scenario_service.get_draft_scenarios();
+      // Replace the entire drafts array instead of appending
+      setDrafts(draftScenarios.data);
+      setLoading(false);
+    } catch (error) {
+      console.error("error fetching drafts:", error);
+      toast({
+        title: "Error",
+        description: "failed to fetch draft scenarios",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      setLoading(false);
+    }
+  };
+
+  const fetchActualScenarios = async () => {
+    try {
+      const scenarios = await scenario_service.get_all_scenarios();
+      setActualScenarios(scenarios.data);
+    } catch (error) {
+      console.error("error fetching actual scenarios:", error);
+      toast({
+        title: "Error",
+        description: "failed to fetch scenarios",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
 
   const handle_sample_scenario = async (scenario: ScenarioRaw) => {
     try {
@@ -43,6 +99,56 @@ const MyScenariosPage: React.FC = () => {
       console.log("yaml in myScenariosPage:", yaml);
     } catch (error) {
       console.error("Error creating scenario:", error);
+    }
+  };
+
+  const handleEditDraft = (draftId: string) => {
+    navigate(`/scenarios/edit/${draftId}`);
+  };
+
+  const handleDeleteDraft = async (draftId: string) => {
+    try {
+      await scenario_service.delete_scenario(draftId);
+      setDrafts(drafts.filter(draft => draft._id !== draftId));
+      toast({
+        title: "Draft Deleted",
+        description: "Draft scenario was deleted successfully",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error deleting draft:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete draft scenario",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleDeleteScenario = async (scenarioId: string) => {
+    try {
+      await scenario_service.delete_scenario(scenarioId);
+      setActualScenarios(actualScenarios.filter(scenario => scenario._id !== scenarioId));
+      toast({
+        title: "Scenario Deleted",
+        description: "Scenario has been deleted successfully",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error deleting scenario:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete scenario",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -71,8 +177,6 @@ const MyScenariosPage: React.FC = () => {
             </Text>
           </Box>
           <Button
-            // as={RouterLink}
-            // to="/scenarios/new"
             onClick={() => handle_sample_scenario(SAMPLE_SCENARIOS[0])}
             size="sm"
             colorScheme="blue"
@@ -135,7 +239,7 @@ const MyScenariosPage: React.FC = () => {
           _hover={{ transform: "translateY(-5px)", boxShadow: "lg" }}
           transition="all 0.3s"
           cursor="pointer"
-          onClick={() => (window.location.href = "/scenarios/new")}
+          onClick={() => navigate("/scenarios/new")}
         >
           <Flex direction="column" align="center" textAlign="center">
             <Flex
@@ -159,6 +263,7 @@ const MyScenariosPage: React.FC = () => {
           </Flex>
         </Box>
 
+        {/* run simulation card */}
         <Box
           bg={cardBgColor}
           p={5}
@@ -169,7 +274,7 @@ const MyScenariosPage: React.FC = () => {
           _hover={{ transform: "translateY(-5px)", boxShadow: "lg" }}
           transition="all 0.3s"
           cursor="pointer"
-          onClick={() => (window.location.href = "/simulation/run")}
+          onClick={() => navigate("/simulation/run")}
         >
           <Flex direction="column" align="center" textAlign="center">
             <Flex
@@ -194,7 +299,77 @@ const MyScenariosPage: React.FC = () => {
         </Box>
       </SimpleGrid>
 
-      {/* Scenario Cards with improved visual hierarchy */}
+      {/* Draft Scenarios Section - Only show if there are drafts */}
+      {drafts.length > 0 && (
+        <Box mb={8}>
+          <Flex
+            justify="space-between"
+            align="center"
+            mb={4}
+            pb={2}
+            borderBottom="1px solid"
+            borderColor={borderColor}
+          >
+            <Heading as="h2" size="md" color={headingColor} fontWeight="semibold">
+              Your Draft Scenarios
+            </Heading>
+            <Badge
+              colorScheme="blue"
+              fontSize="sm"
+              borderRadius="full"
+              px={3}
+              py={1}
+            >
+              {drafts.length} drafts
+            </Badge>
+          </Flex>
+          <SimpleGrid columns={{ base: 1, md: 1 }} spacing={6}>
+            {drafts.map((draft) => (
+              <Box
+                key={draft._id}
+                bg={cardBgColor}
+                p={5}
+                borderRadius="lg"
+                boxShadow="md"
+                border="1px solid"
+                borderColor={borderColor}
+              >
+                <Flex justify="space-between" align="center">
+                  <Box>
+                    <Heading as="h3" size="md" mb={2} color={headingColor}>
+                      {draft.name}
+                    </Heading>
+                    <Text color={infoColor}>
+                      Last updated: {new Date(draft.updatedAt).toLocaleDateString()}
+                    </Text>
+                  </Box>
+                  <Flex gap={2}>
+                    <Button
+                      leftIcon={<FaEdit />}
+                      colorScheme="blue"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditDraft(draft._id)}
+                    >
+                      Continue Editing
+                    </Button>
+                    <Button
+                      colorScheme="red"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteDraft(draft._id)}
+                    >
+                      Delete
+                    </Button>
+                  </Flex>
+                </Flex>
+              </Box>
+            ))}
+          </SimpleGrid>
+        </Box>
+      )}
+
+      {/* Actual Scenarios Section */}
       <Box mb={8}>
         <Flex
           justify="space-between"
@@ -214,7 +389,46 @@ const MyScenariosPage: React.FC = () => {
             px={3}
             py={1}
           >
-            {SAMPLE_SCENARIOS.length} scenarios
+            {actualScenarios.length} scenarios
+          </Badge>
+        </Flex>
+        <SimpleGrid columns={{ base: 1, md: 1 }} spacing={6}>
+          {actualScenarios.map((scenario) => (
+            <ScenarioDetailCard 
+              key={scenario._id} 
+              scenario={scenario} 
+              onDelete={() => handleDeleteScenario(scenario._id)}
+            />
+          ))}
+          {actualScenarios.length === 0 && !loading && (
+            <Text color={infoColor} textAlign="center" py={4}>
+              No scenarios found. Create a new scenario to get started.
+            </Text>
+          )}
+        </SimpleGrid>
+      </Box>
+
+      {/* sample scenarios section */}
+      <Box mb={8}>
+        <Flex
+          justify="space-between"
+          align="center"
+          mb={4}
+          pb={2}
+          borderBottom="1px solid"
+          borderColor={borderColor}
+        >
+          <Heading as="h2" size="md" color={headingColor} fontWeight="semibold">
+            Sample Scenarios
+          </Heading>
+          <Badge
+            colorScheme="blue"
+            fontSize="sm"
+            borderRadius="full"
+            px={3}
+            py={1}
+          >
+            {SAMPLE_SCENARIOS.length} samples
           </Badge>
         </Flex>
         <SimpleGrid columns={{ base: 1, md: 1 }} spacing={6}>
