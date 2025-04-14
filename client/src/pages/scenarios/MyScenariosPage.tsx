@@ -47,11 +47,19 @@ const MyScenariosPage: React.FC = () => {
   useEffect(() => {
     fetchDrafts();
     fetchActualScenarios();
+
+    // Cleanup function
+    return () => {
+      setDrafts([]);
+      setActualScenarios([]);
+    };
   }, []);
 
   const fetchDrafts = async () => {
     try {
+      setLoading(true);
       const draftScenarios = await scenario_service.get_draft_scenarios();
+      // Replace the entire drafts array instead of appending
       setDrafts(draftScenarios.data);
       setLoading(false);
     } catch (error) {
@@ -291,78 +299,75 @@ const MyScenariosPage: React.FC = () => {
         </Box>
       </SimpleGrid>
 
-      {/* Draft Scenarios Section */}
-      <Box mb={8}>
-        <Flex
-          justify="space-between"
-          align="center"
-          mb={4}
-          pb={2}
-          borderBottom="1px solid"
-          borderColor={borderColor}
-        >
-          <Heading as="h2" size="md" color={headingColor} fontWeight="semibold">
-            Your Draft Scenarios
-          </Heading>
-          <Badge
-            colorScheme="blue"
-            fontSize="sm"
-            borderRadius="full"
-            px={3}
-            py={1}
+      {/* Draft Scenarios Section - Only show if there are drafts */}
+      {drafts.length > 0 && (
+        <Box mb={8}>
+          <Flex
+            justify="space-between"
+            align="center"
+            mb={4}
+            pb={2}
+            borderBottom="1px solid"
+            borderColor={borderColor}
           >
-            {drafts.length} drafts
-          </Badge>
-        </Flex>
-        <SimpleGrid columns={{ base: 1, md: 1 }} spacing={6}>
-          {drafts.map((draft) => (
-            <Box
-              key={draft._id}
-              bg={cardBgColor}
-              p={5}
-              borderRadius="lg"
-              boxShadow="md"
-              border="1px solid"
-              borderColor={borderColor}
+            <Heading as="h2" size="md" color={headingColor} fontWeight="semibold">
+              Your Draft Scenarios
+            </Heading>
+            <Badge
+              colorScheme="blue"
+              fontSize="sm"
+              borderRadius="full"
+              px={3}
+              py={1}
             >
-              <Flex justify="space-between" align="center">
-                <Box>
-                  <Heading as="h3" size="md" mb={2} color={headingColor}>
-                    {draft.name}
-                  </Heading>
-                  <Text color={infoColor}>
-                    Last updated: {new Date(draft.updatedAt).toLocaleDateString()}
-                  </Text>
-                </Box>
-                <Flex gap={2}>
-                  <Button
-                    leftIcon={<FaEdit />}
-                    colorScheme="blue"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEditDraft(draft._id)}
-                  >
-                    Continue Editing
-                  </Button>
-                  <Button
-                    colorScheme="red"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeleteDraft(draft._id)}
-                  >
-                    Delete
-                  </Button>
+              {drafts.length} drafts
+            </Badge>
+          </Flex>
+          <SimpleGrid columns={{ base: 1, md: 1 }} spacing={6}>
+            {drafts.map((draft) => (
+              <Box
+                key={draft._id}
+                bg={cardBgColor}
+                p={5}
+                borderRadius="lg"
+                boxShadow="md"
+                border="1px solid"
+                borderColor={borderColor}
+              >
+                <Flex justify="space-between" align="center">
+                  <Box>
+                    <Heading as="h3" size="md" mb={2} color={headingColor}>
+                      {draft.name}
+                    </Heading>
+                    <Text color={infoColor}>
+                      Last updated: {new Date(draft.updatedAt).toLocaleDateString()}
+                    </Text>
+                  </Box>
+                  <Flex gap={2}>
+                    <Button
+                      leftIcon={<FaEdit />}
+                      colorScheme="blue"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditDraft(draft._id)}
+                    >
+                      Continue Editing
+                    </Button>
+                    <Button
+                      colorScheme="red"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteDraft(draft._id)}
+                    >
+                      Delete
+                    </Button>
+                  </Flex>
                 </Flex>
-              </Flex>
-            </Box>
-          ))}
-          {drafts.length === 0 && !loading && (
-            <Text color={infoColor} textAlign="center" py={4}>
-              No draft scenarios found. Create a new scenario to get started.
-            </Text>
-          )}
-        </SimpleGrid>
-      </Box>
+              </Box>
+            ))}
+          </SimpleGrid>
+        </Box>
+      )}
 
       {/* Actual Scenarios Section */}
       <Box mb={8}>
