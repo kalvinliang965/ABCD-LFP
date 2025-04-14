@@ -274,6 +274,5 @@ export function create_scenario_raw_yaml(yamlString: string): ScenarioRaw {
     const result = ScenarioRawSchema.parse(parsed_data);
     return {
         ...result,
-        maritalStatus: result.maritalStatus,
     }  as unknown as ScenarioRaw;
 }

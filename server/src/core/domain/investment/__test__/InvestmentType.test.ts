@@ -295,12 +295,7 @@ describe("Investment Type Factory", () => {
       expect(type.return_change_type).toBeDefined();
       expect(type.income_change_type).toBeDefined();
       
-      expect(type.expect_annual_return).toEqual(
-        expect.objectContaining({
-          sample: expect.any(Function),
-          _params: expect.any(Map)
-        })
-      );
+      expect(typeof type.get_annual_return()).toBe("number");
       
       expect(type.taxability).toBeDefined();
     };

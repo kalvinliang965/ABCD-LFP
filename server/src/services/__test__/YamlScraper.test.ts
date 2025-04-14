@@ -10,12 +10,12 @@ describe("parse state tax", () => {
       - min: 0
         max: 50000
         rate: 0.1
-        taxpayer_type: "SINGLE"
+        taxpayer_type: "individual"
         income_type: "TAXABLE_INCOME"
       - min: 50001
         max: null
         rate: 0.2
-        taxpayer_type: "MARRIED"
+        taxpayer_type: "couple"
         income_type: "TAXABLE_INCOME"
     `;
 
@@ -216,10 +216,9 @@ describe("parse state tax", () => {
 describe("parse scenario yaml", () => {
   it("should yaml_string contain scenario data correctly", () => {
     const scenarioRaw = create_scenario_raw_yaml(scenario_yaml_string);
-
     expect(scenarioRaw).toBeDefined();
     expect(scenarioRaw.name).toBe("Retirement Planning Scenario");
-    expect(scenarioRaw.martialStatus).toBe("couple");
+    expect(scenarioRaw.maritalStatus).toBe("couple");
     expect(scenarioRaw.birthYears).toEqual([1985, 1987]);
     
     expect(scenarioRaw.lifeExpectancy.length).toBe(2);
