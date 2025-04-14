@@ -20,6 +20,7 @@ import { pay_mandatory_expenses } from './logic/PayMandatoryExpense';
 import { pay_discretionary_expenses } from './logic/PayDiscretionaryExpense';
 import { invest_excess_cash as run_invest_event } from './logic/InvestExcessCash';
 import { run_rebalance_investment } from './logic/RebalanceInvestments';
+import { delete_state_tax_brackets_by_state } from '../../db/repositories/StateTaxBracketRepository';
 
 export async function create_simulation_engine(scenario_yaml: string, state_yaml: string): Promise<SimulationEngine> {
 
@@ -42,16 +43,18 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
         federal_tax_service = await create_federal_tax_service();
         simulation_logger.info("Successfully initialize federal tax service");
         
-        // TODO: fix this later. if yaml file is given we assume user 
-        // want to update the tax info for that state
-        
         // initialize state tax service 
         if (state_yaml) {
-            simulation_logger.info("initializing state tax service from yaml....");
+            simulation_logger.debug("initializing state tax service from yaml....");
+
+            simulation_logger.debug("Removing existing state data");
+            await delete_state_tax_brackets_by_state(scenario.residence_state);
             state_tax_service = await create_state_tax_service_yaml(scenario.residence_state, state_yaml);
+            simulation_logger.debug("Successfully initialized state tax service from yaml");
         } else {
-            simulation_logger.info("initializing state tax service from db....");
+            simulation_logger.debug("initializing state tax service from db....");
             state_tax_service = await create_state_tax_service_db(scenario.residence_state); 
+            simulation_logger.info("Successfully initialize state tax service from db");
         }
         simulation_logger.info("Successfully initialize state tax service");
         simulation_logger.info("Successfully initialize simulation engine");

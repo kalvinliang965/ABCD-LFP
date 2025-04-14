@@ -78,7 +78,7 @@ async function testProcessRMD() {
 
 async function simulation_engine_demo() {
   const simulation_engine = await create_simulation_engine(scenario_yaml_string, state_tax_yaml_string);
-  simulation_engine.run(5);
+  simulation_engine.run(1);
 
 }
 export {

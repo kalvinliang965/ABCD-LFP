@@ -50,7 +50,7 @@ export const incr_600_init_600_investment_two: InvestmentRaw = create_investment
 export const cash_investment_one: InvestmentRaw = create_investment_raw(
     cash_investment_type_one.name,
     100,
-    "non-retirment",
+    "non-retirement",
     "cash",
 );
 

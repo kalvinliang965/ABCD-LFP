@@ -4,11 +4,10 @@ import { load } from "cheerio";
 import { create_tax_brackets, TaxBrackets } from "../core/tax/TaxBrackets";
 import { IncomeType, TaxFilingStatus } from "../core/Enums";
 import { StandardDeduction, create_standard_deductions } from "../core/tax/StandardDeduction";
-import { save_bracket } from "../db/repositories/TaxBracketRepository";
-import { save_standard_deduction } from "../db/repositories/StandardDeductionRepository";
+import { create_taxbracket_in_db } from "../db/repositories/TaxBracketRepository";
+import { create_standard_deduction_in_db } from "../db/repositories/StandardDeductionRepository";
 
 import { simulation_logger } from "../utils/logger/logger";
-import { signedCookie } from "cookie-parser";
 
 const SINGLE_TABLE: number = 0;
 const MARRIED_TABLE: number = 1;
@@ -59,7 +58,7 @@ async function parse_table_rows(taxBrackets: TaxBrackets, status: TaxFilingStatu
         const max = max_text.toLowerCase() === "and up" ? Infinity: extractNumbers(max_text, 1)[0];
         const rate = extractNumbers(rate_text, 1)[0] / 100;
         taxBrackets.add_bracket(min, max, rate, status);
-        if (save_to_database) await save_bracket(min, max, rate, IncomeType.TAXABLE_INCOME, status);
+        if (save_to_database) await create_taxbracket_in_db(min, max, rate, IncomeType.TAXABLE_INCOME, status);
     });
 }
 
@@ -134,10 +133,10 @@ async function parse_standard_deductions(html: string, save_to_database = false)
             const cost = extractNumbers(text, 1)[0];
             if (idx == 0) {
                 std_deductions.add_deduction(cost, TaxFilingStatus.SINGLE);
-                if (save_to_database) await save_standard_deduction(cost, TaxFilingStatus.SINGLE);
+                if (save_to_database) await create_standard_deduction_in_db(cost, TaxFilingStatus.SINGLE);
             } else if (idx == 1) {
                 std_deductions.add_deduction(cost, TaxFilingStatus.MARRIED);
-                if (save_to_database) await save_standard_deduction(cost, TaxFilingStatus.MARRIED);
+                if (save_to_database) await create_standard_deduction_in_db(cost, TaxFilingStatus.MARRIED);
             }
         });
         
@@ -183,10 +182,10 @@ async function parse_capital_gains(
                     const upperbound = extractNumbers(list_item.text(), 1)[0];
                     if (idx == 0) {
                         taxBrackets.add_bracket(0, upperbound, rate, TaxFilingStatus.SINGLE);
-                        if (save_to_database) await save_bracket(0, upperbound, rate, IncomeType.CAPITAL_GAINS, TaxFilingStatus.SINGLE);
+                        if (save_to_database) await create_taxbracket_in_db(0, upperbound, rate, IncomeType.CAPITAL_GAINS, TaxFilingStatus.SINGLE);
                     } else if (idx == 1) {
                         taxBrackets.add_bracket(0, upperbound, rate, TaxFilingStatus.MARRIED);
-                        if (save_to_database) await save_bracket(0, upperbound, rate, IncomeType.CAPITAL_GAINS, TaxFilingStatus.MARRIED);
+                        if (save_to_database) await create_taxbracket_in_db(0, upperbound, rate, IncomeType.CAPITAL_GAINS, TaxFilingStatus.MARRIED);
                     }
                 });
             }
@@ -206,10 +205,10 @@ async function parse_capital_gains(
                 const [lowerbound, upperbound] = extractNumbers(list_item.text(), 2);
                     if (idx == 0) {
                         taxBrackets.add_bracket(lowerbound + 1, upperbound, rate, TaxFilingStatus.SINGLE);
-                        if (save_to_database) await save_bracket(lowerbound, upperbound, rate, IncomeType.CAPITAL_GAINS, TaxFilingStatus.SINGLE);
+                        if (save_to_database) await create_taxbracket_in_db(lowerbound, upperbound, rate, IncomeType.CAPITAL_GAINS, TaxFilingStatus.SINGLE);
                     } else if (idx == 2) {
                         taxBrackets.add_bracket(lowerbound + 1, upperbound, rate, TaxFilingStatus.MARRIED);
-                        if (save_to_database) await save_bracket(lowerbound, upperbound, rate, IncomeType.CAPITAL_GAINS, TaxFilingStatus.MARRIED);
+                        if (save_to_database) await create_taxbracket_in_db(lowerbound, upperbound, rate, IncomeType.CAPITAL_GAINS, TaxFilingStatus.MARRIED);
                     }
                 });
             }
@@ -239,7 +238,7 @@ async function parse_capital_gains(
                         throw new Error("Invalid highest rate scrapped");
                     }
                     taxBrackets.add_bracket(max + 1, Infinity, upper_rate, taxpayer_type);
-                    if (save_to_database) await save_bracket(max + 1, Infinity, upper_rate, IncomeType.CAPITAL_GAINS, taxpayer_type);
+                    if (save_to_database) await create_taxbracket_in_db(max + 1, Infinity, upper_rate, IncomeType.CAPITAL_GAINS, taxpayer_type);
                 }
             }
         });

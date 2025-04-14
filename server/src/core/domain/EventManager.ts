@@ -73,7 +73,7 @@ export interface EventManager {
     update_initial_amount: (event: ExpenseEvent | IncomeEvent) => number;
 }
 
-function create_event_manager_clone(
+export function create_event_manager_clone(
     income_event: IncomeEventMap,
     expense_event: ExpenseEventMap,
     invest_event: InvestEventMap,

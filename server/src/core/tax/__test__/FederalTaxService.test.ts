@@ -1,10 +1,10 @@
 // FederalTaxService.test.ts
 import { create_standard_deductions, StandardDeduction } from '../StandardDeduction';
-import { load_standard_deduction } from '../../../db/repositories/StandardDeductionRepository';
+import { get_standard_deduction } from '../../../db/repositories/StandardDeductionRepository';
 import { create_tax_brackets, TaxBrackets } from '../TaxBrackets';
 import { TaxFilingStatus, IncomeType } from '../../Enums';
 import { FederalTaxService, create_federal_tax_service } from '../FederalTaxService';
-import { load_capital_gains_brackets, load_taxable_income_brackets } from '../../../db/repositories/TaxBracketRepository';
+import { get_capital_gains_brackets, get_taxable_income_brackets } from '../../../db/repositories/TaxBracketRepository';
 import { create_federal_service_wo } from '../FederalTaxService';
 
 jest.mock('../../../db/repositories/TaxBracketRepository');
@@ -91,7 +91,7 @@ describe("FederalTaxService", () => {
         let service: FederalTaxService;
         beforeEach(async () => {
             // Mock database responses
-            (load_taxable_income_brackets as jest.Mock)
+            (get_taxable_income_brackets as jest.Mock)
                 .mockResolvedValue([
                     {
                         min: 0,
@@ -119,7 +119,7 @@ describe("FederalTaxService", () => {
                         taxpayer_type: TaxFilingStatus.MARRIED
                     }
                 ]);
-            (load_capital_gains_brackets as jest.Mock)
+            (get_capital_gains_brackets as jest.Mock)
                 .mockResolvedValue([
                     {
                         min: 0,
@@ -147,16 +147,16 @@ describe("FederalTaxService", () => {
                         taxpayer_type: TaxFilingStatus.MARRIED
                     }
                 ]);
-            (load_standard_deduction as jest.Mock)
+            (get_standard_deduction as jest.Mock)
             .mockResolvedValue([{ amount: 1000, taxpayer_type: TaxFilingStatus.SINGLE }, {amount: 2000, taxpayer_type: TaxFilingStatus.MARRIED}]);
 
             // Create service instance
             service = await create_federal_tax_service();
         });
         it("should initialize with database data", async () => {
-            expect(load_taxable_income_brackets).toHaveBeenCalled();
-            expect(load_capital_gains_brackets).toHaveBeenCalled();
-            expect(load_standard_deduction).toHaveBeenCalled();
+            expect(get_taxable_income_brackets).toHaveBeenCalled();
+            expect(get_capital_gains_brackets).toHaveBeenCalled();
+            expect(get_standard_deduction).toHaveBeenCalled();
         });
         describe("find_deduction", () => {
             it("should return correct deduction amount", () => {
@@ -174,13 +174,13 @@ describe("FederalTaxService", () => {
 
     describe("Initialization General", () => {
         it("should handle initialization failures", async () => {
-            (load_taxable_income_brackets as jest.Mock)
+            (get_taxable_income_brackets as jest.Mock)
                 .mockResolvedValue([]);
             
-            (load_capital_gains_brackets as jest.Mock)
+            (get_capital_gains_brackets as jest.Mock)
                 .mockResolvedValue([]);
         
-            (load_standard_deduction as jest.Mock)
+            (get_standard_deduction as jest.Mock)
                 .mockResolvedValue([]);
             const exitSpy = jest.spyOn(process, 'exit').mockImplementation((code?: number) => {
                 throw new Error(`process.exit(${code})`);
@@ -274,7 +274,7 @@ describe("FederalTaxService", () => {
       
       describe("Database Initialization Edge Cases", () => {
         it("should handle corrupted database entries", async () => {
-          (load_taxable_income_brackets as jest.Mock).mockResolvedValueOnce([
+          (get_taxable_income_brackets as jest.Mock).mockResolvedValueOnce([
             { income_type: "INVALID_TYPE", taxpayer_type: TaxFilingStatus.SINGLE }
           ]);
           const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
