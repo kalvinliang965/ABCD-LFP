@@ -3,12 +3,12 @@ import { create_tax_brackets } from "../TaxBrackets";
 import { TaxFilingStatus } from "../../Enums";
 import { create_state_tax_service_wo, create_state_tax_service_yaml, create_state_tax_service_db } from "../StateTaxService";
 import { StateType } from "../../Enums";
-import { state_tax_brackets_exist_in_db, get_state_tax_brackets_by_state, create_state_taxbracket_in_db } from "../../../db/repositories/StateTaxBracketRepository";
+import { state_taxbrackets_exist_in_db, get_state_taxbrackets_by_state, create_state_taxbracket_in_db } from "../../../db/repositories/StateTaxBracketRepository";
 
 jest.mock("../../../db/repositories/StateTaxBracketRepository", () => ({
-    save_state_tax_bracket: jest.fn(),
-    has_state_data: jest.fn(),
-    load_state_taxable_income_brackets: jest.fn(),
+    create_state_taxbracket_in_db: jest.fn(),
+    state_taxbrackets_exist_in_db: jest.fn(),
+    get_state_taxbrackets_by_state: jest.fn(),
 }));
 
 describe('StateTaxService', () => {
@@ -43,16 +43,21 @@ describe('StateTaxService', () => {
       it('should create independent instances when cloned', () => {
         const tax_brackets = create_tax_brackets();
         tax_brackets.add_bracket(0, 100, 0.1, TaxFilingStatus.SINGLE);
+        tax_brackets.add_bracket(101, Infinity, 0.2, TaxFilingStatus.SINGLE);
         const original = create_state_tax_service_wo(tax_brackets)
-        const clone = original.clone()
-        expect(clone.find_bracket_with_rate(0.1, TaxFilingStatus.SINGLE)).not.toBe(original.find_bracket_with_rate(0.1, TaxFilingStatus.SINGLE))
+        const clone = original.clone();
+        expect(clone.find_bracket_with_rate(0.1, TaxFilingStatus.SINGLE)).toEqual(original.find_bracket_with_rate(0.1, TaxFilingStatus.SINGLE))
+        
         tax_brackets.adjust_for_inflation(0.1);
+        
         const original_bracket = original.find_bracket_with_rate(0.1, TaxFilingStatus.SINGLE);
         const cloned_bracket = clone.find_bracket_with_rate(0.1, TaxFilingStatus.SINGLE);
+        
         // check orginal
         expect(original_bracket.min).toBe(0);
         expect(original_bracket.max).toBe(110);
         expect(original_bracket.rate).toBe(0.1)
+        
         // check cloned
         expect(cloned_bracket.min).toBe(0);
         expect(cloned_bracket.max).toBe(100);
@@ -68,8 +73,8 @@ describe('StateTaxService', () => {
         });
         it("should retrieve data from database correctly", async ()=> {
             // say there are data in database
-            (state_tax_brackets_exist_in_db as jest.Mock).mockResolvedValue(true);
-            (get_state_tax_brackets_by_state as jest.Mock).mockResolvedValue([
+            (state_taxbrackets_exist_in_db as jest.Mock).mockResolvedValue(true);
+            (get_state_taxbrackets_by_state as jest.Mock).mockResolvedValue([
                 {
                     min: 0,
                     max: 5000,
@@ -91,7 +96,7 @@ describe('StateTaxService', () => {
             expect(create_state_taxbracket_in_db).not.toHaveBeenCalled();
         });
         it("should throw error if database contain no data", async () => {
-            (state_tax_brackets_exist_in_db as jest.Mock).mockResolvedValue(false);
+            (state_taxbrackets_exist_in_db as jest.Mock).mockResolvedValue(false);
             await expect(create_state_tax_service_db(StateType.CT))
                 .rejects.toThrow();
         });
@@ -100,8 +105,8 @@ describe('StateTaxService', () => {
             let exitSpy = jest.spyOn(process, "exit").mockImplementation(()=> {
                 throw new Error("process.exit called");
             });
-            (state_tax_brackets_exist_in_db as jest.Mock).mockResolvedValue(true);
-            (get_state_tax_brackets_by_state as jest.Mock).mockResolvedValue([
+            (state_taxbrackets_exist_in_db as jest.Mock).mockResolvedValue(true);
+            (get_state_taxbrackets_by_state as jest.Mock).mockResolvedValue([
                 {
                     min: 0,
                     max: 5000,
@@ -136,11 +141,11 @@ describe('StateTaxService', () => {
               - min: 0
                 max: 50000
                 rate: 0.1
-                taxpayer_type: "SINGLE"
+                taxpayer_type: "individual"
               - min: 50001
                 max: null
                 rate: 0.2
-                taxpayer_type: "SINGLE"
+                taxpayer_type: "individual"
       `
         it('should create service from valid YAML', async () => {
             const service = await create_state_tax_service_yaml(StateType.NY, validYAML)
@@ -156,7 +161,7 @@ describe('StateTaxService', () => {
                 - min: "invalid"
                     max: 50000
                     rate: 0.1
-                    taxpayer_type: "SINGLE"
+                    taxpayer_type: "individual"
             `
             it('should reject mismatched state', async () => {
                 await expect(create_state_tax_service_yaml(StateType.NJ, validYAML))

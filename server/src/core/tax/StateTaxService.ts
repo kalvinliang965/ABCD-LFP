@@ -2,7 +2,7 @@ import { create_state_tax__raw_yaml, StateTaxYAML } from "../../services/StateYa
 import { StateType, TaxFilingStatus } from "../Enums";
 import { create_tax_brackets, TaxBracketSet } from "./TaxBrackets";
 import { TaxBrackets, TaxBracket } from "./TaxBrackets";
-import { get_state_tax_brackets_by_state, create_state_taxbracket_in_db, state_tax_brackets_exist_in_db } from "../../db/repositories/StateTaxBracketRepository";
+import { get_state_taxbrackets_by_state, create_state_taxbracket_in_db, state_taxbrackets_exist_in_db } from "../../db/repositories/StateTaxBracketRepository";
 import { simulation_logger } from "../../utils/logger/logger";
 
 export interface StateTaxService {
@@ -123,10 +123,10 @@ export async function create_state_tax_service_yaml(resident_state: StateType , 
 export async function create_state_tax_service_db(entered_resident_state: StateType): Promise<StateTaxService> {
     try {
         const taxable_income_bracket = create_tax_brackets()
-        if (!await state_tax_brackets_exist_in_db(entered_resident_state)) {
+        if (!await state_taxbrackets_exist_in_db(entered_resident_state)) {
             throw new Error(`DB does not contain data for ${entered_resident_state}`);
         } else {
-            const tax_bracket_list = await get_state_tax_brackets_by_state(entered_resident_state);
+            const tax_bracket_list = await get_state_taxbrackets_by_state(entered_resident_state);
             tax_bracket_list.forEach((ti) => {
                 const { min, max, rate, taxpayer_type, resident_state } = ti;
                 if (resident_state != entered_resident_state) {
