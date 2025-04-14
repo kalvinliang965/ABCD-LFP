@@ -26,7 +26,7 @@ pre_tax_2.clone = function() {
   }
 
 const createBaseState = (): SimulationState => ({
-  accounts: {
+  account_manager: {
     pre_tax: new Map<string, Investment>([
         ['pre_tax_1', pre_tax_1],
         ['pre_tax_2', pre_tax_2],
@@ -36,8 +36,8 @@ const createBaseState = (): SimulationState => ({
   },
   get_tax_filing_status: () => TaxFilingStatus.SINGLE,
   federal_tax_service: {
-    find_bracket: jest.fn().mockReturnValue({ min: 0, max: 100000, rate: 0.24 }),
-    find_deduction: jest.fn().mockReturnValue(12500),
+    find_bracket_with_income: jest.fn().mockReturnValue({ min: 0, max: 100000, rate: 0.24 }),
+    find_deduction: jest.fn().mockReturnValue(0),
     adjust_for_inflation: jest.fn()
   },
   state_tax_service: {
@@ -49,13 +49,15 @@ const createBaseState = (): SimulationState => ({
   roth_conversion_start: 2024,
   roth_conversion_end: 2030,
   roth_conversion_strategy: ['pre_tax_1', 'pre_tax_2'],
-  get_ordinary_income: jest.fn().mockReturnValue(80000),
-  get_capital_gains_income: jest.fn().mockReturnValue(20000),
-  get_social_security_income: jest.fn().mockReturnValue(30000),
-  get_after_tax_contribution: jest.fn().mockReturnValue(0),
-  get_after_tax_contribution_limit: jest.fn().mockReturnValue(6500),
-  incr_ordinary_income: jest.fn(),
-  incr_after_tax_contribution: jest.fn(),
+  user_tax_data: {
+    get_cur_year_income: jest.fn().mockReturnValue(80000),
+    get_cur_year_gains: jest.fn().mockReturnValue(20000),
+    get_cur_year_ss: jest.fn().mockReturnValue(30000),
+    get_cur_fed_taxable_income: () => 80000 - 0.15 * 30000,
+    incr_cur_year_income: jest.fn(),
+    incr_cur_year_gains: jest.fn(),
+    incr_cur_year_ss: jest.fn(),
+  }
 } as unknown as SimulationState);
 
 describe('Roth Conversion Process', () => {
@@ -94,27 +96,28 @@ describe('Roth Conversion Process', () => {
       
       state.get_current_year = jest.fn().mockReturnValue(2025);
       process_roth_conversion(state);
-      expect(state.incr_ordinary_income).toHaveBeenCalled();
+      expect(state.user_tax_data.incr_cur_year_income).toHaveBeenCalled();
 
       state.get_current_year = jest.fn().mockReturnValue(2032);
       process_roth_conversion(state);
-      expect(state.incr_ordinary_income).toHaveBeenCalledTimes(1);
+      expect(state.user_tax_data.incr_cur_year_income).toHaveBeenCalledTimes(1);
     });
 
     test('nothing is transfer', () => {
       const state = createBaseState();
-      state.federal_tax_service.find_bracket_with_rate = jest.fn().mockReturnValue({
+      state.federal_tax_service.find_bracket_with_income = jest.fn().mockReturnValue({
         min: 0,
         max: 50000,
         rate: 0.12
       });
-      // Ordinary income: 80000
-      // capital gains income 20000
+      console.log(state.user_tax_data.get_cur_fed_taxable_income());
+      // cur year income: 80000
       // social security benefit 30000
-      // taxable income = 95500
+      // taxable income = 795500
+      // 795500 - 0 = 75500
       // exceed the current bracket
       process_roth_conversion(state);
-      expect(state.incr_ordinary_income).not.toHaveBeenCalled();
+      expect(state.user_tax_data.incr_cur_year_income).not.toHaveBeenCalled();
     });
   });
 
