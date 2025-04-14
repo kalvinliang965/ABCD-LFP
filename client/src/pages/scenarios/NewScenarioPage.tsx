@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Box, Text, useToast, Button, HStack } from "@chakra-ui/react";
 import { useEventSeries } from "../../contexts/EventSeriesContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import ScenarioDetailsForm, {
   ScenarioDetails,
   ScenarioType,
@@ -49,9 +49,11 @@ import { scenarioYAMLService } from "../../services/scenarioYAML";
 import { convert_scenario_to_yaml } from "../../utils/yamlExport";
 import use_draft_saver from "../../utils/useDraftSaver";
 import { create_draft_state_helper } from "../../utils/draftStateHelper";
+import { scenario_service } from "../../services/scenarioService";
 
 function NewScenarioPage() {
-  //! belong to Kate, don't touch
+  const { id } = useParams();
+  const isEditMode = !!id;
   const { selectedType, setSelectedType } = useEventSeries();
   const navigate = useNavigate();
   const [addedEvents, setAddedEvents] = useState<AddedEvent[]>([]);
@@ -76,6 +78,14 @@ function NewScenarioPage() {
   useEffect(() => {
     console.log("NewScenarioPage: Step changed to:", step);
   }, [step]);
+
+  //cleanup when component unmount
+  useEffect(() => {
+    return () => {
+      //clear the editing scenario ID when leaving the page
+      localStorage.removeItem('current_editing_scenario_id');
+    };
+  }, []);
 
   const [scenarioDetails, setScenarioDetails] = useState<ScenarioDetails>({
     name: "",
@@ -164,6 +174,105 @@ function NewScenarioPage() {
       addedEvents,
     ]
   );
+
+  //add useEffect to load scenario data when in edit mode
+  useEffect(() => {
+    const loadScenarioData = async () => {
+      if (isEditMode && id) {
+        try {
+          const response = await scenario_service.get_scenario_by_id(id);
+          const scenario = response.data;
+          
+          //set the current scenario ID in localStorage
+          localStorage.setItem('current_scenario_id', id);
+          
+          //set the scenario details
+          setScenarioDetails({
+            name: scenario.name,
+            type: scenario.maritalStatus,
+            userBirthYear: scenario.birthYears[0],
+            spouseBirthYear: scenario.birthYears[1]
+          });
+
+          //set life expectancy config
+          setLifeExpectancyConfig({
+            userExpectancyType: scenario.lifeExpectancy[0].type,
+            userFixedAge: scenario.lifeExpectancy[0].value,
+            spouseExpectancyType: scenario.lifeExpectancy[1]?.type,
+            spouseFixedAge: scenario.lifeExpectancy[1]?.value
+          });
+
+          //set investments config
+          setInvestmentsConfig({
+            investments: scenario.investments
+          });
+
+          //set event series
+          setAddedEvents(scenario.eventSeries);
+
+          //set RMD settings
+          setRmdSettings({
+            currentAge: new Date().getFullYear() - scenario.birthYears[0],
+            accountPriority: scenario.RMDStrategy,
+            availableAccounts: scenario.investments.map((inv: { id: string; investmentType: string }) => ({
+              id: inv.id,
+              name: inv.investmentType
+            }))
+          });
+
+          //set spending strategy
+          setSpendingStrategy({
+            availableExpenses: scenario.spendingStrategy,
+            selectedExpenses: scenario.spendingStrategy
+          });
+
+          //set withdrawal strategy
+          setWithdrawalStrategy({
+            availableAccounts: scenario.investments.map((inv: { id: string; investmentType: string }) => ({
+              id: inv.id,
+              name: inv.investmentType
+            })),
+            accountPriority: scenario.expenseWithdrawalStrategy
+          });
+
+          //set Roth conversion strategy
+          setRothConversionStrategy({
+            roth_conversion_opt: scenario.RothConversionOpt,
+            roth_conversion_start: scenario.RothConversionStart,
+            roth_conversion_end: scenario.RothConversionEnd,
+            availableAccounts: scenario.investments.map((inv: { id: string; investmentType: string }) => ({
+              id: inv.id,
+              name: inv.investmentType
+            })),
+            accountPriority: scenario.RothConversionStrategy
+          });
+
+          //set additional settings
+          setAdditionalSettings({
+            inflationConfig: scenario.inflationAssumption,
+            afterTaxContributionLimit: scenario.afterTaxContributionLimit,
+            financialGoal: {
+              value: scenario.financialGoal
+            },
+            stateOfResidence: scenario.residenceState
+          });
+          setStep("Scenario_name&type");
+        } catch (error) {
+          console.error("Error loading scenario:", error);
+          toast({
+            title: "Error",
+            description: "Failed to load scenario data",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+          navigate("/scenarios");
+        }
+      }
+    };
+
+    loadScenarioData();
+  }, [id, isEditMode, navigate, toast]);
 
   // *this part is called by who? check the type.
   // *this part only has two values, FROM_SCRATCH and IMPORT_YAML.
@@ -490,6 +599,16 @@ function NewScenarioPage() {
     console.log("=====================================================");
 
     try {
+      //delete the draft version if we're in edit mode
+      if (id) {
+        try {
+          await scenario_service.delete_scenario(id);
+          console.log("Deleted draft scenario:", id);
+        } catch (err) {
+          console.error("Error deleting draft scenario:", err);
+        }
+      }
+
       // Save final state (not draft)
       await save_draft(get_current_draft_state(), false);
       console.log("Complete scenario saved to database");
@@ -504,7 +623,7 @@ function NewScenarioPage() {
       //need to check what is the correct way to clear the local storage
       clearLocalStorage();
       //clear the current scenario ID when finishing
-      localStorage.removeItem('current_scenario_id');
+      localStorage.removeItem('current_editing_scenario_id');
       
       // Show success toast and navigate to scenarios page
       toast({
@@ -516,7 +635,6 @@ function NewScenarioPage() {
       });
       navigate("/scenarios");
 
-      // After successfully saving the complete scenario
     } catch (error) {
       console.error("Error saving scenario:", error);
       toast({

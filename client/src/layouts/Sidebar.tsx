@@ -180,7 +180,7 @@ const Sidebar: React.FC = () => {
           <NavItem
             icon={FaClipboardList}
             to="/scenarios"
-            isActive={location.pathname === "/scenarios"}
+            isActive={location.pathname === "/scenarios" || location.pathname.includes("/scenarios/")}
             sidebarOpen={sidebarOpen}
           >
             My Scenarios
@@ -199,7 +199,7 @@ const Sidebar: React.FC = () => {
           <NavItem
             icon={FaChartLine}
             to="/simulation/results"
-            isActive={location.pathname === "/simulation/results" || location.pathname.includes("/scenarios/")}
+            isActive={location.pathname === "/simulation/results" || location.pathname.includes("/scenarios/") && location.pathname.includes("/results")}
             sidebarOpen={sidebarOpen}
           >
             Results & Charts

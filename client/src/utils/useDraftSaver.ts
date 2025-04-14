@@ -20,7 +20,7 @@ export const use_draft_saver = (): DraftSaverResult => {
     //promt: please write the console log statements for monitoring scenario_id changes
   useEffect(() => {
     console.log("Initializing scenario_id from localStorage...");
-    const saved_id = localStorage.getItem('current_scenario_id');
+    const saved_id = localStorage.getItem('current_editing_scenario_id');
     console.log("Retrieved saved_id from localStorage:", saved_id);
     if (saved_id) {
       console.log("Setting scenario_id to saved_id:", saved_id);
@@ -37,10 +37,10 @@ export const use_draft_saver = (): DraftSaverResult => {
     console.log("scenario_id changed to:", scenario_id);
     if (scenario_id) {
       console.log("Saving scenario_id to localStorage:", scenario_id);
-      localStorage.setItem('current_scenario_id', scenario_id);
+      localStorage.setItem('current_editing_scenario_id', scenario_id);
     } else {
       console.log("Removing scenario_id from localStorage");
-      localStorage.removeItem('current_scenario_id');
+      localStorage.removeItem('current_editing_scenario_id');
     }
   }, [scenario_id]);
 
