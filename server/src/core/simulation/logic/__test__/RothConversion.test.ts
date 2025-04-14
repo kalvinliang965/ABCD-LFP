@@ -61,14 +61,6 @@ const createBaseState = (): SimulationState => ({
 } as unknown as SimulationState);
 
 describe('Roth Conversion Process', () => {
-
-    beforeEach(() => {
-        // clear error and proces.exit
-        jest.spyOn(console, 'error').mockImplementation(() => {});
-        jest.spyOn(process, 'exit').mockImplementation((code?: number) => {
-            throw new Error(`process.exit(${code})`);
-        });
-    });
     
     afterEach(() => {
         jest.restoreAllMocks();
@@ -110,7 +102,6 @@ describe('Roth Conversion Process', () => {
         max: 50000,
         rate: 0.12
       });
-      console.log(state.user_tax_data.get_cur_fed_taxable_income());
       // cur year income: 80000
       // social security benefit 30000
       // taxable income = 795500
@@ -122,25 +113,19 @@ describe('Roth Conversion Process', () => {
   });
 
   describe('boundarie test', () => {
-    test('empty roth conversion strategy', () => {
+    it('should transfter nothing on empty roth conversion strategy', () => {
       const state = createBaseState();
       state.roth_conversion_strategy = [];
       
       process_roth_conversion(state);
       expect(state.account_manager.after_tax.size).toBe(0  );
     });
-    test('account not exist', () => {
+    it('should error on account not exist', () => {
         const state = createBaseState();
         state.roth_conversion_strategy = ['non_existent'];
-        
-        try {
-            process_roth_conversion(state);
-        }catch(error) {
-            expect(error).toBeInstanceOf(Error);
-            if (error instanceof Error) {
-                expect(error.message).toMatch("process.exit(1)");
-            }
-        }
+      
+        expect(() => process_roth_conversion(state)).toThrow(/Investment with/);
+     
       });
   });
 });
