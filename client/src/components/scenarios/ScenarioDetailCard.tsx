@@ -35,6 +35,7 @@ import {
   FaShoppingBag,
   FaChevronRight,
   FaDownload,
+  FaTrash,
 } from "react-icons/fa";
 import { ScenarioRaw } from "../../types/Scenarios";
 import { download_scenario_as_yaml } from "../../utils/yamlExport";
@@ -45,10 +46,52 @@ import { download_scenario_as_yaml } from "../../utils/yamlExport";
  */
 interface ScenarioDetailCardProps {
   scenario: ScenarioRaw;
+  onDelete?: () => void;
 }
+//moved up
+const InfoItem = ({
+  icon,
+  label,
+  value,
+  tooltipContent,
+}: {
+  icon: React.ComponentType;
+  label: string;
+  value: string | number;
+  tooltipContent: string;
+}) => {
+  const iconBg = useColorModeValue("blue.50", "blue.900");
+  const labelColor = useColorModeValue("gray.600", "gray.400");
+
+  return (
+    <GridItem>
+      <Tooltip label={tooltipContent} placement="top">
+        <Flex align="center">
+          <Flex
+            p={2}
+            borderRadius="md"
+            bg={iconBg}
+            alignItems="center"
+            justifyContent="center"
+            mr={3}
+          >
+            <Icon as={icon} color="blue.500" boxSize={4} />
+          </Flex>
+          <Box>
+            <Text fontSize="xs" color={labelColor} fontWeight="medium">
+              {label}
+            </Text>
+            <Text fontWeight="semibold">{value}</Text>
+          </Box>
+        </Flex>
+      </Tooltip>
+    </GridItem>
+  );
+};
 
 const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
   scenario,
+  onDelete
 }) => {
   const toast = useToast();
   const highlightColor = useColorModeValue("blue.500", "blue.300");
@@ -99,59 +142,79 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
           <Heading size="md" fontWeight="bold">
             {scenario.name}
           </Heading>
-          <Badge
-            colorScheme={
-              scenario.maritalStatus === "individual" ? "purple" : "pink"
-            }
-            fontSize="0.8em"
-            py={1}
-            px={2}
-            borderRadius="full"
-            textTransform="capitalize"
-          >
-            {scenario.maritalStatus}
-          </Badge>
+          <Flex gap={2} align="center">
+            <Badge
+              colorScheme={
+                scenario.maritalStatus === 'individual' ? "purple" : "pink"
+              }
+              fontSize="0.8em"
+              py={1}
+              px={2}
+              borderRadius="full"
+              textTransform="capitalize"
+            >
+              {scenario.maritalStatus}
+            </Badge>
+          </Flex>
         </Flex>
       </Box>
 
       {/* Main content grid */}
-      <Grid templateColumns="repeat(2, 1fr)" gap={4} p={4}>
-        {/* Financial Goal */}
-        <InfoItem
-          icon={FaDollarSign}
-          label="Financial Goal"
-          value={`$${scenario.financialGoal.toLocaleString()}`}
-          tooltipContent="Target financial goal for this scenario"
-        />
+      <Box position="relative">
+        {onDelete && (
+          <Box position="absolute" right="4" top="4">
+            <IconButton
+              aria-label="Delete scenario"
+              icon={<FaTrash />}
+              size="sm"
+              colorScheme="red"
+              variant="solid"
+              bg="rgba(229, 62, 62, 0.85)"
+              color="white"
+              fontWeight="normal"
+              _hover={{ bg: "rgba(229, 62, 62, 0.95)" }}
+              onClick={onDelete}
+            />
+          </Box>
+        )}
+        <Grid templateColumns="repeat(2, 1fr)" gap={4} p={4}>
+          {/* Financial Goal */}
+          <InfoItem
+            icon={FaDollarSign}
+            label="Financial Goal"
+            value={`$${scenario.financialGoal.toLocaleString()}`}
+            tooltipContent="Target financial goal for this scenario"
+          />
 
-        {/* Residence State */}
-        <InfoItem
-          icon={FaMapMarkerAlt}
-          label="Residence State"
-          value={scenario.residenceState}
-          tooltipContent="State of residence for tax calculations"
-        />
+          {/* Residence State */}
+          <InfoItem
+            icon={FaMapMarkerAlt}
+            label="Residence State"
+            value={scenario.residenceState}
+            tooltipContent="State of residence for tax calculations"
+          />
 
-        {/* Life Expectancy */}
-        <InfoItem
-          icon={FaHourglass}
-          label="Life Expectancy"
-          value={
-            scenario.lifeExpectancy[0].type === "fixed"
-              ? scenario.lifeExpectancy[0].value
-              : `${scenario.lifeExpectancy[0].mean} ± ${scenario.lifeExpectancy[0].std}`
-          }
-          tooltipContent="Projected life expectancy for planning"
-        />
+          {/* Life Expectancy */}
+          <InfoItem
+            icon={FaHourglass}
+            label="Life Expectancy"
+            value={
+              scenario.lifeExpectancy[0].type === "fixed"
+                ? scenario.lifeExpectancy[0].value
+                : `${scenario.lifeExpectancy[0].mean} ± ${scenario.lifeExpectancy[0].stdev}`
+            }
+            tooltipContent="Projected life expectancy for planning"
+          />
 
-        {/* Birth Year */}
-        <InfoItem
-          icon={FaCalendarAlt}
-          label="Birth Year"
-          value={scenario.birthYears.join(", ")}
-          tooltipContent="Birth year(s) for scenario participants"
-        />
-      </Grid>
+          {/* Birth Year */}
+          <InfoItem
+            icon={FaCalendarAlt}
+            label="Birth Year"
+            value={scenario.birthYears.join(", ")}
+            tooltipContent="Birth year(s) for scenario participants"
+          />
+        </Grid>
+      </Box>
 
       {/* Spending Strategy */}
       {scenario.spendingStrategy && scenario.spendingStrategy.length > 0 && (
@@ -283,47 +346,6 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
         </Link>
       </Flex>
     </Box>
-  );
-};
-
-// Helper component for displaying info items
-const InfoItem = ({
-  icon,
-  label,
-  value,
-  tooltipContent,
-}: {
-  icon: React.ComponentType;
-  label: string;
-  value: string | number;
-  tooltipContent: string;
-}) => {
-  const iconBg = useColorModeValue("blue.50", "blue.900");
-  const labelColor = useColorModeValue("gray.600", "gray.400");
-
-  return (
-    <GridItem>
-      <Tooltip label={tooltipContent} placement="top">
-        <Flex align="center">
-          <Flex
-            p={2}
-            borderRadius="md"
-            bg={iconBg}
-            alignItems="center"
-            justifyContent="center"
-            mr={3}
-          >
-            <Icon as={icon} color="blue.500" boxSize={4} />
-          </Flex>
-          <Box>
-            <Text fontSize="xs" color={labelColor} fontWeight="medium">
-              {label}
-            </Text>
-            <Text fontWeight="semibold">{value}</Text>
-          </Box>
-        </Flex>
-      </Tooltip>
-    </GridItem>
   );
 };
 
