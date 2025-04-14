@@ -5,7 +5,6 @@ import {
   Flex,
   Text,
   Link,
-  VStack,
   HStack,
   Tooltip,
   Divider,
@@ -22,29 +21,21 @@ import {
   PopoverArrow,
   PopoverCloseButton,
   IconButton,
-  Button,
   useToast,
 } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router-dom";
 import {
   FaCalendarAlt,
-  FaUser,
-  FaUsers,
   FaMapMarkerAlt,
   FaDollarSign,
   FaHourglass,
   FaChartLine,
   FaMoneyBillWave,
   FaPercentage,
-  FaExchangeAlt,
-  FaWallet,
   FaShoppingBag,
-  FaPiggyBank,
-  FaInfoCircle,
   FaChevronRight,
   FaDownload,
 } from "react-icons/fa";
-import Card from "../common/Card";
 import { ScenarioRaw } from "../../types/Scenarios";
 import { download_scenario_as_yaml } from "../../utils/yamlExport";
 
@@ -61,39 +52,9 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
 }) => {
   const toast = useToast();
   const highlightColor = useColorModeValue("blue.500", "blue.300");
-  const secondaryTextColor = useColorModeValue("gray.600", "gray.300");
   const cardBg = useColorModeValue("white", "gray.800");
   const cardBorder = useColorModeValue("gray.200", "gray.700");
   const headerBg = useColorModeValue("blue.500", "blue.600");
-  const iconBg = useColorModeValue("blue.50", "blue.900");
-
-  // Badge colors for the scenario type
-  const getBadgeInfo = () => {
-    if (scenario.martialStatus === "single") {
-      return {
-        text: "INDIVIDUAL",
-        colorScheme: "blue",
-      };
-    } else {
-      return {
-        text: "COUPLE",
-        colorScheme: "pink",
-      };
-    }
-  };
-
-  // Count the number of event series if they exist
-  const eventCount = scenario.eventSeries.size || 0;
-  const investmentCount = scenario.investments.size || 0;
-
-  // Get relevant tooltips
-  const getFinancialGoalTooltip = () => {
-    return "A financial goal is a non-negative number specifying the desired minimum total value of your investments. If a financial goal of 0 is achieved, it means you are always able to meet your expenses.";
-  };
-
-  const getLifeExpectancyTooltip = () => {
-    return "The age at which the scenario simulation will end for the individual or couple.";
-  };
 
   const handle_download_yaml = () => {
     try {
@@ -140,7 +101,7 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
           </Heading>
           <Badge
             colorScheme={
-              scenario.martialStatus === "single" ? "purple" : "pink"
+              scenario.maritalStatus === "individual" ? "purple" : "pink"
             }
             fontSize="0.8em"
             py={1}
@@ -148,7 +109,7 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
             borderRadius="full"
             textTransform="capitalize"
           >
-            {scenario.martialStatus}
+            {scenario.maritalStatus}
           </Badge>
         </Flex>
       </Box>
