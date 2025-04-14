@@ -294,6 +294,7 @@ function NewScenarioPage() {
   };
 
   const handle_continue_to_spending_strategy = () => {
+    clearLocalStorage();
     // Get all expenses from added events
     const allExpenses = addedEvents
       .filter(
@@ -314,6 +315,7 @@ function NewScenarioPage() {
   };
 
   const handle_continue_to_withdrawal_strategy = () => {
+    clearLocalStorage();
     // Get all accounts from investments with their IDs
     //console.log("Investments:", investmentsConfig.investments);
     const allAccounts = investmentsConfig.investments.map((inv) => ({
@@ -334,11 +336,13 @@ function NewScenarioPage() {
   };
 
   const handle_continue_from_withdrawal_strategy = async () => {
+    clearLocalStorage();
     await saveWithdrawalStrategy();
     setStep("eventSelection");
   };
 
   const handle_to_spending_strategy = () => {
+    clearLocalStorage();
     setStep("spendingStrategy");
   };
   //! don't touch
