@@ -47,6 +47,7 @@ import rmdStrategyStorage from "../../services/rmdStrategyStorage";
 import lifeExpectancyStorage from "../../services/lifeExpectancyStorage";
 import { scenarioApi } from "../../services/scenario";
 import { convert_scenario_to_yaml } from "../../utils/yamlExport";
+import { DistributionType, StateType } from "../../types/Enum";
 
 function NewScenarioPage() {
   //! belong to Kate, don't touch
@@ -96,14 +97,12 @@ function NewScenarioPage() {
   const [additionalSettings, setAdditionalSettings] =
     useState<AdditionalSettingsConfig>({
       inflationConfig: {
-        type: "fixed",
+        type: DistributionType.FIXED,
         value: 2.5, //! 2.5 is the default value, which means the user doesn't input anything, then it's 2.5
       },
       afterTaxContributionLimit: 0,
-      financialGoal: {
-        value: 0, //! 0 is the default value, which means the user doesn't input anything, then it's 0
-      },
-      stateOfResidence: "NY", // ! state of residence, currently only has 3 values, NY, NJ, CT. need to modify when expanding.
+      financialGoal: 0, //! 0 is the default value, which means the user doesn't input anything, then it's 0
+      stateOfResidence: StateType.NY, // ! state of residence, currently only has 3 values, NY, NJ, CT. need to modify when expanding.
     });
 
   const toast = useToast();
