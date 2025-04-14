@@ -1,5 +1,6 @@
 import express from "express";
 import "./config/environment"; // load environment variables
+//import "./auth/passport";
 import { initialize_middlewares, sessionStore } from "./middleware";
 import { connect_database, disconnect_database } from "./db/connections";
 import { api_config } from "./config/api";
@@ -41,7 +42,7 @@ async function initialize_application() {
   await connect_database();
 
   // run demo code below
-  await simulation_engine_demo();
+  //await simulation_engine_demo();
 }
 
 function start_server() {

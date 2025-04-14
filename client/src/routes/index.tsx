@@ -5,6 +5,7 @@ import ScenarioRoutes from "./scenarioRoutes";
 import SimulationRoutes from "./simulationRoutes";
 import AccountRoutes from "./accountRoutes";
 import UserProfile from "../components/user/UserProfile";
+//import "./config/passport"; 
 
 // Pages
 import Login from "../pages/Login";

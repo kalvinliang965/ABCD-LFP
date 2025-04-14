@@ -6,11 +6,13 @@ import { FaGoogle } from "react-icons/fa"; // 导入Google图标
 import { Box, Button, Center, Container, Heading, Text, VStack, useColorModeValue } from '@chakra-ui/react';
 import { FcGoogle } from 'react-icons/fc'; // Install react-icons if not already installed
 import { appConfig } from "../config/appConfig";
+import { useAuth } from "../contexts/AuthContext";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const { checkAuthStatus } = useAuth();
 
   useEffect(() => {
     // 获取DOM元素，querySelector获取的是第一个元素，querySelectorAll获取的是所有元素
@@ -93,6 +95,7 @@ const Login: React.FC = () => {
 
       if (response.data.success) {
         localStorage.setItem('token', response.data.token);
+        await checkAuthStatus();
         navigate(response.data.redirectUrl || "/dashboard");
       } else {
         console.error("Login failed");
