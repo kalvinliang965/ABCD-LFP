@@ -28,7 +28,7 @@ router.get(
   }),
   (req, res) => {
     // Log the authenticated user
-    console.log("Google auth successful, user:", req.user);
+    //console.log("Google auth successful, user:", req.user);
     
     // Redirect to frontend
     res.redirect(`${process.env.CLIENT_URL}/auth/callback`);

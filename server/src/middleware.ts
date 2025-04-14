@@ -83,18 +83,18 @@ function initialize_middlewares(app: Express) {
           },
           async (accessToken, refreshToken, profile, done) => {
             try {
-              console.log("Google profile:", profile.id);
+              //console.log("Google profile:", profile.id);
               
               // Check if user already exists
               const existingUser = await User.findOne({ googleId: profile.id });
               
               if (existingUser) {
-                console.log("Existing user found:", existingUser._id);
+               // console.log("Existing user found:", existingUser._id);
                 return done(null, existingUser);
               }
               
               // Create new user
-              console.log("Creating new user...");
+              //console.log("Creating new user...");
               const newUser = new User({
                 userId: `user_${Math.random().toString(36).substr(2, 9)}`,
                 googleId: profile.id,
@@ -105,7 +105,7 @@ function initialize_middlewares(app: Express) {
               
               // Save user to database
               await newUser.save();
-              console.log("New user saved with ID:", newUser._id);
+              //console.log("New user saved with ID:", newUser._id);
               
               // Return the new user
               done(null, newUser);

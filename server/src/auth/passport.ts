@@ -4,7 +4,7 @@ import User from "../db/models/User";
 
 // This is called when user logs in
 passport.serializeUser((user: any, done) => {
-  console.log("Serializing user with ID:", user._id);
+  //console.log("Serializing user with ID:", user._id);
   // Store only the user ID in the session
   done(null, user._id.toString());
 });
@@ -12,7 +12,7 @@ passport.serializeUser((user: any, done) => {
 // This is called on every request to get the user from the session
 passport.deserializeUser(async (id: string, done) => {
   try {
-    console.log("Deserializing user with ID:", id);
+    //console.log("Deserializing user with ID:", id);
     const user = await User.findById(id);
     done(null, user);
   } catch (error) {
@@ -32,18 +32,18 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        console.log("Google profile:", profile.id);
+        //console.log("Google profile:", profile.id);
         
         // Check if user already exists
         const existingUser = await User.findOne({ googleId: profile.id });
         
         if (existingUser) {
-          console.log("Existing user found:", existingUser._id);
+         // console.log("Existing user found:", existingUser._id);
           return done(null, existingUser);
         }
         
         // Create new user
-        console.log("Creating new user...");
+        //console.log("Creating new user...");
         const newUser = new User({
           userId: `user_${Math.random().toString(36).substr(2, 9)}`,
           googleId: profile.id,
@@ -54,7 +54,7 @@ passport.use(
         
         // Save user to database
         await newUser.save();
-        console.log("New user saved with ID:", newUser._id);
+        //console.log("New user saved with ID:", newUser._id);
         
         // Return the new user
         done(null, newUser);
