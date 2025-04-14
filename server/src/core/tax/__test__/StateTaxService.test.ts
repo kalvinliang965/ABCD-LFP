@@ -45,10 +45,10 @@ describe('StateTaxService', () => {
         tax_brackets.add_bracket(0, 100, 0.1, TaxFilingStatus.SINGLE);
         const original = create_state_tax_service_wo(tax_brackets)
         const clone = original.clone()
-        expect(clone.find_bracket(0.1, TaxFilingStatus.SINGLE)).not.toBe(original.find_bracket(0.1, TaxFilingStatus.SINGLE))
+        expect(clone.find_bracket_with_rate(0.1, TaxFilingStatus.SINGLE)).not.toBe(original.find_bracket_with_rate(0.1, TaxFilingStatus.SINGLE))
         tax_brackets.adjust_for_inflation(0.1);
-        const original_bracket = original.find_bracket(0.1, TaxFilingStatus.SINGLE);
-        const cloned_bracket = clone.find_bracket(0.1, TaxFilingStatus.SINGLE);
+        const original_bracket = original.find_bracket_with_rate(0.1, TaxFilingStatus.SINGLE);
+        const cloned_bracket = clone.find_bracket_with_rate(0.1, TaxFilingStatus.SINGLE);
         // check orginal
         expect(original_bracket.min).toBe(0);
         expect(original_bracket.max).toBe(110);
