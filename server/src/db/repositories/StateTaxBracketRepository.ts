@@ -49,7 +49,7 @@ export const delete_state_tax_brackets_by_state = async (resident_state: StateTy
     throw new Error(`Interel Service Error: ${error instanceof Error? error.message: error}`)
   }
 }
-export const state_tax_brackets_exist_in_db = async (resident_state: StateType):Promise<boolean> => {
+export const state_taxbrackets_exist_in_db = async (resident_state: StateType):Promise<boolean> => {
   try {
     // we asssume if one bracket exist, then all of them should exist
     const bracket = await StateTaxBracketModel.findOne({
@@ -64,7 +64,7 @@ export const state_tax_brackets_exist_in_db = async (resident_state: StateType):
   }
 }
 
-export const get_state_tax_brackets_by_state = async (resident_state: StateType): Promise<Array<IStateTaxBracket>> => {
+export const get_state_taxbrackets_by_state = async (resident_state: StateType): Promise<Array<IStateTaxBracket>> => {
   try {
     const taxable_income_bracket_list = await StateTaxBracketModel.find({
         resident_state,
