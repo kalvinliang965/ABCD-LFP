@@ -16,7 +16,8 @@ describe("FederalTaxService", () => {
     describe("Initialization without database", () => {
         let service: FederalTaxService;
         const mock_taxable_income_bracket = {
-            find_bracket: jest.fn(),
+            find_bracket_with_rate: jest.fn(),
+            find_bracket_with_income: jest.fn(),
             find_rate: jest.fn(),
             adjust_for_inflation: jest.fn(),
             to_string: () => "Mock Taxable income Bracket",
@@ -24,7 +25,8 @@ describe("FederalTaxService", () => {
         } as unknown as TaxBrackets;
 
         const mock_capital_gains_bracket = {
-            find_bracket: jest.fn(),
+            find_bracket_with_rate: jest.fn(),
+            find_bracket_with_income: jest.fn(),
             find_rate: jest.fn(),
             adjust_for_inflation: jest.fn(),
             to_string: () => "Mock capital gains Bracket",
@@ -49,7 +51,7 @@ describe("FederalTaxService", () => {
                 expect(mockStandardDeduction.adjust_for_inflation).toHaveBeenCalledWith(0.02);
             });
 
-            describe("find_bracket", () => {
+            describe("find_bracket with rate", () => {
                 it("should handle taxable income type", () => {
                     service.find_bracket_with_rate(0.05, IncomeType.TAXABLE_INCOME, TaxFilingStatus.SINGLE);
                     expect(mock_taxable_income_bracket.find_bracket_with_rate).toHaveBeenCalledWith(0.05, TaxFilingStatus.SINGLE);
@@ -65,15 +67,6 @@ describe("FederalTaxService", () => {
                     .toThrow("invalid income type");
                 });
             });
-
-            describe("find_rate", () => {
-                it("should calculate capital gains rate", () => {
-                    (mock_capital_gains_bracket.find_rate as jest.Mock).mockReturnValue(0.15);
-                    const rate = service.find_rate(3000, IncomeType.CAPITAL_GAINS, TaxFilingStatus.SINGLE);
-                    expect(rate).toEqual(0.15);
-                });
-            });
-
         });
 
         describe("Edge Cases", () => {

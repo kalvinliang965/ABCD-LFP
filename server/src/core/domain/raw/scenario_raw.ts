@@ -19,7 +19,7 @@ import {
 
 import { my_investments_investment_one } from "./event_raw/investment_event_raw";
 import { rebalance_one } from "./event_raw/rebalance_event_raw";
-import { salary_income_one } from "./event_raw/income_event_raw";
+import { salary_income_event_one } from "./event_raw/income_event_raw";
 import { cash_investment_type_one, InvestmentTypeRaw, s_and_p_500_investment_type_one, tax_exempt_bonds_investment_type_one } from "./investment_type_raw";
 
 // a distribution is represented as a map with one of the following forms:
@@ -83,7 +83,7 @@ export const scenario_one = create_scenario_raw(
   new Set<
     IncomeEventRaw | InvestEventRaw | ExpenseEventRaw | RebalanceEventRaw
   >([
-    salary_income_one,
+    salary_income_event_one,
     food_expense_one,
     vacation_expense_one,
     streaming_services_expense_one,

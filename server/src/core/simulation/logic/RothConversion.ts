@@ -18,8 +18,8 @@ function transfer_investment(
         const label = roth_conversion_strategy[i];
         const from_investment = source_pool.get(label);
         if (!from_investment) {
-            console.error(`Investment with label ${label} not exist`);
-            process.exit(1);
+            simulation_logger.error(`Investment with label ${label} not exist`);
+            throw new Error(`Investment with ${label} not exist`);
         }
         if (!target_pool.has(label)) {
             const cloned_investment = from_investment.clone();
@@ -36,35 +36,40 @@ function transfer_investment(
 }
 
 function process_roth_conversion(simulation_state: SimulationState) {
-    if (!simulation_state.roth_conversion_opt) {
-        simulation_logger.debug("roth conversion is not enabled");
-        return;
-    }
-    if (simulation_state.get_current_year() < simulation_state.roth_conversion_start 
-        || simulation_state.get_current_year() > simulation_state.roth_conversion_end) {
-            simulation_logger.debug("not within roth conversion time frame");
-        return;
-    }
 
-    const income = simulation_state.user_tax_data.get_cur_year_income() 
-    const taxable_income = income - 0.15 * simulation_state.user_tax_data.get_cur_year_ss()
-    const current_bracket = simulation_state
-                    .federal_tax_service
-                    .find_bracket_with_income(taxable_income, IncomeType.TAXABLE_INCOME, simulation_state.get_tax_filing_status());
-    const standard_deduction = simulation_state
-                                    .federal_tax_service
-                                    .find_deduction(simulation_state.get_tax_filing_status());
-    const upper = current_bracket.max;
-    const transfer_amt = upper - (taxable_income - standard_deduction);
-    // does not go into annual contribution for after tax
-    if (transfer_amt > 0) {
-        transfer_investment(
-            simulation_state.roth_conversion_strategy,
-            transfer_amt,
-            simulation_state.account_manager.pre_tax,
-            simulation_state.account_manager.after_tax
-        );
-        simulation_state.user_tax_data.incr_cur_year_income(transfer_amt);
+    try {
+        if (!simulation_state.roth_conversion_opt) {
+            simulation_logger.debug("roth conversion is not enabled");
+            return;
+        }
+        if (simulation_state.get_current_year() < simulation_state.roth_conversion_start 
+            || simulation_state.get_current_year() > simulation_state.roth_conversion_end) {
+                simulation_logger.debug("not within roth conversion time frame");
+            return;
+        }
+
+        const income = simulation_state.user_tax_data.get_cur_year_income() 
+        const taxable_income = income - 0.15 * simulation_state.user_tax_data.get_cur_year_ss()
+        const current_bracket = simulation_state
+                        .federal_tax_service
+                        .find_bracket_with_income(taxable_income, IncomeType.TAXABLE_INCOME, simulation_state.get_tax_filing_status());
+        const standard_deduction = simulation_state
+                                        .federal_tax_service
+                                        .find_deduction(simulation_state.get_tax_filing_status());
+        const upper = current_bracket.max;
+        const transfer_amt = upper - (taxable_income - standard_deduction);
+        // does not go into annual contribution for after tax
+        if (transfer_amt > 0) {
+            transfer_investment(
+                simulation_state.roth_conversion_strategy,
+                transfer_amt,
+                simulation_state.account_manager.pre_tax,
+                simulation_state.account_manager.after_tax
+            );
+            simulation_state.user_tax_data.incr_cur_year_income(transfer_amt);
+        }
+    } catch(error) {
+        throw error;
     }
 }
 

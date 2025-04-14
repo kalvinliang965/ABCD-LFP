@@ -1,6 +1,6 @@
 import { create_expense_event_raw, streaming_services_expense_one } from "../raw/event_raw/expense_event_raw";
 import { create_event_manager, resolve_event_chain } from "../EventManager";
-import { EventUnionRaw, salary_income_one } from "../raw/event_raw/event_raw";
+import { EventUnionRaw, salary_income_event_one } from "../raw/event_raw/event_raw";
 import { resolve } from "path";
 import { EventUnion } from "../event/Event";
 
