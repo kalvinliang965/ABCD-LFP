@@ -3,7 +3,7 @@ import { IncomeType, TaxFilingStatus } from "../../core/Enums";
 import { simulation_logger } from "../../utils/logger/logger";
 import TaxBracketModel, { ITaxBracket } from "../models/tax_bracket";
 
-const save_bracket = async (
+export const create_taxbracket_in_db = async (
   min: number,
   max: number,
   rate: number,
@@ -32,7 +32,7 @@ const save_bracket = async (
 };
 
 
-const load_capital_gains_brackets = async(): Promise<Array<ITaxBracket>> => {
+export const get_capital_gains_brackets = async(): Promise<Array<ITaxBracket>> => {
   try {
     const capital_gains_bracket_list = await TaxBracketModel.find({
       income_type: IncomeType.CAPITAL_GAINS,
@@ -43,7 +43,7 @@ const load_capital_gains_brackets = async(): Promise<Array<ITaxBracket>> => {
     throw new Error(`Internel Service Error: ${error}`);
   }
 }
-const load_taxable_income_brackets = async (): Promise<Array<ITaxBracket>> => {
+export const get_taxable_income_brackets = async (): Promise<Array<ITaxBracket>> => {
   try {
     const taxable_income_bracket_list = await TaxBracketModel.find({
       income_type: IncomeType.TAXABLE_INCOME,
@@ -56,8 +56,3 @@ const load_taxable_income_brackets = async (): Promise<Array<ITaxBracket>> => {
 };
 
 
-export {
-  save_bracket,
-  load_capital_gains_brackets,
-  load_taxable_income_brackets,
-};

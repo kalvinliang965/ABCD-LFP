@@ -103,7 +103,7 @@ describe('Roth Conversion Process', () => {
 
     test('nothing is transfer', () => {
       const state = createBaseState();
-      state.federal_tax_service.find_bracket = jest.fn().mockReturnValue({
+      state.federal_tax_service.find_bracket_with_rate = jest.fn().mockReturnValue({
         min: 0,
         max: 50000,
         rate: 0.12

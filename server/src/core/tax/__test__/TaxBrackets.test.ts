@@ -36,43 +36,43 @@ describe("TaxBrackets", () => {
             const cloned_bracket = base_bracket.clone();
             cloned_bracket.adjust_for_inflation(0.05);
             let bracket;
-            bracket = cloned_bracket.find_bracket(0.1, TaxFilingStatus.SINGLE);
+            bracket = cloned_bracket.find_bracket_with_rate(0.1, TaxFilingStatus.SINGLE);
             expect(bracket.min).toBeCloseTo(0);
             expect(bracket.max).toBeCloseTo(3150);
             expect(bracket.rate).toBeCloseTo(0.1);
 
-            bracket = cloned_bracket.find_bracket(0.2, TaxFilingStatus.MARRIED);
+            bracket = cloned_bracket.find_bracket_with_rate(0.2, TaxFilingStatus.MARRIED);
             expect(bracket.min).toBeCloseTo(0);
             expect(bracket.max).toBeCloseTo(3150);
             expect(bracket.rate).toBeCloseTo(0.2);
 
 
-            bracket = cloned_bracket.find_bracket(0.13, TaxFilingStatus.SINGLE);
+            bracket = cloned_bracket.find_bracket_with_rate(0.13, TaxFilingStatus.SINGLE);
             expect(bracket.min).toBeCloseTo(3151);
             expect(bracket.max).toBeCloseTo(7350);
             expect(bracket.rate).toBeCloseTo(0.13);
 
-            bracket = cloned_bracket.find_bracket(0.23, TaxFilingStatus.MARRIED);
+            bracket = cloned_bracket.find_bracket_with_rate(0.23, TaxFilingStatus.MARRIED);
             expect(bracket.min).toBeCloseTo(3151);
             expect(bracket.max).toBeCloseTo(7350);
             expect(bracket.rate).toBeCloseTo(0.23);
 
-            bracket = cloned_bracket.find_bracket(0.23, TaxFilingStatus.SINGLE);
+            bracket = cloned_bracket.find_bracket_with_rate(0.23, TaxFilingStatus.SINGLE);
             expect(bracket.min).toBeCloseTo(7351);
             expect(bracket.max).toBeCloseTo(10500);
             expect(bracket.rate).toBeCloseTo(0.23);
 
-            bracket = cloned_bracket.find_bracket(0.33, TaxFilingStatus.MARRIED);
+            bracket = cloned_bracket.find_bracket_with_rate(0.33, TaxFilingStatus.MARRIED);
             expect(bracket.min).toBeCloseTo(7351);
             expect(bracket.max).toBeCloseTo(10500);
             expect(bracket.rate).toBeCloseTo(0.33);
             
-            bracket = cloned_bracket.find_bracket(0.4, TaxFilingStatus.SINGLE);
+            bracket = cloned_bracket.find_bracket_with_rate(0.4, TaxFilingStatus.SINGLE);
             expect(bracket.min).toBeCloseTo(10501);
             expect(bracket.max).toBeCloseTo(Infinity);
             expect(bracket.rate).toBeCloseTo(0.4);
 
-            bracket = cloned_bracket.find_bracket(0.5, TaxFilingStatus.MARRIED);
+            bracket = cloned_bracket.find_bracket_with_rate(0.5, TaxFilingStatus.MARRIED);
             expect(bracket.min).toBeCloseTo(10501);
             expect(bracket.max).toBeCloseTo(Infinity);
             expect(bracket.rate).toBeCloseTo(0.5);
@@ -111,43 +111,43 @@ describe("TaxBrackets", () => {
 
         it("should retrieve bracket correctly based on rate", ()=>{
             let bracket;
-            bracket = base_bracket.find_bracket(0.1, TaxFilingStatus.SINGLE);
+            bracket = base_bracket.find_bracket_with_rate(0.1, TaxFilingStatus.SINGLE);
             expect(bracket.min).toBe(0);
             expect(bracket.max).toBe(3000);
             expect(bracket.rate).toBe(0.1);
 
-            bracket = base_bracket.find_bracket(0.2, TaxFilingStatus.MARRIED);
+            bracket = base_bracket.find_bracket_with_rate(0.2, TaxFilingStatus.MARRIED);
             expect(bracket.min).toBe(0);
             expect(bracket.max).toBe(3000);
             expect(bracket.rate).toBe(0.2);
 
 
-            bracket = base_bracket.find_bracket(0.13, TaxFilingStatus.SINGLE);
+            bracket = base_bracket.find_bracket_with_rate(0.13, TaxFilingStatus.SINGLE);
             expect(bracket.min).toBe(3001);
             expect(bracket.max).toBe(7000);
             expect(bracket.rate).toBe(0.13);
 
-            bracket = base_bracket.find_bracket(0.23, TaxFilingStatus.MARRIED);
+            bracket = base_bracket.find_bracket_with_rate(0.23, TaxFilingStatus.MARRIED);
             expect(bracket.min).toBe(3001);
             expect(bracket.max).toBe(7000);
             expect(bracket.rate).toBe(0.23);
 
-            bracket = base_bracket.find_bracket(0.23, TaxFilingStatus.SINGLE);
+            bracket = base_bracket.find_bracket_with_rate(0.23, TaxFilingStatus.SINGLE);
             expect(bracket.min).toBe(7001);
             expect(bracket.max).toBe(10000);
             expect(bracket.rate).toBe(0.23);
 
-            bracket = base_bracket.find_bracket(0.33, TaxFilingStatus.MARRIED);
+            bracket = base_bracket.find_bracket_with_rate(0.33, TaxFilingStatus.MARRIED);
             expect(bracket.min).toBe(7001);
             expect(bracket.max).toBe(10000);
             expect(bracket.rate).toBe(0.33);
             
-            bracket = base_bracket.find_bracket(0.4, TaxFilingStatus.SINGLE);
+            bracket = base_bracket.find_bracket_with_rate(0.4, TaxFilingStatus.SINGLE);
             expect(bracket.min).toBe(10001);
             expect(bracket.max).toBe(Infinity);
             expect(bracket.rate).toBe(0.4);
 
-            bracket = base_bracket.find_bracket(0.5, TaxFilingStatus.MARRIED);
+            bracket = base_bracket.find_bracket_with_rate(0.5, TaxFilingStatus.MARRIED);
             expect(bracket.min).toBe(10001);
             expect(bracket.max).toBe(Infinity);
             expect(bracket.rate).toBe(0.5);
@@ -169,8 +169,8 @@ describe("TaxBrackets", () => {
                 throw new Error(`process.exit(${code})`);
             });
             try {
-                base_bracket.find_bracket(0.663, TaxFilingStatus.SINGLE);
-                base_bracket.find_bracket(0.663, TaxFilingStatus.MARRIED);
+                base_bracket.find_bracket_with_rate(0.663, TaxFilingStatus.SINGLE);
+                base_bracket.find_bracket_with_rate(0.663, TaxFilingStatus.MARRIED);
             }catch(error){
                 expect(error).toBeInstanceOf(Error);
                 if (error instanceof Error) {
@@ -187,8 +187,8 @@ describe("TaxBrackets", () => {
             cloned.adjust_for_inflation(0.02);
 
             function test(rate: number, status: TaxFilingStatus) {
-                const bracket = base_bracket.find_bracket(rate, status);
-                const cloned_bracket = cloned.find_bracket(rate, status);
+                const bracket = base_bracket.find_bracket_with_rate(rate, status);
+                const cloned_bracket = cloned.find_bracket_with_rate(rate, status);
                 if (bracket.min == 0) {
                     expect(cloned_bracket.min).toBe(bracket.min);
                 } else {

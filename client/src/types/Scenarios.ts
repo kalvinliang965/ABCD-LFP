@@ -55,7 +55,7 @@ export type RebalanceEventRaw = EventRaw & {
 
 export interface ScenarioRaw {
   name: string;
-  martialStatus: string;
+  maritalStatus: 'couple' | 'individual';
   birthYears: Array<number>;
   lifeExpectancy: Array<{ [key: string]: any }>; //! chen changed it to match with YAML
   investmentTypes: Set<InvestmentTypeRaw>;

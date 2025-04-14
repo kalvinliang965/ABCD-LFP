@@ -18,7 +18,11 @@ export function pay_discretionary_expenses(state: SimulationState): void {
 
   // warning: I know using get_net_worth here gonna be inefficient, but i will fix get_net_worth later!
   function financial_goal_reach(): boolean {
-    return state.account_manager.get_net_worth() >= state.get_financial_goal(); 
+    const net_worth = state.account_manager.get_net_worth();
+    const financial_goal = state.get_financial_goal();
+
+    simulation_logger.debug(`Networth: ${net_worth}, financial goal: ${financial_goal}`);
+    return net_worth >= financial_goal; 
   }
 
   if (!financial_goal_reach()) {
@@ -43,7 +47,7 @@ export function pay_discretionary_expenses(state: SimulationState): void {
     
     // amount we have to pay
     const full_payment = Math.min(state.event_manager.update_initial_amount(expense_event));
-    const partial_payment = Math.min(state.get_financial_goal() - state.account_manager.get_net_worth());
+    const partial_payment = Math.min(state.account_manager.get_net_worth() - state.get_financial_goal());
     // WARNING: This shouldnt be negative
     if (partial_payment <= 0) {
       simulation_logger.error("Financial goal is violated incorrectly");

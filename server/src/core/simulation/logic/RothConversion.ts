@@ -50,7 +50,7 @@ function process_roth_conversion(simulation_state: SimulationState) {
     const taxable_income = income - 0.15 * simulation_state.user_tax_data.get_cur_year_ss()
     const current_bracket = simulation_state
                     .federal_tax_service
-                    .find_bracket(taxable_income, IncomeType.TAXABLE_INCOME, simulation_state.get_tax_filing_status());
+                    .find_bracket_with_income(taxable_income, IncomeType.TAXABLE_INCOME, simulation_state.get_tax_filing_status());
     const standard_deduction = simulation_state
                                     .federal_tax_service
                                     .find_deduction(simulation_state.get_tax_filing_status());
