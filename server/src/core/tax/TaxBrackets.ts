@@ -115,27 +115,29 @@ export function create_tax_brackets(): TaxBrackets {
     }
 
     const adjust_for_inflation = (rate: number):void => {
-        for (const bracketSet of brackets.values()) {
-            for (const bracket of bracketSet) {
+        for (const bracket_set of brackets.values()) {
+            for (const bracket of bracket_set) {
                 bracket.min = Math.round(bracket.min * (1 + rate));
                 
                 if (bracket.max !== Infinity) {
                     bracket.max = Math.round(bracket.max * (1 + rate));
                 }
             }
-            bracketSet.sort((a, b) => a.min - b.min);
+            bracket_set.sort((a, b) => a.min - b.min);
 
-            for (let i = 0; i < bracketSet.length - 1; i++) {
-                const current = bracketSet[i];
-                const next = bracketSet[i + 1];
+            for (let i = 0; i < bracket_set.length - 1; i++) {
+                const current = bracket_set[i];
+                const next = bracket_set[i + 1];
                 current.max = next.min - 1;
                 if (current.max < current.min) {
                     next.min = current.min + 1;
                     current.max = next.min - 1;
                 }
             }
-            const lastBracket = bracketSet[bracketSet.length - 1];
-            lastBracket.max = Infinity;
+            const last_bracket = bracket_set[bracket_set.length - 1];
+            if (last_bracket) {
+                last_bracket.max = Infinity;
+            }
         }
     }
 
