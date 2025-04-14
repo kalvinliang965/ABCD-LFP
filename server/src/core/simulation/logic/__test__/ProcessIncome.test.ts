@@ -55,7 +55,7 @@ describe('ProcessIncome', () => {
       spouse: {
         is_alive: () => true
       },
-      events_by_type: {
+      event_manager: {
         income: new Map()
       },
       accounts: {

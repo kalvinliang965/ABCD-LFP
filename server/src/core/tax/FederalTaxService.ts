@@ -6,8 +6,8 @@ import {
     fetch_and_parse_standard_deduction, 
     fetch_and_parse_taxable_income 
 } from "../../services/FederalTaxScraper";
-import { load_capital_gains_brackets, load_taxable_income_brackets } from "../../db/repositories/TaxBracketRepository";
-import { load_standard_deduction } from "../../db/repositories/StandardDeductionRepository";
+import { get_taxable_income_brackets, get_capital_gains_brackets } from "../../db/repositories/TaxBracketRepository";
+import { get_standard_deduction } from "../../db/repositories/StandardDeductionRepository";
 import { IncomeType, TaxFilingStatus } from "../Enums";
 import { tax_config } from "../../config/tax";
  
@@ -15,16 +15,16 @@ import { simulation_logger } from "../../utils/logger/logger";
 
 async function initialize_taxable_income_bracket(): Promise<TaxBrackets> {
     try {
-        simulation_logger.debug("Loading taxable income brackets from database...");
-        const taxable_income_bracket_list = await load_taxable_income_brackets(); 
+        simulation_logger.debug("geting taxable income brackets from database...");
+        const taxable_income_bracket_list = await get_taxable_income_brackets(); 
         if (taxable_income_bracket_list.length) {
-            simulation_logger.debug("Successfully loaded taxable income brackets from database");
+            simulation_logger.debug("Successfully geted taxable income brackets from database");
             const gains = create_tax_brackets();
             taxable_income_bracket_list.forEach((ti) => {
                 const { min, max, rate, income_type, taxpayer_type } = ti;
                 if (income_type != IncomeType.TAXABLE_INCOME) {
                     simulation_logger.error(
-                        "initialize_taxable_income_bracket() loadded wrong data",
+                        "initialize_taxable_income_bracket() getded wrong data",
                         {
                             expect: IncomeType.TAXABLE_INCOME,
                             actual: income_type,
@@ -51,16 +51,16 @@ async function initialize_taxable_income_bracket(): Promise<TaxBrackets> {
 
 async function initialize_capital_gains_bracket(): Promise<TaxBrackets> {
     try {
-        simulation_logger.debug("Loading capital gains brackets from database...");
-        const capital_gains_bracket_list = await load_capital_gains_brackets(); 
+        simulation_logger.debug("geting capital gains brackets from database...");
+        const capital_gains_bracket_list = await get_capital_gains_brackets(); 
         if (capital_gains_bracket_list.length) {
-            simulation_logger.debug("Successfully loaded capital gains brackets from database");
+            simulation_logger.debug("Successfully geted capital gains brackets from database");
             const gains = create_tax_brackets();
             capital_gains_bracket_list.forEach((cg) => {
                 const { min, max, rate, income_type, taxpayer_type } = cg;
                 if (income_type != IncomeType.CAPITAL_GAINS) {
                     simulation_logger.error(
-                        "initialize_capital_gains_bracket() loadded wrong data", {
+                        "initialize_capital_gains_bracket() getded wrong data", {
                             expect: IncomeType.CAPITAL_GAINS,
                             actual: income_type,
                             taxpayer_type,
@@ -85,10 +85,10 @@ async function initialize_capital_gains_bracket(): Promise<TaxBrackets> {
 
 async function initialize_standard_deductions_info(): Promise<StandardDeduction> {
     try {
-        simulation_logger.debug("Loading standard deduction info");
-        const standard_deduction_list = await load_standard_deduction();
+        simulation_logger.debug("geting standard deduction info");
+        const standard_deduction_list = await get_standard_deduction();
         if (standard_deduction_list.length > 0) {
-            simulation_logger.debug("Successfully loaded standard deduction info from database");
+            simulation_logger.debug("Successfully geted standard deduction info from database");
             const deductions = create_standard_deductions();
             standard_deduction_list.forEach((deduction) => {
                 const { amount, taxpayer_type }  = deduction;
