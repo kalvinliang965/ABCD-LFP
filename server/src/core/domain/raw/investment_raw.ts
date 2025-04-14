@@ -51,7 +51,7 @@ export const cash_investment_one: InvestmentRaw = create_investment_raw(
     cash_investment_type_one.name,
     100,
     "non-retirement",
-    "cash",
+    "cash-one",
 );
 
 export const s_and_p_investment_one: InvestmentRaw = create_investment_raw(

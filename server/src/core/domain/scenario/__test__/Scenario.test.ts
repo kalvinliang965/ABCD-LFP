@@ -13,7 +13,7 @@ import {
 } from "../../raw/event_raw/expense_event_raw";
 import { my_investments_investment_one } from "../../raw/event_raw/investment_event_raw";
 import { rebalance_one } from "../../raw/event_raw/rebalance_event_raw";
-import { salary_income_one } from "../../raw/event_raw/income_event_raw";
+import { salary_income_event_one } from "../../raw/event_raw/income_event_raw";
 import { cash_investment_type_one, InvestmentTypeRaw } from "../../raw/investment_type_raw";
 import { InvestmentRaw } from "../../raw/investment_raw";
 import { scenario_yaml_string, create_scenario_raw_yaml } from "../../../../services/ScenarioYamlParser";
@@ -33,7 +33,7 @@ describe("Scenario initialization test", () => {
       ];
       const investmentTypes = new Set([cash_investment_type_one])
       const investments = new Set([cash_investment_one]);
-      const eventSeries = new Set([salary_income_one, food_expense_one]);
+      const eventSeries = new Set([salary_income_event_one, food_expense_one]);
       const inflationAssumption = new Map<string, any>([
         ["type", "fixed"],
         ["value", 0.02],
@@ -124,7 +124,7 @@ describe("Scenario initialization test", () => {
       // Assert
       const events = scenario_one.eventSeries;
       expect(events.size).toBe(6);
-      expect(events.has(salary_income_one)).toBe(true);
+      expect(events.has(salary_income_event_one)).toBe(true);
       expect(events.has(food_expense_one)).toBe(true);
       expect(events.has(vacation_expense_one)).toBe(true);
       expect(events.has(streaming_services_expense_one)).toBe(true);
