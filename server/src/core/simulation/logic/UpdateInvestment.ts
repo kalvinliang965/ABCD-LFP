@@ -16,6 +16,7 @@ export default function update_investment(simulation_state: SimulationState) {
             investment_type: investment.investment_type,
         });
 
+
         // steps d: capital gains
         // since it is relative to beginning of the year, we calculate this first
         let annual_gains = 0

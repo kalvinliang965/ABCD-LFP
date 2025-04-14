@@ -67,7 +67,7 @@ export const tax_exempt_bonds_investment_type_one = create_investment_type_raw(
 
 
 export const incr_300_investment_type_one = create_investment_type_raw(
-    "fixed investment",
+    "fixed investment 300 one",
     "increase by 300 on everything",
     "amount",
     new Map<string, any>([
@@ -84,7 +84,7 @@ export const incr_300_investment_type_one = create_investment_type_raw(
 );
 
 export const incr_300_investment_type_two = create_investment_type_raw(
-    "fixed investment",
+    "fixed investment 300 two",
     "increase by 300 on everything",
     "amount",
     new Map<string, any>([

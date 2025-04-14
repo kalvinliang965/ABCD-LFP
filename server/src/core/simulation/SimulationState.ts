@@ -169,9 +169,9 @@ export async function create_simulation_state(
           investment.incr_cost_basis(-going_to_withdraw);
 
           // step) f.i
-          // not pre tax retirement accont
+          // if sold investment from non-retirement accont
           // we have to calculate capital gains
-          if (investment.tax_status != TaxStatus.PRE_TAX) {
+          if (investment.tax_status === TaxStatus.NON_RETIREMENT) {
             const fraction = (going_to_withdraw / investment.get_cost_basis());
             const gains = investment.get_value() - investment.get_cost_basis();
             const capital_gains = fraction * gains;

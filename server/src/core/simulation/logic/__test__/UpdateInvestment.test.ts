@@ -6,6 +6,9 @@ import { create_investment } from '../../../domain/investment/Investment';
 import { incr_300_init_300_investment_one, incr_300_init_300_investment_two } from '../../../domain/raw/investment_raw';
 import { Investment } from '../../../domain/investment/Investment';
 import { TaxFilingStatus } from '../../../Enums';
+import { incr_300_investment_type_one, incr_300_investment_type_two } from '../../../domain/raw/investment_type_raw';
+import { InvestmentType } from '../../../domain/investment/InvestmentType';
+import { create_investment_type_manager } from '../../../domain/InvestmentTypeManager';
 
 const non_retirement_300_non_tax_exempt = create_investment(incr_300_init_300_investment_one);
 non_retirement_300_non_tax_exempt.tax_status = TaxStatus.NON_RETIREMENT;
@@ -21,15 +24,14 @@ pre_tax_300_non_tax_exempt.incr_value = jest.fn()
 
 
 const createBaseState = (): SimulationState => ({
-  accounts: {
-    pre_tax: new Map<string, Investment>([
+  account_manager: {
+    all: new Map<string, Investment>([
         ['non_retirment_tax_exempt', non_retirement_300_tax_exempt],
         ['non_retirment_non_tax_exempt', non_retirement_300_non_tax_exempt],
         ['pre_tax_300_non_tax_exempt', pre_tax_300_non_tax_exempt],
     ]),
-    after_tax: new Map<string, Investment>(),
-    non_retirement: new Map()
   },
+  investment_type_manager: create_investment_type_manager(new Set([incr_300_investment_type_two, incr_300_investment_type_one])),
   get_tax_filing_status: () => TaxFilingStatus.SINGLE,
   federal_tax_service: {
     find_bracket: jest.fn().mockReturnValue({ min: 0, max: 100000, rate: 0.24 }),
@@ -45,24 +47,24 @@ const createBaseState = (): SimulationState => ({
   roth_conversion_start: 2024,
   roth_conversion_end: 2030,
   roth_conversion_strategy: [],
-  get_ordinary_income: jest.fn().mockReturnValue(80000),
-  get_capital_gains_income: jest.fn().mockReturnValue(20000),
-  get_social_security_income: jest.fn().mockReturnValue(30000),
-  get_after_tax_contribution: jest.fn().mockReturnValue(0),
-  get_after_tax_contribution_limit: jest.fn().mockReturnValue(6500),
-  incr_ordinary_income: jest.fn(),
-  incr_capital_gains_income: jest.fn(),
-  incr_after_tax_contribution: jest.fn(),
-} as unknown as SimulationState);
+  user_tax_data: {
+    get_cur_year_income: jest.fn().mockReturnValue(80000),
+    get_cur_year_gains: jest.fn().mockReturnValue(20000),
+    get_cur_year_ss: jest.fn().mockReturnValue(30000),
+    get_cur_fed_taxable_income: () => 80000 - 0.15 * 20000,
+    incr_cur_year_income: jest.fn(),
+    incr_cur_year_gains: jest.fn(),
+    incr_cur_year_ss: jest.fn(),
+  }
+} as unknown as SimulationState); 
 
 describe('updateInvestment', () => {
   it('should update ordinary income if tax-exempt and non-retirment account', () => {
-    const simulation_state = createBaseState()
+    const simulation_state = createBaseState();
     update_investment(simulation_state);
 
     // only non_retirement_300_non_tax_exempt is updated
-    expect(simulation_state.incr_ordinary_income).toHaveBeenCalledWith(300);
-    expect(simulation_state.incr_capital_gains_income).toHaveBeenCalledWith(300);
+    expect(simulation_state.user_tax_data.incr_cur_year_income).toHaveBeenCalledWith(300);
 
     // avg = (300(prev) + 600(added)) // 2 * 0.004 = 1.8
     // but with mocking, 300 + 300 // 2 * 0.004 = 1.2
