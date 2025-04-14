@@ -10,7 +10,7 @@ import { database_config } from "./config/database";
 import { api_config } from "./config/api";
 import passport from "passport";
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-
+import User from "./db/models/User";
 
 let sessionStore: MongoStore;
 
@@ -50,19 +50,19 @@ function initialize_middlewares(app: Express) {
     }));
     app.use(passport.initialize());
     app.use(passport.session());
-    passport.use(
-        new GoogleStrategy(
-          {
-            clientID: process.env.GOOGLE_CLIENT_ID!,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-            callbackURL: "/auth/google/callback",
-          },
-          async (accessToken, refreshToken, profile, done) => {
-            // You would query your DB here and find or create the user
-            return done(null, profile); // Store the whole profile or a user object
-          }
-        )
-      );
+    // passport.use(
+    //     new GoogleStrategy(
+    //       {
+    //         clientID: process.env.GOOGLE_CLIENT_ID!,
+    //         clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    //         callbackURL: "/auth/google/callback",
+    //       },
+    //       async (accessToken, refreshToken, profile, done) => {
+    //         // You would query your DB here and find or create the user
+    //         return done(null, profile); // Store the whole profile or a user object
+    //       }
+    //     )
+    //   );
       
       // Optional if using sessions
       passport.serializeUser((user, done) => {
@@ -72,6 +72,54 @@ function initialize_middlewares(app: Express) {
       passport.deserializeUser((obj: any, done) => {
         done(null, obj);
     });
+
+    passport.use(
+        new GoogleStrategy(
+          {
+            clientID: process.env.GOOGLE_CLIENT_ID || '',
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+            callbackURL: "/auth/google/callback",
+            proxy: true
+          },
+          async (accessToken, refreshToken, profile, done) => {
+            try {
+              console.log("Google profile:", profile.id);
+              
+              // Check if user already exists
+              const existingUser = await User.findOne({ googleId: profile.id });
+              
+              if (existingUser) {
+                console.log("Existing user found:", existingUser._id);
+                return done(null, existingUser);
+              }
+              
+              // Create new user
+              console.log("Creating new user...");
+              const newUser = new User({
+                userId: `user_${Math.random().toString(36).substr(2, 9)}`,
+                googleId: profile.id,
+                name: profile.displayName,
+                email: profile.emails?.[0]?.value || '',
+                profilePicture: profile.photos?.[0]?.value || ''
+              });
+              
+              // Save user to database
+              await newUser.save();
+              console.log("New user saved with ID:", newUser._id);
+              
+              // Return the new user
+              done(null, newUser);
+            } catch (error) {
+              console.error("Error in Google strategy:", error);
+              done(error, false);
+            }
+          }
+        )
+      );
+
+
+
+
     // profiling
     app.use((req, res, next) => {
         const start = process.hrtime(); // High-resolution time
@@ -85,5 +133,4 @@ function initialize_middlewares(app: Express) {
       
     console.log("Finish registering global middleware");
 }
-
 export { sessionStore, initialize_middlewares }
