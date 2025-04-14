@@ -52,6 +52,8 @@ router.get("/logout", (req, res) => {
 
 // Check if user is authenticated
 router.get("/current-user", (req, res) => {
+  console.log("Session:", req.session);
+  console.log("User:", req.user);
   if (!req.user) {
     return res.status(401).json({ error: "Not authenticated" });
   }
