@@ -197,9 +197,13 @@ function NewScenarioPage() {
           //set life expectancy config
           setLifeExpectancyConfig({
             userExpectancyType: scenario.lifeExpectancy[0].type,
-            userFixedAge: scenario.lifeExpectancy[0].value,
+            userFixedAge: scenario.lifeExpectancy[0].type === "fixed" ? scenario.lifeExpectancy[0].value : undefined,
+            userMeanAge: scenario.lifeExpectancy[0].type === "normal" ? scenario.lifeExpectancy[0].mean : undefined,
+            userStandardDeviation: scenario.lifeExpectancy[0].type === "normal" ? scenario.lifeExpectancy[0].stdev : undefined,
             spouseExpectancyType: scenario.lifeExpectancy[1]?.type,
-            spouseFixedAge: scenario.lifeExpectancy[1]?.value
+            spouseFixedAge: scenario.lifeExpectancy[1]?.type === "fixed" ? scenario.lifeExpectancy[1]?.value : undefined,
+            spouseMeanAge: scenario.lifeExpectancy[1]?.type === "normal" ? scenario.lifeExpectancy[1]?.mean : undefined,
+            spouseStandardDeviation: scenario.lifeExpectancy[1]?.type === "normal" ? scenario.lifeExpectancy[1]?.stdev : undefined
           });
 
           //set investments config
@@ -291,6 +295,13 @@ function NewScenarioPage() {
     setWithdrawalStrategy({
       availableAccounts: [],
       accountPriority: [],
+    });
+
+    //reset RMD settings to initial state
+    setRmdSettings({
+      currentAge: 0,
+      accountPriority: [],
+      availableAccounts: [],
     });
     
     if (type === ScenarioCreationType.FROM_SCRATCH) {
@@ -407,9 +418,7 @@ function NewScenarioPage() {
     console.log("Pre-tax accounts for Roth conversion:", allAccounts);
 
     setRothConversionStrategy({
-      roth_conversion_opt: false,
-      roth_conversion_start: new Date().getFullYear(),
-      roth_conversion_end: new Date().getFullYear() + 5,
+      ...rothConversionStrategy,
       availableAccounts: allAccounts,
       accountPriority: rothConversionStrategy.accountPriority || [],
     });
@@ -599,7 +608,16 @@ function NewScenarioPage() {
     console.log("=====================================================");
 
     try {
-      //delete the draft version if we're in edit mode
+      // First save the final version
+      await save_draft(get_current_draft_state(), false);
+      console.log("Complete scenario saved to database");
+
+      // Then convert to YAML and send to backend
+      const yaml = convert_scenario_to_yaml(scenarioRaw);
+      const savedScenario = await scenarioYAMLService.create(yaml); 
+      console.log("Scenario saved to backend as YAML:", savedScenario);
+
+      // Only after successful save, delete the draft if we're in edit mode
       if (id) {
         try {
           await scenario_service.delete_scenario(id);
@@ -608,15 +626,6 @@ function NewScenarioPage() {
           console.error("Error deleting draft scenario:", err);
         }
       }
-
-      // Save final state (not draft)
-      await save_draft(get_current_draft_state(), false);
-      console.log("Complete scenario saved to database");
-
-      // Then convert to YAML and send to backend
-      const yaml = convert_scenario_to_yaml(scenarioRaw);
-      const savedScenario = await scenarioYAMLService.create(yaml); 
-      console.log("Scenario saved to backend as YAML:", savedScenario);
 
       // Clean investment type data from localStorage
       investmentTypeStorage.clear();
