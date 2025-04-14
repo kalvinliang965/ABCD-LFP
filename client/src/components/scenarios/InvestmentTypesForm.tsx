@@ -117,11 +117,8 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
   const badgeTextTaxable = useColorModeValue("green.800", "green.100");
   const badgeTextExempt = useColorModeValue("purple.800", "purple.100");
   const emptyStateIconColor = useColorModeValue("blue.300", "blue.500");
-  const emptyBorderColor = useColorModeValue("blue.200", "blue.600");
-  const cardShadow = "lg";
   const buttonHoverBg = useColorModeValue("blue.600", "blue.400");
   const highlightColor = useColorModeValue("yellow.100", "yellow.800");
-  const gradientStart = useColorModeValue("blue.50", "blue.900");
   const gradientEnd = useColorModeValue("white", "gray.800");
 
   // Animation variants - enhanced for more fluidity
@@ -159,6 +156,11 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
     if (typeToEdit && typeToEdit.name) {
       // Update existing investment type
       investmentTypeStorage.update(typeToEdit.name, investmentType);
+
+      console.log(
+        "investmentType from handle_save_investment_type",
+        investmentType
+      );
 
       toast({
         title: "Investment Type Updated",
@@ -335,10 +337,6 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
   const taxExemptCount = investmentTypes.filter(
     (type) => !type.taxability
   ).length;
-  const avgExpenseRatio = investmentTypes.length
-    ? investmentTypes.reduce((sum, type) => sum + type.expenseRatio, 0) /
-      investmentTypes.length
-    : 0;
 
   return (
     <Box minH="100vh" bg={bg} py={8}>

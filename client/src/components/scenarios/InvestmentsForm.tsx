@@ -15,13 +15,9 @@ import {
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
-  Radio,
-  RadioGroup,
-  Stack,
   Select,
   IconButton,
   Icon,
-  Divider,
   useToast,
   Card,
   CardHeader,
@@ -36,12 +32,8 @@ import {
   GridItem,
   SimpleGrid,
   Container,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
 } from "@chakra-ui/react";
-import { DeleteIcon, AddIcon, ChevronDownIcon } from "@chakra-ui/icons";
+import {  AddIcon} from "@chakra-ui/icons";
 import { TrendingUp } from "lucide-react";
 import {
   FiChevronLeft,
@@ -337,7 +329,7 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     }).format(value);
   };
 
-  //! this is dulicated
+  //this is for display purpose
   const get_tax_status_display = (status: TaxStatus) => {
     switch (status) {
       case "non-retirement":
@@ -379,31 +371,6 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
     }
   };
 
-  //! no need for this function
-  const get_investment_icon = (type: string) => {
-    switch (type) {
-      case "stock":
-        return FiBarChart2;
-      case "bond":
-        return FiAward;
-      case "real_estate":
-        return FiBriefcase;
-      case "cash":
-        return FiDollarSign;
-      case "gold":
-        return FiActivity;
-      case "crypto":
-        return FiActivity;
-      case "mutual_fund":
-        return FiBarChart2;
-      case "etf":
-        return FiBarChart2;
-      default:
-        return FiInfo;
-    }
-  };
-
-  //? wtf is this
   const total_investment_value = investmentsConfig.investments.reduce(
     (total, investment) => total + investment.value,
     0

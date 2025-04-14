@@ -5,7 +5,6 @@ import {
   Flex,
   Text,
   Link,
-  VStack,
   HStack,
   Tooltip,
   Divider,
@@ -22,30 +21,21 @@ import {
   PopoverArrow,
   PopoverCloseButton,
   IconButton,
-  Button,
   useToast,
 } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router-dom";
 import {
   FaCalendarAlt,
-  FaUser,
-  FaUsers,
   FaMapMarkerAlt,
   FaDollarSign,
   FaHourglass,
   FaChartLine,
   FaMoneyBillWave,
   FaPercentage,
-  FaExchangeAlt,
-  FaWallet,
   FaShoppingBag,
-  FaPiggyBank,
-  FaInfoCircle,
-  FaChevronRight,
   FaDownload,
   FaTrash,
 } from "react-icons/fa";
-import Card from "../common/Card";
 import { ScenarioRaw } from "../../types/Scenarios";
 import { download_scenario_as_yaml } from "../../utils/yamlExport";
 
@@ -104,11 +94,9 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
 }) => {
   const toast = useToast();
   const highlightColor = useColorModeValue("blue.500", "blue.300");
-  const secondaryTextColor = useColorModeValue("gray.600", "gray.300");
   const cardBg = useColorModeValue("white", "gray.800");
   const cardBorder = useColorModeValue("gray.200", "gray.700");
   const headerBg = useColorModeValue("blue.500", "blue.600");
-  const iconBg = useColorModeValue("blue.50", "blue.900");
 
   const handle_download_yaml = () => {
     try {
@@ -322,7 +310,7 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
                 <PopoverBody>
                   <Text fontSize="sm">
                     Inflation rate:{" "}
-                    {scenario.inflationAssumption.value * 100}%
+                    {scenario.inflationAssumption.value}%
                   </Text>
                 </PopoverBody>
               </PopoverContent>
@@ -340,8 +328,7 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
             />
           </Tooltip>
         </HStack>
-
-        <Link
+        {/* <Link
           as={RouterLink}
           to={`/scenarios/${encodeURIComponent(scenario.name)}`}
           color={highlightColor}
@@ -354,7 +341,8 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
             <Text mr={1}>View Details</Text>
             <Icon as={FaChevronRight} boxSize={3} />
           </Flex>
-        </Link>
+        </Link> */}
+        
       </Flex>
     </Box>
   );

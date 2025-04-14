@@ -50,6 +50,7 @@ import { convert_scenario_to_yaml } from "../../utils/yamlExport";
 import use_draft_saver from "../../utils/useDraftSaver";
 import { create_draft_state_helper } from "../../utils/draftStateHelper";
 import { scenario_service } from "../../services/scenarioService";
+import { DistributionType, StateType } from "../../types/Enum";
 
 function NewScenarioPage() {
   const { id } = useParams();
@@ -108,14 +109,12 @@ function NewScenarioPage() {
   const [additionalSettings, setAdditionalSettings] =
     useState<AdditionalSettingsConfig>({
       inflationConfig: {
-        type: "fixed",
+        type: DistributionType.FIXED,
         value: 2.5, //! 2.5 is the default value, which means the user doesn't input anything, then it's 2.5
       },
       afterTaxContributionLimit: 0,
-      financialGoal: {
-        value: 0, //! 0 is the default value, which means the user doesn't input anything, then it's 0
-      },
-      stateOfResidence: "NY", // ! state of residence, currently only has 3 values, NY, NJ, CT. need to modify when expanding.
+      financialGoal: 0, //! 0 is the default value, which means the user doesn't input anything, then it's 0
+      stateOfResidence: StateType.NY, // ! state of residence, currently only has 3 values, NY, NJ, CT. need to modify when expanding.
     });
 
   const toast = useToast();
@@ -255,9 +254,7 @@ function NewScenarioPage() {
           setAdditionalSettings({
             inflationConfig: scenario.inflationAssumption,
             afterTaxContributionLimit: scenario.afterTaxContributionLimit,
-            financialGoal: {
-              value: scenario.financialGoal
-            },
+            financialGoal: scenario.financialGoal,
             stateOfResidence: scenario.residenceState
           });
           setStep("Scenario_name&type");

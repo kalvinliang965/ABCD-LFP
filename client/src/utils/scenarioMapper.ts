@@ -13,13 +13,11 @@ import {
 } from "../types/Scenarios";
 import {
   ScenarioDetails,
-  ScenarioType,
 } from "../components/scenarios/ScenarioDetailsForm";
 import { LifeExpectancyConfig } from "../components/scenarios/LifeExpectancyForm";
 import { InvestmentsConfig } from "../components/scenarios/InvestmentsForm";
 import {
   AdditionalSettingsConfig,
-  InflationConfig,
 } from "../components/scenarios/AdditionalSettingsForm";
 import { RMDSettings } from "../components/scenarios/RMDSettingsForm";
 import { SpendingStrategy } from "../components/scenarios/SpendingStrategyForm";
@@ -210,7 +208,7 @@ export function map_form_to_scenario_raw(
     RothConversionStart: rothConversionStrategy.roth_conversion_start,
     RothConversionEnd: rothConversionStrategy.roth_conversion_end,
     RothConversionStrategy: rothConversionStrategy.accountPriority,
-    financialGoal: additionalSettings.financialGoal?.value || 0,
-    residenceState: additionalSettings.stateOfResidence || "NY",
+    financialGoal: additionalSettings.financialGoal,
+    residenceState: additionalSettings.stateOfResidence,
   };
 }
