@@ -129,7 +129,7 @@ export default async function process_rmds(
   if (totalRmdAmount > 0) {
     // Round to 2 decimal places for currency
     const roundedAmount = Math.round(totalRmdAmount * 100) / 100;
-    state.incr_ordinary_income(roundedAmount);
+    state.user_tax_data.incr_cur_year_income(roundedAmount);
   }
   
   return totalRmdAmount;

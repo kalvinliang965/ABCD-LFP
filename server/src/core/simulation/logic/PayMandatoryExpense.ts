@@ -57,66 +57,12 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   simulation_logger.debug(`total amount we have to pay (including tax): ${mandatory_expenses}`);
 
   // step e: total withdrawal amount W = P - (amount of cash)
-  const withdrawal_amount = total_amount - state.account_manager.cash.get_value();
+  const withdrawal_amount = Math.max(0, total_amount - state.account_manager.cash.get_value());
   state.account_manager.cash.incr_value(-Math.min(total_amount, state.account_manager.cash.get_value()));
 
-  simulation_logger.debug(`withdrawal amount: ${withdrawal_amount}`);
+  simulation_logger.debug(`withdrawal amount needed: ${withdrawal_amount}`);
 
   // step f:
-  // get active mandatory expense
-  let withdrawaled=0;
-  const investments = state.account_manager.all;
-  for (const inv_id of state.expense_withrawal_strategy) {
-    // withdrawaled enough money
-    if (withdrawaled > withdrawal_amount) {
-      return true;
-    }
-
-    if (!investments.has(inv_id)) {
-      simulation_logger.error(`Investment "${inv_id}" does not exist`);
-      throw new Error(`Investment "${inv_id}" does not exist`)
-    }
-    const investment = investments.get(inv_id)!;
-    const purchase_price = investment.get_cost_basis();
-    simulation_logger.debug(`Planning to sell investment: ${inv_id}`, {
-      purchase_price,
-      tax_status: investment.tax_status,
-    })
-    simulation_logger.debug(`${withdrawal_amount - withdrawaled} left`);
-    
-    // we are withdrawing amount needed to reach
-    const going_to_withdraw = Math.min(withdrawal_amount - withdrawaled, purchase_price);
-
-    simulation_logger.debug(`going to withdraw ${going_to_withdraw} from ${inv_id}`);
-    investment.incr_cost_basis(-going_to_withdraw);
-
-    // step) f.i
-    // not pre tax retirement accont
-    // we have to calculate capital gains
-    if (investment.tax_status != TaxStatus.PRE_TAX) {
-      const fraction = (going_to_withdraw / investment.get_cost_basis());
-      const gains = investment.get_value() - investment.get_cost_basis();
-      const capital_gains = fraction * gains;
-      state.user_tax_data.incr_cur_year_gains(capital_gains);
-    } 
-    
-    if (investment.tax_status === TaxStatus.PRE_TAX) {
-      state.user_tax_data.incr_cur_year_income(going_to_withdraw);
-    }
-    
-    // update withrawal
-    if (
-      state.user.get_age() < 59 && (
-        investment.tax_status === TaxStatus.PRE_TAX || 
-        investment.tax_status === TaxStatus.AFTER_TAX
-    )) {
-      state.user_tax_data.incr_year_early_withdrawal(going_to_withdraw);
-    }
-
-    withdrawaled += going_to_withdraw;
-    simulation_logger.debug(`recieved ${going_to_withdraw} from selling ${investment.id}`)
-    simulation_logger.debug(`total withdrawaled: ${withdrawaled}`);
-  }
-
-  return false;
+  // withdrawal from investments to fill withdrawal_amount
+  return withdrawal_amount === state.process_investment_withdrawal(withdrawal_amount);
 }

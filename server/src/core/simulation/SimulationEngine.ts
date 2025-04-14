@@ -2,7 +2,7 @@
 import { SimulationState, create_simulation_state } from './SimulationState';
 import { SimulationResult, create_simulation_result } from './SimulationResult';
 import { create_scenario, Scenario } from '../domain/scenario/Scenario';
-import process_roth_conversion from './logic/RothConversion';
+import run_roth_conversion_optimizer from './logic/RothConversion';
 import update_investment from './logic/UpdateInvestment';
 import { create_federal_tax_service, FederalTaxService } from "../tax/FederalTaxService";
 import { create_state_tax_service_yaml, create_state_tax_service_db, StateTaxService } from "../tax/StateTaxService";
@@ -15,6 +15,11 @@ export interface SimulationEngine {
 }
 
 import { simulation_logger } from '../../utils/logger/logger';
+import perform_rmds from './logic/ProcessRMD';
+import { pay_mandatory_expenses } from './logic/PayMandatoryExpense';
+import { pay_discretionary_expenses } from './logic/PayDiscretionaryExpense';
+import { invest_excess_cash as run_invest_event } from './logic/InvestExcessCash';
+import { run_rebalance_investment } from './logic/RebalanceInvestments';
 
 export async function create_simulation_engine(scenario_yaml: string, state_yaml: string): Promise<SimulationEngine> {
 
@@ -73,7 +78,15 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
                 simulation_result = create_simulation_result();
                 // Run the simulation synchronously.
                 while (should_continue(simulation_state)) {
-                    simulate_year(simulation_state, simulation_result);
+                    // adjust for tax, inflation, etc...
+                    simulation_state.setup();
+                    // simulate year
+                    if (!simulate_year(simulation_state, simulation_result)) {
+                        simulation_logger.info(`
+                            User cannot pay all mandatory expense for ${simulation_state.get_current_year()}
+                        `);
+                    }
+                    // increase uesr age and tax status
                     simulation_state.advance_year();
                 }
                 simulation_logger.info(
@@ -100,7 +113,7 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
 
 
 
-    function simulate_year(simulation_state: SimulationState, simulation_result: SimulationResult ) {
+    function simulate_year(simulation_state: SimulationState, simulation_result: SimulationResult ): boolean {
         try {
             simulation_logger.debug(
                 "Simulating new year", 
@@ -108,15 +121,37 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
                     simulation_state: simulation_state,
                 }
             ); 
-            
-            run_income_event(simulation_state);
             simulation_logger.debug("Running income events")
-
-            if (simulation_state.roth_conversion_opt) {
-                process_roth_conversion(simulation_state);
+            run_income_event(simulation_state);
+            
+            if (simulation_state.user.get_age() >= 74) {
+                simulation_logger.debug("Performing rmd...");
+                perform_rmds(simulation_state);
             }
+            simulation_logger.debug("Updating investments...");
             update_investment(simulation_state);
+            if (simulation_state.roth_conversion_opt) {
+                simulation_logger.debug("Running roth conversion optimizer...");
+                run_roth_conversion_optimizer(simulation_state);
+            }
+            
+            simulation_logger.debug(`Paying non discretionary expenses...`);
+            if (!pay_mandatory_expenses(simulation_state)) {
+                simulation_logger.info(`User cannnot pay all non discretionary expenses`);
+                return false;
+            }
+            
+            simulation_logger.debug(`Paying discretionary expenses`);
+            pay_discretionary_expenses(simulation_state);
+
+            simulation_logger.debug(`Running invest event scheduled for current year...`);
+            run_invest_event(simulation_state);
+
+            simulation_logger.debug(`Running rebalance events scheduled for the current year...`);
+            run_rebalance_investment(simulation_state);
+
             simulation_result.update(simulation_state);
+            return true;
         } catch (error) {
             throw error
         }

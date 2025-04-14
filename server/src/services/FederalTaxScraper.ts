@@ -7,7 +7,8 @@ import { StandardDeduction, create_standard_deductions } from "../core/tax/Stand
 import { save_bracket } from "../db/repositories/TaxBracketRepository";
 import { save_standard_deduction } from "../db/repositories/StandardDeductionRepository";
 
-import { tax_logger } from "../utils/logger/logger";
+import { simulation_logger } from "../utils/logger/logger";
+import { signedCookie } from "cookie-parser";
 
 const SINGLE_TABLE: number = 0;
 const MARRIED_TABLE: number = 1;
@@ -19,7 +20,7 @@ async function fetch_and_parse_capital_gains(url: string): Promise<TaxBrackets> 
         const { data: html } = await axios.get(url);
         return parse_capital_gains(html, true);
     } catch (error) {
-        console.error("Failed to fetch capital gains data:", error);
+        simulation_logger.error("Failed to fetch capital gains data:", error);
         throw new Error("Capital gains data acquisition failed");
     }
 }
@@ -28,7 +29,7 @@ async function fetch_and_parse_standard_deduction(url: string): Promise<Standard
         const { data: html } = await axios.get(url);
         return parse_standard_deductions(html, true);
     } catch (error) {
-        console.error("Failed to fetch capital gains data:", error);
+        simulation_logger.error("Failed to fetch capital gains data:", error);
         throw new Error("Capital gains data acquisition failed");
     }
 }
@@ -38,7 +39,7 @@ async function fetch_and_parse_taxable_income(url: string): Promise<TaxBrackets>
         const { data: html } = await axios.get(url);
         return parse_taxable_income(html, true);
     } catch (error) {
-        console.error("Failed to fetch capital gains data:", error);
+        simulation_logger.error("Failed to fetch capital gains data", {error});
         throw new Error("Capital gains data acquisition failed");
     }
 }
@@ -100,7 +101,9 @@ async function parse_taxable_income(html: string, save_to_database = false): Pro
         }
         return await parse_federal_tax_tables(federal_tax_tables, save_to_database);
     } catch (error) {
-        console.error("Error fetching the federal tax brackets:", error);
+        simulation_logger.error("Error fetching the federal tax brackets",{
+            error,
+        });
         throw new Error("Federal tax data unavailable");
     }
 }
@@ -143,7 +146,7 @@ async function parse_standard_deductions(html: string, save_to_database = false)
         }
         return std_deductions;
     } catch (error) {
-        console.error("Error fetching the standard deduction: ", error);
+        simulation_logger.error("Error fetching the standard deduction: ", error);
         throw new Error("Standard deduction data unavailable.");
     }
 }
@@ -157,7 +160,6 @@ async function parse_capital_gains(
         const paragraph = h2.nextAll('p').filter((_, el) => 
              $(el).text().toLowerCase().includes("a capital gains rate of")
         );
-        // console.log(paragraph.html());
         if (!paragraph || paragraph.length != 3) {
              throw new Error(`Expected 3 paragraph contain the text: "a capital gains rate of "`);
         }
@@ -228,12 +230,12 @@ async function parse_capital_gains(
                 for (const tuple of bracket_tuple_list) {
                     const {taxpayer_type, taxbracket} = tuple;
                     if (!taxbracket) {
-                        console.error("Finding highest rate bracket when it is empty");
+                        simulation_logger.error("Finding highest rate bracket when it is empty");
                         process.exit(1)
                     }
                     const { max, rate} = taxbracket;
                     if (rate >= upper_rate) {
-                        console.error(`Invalid highest rate: ${upper_rate} <= ${rate}`);
+                        simulation_logger.error(`Invalid highest rate: ${upper_rate} <= ${rate}`);
                         throw new Error("Invalid highest rate scrapped");
                     }
                     taxBrackets.add_bracket(max + 1, Infinity, upper_rate, taxpayer_type);
@@ -243,7 +245,7 @@ async function parse_capital_gains(
         });
         return taxBrackets;
     } catch (error) {
-        console.error("Error fetching the cpaital gains", error);
+        simulation_logger.error("Error fetching the cpaital gains", error);
         throw new Error("Capital gains data unavailable.");
     }
 }
@@ -252,9 +254,11 @@ export const extractNumbers = (sentence: string, num: number): number[] => {
     const matches = sentence.match(/-?\d{1,3}(?:,\d{3})*(?:\.\d+)?/g) || [];
     const res = matches.map(m => Number(m.replace(/,/g, ''))).filter(num => !isNaN(num)); 
     if (res.length != num) {
-        console.error(res)
-        console.error(sentence);
-        throw new Error(`Number of of integer in this sentence should be equal to "${num}"`);
+        simulation_logger.error(`Number of integer in this sentence should be equal to "${num}"`,{
+            res,
+            sentence,
+        })
+        throw new Error(`Number of integer in this sentence should be equal to "${num}"`);
     }
     return res;
 } 

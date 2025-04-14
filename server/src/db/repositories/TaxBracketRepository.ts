@@ -1,5 +1,6 @@
 // src/db/repositories/TaxBracketRepository.ts
 import { IncomeType, TaxFilingStatus } from "../../core/Enums";
+import { simulation_logger } from "../../utils/logger/logger";
 import TaxBracketModel, { ITaxBracket } from "../models/tax_bracket";
 
 const save_bracket = async (
@@ -18,7 +19,13 @@ const save_bracket = async (
       taxpayer_type: taxpayer_type,
     });
     await newBracket.save();
-    console.log(`Data save succesfully: ${taxpayer_type} AND ${income_type}: [${min}, ${max}] = ${rate}`);
+    simulation_logger.info("Succesfully saved federal tax data", {
+      taxpayer_type, 
+      income_type,
+      min,
+      max,
+      rate
+    });
   } catch (error) {
     throw new Error(`Internel Service error ${(error as Error).message}`);
   }
@@ -30,7 +37,7 @@ const load_capital_gains_brackets = async(): Promise<Array<ITaxBracket>> => {
     const capital_gains_bracket_list = await TaxBracketModel.find({
       income_type: IncomeType.CAPITAL_GAINS,
     });
-    console.log(`${capital_gains_bracket_list.length} taxable brackets sucessfully loaded`);
+    simulation_logger.info(`${capital_gains_bracket_list.length} taxable brackets sucessfully loaded`);
     return capital_gains_bracket_list;
   } catch (error) {
     throw new Error(`Internel Service Error: ${error}`);
@@ -41,7 +48,7 @@ const load_taxable_income_brackets = async (): Promise<Array<ITaxBracket>> => {
     const taxable_income_bracket_list = await TaxBracketModel.find({
       income_type: IncomeType.TAXABLE_INCOME,
     });
-    console.log(`${taxable_income_bracket_list.length} taxable brackets sucessfully loaded`);
+    simulation_logger.info(`${taxable_income_bracket_list.length} taxable brackets sucessfully loaded`);
     return taxable_income_bracket_list;
   } catch (error) {
     throw new Error(`Internel Service Error: ${error}`);

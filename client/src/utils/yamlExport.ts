@@ -51,7 +51,7 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
     // Add comment header with version information
     // Special formatting for the header comments
     name: serializedScenario.name,
-    maritalStatus: serializedScenario.martialStatus, //fix spelling issue in original data
+    maritalStatus: serializedScenario.maritalStatus,
     birthYears: serializedScenario.birthYears.map(ensure_number),
     lifeExpectancy: serializedScenario.lifeExpectancy.map(process_values),
 

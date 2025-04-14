@@ -11,11 +11,6 @@ import {
   TaxFilingStatus,
 } from "../../Enums";
 import { create_investment, Investment } from "../investment/Investment";
-import {
-  get_discretionary_expenses,
-  get_mandatory_expenses,
-  SpendingEvent,
-} from "../../simulation/logic/ExpenseHelper";
 import { ScenarioRaw } from "../raw/scenario_raw";
 import { InvestmentRaw } from "../raw/investment_raw";
 import { TaxStatus, parse_state_type, parse_taxpayer_type } from "../../Enums";
@@ -160,7 +155,7 @@ export interface Scenario {
 export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenario> {
   try {
     const taxfilingStatus: TaxFilingStatus = parse_taxpayer_type(
-      scenario_raw.martialStatus
+      scenario_raw.maritalStatus
     );
     const [user_birth_year, spouse_birth_year] = parse_birth_years(
       scenario_raw.birthYears

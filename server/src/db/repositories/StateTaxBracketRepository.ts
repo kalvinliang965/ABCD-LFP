@@ -1,6 +1,7 @@
 
 // src/db/repositories/StateTaxBracketRepository.ts
 import { IncomeType, StateType, TaxFilingStatus } from "../../core/Enums";
+import { simulation_logger } from "../../utils/logger/logger";
 import StateTaxBracketModel, { IStateTaxBracket } from "../models/StateTaxBracket";
 
 export const save_state_tax_bracket = async (
@@ -19,7 +20,13 @@ export const save_state_tax_bracket = async (
       resident_state,
     });
     await newBracket.save();
-    console.log(`Data save succesfully: ${taxpayer_type} AND ${resident_state}: [${min}, ${max}] = ${rate}`);
+    simulation_logger.info("Succesfully saved state tax data", {
+      taxpayer_type, 
+      resident_state, 
+      min,
+      max,
+      rate
+    });
   } catch (error) {
     throw new Error(`Internel Service error ${(error as Error).message}`);
   }
@@ -43,7 +50,7 @@ export const load_state_taxable_income_brackets = async (resident_state: StateTy
     const taxable_income_bracket_list = await StateTaxBracketModel.find({
         resident_state,
     });
-    console.log(`${taxable_income_bracket_list.length} taxable brackets sucessfully loaded`);
+    simulation_logger.info(`${taxable_income_bracket_list.length} taxable brackets sucessfully loaded`);
     return taxable_income_bracket_list;
   } catch (error) {
     throw new Error(`Internel Service Error: ${error}`);

@@ -8,10 +8,9 @@ import { simulation_logger } from '../../../utils/logger/logger';
  */
 export function invest_excess_cash(
 	state: SimulationState,
-	scenario: Scenario
 ): void {
 	//get current invest events for this year
-	const invest_events = scenario.event_manager.get_active_invest_event(state.get_current_year());
+	const invest_events = state.event_manager.get_active_invest_event(state.get_current_year());
 	simulation_logger.debug(`${invest_events.length} active invest events retrieved`);
 	
 	//if no investment events are active, do nothing
@@ -77,9 +76,9 @@ export function invest_excess_cash(
 			const planned_amount = excess_cash * percentage;
 			planned_amounts.set(investment_id, planned_amount);
 			//determine account type and add to its own total
-			if (scenario.account_manager.after_tax.has(investment_id)) {
+			if (state.account_manager.after_tax.has(investment_id)) {
 				after_tax_total += planned_amount;
-			} else if (scenario.account_manager.non_retirement.has(investment_id)) {
+			} else if (state.account_manager.non_retirement.has(investment_id)) {
 				non_retirement_total += planned_amount;
 			}
 		}
@@ -88,15 +87,15 @@ export function invest_excess_cash(
 
 		//for after tax account we check if it exceeds inflation adjusted limits
 		//if it does, we scale down after-tax amounts to limit, then reallocate difference into non-retirement investments
-		if (after_tax_total > scenario.after_tax_contribution_limit){
-			simulation_logger.debug(`After-tax contributions (${after_tax_total}) exceed limit (${scenario.after_tax_contribution_limit})`);
+		if (after_tax_total > state.get_after_tax_contribution_limit()){
+			simulation_logger.debug(`After-tax contributions (${after_tax_total}) exceed limit (${state.get_after_tax_contribution_limit()})`);
 			
 			//compute scaling factors for after-tax
-			const after_tax_scale = scenario.after_tax_contribution_limit / after_tax_total; 
+			const after_tax_scale = state.get_after_tax_contribution_limit() / after_tax_total; 
 			let non_retirement_scale = 1; //default
 
 			if (non_retirement_total > 0){
-				non_retirement_scale = (excess_cash - scenario.after_tax_contribution_limit) / non_retirement_total; //scale up
+				non_retirement_scale = (excess_cash - state.get_after_tax_contribution_limit()) / non_retirement_total; //scale up
 				simulation_logger.debug(`Scaling factors-> After-tax: ${after_tax_scale}, Non-retirement: ${non_retirement_scale}`);
 			} else {
 				simulation_logger.warn('No non-retirement investments, skip scaling for non-retirement allocations');
@@ -104,9 +103,9 @@ export function invest_excess_cash(
 
 			//apply scaling factors
 			for (const [investment_id, planned_amount] of planned_amounts.entries()) {
-				if (scenario.account_manager.after_tax.has(investment_id)) {
+				if (state.account_manager.after_tax.has(investment_id)) {
 					planned_amounts.set(investment_id, planned_amount * after_tax_scale);
-				} else if (scenario.account_manager.non_retirement.has(investment_id)) {
+				} else if (state.account_manager.non_retirement.has(investment_id)) {
 					planned_amounts.set(investment_id, planned_amount * non_retirement_scale);
 				}
 			}
@@ -116,10 +115,10 @@ export function invest_excess_cash(
 		for (const [investment_id, amount_to_invest] of planned_amounts.entries()) {
 			//find the investment in allowed accounts
 			let investment: Investment | undefined;
-			if (scenario.account_manager.after_tax.has(investment_id)) {
-				investment = scenario.account_manager.after_tax.get(investment_id);
-			} else if (scenario.account_manager.non_retirement.has(investment_id)) {
-				investment = scenario.account_manager.non_retirement.get(investment_id);
+			if (state.account_manager.after_tax.has(investment_id)) {
+				investment = state.account_manager.after_tax.get(investment_id);
+			} else if (state.account_manager.non_retirement.has(investment_id)) {
+				investment = state.account_manager.non_retirement.get(investment_id);
 			}
 			
 			if (!investment) {
@@ -131,7 +130,7 @@ export function invest_excess_cash(
 			investment.incr_value(amount_to_invest);
 			investment.incr_cost_basis(amount_to_invest);
 			cash_account.incr_value(-amount_to_invest);
-			simulation_logger.debug(`Investment: ${investment_id} (${scenario.account_manager.after_tax.has(investment_id) ? 'after-tax' : 'non-retirement'}) -> Amount: ${amount_to_invest}, New Value: ${investment.get_value()}, Cash Balance: ${cash_account.get_value()}`);
+			simulation_logger.debug(`Investment: ${investment_id} (${state.account_manager.after_tax.has(investment_id) ? 'after-tax' : 'non-retirement'}) -> Amount: ${amount_to_invest}, New Value: ${investment.get_value()}, Cash Balance: ${cash_account.get_value()}`);
 		}
 	}
 }

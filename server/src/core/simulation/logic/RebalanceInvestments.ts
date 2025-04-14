@@ -9,12 +9,11 @@ import { simulation_logger } from '../../../utils/logger/logger';
  *process sales first to calculate capital gains, then purchases
  *ensure all investments are of the same account type
  */
-export function rebalance_investments(
+export function run_rebalance_investment(
 	state: SimulationState,
-	scenario: Scenario
 ): void {
 	//get current rebalance events for this year
-	const rebalance_events = scenario.event_manager.get_active_rebalance_event(state.get_current_year());
+	const rebalance_events = state.event_manager.get_active_rebalance_event(state.get_current_year());
 	simulation_logger.debug(`${rebalance_events.length} active rebalance events retrieved`);
 	
 	//if no rebalance events are active, do nothing
@@ -33,9 +32,9 @@ export function rebalance_investments(
 		let account_type: TaxStatus | undefined;
 		
 		//get the first investment's account type
-		const first_investment = scenario.account_manager.after_tax.get(investment_ids[0]) || 
-		                        scenario.account_manager.non_retirement.get(investment_ids[0]) || 
-		                        scenario.account_manager.pre_tax.get(investment_ids[0]);
+		const first_investment = state.account_manager.after_tax.get(investment_ids[0]) || 
+		                        state.account_manager.non_retirement.get(investment_ids[0]) || 
+		                        state.account_manager.pre_tax.get(investment_ids[0]);
 		
 		if (!first_investment) {
 			simulation_logger.error(`First investment ${investment_ids[0]} not found in any account type`);
@@ -46,9 +45,9 @@ export function rebalance_investments(
 		
 		//verify all other investments are in the same account type
 		for (const investment_id of investment_ids.slice(1)) {
-			const investment = scenario.account_manager.after_tax.get(investment_id) || 
-			                  scenario.account_manager.non_retirement.get(investment_id) || 
-			                  scenario.account_manager.pre_tax.get(investment_id);
+			const investment = state.account_manager.after_tax.get(investment_id) || 
+			                  state.account_manager.non_retirement.get(investment_id) || 
+			                  state.account_manager.pre_tax.get(investment_id);
 			
 			if (!investment || investment.tax_status !== account_type) {
 				simulation_logger.error(`Investment ${investment_id} is not in ${account_type} account type`);
@@ -59,9 +58,9 @@ export function rebalance_investments(
 		//get all investments for this account type
 		const investments = new Map<string, Investment>();
 		for (const investment_id of investment_ids) {
-			const investment = scenario.account_manager.after_tax.get(investment_id) || 
-			                   scenario.account_manager.non_retirement.get(investment_id) || 
-			                  scenario.account_manager.pre_tax.get(investment_id);
+			const investment = state.account_manager.after_tax.get(investment_id) || 
+			                   state.account_manager.non_retirement.get(investment_id) || 
+			                  state.account_manager.pre_tax.get(investment_id);
 			if (investment && investment.tax_status === account_type) {
 				investments.set(investment_id, investment);
 			}

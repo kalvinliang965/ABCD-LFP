@@ -30,7 +30,7 @@ import { cash_investment_type_one, InvestmentTypeRaw, s_and_p_500_investment_typ
 
 export interface ScenarioRaw {
   name: string;
-  martialStatus: string;
+  maritalStatus: 'couple' | 'individual';
   birthYears: Array<number>;
   lifeExpectancy: Array<Map<string, any>>;
   investmentTypes: Set<InvestmentTypeRaw>
@@ -108,7 +108,7 @@ export const scenario_one = create_scenario_raw(
 
 export function create_scenario_raw(
   name: string,
-  martialStatus: string,
+  maritalStatus: 'couple' | 'individual',
   birthYears: Array<number>,
   lifeExpectancy: Array<Map<string, any>>,
   investmentTypes: Set<InvestmentTypeRaw>,
@@ -132,7 +132,7 @@ export function create_scenario_raw(
   
   return {
     name,
-    martialStatus,
+    maritalStatus,
     birthYears,
     lifeExpectancy,
     investmentTypes,
