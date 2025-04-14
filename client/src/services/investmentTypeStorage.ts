@@ -138,6 +138,8 @@ export const investmentTypeStorage = {
 
       currentData[index] = updatedType;
 
+      console.log("updatedType from update", updatedType);
+
       // Convert and save to localStorage
       const storageData = currentData.map(map_to_storage_object);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));

@@ -286,7 +286,7 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
 
     return {
       name: data.name || "",
-      description: data.description || "",
+      description: String(data.description || ""),
       returnType: returnType,
       returnRate: returnRate,
       returnInputMode: data.returnAmtOrPct || ValueInputMode.PERCENT,
@@ -438,7 +438,7 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
       // Convert form data to InvestmentTypeRaw format
       const investmentType: InvestmentTypeRaw = {
         name: trimmedName, // Use trimmed name
-        description: formData.description,
+        description: String(formData.description), // Ensure description is always a string
         returnAmtOrPct: formData.returnInputMode,
         expenseRatio: parseFloat(formData.expenseRatio) / 100, // Convert from percentage to decimal
         incomeAmtOrPct: formData.dividendInputMode,
@@ -446,6 +446,8 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
         returnDistribution: [], // Initialize with empty array
         incomeDistribution: [], // Initialize with empty array
       };
+
+      console.log("investmentType form AddInvestmentTypeModal", investmentType);
 
       // Create return distribution based on type
       if (formData.returnType === DistributionType.FIXED) {

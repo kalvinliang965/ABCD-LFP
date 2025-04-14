@@ -1,0 +1,292 @@
+// AI-generated code
+// Create a modal component for Run simulation that allows user to select scenarios and specify simulation count
+
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Heading,
+  Text,
+  Button,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  FormControl,
+  FormLabel,
+  FormErrorMessage,
+  FormHelperText,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+  VStack,
+  SimpleGrid,
+  Badge,
+  Icon,
+  useToast,
+  useColorModeValue,
+} from "@chakra-ui/react";
+import { FaExclamationTriangle } from "react-icons/fa";
+import { ScenarioDetailCard } from "../scenarios";
+import { useNavigate } from "react-router-dom";
+import { scenario_service } from "../../services/scenarioService";
+
+interface RunSimulationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const RunSimulationModal: React.FC<RunSimulationModalProps> = ({
+  isOpen,
+  onClose,
+}) => {
+  const [scenarios, set_scenarios] = useState<any[]>([]);
+  const [loading, set_loading] = useState<boolean>(true);
+  const [selected_scenario, set_selected_scenario] = useState<string>("");
+  const [simulation_count, set_simulation_count] = useState<number>(100);
+  const [count_error, set_count_error] = useState<string>("");
+  const toast = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isOpen) {
+      fetch_scenarios();
+    }
+
+    // Cleanup function
+    return () => {
+      // Reset state when modal closes
+      if (!isOpen) {
+        set_selected_scenario("");
+      }
+    };
+  }, [isOpen]);
+
+  const fetch_scenarios = async () => {
+    try {
+      set_loading(true);
+      const response = await scenario_service.get_all_scenarios();
+      // Filter scenarios where isDraft is false
+      const active_scenarios = response.data.filter(
+        (scenario: any) => !scenario.isDraft
+      );
+      set_scenarios(active_scenarios);
+      set_loading(false);
+    } catch (error) {
+      console.error("Error fetching scenarios:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch scenarios",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      set_loading(false);
+    }
+  };
+
+  const validate_simulation_count = (value: number) => {
+    if (!value || value <= 0) {
+      set_count_error("Simulation count must be a positive integer");
+      return false;
+    }
+
+    if (!Number.isInteger(value)) {
+      set_count_error("Simulation count must be an integer");
+      return false;
+    }
+
+    set_count_error("");
+    return true;
+  };
+
+  const handle_simulation_count_change = (value: string) => {
+    const num_value = parseInt(value);
+    set_simulation_count(num_value);
+    validate_simulation_count(num_value);
+  };
+
+  const handle_run_simulation = () => {
+    if (!selected_scenario) {
+      toast({
+        title: "No Scenario Selected",
+        description: "Please select a scenario to run simulation",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!validate_simulation_count(simulation_count)) {
+      return;
+    }
+
+    // Here you would typically connect to the backend to run the simulation
+    // For now, just show a success toast
+    toast({
+      title: "Simulation Started",
+      description: `Running ${simulation_count} simulations for the selected scenario`,
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+
+    onClose();
+
+    // Clear selection after running
+    set_selected_scenario("");
+  };
+
+  const handle_card_selection = (scenarioId: string) => {
+    // Toggle selection - if it's already selected, unselect it
+    if (selected_scenario === scenarioId) {
+      set_selected_scenario("");
+    } else {
+      set_selected_scenario(scenarioId);
+    }
+  };
+
+  // Find the selected scenario object
+  const selected_scenario_object = scenarios.find(
+    (s) => s._id === selected_scenario
+  );
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered>
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader>Configure Simulation</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody>
+          {loading ? (
+            <Text>Loading scenarios...</Text>
+          ) : scenarios.filter((s) => !s.isDraft).length === 0 ? (
+            <VStack spacing={4} align="center" p={4}>
+              <Icon
+                as={FaExclamationTriangle}
+                boxSize={12}
+                color="orange.500"
+              />
+              <Heading size="md" textAlign="center">
+                No Scenarios Available
+              </Heading>
+              <Text textAlign="center">
+                You don't have any active scenarios yet. Please create a
+                scenario first.
+              </Text>
+              <Button
+                colorScheme="blue"
+                onClick={() => navigate("/scenarios/new")}
+              >
+                Create New Scenario
+              </Button>
+            </VStack>
+          ) : (
+            <VStack spacing={6} align="stretch">
+              <FormControl isRequired>
+                <FormLabel fontWeight="bold">Select Scenario</FormLabel>
+                <Text fontSize="sm" color="gray.500" mb={2}>
+                  Click on a scenario card to select it for simulation. Click
+                  again to unselect.
+                </Text>
+
+                {/* Show scenario cards instead of dropdown */}
+                <SimpleGrid columns={1} spacing={4} mb={4}>
+                  {scenarios
+                    .filter((scenario) => !scenario.isDraft)
+                    .map((scenario) => (
+                      <Box
+                        key={scenario._id}
+                        onClick={() => handle_card_selection(scenario._id)}
+                        cursor="pointer"
+                        position="relative"
+                        borderWidth={
+                          selected_scenario === scenario._id ? "2px" : "1px"
+                        }
+                        borderColor={
+                          selected_scenario === scenario._id
+                            ? "purple.500"
+                            : useColorModeValue("gray.200", "gray.700")
+                        }
+                        borderRadius="lg"
+                        transition="all 0.2s"
+                        _hover={{
+                          transform: "translateY(-2px)",
+                          boxShadow: "md",
+                        }}
+                      >
+                        {selected_scenario === scenario._id && (
+                          <Badge
+                            position="absolute"
+                            top="-2"
+                            right="-2"
+                            colorScheme="purple"
+                            fontSize="0.8em"
+                            py={1}
+                            px={2}
+                            borderRadius="full"
+                            zIndex={1}
+                          >
+                            Selected
+                          </Badge>
+                        )}
+                        <ScenarioDetailCard scenario={scenario} />
+                      </Box>
+                    ))}
+                </SimpleGrid>
+              </FormControl>
+
+              <FormControl isRequired isInvalid={!!count_error}>
+                <FormLabel fontWeight="bold">Number of Simulations</FormLabel>
+                <NumberInput
+                  min={1}
+                  step={10}
+                  value={simulation_count}
+                  onChange={handle_simulation_count_change}
+                >
+                  <NumberInputField />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
+                {count_error ? (
+                  <FormErrorMessage>{count_error}</FormErrorMessage>
+                ) : (
+                  <FormHelperText>
+                    How many times should we run the simulation? Higher numbers
+                    give more accurate results but take longer.
+                  </FormHelperText>
+                )}
+              </FormControl>
+            </VStack>
+          )}
+        </ModalBody>
+
+        <ModalFooter>
+          <Button variant="outline" mr={3} onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            colorScheme="purple"
+            onClick={handle_run_simulation}
+            isDisabled={
+              scenarios.filter((s) => !s.isDraft).length === 0 ||
+              !selected_scenario ||
+              !!count_error
+            }
+          >
+            Run Simulation
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
+};
+
+export default RunSimulationModal;

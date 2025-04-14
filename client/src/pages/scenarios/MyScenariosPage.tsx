@@ -10,6 +10,7 @@ import {
   Badge,
   useColorModeValue,
   useToast,
+  useDisclosure,
 } from "@chakra-ui/react";
 import {
   FaInfoCircle,
@@ -19,6 +20,7 @@ import {
   FaEdit,
 } from "react-icons/fa";
 import { ScenarioDetailCard } from "../../components/scenarios";
+import { RunSimulationModal } from "../../components/simulation";
 import { SAMPLE_SCENARIOS } from "../../types/scenario"; //! temporary
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { ScenarioRaw } from "../../types/Scenarios";
@@ -33,9 +35,10 @@ const MyScenariosPage: React.FC = () => {
   const [drafts, setDrafts] = useState<any[]>([]);
   const [actualScenarios, setActualScenarios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
   const navigate = useNavigate();
-  
+
   const headingColor = useColorModeValue("gray.700", "white");
   const noteColor = useColorModeValue("blue.700", "blue.200");
   const noteBgColor = useColorModeValue("blue.50", "blue.900");
@@ -109,7 +112,7 @@ const MyScenariosPage: React.FC = () => {
   const handleDeleteDraft = async (draftId: string) => {
     try {
       await scenario_service.delete_scenario(draftId);
-      setDrafts(drafts.filter(draft => draft._id !== draftId));
+      setDrafts(drafts.filter((draft) => draft._id !== draftId));
       toast({
         title: "Draft Deleted",
         description: "Draft scenario was deleted successfully",
@@ -132,7 +135,9 @@ const MyScenariosPage: React.FC = () => {
   const handleDeleteScenario = async (scenarioId: string) => {
     try {
       await scenario_service.delete_scenario(scenarioId);
-      setActualScenarios(actualScenarios.filter(scenario => scenario._id !== scenarioId));
+      setActualScenarios(
+        actualScenarios.filter((scenario) => scenario._id !== scenarioId)
+      );
       toast({
         title: "Scenario Deleted",
         description: "Scenario has been deleted successfully",
@@ -274,7 +279,7 @@ const MyScenariosPage: React.FC = () => {
           _hover={{ transform: "translateY(-5px)", boxShadow: "lg" }}
           transition="all 0.3s"
           cursor="pointer"
-          onClick={() => navigate("/simulation/run")}
+          onClick={onOpen}
         >
           <Flex direction="column" align="center" textAlign="center">
             <Flex
@@ -310,7 +315,12 @@ const MyScenariosPage: React.FC = () => {
             borderBottom="1px solid"
             borderColor={borderColor}
           >
-            <Heading as="h2" size="md" color={headingColor} fontWeight="semibold">
+            <Heading
+              as="h2"
+              size="md"
+              color={headingColor}
+              fontWeight="semibold"
+            >
               Your Draft Scenarios
             </Heading>
             <Badge
@@ -340,7 +350,8 @@ const MyScenariosPage: React.FC = () => {
                       {draft.name}
                     </Heading>
                     <Text color={infoColor}>
-                      Last updated: {new Date(draft.updatedAt).toLocaleDateString()}
+                      Last updated:{" "}
+                      {new Date(draft.updatedAt).toLocaleDateString()}
                     </Text>
                   </Box>
                   <Flex gap={2}>
@@ -394,9 +405,9 @@ const MyScenariosPage: React.FC = () => {
         </Flex>
         <SimpleGrid columns={{ base: 1, md: 1 }} spacing={6}>
           {actualScenarios.map((scenario) => (
-            <ScenarioDetailCard 
-              key={scenario._id} 
-              scenario={scenario} 
+            <ScenarioDetailCard
+              key={scenario._id}
+              scenario={scenario}
               onDelete={() => handleDeleteScenario(scenario._id)}
             />
           ))}
@@ -405,36 +416,6 @@ const MyScenariosPage: React.FC = () => {
               No scenarios found. Create a new scenario to get started.
             </Text>
           )}
-        </SimpleGrid>
-      </Box>
-
-      {/* sample scenarios section */}
-      <Box mb={8}>
-        <Flex
-          justify="space-between"
-          align="center"
-          mb={4}
-          pb={2}
-          borderBottom="1px solid"
-          borderColor={borderColor}
-        >
-          <Heading as="h2" size="md" color={headingColor} fontWeight="semibold">
-            Sample Scenarios
-          </Heading>
-          <Badge
-            colorScheme="blue"
-            fontSize="sm"
-            borderRadius="full"
-            px={3}
-            py={1}
-          >
-            {SAMPLE_SCENARIOS.length} samples
-          </Badge>
-        </Flex>
-        <SimpleGrid columns={{ base: 1, md: 1 }} spacing={6}>
-          {SAMPLE_SCENARIOS.map((scenario) => (
-            <ScenarioDetailCard key={scenario.name} scenario={scenario} />
-          ))}
         </SimpleGrid>
       </Box>
 
@@ -476,6 +457,9 @@ const MyScenariosPage: React.FC = () => {
           </Text>
         </Box>
       </Box>
+
+      {/* Import the RunSimulationModal component */}
+      <RunSimulationModal isOpen={isOpen} onClose={onClose} />
     </Box>
   );
 };

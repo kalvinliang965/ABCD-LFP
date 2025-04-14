@@ -2,10 +2,10 @@ import React from "react";
 import { Route } from "react-router-dom";
 import { ProtectedRoute } from "../common";
 import { Layout } from "../layouts";
-import SimulationResults from '../pages/SimulationResultsPage';
+import SimulationResults from "../pages/SimulationResultsPage";
 
 // Placeholder components
-const RunSimulation = () => <div>Run Simulation</div>;
+const RunSimulation = () => <div>Run Simulation Placeholder</div>;
 
 //const SimulationResults = () => <div>Simulation Results</div>;
 

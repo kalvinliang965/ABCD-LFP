@@ -14,11 +14,13 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
   // First, ensure all Sets are converted to Arrays
   const serializedScenario = serialize_scenario_for_api(scenario);
 
-  console.log("inflation assumption:", serializedScenario.inflationAssumption);
+  console.log("investmentTypes:", serializedScenario.investmentTypes);
 
   // Helper function to ensure numbers are parsed correctly
-  const ensure_number = (val: any): any => {
+  const ensure_number = (val: any, key?: string): any => {
     if (val === null || val === undefined) return val;
+    // Skip number conversion for descriptions
+    if (key === "description") return String(val);
     if (typeof val === "string") {
       // Try to convert string to number if it looks like a number
       const num = Number(val);
@@ -38,7 +40,8 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
     if (typeof obj === "object") {
       const result: any = {};
       for (const key in obj) {
-        result[key] = process_values(obj[key]);
+        result[key] =
+          key === "description" ? String(obj[key]) : process_values(obj[key]);
       }
       return result;
     }
@@ -57,9 +60,10 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
 
     // Convert array of investment types to the expected format
     investmentTypes: serializedScenario.investmentTypes.map((invType: any) => {
-      return process_values({
+      console.log("invType:", invType);
+      const processed = process_values({
         name: invType.name,
-        description: invType.description,
+        description: String(invType.description),
         returnAmtOrPct: invType.returnAmtOrPct,
         returnDistribution: process_values(invType.returnDistribution[0]),
         expenseRatio: ensure_number(invType.expenseRatio),
@@ -67,6 +71,10 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
         incomeDistribution: process_values(invType.incomeDistribution[0]),
         taxability: invType.taxability,
       });
+
+      // Ensure description is always a string after processing
+      processed.description = String(processed.description);
+      return processed;
     }),
 
     // Convert investments to the expected format

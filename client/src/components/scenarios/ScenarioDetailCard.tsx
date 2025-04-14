@@ -33,7 +33,6 @@ import {
   FaMoneyBillWave,
   FaPercentage,
   FaShoppingBag,
-  FaChevronRight,
   FaDownload,
   FaTrash,
 } from "react-icons/fa";
@@ -311,7 +310,7 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
                 <PopoverBody>
                   <Text fontSize="sm">
                     Inflation rate:{" "}
-                    {scenario.inflationAssumption.value * 100}%
+                    {scenario.inflationAssumption.value}%
                   </Text>
                 </PopoverBody>
               </PopoverContent>
@@ -329,8 +328,7 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
             />
           </Tooltip>
         </HStack>
-
-        <Link
+        {/* <Link
           as={RouterLink}
           to={`/scenarios/${encodeURIComponent(scenario.name)}`}
           color={highlightColor}
@@ -343,7 +341,8 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
             <Text mr={1}>View Details</Text>
             <Icon as={FaChevronRight} boxSize={3} />
           </Flex>
-        </Link>
+        </Link> */}
+        
       </Flex>
     </Box>
   );
