@@ -611,17 +611,7 @@ function NewScenarioPage() {
     try {
       // First save the final version
       await save_draft(get_current_draft_state(), false);
-      console.log('Complete scenario saved to database');
-
-      // Only after successful save, delete the draft if we're in edit mode
-      if (id) {
-        try {
-          await scenario_service.delete_scenario(id);
-          console.log('Deleted draft scenario:', id);
-        } catch (err) {
-          console.error('Error deleting draft scenario:', err);
-        }
-      }
+      console.log("Complete scenario saved to database");
 
       // Clean investment type data from localStorage
       investmentTypeStorage.clear();
