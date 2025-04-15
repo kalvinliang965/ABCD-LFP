@@ -93,7 +93,7 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
                     simulation_state.advance_year();
                 }
                 simulation_logger.info(
-                    `${i} simulation completed`,
+                    `${i + 1} simulation completed`,
                     {
                         simulaiton_result: simulation_result,
                     }
