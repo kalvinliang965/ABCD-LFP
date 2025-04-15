@@ -2,8 +2,8 @@ import { map_form_to_scenario_raw } from "../utils/scenarioMapper";
 import { ScenarioRaw, IncomeEventRaw, ExpenseEventRaw, InvestmentEventRaw, RebalanceEventRaw } from "../types/Scenarios";
 import { ScenarioType } from "../components/scenarios/ScenarioDetailsForm";
 import { ExpectancyType } from "../components/scenarios/LifeExpectancyForm";
-import { InflationType, StateOfResidence } from "../components/scenarios/AdditionalSettingsForm";
 import { EventSeriesType, StartYearType, DistributionType, AmountChangeType } from "../types/eventSeries";
+import { InflationType, StateOfResidence } from "../components/scenarios/AdditionalSettingsForm";
 
 //mock the investmentTypeStorage
 jest.mock("../services/investmentTypeStorage", () => ({
@@ -152,7 +152,7 @@ describe("scenarioMapper", () => {
     //check that the result is a valid ScenarioRaw
     expect(result).toBeDefined();
     expect(result.name).toBe("Test Scenario");
-    expect(result.martialStatus).toBe("individual");
+    expect(result.maritalStatus).toBe("individual");
     expect(result.birthYears).toEqual([1980]);
     expect(result.lifeExpectancy).toEqual([
       { type: "fixed", value: 85 }
@@ -523,4 +523,5 @@ describe("scenarioMapper", () => {
     expect(result.financialGoal).toBe(0);
     expect(result.residenceState).toBe("NY");
   });
+}); 
 }); 

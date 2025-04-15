@@ -153,22 +153,22 @@ const YamlImportForm: React.FC<YamlImportFormProps> = ({
       reader.onload = (event) => {
         if (event.target?.result) {
           try {
-            // 读取文件内容
+            // read the file content
             const yamlContent = event.target.result as string;
 
-            // 使用yaml库解析内容
+            // use the yaml library to parse the content
             const parsedData = yaml.load(yamlContent);
 
-            // 记录原始内容和解析后的数据用于调试
+            // record the original content and parsed data for debugging
             console.log("YAML原始内容:", yamlContent);
             console.log("YAML解析后数据:", parsedData);
 
-            // 发送解析后的数据
+            // send the parsed data
             onImportComplete({
               success: true,
               message: "File imported successfully",
               data: parsedData,
-              rawYaml: yamlContent, // 保留原始内容以备调试
+              rawYaml: yamlContent, // keep the original content for debugging
             });
           } catch (parseError) {
             console.error("YAML解析错误:", parseError);
