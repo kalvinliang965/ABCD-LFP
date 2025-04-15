@@ -13,13 +13,11 @@ import {
 } from "../types/Scenarios";
 import {
   ScenarioDetails,
-  ScenarioType,
 } from "../components/scenarios/ScenarioDetailsForm";
 import { LifeExpectancyConfig } from "../components/scenarios/LifeExpectancyForm";
 import { InvestmentsConfig } from "../components/scenarios/InvestmentsForm";
 import {
   AdditionalSettingsConfig,
-  InflationConfig,
 } from "../components/scenarios/AdditionalSettingsForm";
 import { RMDSettings } from "../components/scenarios/RMDSettingsForm";
 import { SpendingStrategy } from "../components/scenarios/SpendingStrategyForm";
@@ -45,30 +43,6 @@ export function map_form_to_scenario_raw(
     birthYears.push(scenarioDetails.spouseBirthYear);
   }
 
-  const inflation_assumption = (() => {
-    if (additionalSettings.inflationConfig.type === "fixed") {
-      return {
-        type: "fixed",
-        value: additionalSettings.inflationConfig.value,
-      };
-    } else if (additionalSettings.inflationConfig.type === "uniform") {
-      return {
-        type: "uniform",
-        min: additionalSettings.inflationConfig.min,
-        max: additionalSettings.inflationConfig.max,
-      };
-    } else {
-      return {
-        type: "normal",
-        mean: additionalSettings.inflationConfig.mean,
-        standardDeviation: additionalSettings.inflationConfig.standardDeviation,
-      };
-    }
-  })();
-
-  console.log("you are now at the inflation assumption section");
-  console.log("Inflation assumption:", inflation_assumption);
-
   // Map life expectancy
   const lifeExpectancy: Array<{ [key: string]: any }> = [];
   if (lifeExpectancyConfig.userExpectancyType === "fixed") {
@@ -79,10 +53,8 @@ export function map_form_to_scenario_raw(
   } else {
     lifeExpectancy.push({
       type: "normal",
-      parameters: {
-        userMeanAge: lifeExpectancyConfig.userMeanAge,
-        userStandardDeviation: lifeExpectancyConfig.userStandardDeviation,
-      },
+      mean: lifeExpectancyConfig.userMeanAge,
+      stdev: lifeExpectancyConfig.userStandardDeviation,
     });
   }
 
@@ -98,13 +70,35 @@ export function map_form_to_scenario_raw(
     } else {
       lifeExpectancy.push({
         type: "normal",
-        parameters: {
-          userMeanAge: lifeExpectancyConfig.spouseMeanAge,
-          userStandardDeviation: lifeExpectancyConfig.spouseStandardDeviation,
-        },
+        mean: lifeExpectancyConfig.spouseMeanAge,
+        stdev: lifeExpectancyConfig.spouseStandardDeviation,
       });
     }
   }
+
+  const inflation_assumption = (() => {
+    if (additionalSettings.inflationConfig.type === "fixed") {
+      return {
+        type: "fixed",
+        value: additionalSettings.inflationConfig.value,
+      };
+    } else if (additionalSettings.inflationConfig.type === "uniform") {
+      return {
+        type: "uniform",
+        lower: additionalSettings.inflationConfig.min,
+        upper: additionalSettings.inflationConfig.max,
+      };
+    } else {
+      return {
+        type: "normal",
+        mean: additionalSettings.inflationConfig.mean,
+        stdev: additionalSettings.inflationConfig.standardDeviation,
+      };
+    }
+  })();
+
+  console.log("you are now at the inflation assumption section");
+  console.log("Inflation assumption:", inflation_assumption);
 
   // Map investment types
   const allInvestmentTypes = investmentTypeStorage.get_all();
@@ -214,7 +208,7 @@ export function map_form_to_scenario_raw(
     RothConversionStart: rothConversionStrategy.roth_conversion_start,
     RothConversionEnd: rothConversionStrategy.roth_conversion_end,
     RothConversionStrategy: rothConversionStrategy.accountPriority,
-    financialGoal: additionalSettings.financialGoal?.value || 0,
-    residenceState: additionalSettings.stateOfResidence || "NY",
+    financialGoal: additionalSettings.financialGoal,
+    residenceState: additionalSettings.stateOfResidence,
   };
 }

@@ -2,7 +2,7 @@
 Prompt: Create a more visually appealing component for importing a scenario from a YAML file
 */
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Box,
   Button,
@@ -50,6 +50,7 @@ const YamlImportForm: React.FC<YamlImportFormProps> = ({
   const [file, set_file] = useState<File | null>(null);
   const [is_loading, set_is_loading] = useState(false);
   const [drag_active, set_drag_active] = useState(false);
+  const file_input_ref = useRef<HTMLInputElement>(null);
   const toast = useToast();
 
   const headerBg = useColorModeValue("blue.50", "blue.900");
@@ -83,6 +84,13 @@ const YamlImportForm: React.FC<YamlImportFormProps> = ({
       }
 
       set_file(selected_file);
+    }
+  };
+
+  const handle_browse_click = () => {
+    // Trigger click on the hidden file input
+    if (file_input_ref.current) {
+      file_input_ref.current.click();
     }
   };
 
@@ -262,26 +270,26 @@ const YamlImportForm: React.FC<YamlImportFormProps> = ({
                     Drag & Drop Your YAML File
                   </Heading>
                   <Text color="gray.500" textAlign="center">
-                    or click to browse files
+                    or use the button below
                   </Text>
                 </VStack>
 
-                <FormControl>
+                <FormControl display="flex" justifyContent="center">
                   <Input
                     id="yaml-file"
                     type="file"
                     accept=".yaml,.yml"
                     onChange={handle_file_change}
-                    height="100%"
-                    width="100%"
-                    position="absolute"
-                    top="0"
-                    left="0"
-                    opacity="0"
-                    aria-hidden="true"
-                    cursor="pointer"
-                    zIndex={2}
+                    ref={file_input_ref}
+                    display="none"
                   />
+                  <Button
+                    onClick={handle_browse_click}
+                    colorScheme="purple"
+                    leftIcon={<Icon as={FileUp} />}
+                  >
+                    Browse Files
+                  </Button>
                 </FormControl>
 
                 <Text fontSize="sm" color="gray.500">

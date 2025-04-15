@@ -16,7 +16,6 @@ import {
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
-  Stack,
   Divider,
   Icon,
   Card,
@@ -26,7 +25,6 @@ import {
   InputGroup,
   InputLeftElement,
   useColorModeValue,
-  FormHelperText,
   Tooltip,
   List,
   ListItem,
@@ -40,11 +38,7 @@ import {
   FiCalendar,
   FiChevronLeft,
   FiChevronRight,
-  FiArrowRight,
   FiInfo,
-  FiDollarSign,
-  FiTrendingUp,
-  FiCheck,
   FiRepeat,
 } from "react-icons/fi";
 

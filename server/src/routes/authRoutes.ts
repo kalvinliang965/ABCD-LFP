@@ -12,6 +12,10 @@ router.post('/signup', signup);
 // Google OAuth login route
 router.get(
   "/google",
+  (req, res, next) => {
+    console.log("➡️  /auth/google route hit");
+    next();
+  },
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
@@ -23,8 +27,10 @@ router.get(
     session: true,
   }),
   (req, res) => {
-    // Successful authentication, redirect to frontend callback
-    console.log("Google auth successful, redirecting to frontend");
+    // Log the authenticated user
+    //console.log("Google auth successful, user:", req.user);
+    
+    // Redirect to frontend
     res.redirect(`${process.env.CLIENT_URL}/auth/callback`);
   }
 );
@@ -46,6 +52,8 @@ router.get("/logout", (req, res) => {
 
 // Check if user is authenticated
 router.get("/current-user", (req, res) => {
+  console.log("Session:", req.session);
+  console.log("User:", req.user);
   if (!req.user) {
     return res.status(401).json({ error: "Not authenticated" });
   }

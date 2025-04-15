@@ -85,10 +85,10 @@ export const login = async (req: Request, res: Response) => {
 
     // Check password
 
-    console.log("Checking password for user:", password);
-    console.log("User password:", user.password);
-    console.log("Raw email:", `"${email}"`);
-console.log("Raw password input:", `"${password}"`);
+    //console.log("Checking password for user:", password);
+    //console.log("User password:", user.password);
+    //console.log("Raw email:", `"${email}"`);
+    //console.log("Raw password input:", `"${password}"`);
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
@@ -110,11 +110,14 @@ console.log("Raw password input:", `"${password}"`);
       req.login(user, (err) => {
         if (err) {
           console.error("Error during login:", err);
+          return res.status(500).json({
+            success: false,
+            message: 'Error during login'
+          });
+        
         }
-      });
-    }
 
-    res.json({
+        res.json({
       success: true,
       message: 'Login successful',
       token,
@@ -125,6 +128,11 @@ console.log("Raw password input:", `"${password}"`);
       },
       redirectUrl: '/dashboard'
     });
+    
+      });
+    }
+
+    
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ 

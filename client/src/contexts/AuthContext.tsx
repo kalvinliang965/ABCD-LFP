@@ -40,7 +40,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const checkAuthStatus = async () => {
     try {
       setLoading(true);
@@ -48,10 +48,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         withCredentials: true,
       });
       setUser(response.data);
+      setIsAuthenticated(true);
       setError(null);
     } catch (err) {
       setUser(null);
       setError('Not authenticated');
+      setIsAuthenticated(false);
     } finally {
       setLoading(false);
     }

@@ -93,6 +93,18 @@ const ScenarioRoutes = [
     }
   />,
   <Route
+  //added for edit draft scenario 
+    key="scenarios-edit"
+    path="/scenarios/edit/:id"
+    element={
+      <ProtectedRoute>
+        <Layout title="Edit Scenario">
+          <NewScenarioPage />
+        </Layout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
     key="scenarios-import-export"
     path="/scenarios/import-export"
     element={

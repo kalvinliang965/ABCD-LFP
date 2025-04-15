@@ -85,8 +85,6 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
   const cardBg = useColorModeValue("white", "gray.800");
   const headerBg = useColorModeValue("blue.50", "blue.900");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-  const userBg = useColorModeValue("blue.50", "blue.900");
-  const spouseBg = useColorModeValue("purple.50", "purple.900");
   const user_current_age = new Date().getFullYear() - userBirthYear;
   const spouse_current_age = spouseBirthYear
     ? new Date().getFullYear() - spouseBirthYear
