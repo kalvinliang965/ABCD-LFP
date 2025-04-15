@@ -476,6 +476,7 @@ function NewScenarioPage() {
   };
 
   const handle_continue_to_spending_strategy = async () => {
+    clearLocalStorage();
     // Get all expenses from added events
     const allExpenses = addedEvents
       .filter(
@@ -506,6 +507,7 @@ function NewScenarioPage() {
   };
 
   const handle_continue_to_withdrawal_strategy = async () => {
+    clearLocalStorage();
     try {
       // Save RMD settings to localStorage first
       if (rmdSettings.id) {
@@ -540,6 +542,7 @@ function NewScenarioPage() {
   };
 
   const handle_continue_from_withdrawal_strategy = async () => {
+    clearLocalStorage();
     try {
       //save to localStorage first
       await saveWithdrawalStrategy();
@@ -552,6 +555,7 @@ function NewScenarioPage() {
   };
 
   const handle_to_spending_strategy = () => {
+    clearLocalStorage();
     setStep("spendingStrategy");
   };
   //! don't touch

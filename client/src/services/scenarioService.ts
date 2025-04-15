@@ -13,7 +13,8 @@ const get_auth_token = () => {
 const axios_instance = axios.create({
   headers: {
     'Content-Type': 'application/json',
-  }
+  },
+  withCredentials: true,
 });
 
 //add request interceptor for JWT token

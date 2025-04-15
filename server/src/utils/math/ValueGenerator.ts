@@ -4,6 +4,7 @@ import normal from "@stdlib/random-base-normal";
 export interface ValueGenerator {
   sample: () => number;
   _params: Map<StatisticType, number>;
+  _distribution_type: DistributionType;
   equal: (that: ValueGenerator) => boolean;
 }
 export function create_value_generator(
@@ -52,9 +53,13 @@ export function create_value_generator(
   };
   return {
     sample,
-    _params: params, // for debug
+    _params: params,
+    _distribution_type: distribution_type,
     equal: (that: ValueGenerator): boolean => {
-      if(params.size !== that._params.size) return false;
+      if(
+        params.size !== that._params.size ||
+        distribution_type !== that._distribution_type
+      ) return false;
       for (const [key, value] of params) {
         const that_value = that._params.get(key);
         if (typeof value === "number"&& typeof that_value == "number" &&
