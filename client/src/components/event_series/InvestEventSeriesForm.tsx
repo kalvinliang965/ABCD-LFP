@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from "react";
 import {
   VStack,
   FormControl,
@@ -15,11 +14,14 @@ import {
   AlertIcon,
   AlertTitle,
   AlertDescription,
-} from "@chakra-ui/react";
-import { CommonFields } from "./CommonFields";
-import { AmountChangeType } from "../../types/eventSeries";
-import { InvestmentRaw } from "../../types/Scenarios";
-import { TaxStatus } from "../../components/scenarios/InvestmentsForm";
+} from '@chakra-ui/react';
+import React, { useState, useEffect } from 'react';
+
+import { TaxStatus } from '../../components/scenarios/InvestmentsForm';
+import { AmountChangeType } from '../../types/eventSeries';
+import { InvestmentRaw } from '../../types/Scenarios';
+
+import { CommonFields } from './CommonFields';
 
 interface InvestEventSeriesFormProps {
   onBack?: () => void;
@@ -34,17 +36,17 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
   existingEvents,
   investments = [],
 }) => {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [startYear, setStartYear] = useState<any>({
-    type: "fixed",
+    type: 'fixed',
     value: new Date().getFullYear(),
   });
   const [duration, setDuration] = useState<any>({
-    type: "fixed",
+    type: 'fixed',
     value: 1,
   });
-  const [maxCash, setMaxCash] = useState("");
+  const [maxCash, setMaxCash] = useState('');
   const [useGlidePath, setUseGlidePath] = useState(false);
   const [allocations, setAllocations] = useState<{ [key: string]: number }>({});
   const [finalAllocations, setFinalAllocations] = useState<{ [key: string]: number }>({});
@@ -52,9 +54,9 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
   //filter out pre-tax investments
   useEffect(() => {
     const nonPreTaxInvestments = investments.filter(
-      inv => inv.taxStatus !== "pre-tax" as TaxStatus
+      inv => inv.taxStatus !== ('pre-tax' as TaxStatus)
     );
-    
+
     const initialAllocations: { [key: string]: number } = {};
     nonPreTaxInvestments.forEach(inv => {
       initialAllocations[inv.id] = 0;
@@ -68,10 +70,14 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
     return Math.abs(sum - 100) < 0.01;
   };
 
-  const handleAllocationChange = (investmentId: string, value: number, isFinal: boolean = false) => {
+  const handleAllocationChange = (
+    investmentId: string,
+    value: number,
+    isFinal: boolean = false
+  ) => {
     const targetAllocations = isFinal ? finalAllocations : allocations;
     const setTargetAllocations = isFinal ? setFinalAllocations : setAllocations;
-    
+
     const newAllocations = { ...targetAllocations };
     newAllocations[investmentId] = value;
     setTargetAllocations(newAllocations);
@@ -80,7 +86,7 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
   const renderAllocationInputs = (isFinal: boolean = false) => {
     const targetAllocations = isFinal ? finalAllocations : allocations;
     const nonPreTaxInvestments = investments.filter(
-      inv => inv.taxStatus !== "pre-tax" as TaxStatus
+      inv => inv.taxStatus !== ('pre-tax' as TaxStatus)
     );
 
     if (nonPreTaxInvestments.length === 0) {
@@ -104,22 +110,17 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
           <Box>
             <AlertTitle>Asset Allocation</AlertTitle>
             <AlertDescription>
-              Enter your desired asset allocation. Percentages must sum to 100%. For glide paths, specify both starting and ending percentages.
+              Enter your desired asset allocation. Percentages must sum to 100%. For glide paths,
+              specify both starting and ending percentages.
             </AlertDescription>
           </Box>
         </Alert>
-        {nonPreTaxInvestments.map((inv) => (
+        {nonPreTaxInvestments.map(inv => (
           <FormControl key={inv.id} isRequired>
-            <FormLabel>
-              {inv.id} (%)
-            </FormLabel>
+            <FormLabel>{inv.id} (%)</FormLabel>
             <NumberInput
               value={targetAllocations[inv.id] || 0}
-              onChange={(value) => handleAllocationChange(
-                inv.id,
-                parseFloat(value) || 0,
-                isFinal
-              )}
+              onChange={value => handleAllocationChange(inv.id, parseFloat(value) || 0, isFinal)}
               min={0}
               max={100}
               precision={2}
@@ -128,9 +129,12 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
             </NumberInput>
           </FormControl>
         ))}
-        <Text color={validateAllocationPercentages(targetAllocations) ? "green.500" : "red.500"}>
-          Total: {Object.values(targetAllocations).reduce((acc, val) => acc + val, 0).toFixed(2)}%
-          {!validateAllocationPercentages(targetAllocations) && " (must equal 100%)"}
+        <Text color={validateAllocationPercentages(targetAllocations) ? 'green.500' : 'red.500'}>
+          Total:{' '}
+          {Object.values(targetAllocations)
+            .reduce((acc, val) => acc + val, 0)
+            .toFixed(2)}
+          %{!validateAllocationPercentages(targetAllocations) && ' (must equal 100%)'}
         </Text>
       </VStack>
     );
@@ -138,27 +142,29 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateAllocationPercentages(allocations) || 
-        (useGlidePath && !validateAllocationPercentages(finalAllocations))) {
+
+    if (
+      !validateAllocationPercentages(allocations) ||
+      (useGlidePath && !validateAllocationPercentages(finalAllocations))
+    ) {
       return;
     }
 
     //convert allocations to the correct format for ScenarioRaw
     const assetAllocationArray = Object.entries(allocations).map(([type, value]) => ({
       type,
-      value: value / 100 //divide by 100 to convert from percentage to decimal
+      value: value / 100, //divide by 100 to convert from percentage to decimal
     }));
 
-    const assetAllocation2Array = useGlidePath 
+    const assetAllocation2Array = useGlidePath
       ? Object.entries(finalAllocations).map(([type, value]) => ({
           type,
-          value: value / 100 //divide by 100 to convert from percentage to decimal
+          value: value / 100, //divide by 100 to convert from percentage to decimal
         }))
       : [];
 
     const eventData = {
-      type: "invest",
+      type: 'invest',
       name,
       description,
       startYear,
@@ -168,7 +174,7 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
       assetAllocation2: assetAllocation2Array,
       glidePath: useGlidePath,
       initialAmount: 0, //required by EventSeries type
-      inflationAdjusted: false //required by EventSeries type
+      inflationAdjusted: false, //required by EventSeries type
     };
 
     if (onEventAdded) {
@@ -178,13 +184,13 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
   };
 
   const resetForm = () => {
-    setName("");
-    setDescription("");
-    setMaxCash("");
+    setName('');
+    setDescription('');
+    setMaxCash('');
     setUseGlidePath(false);
     //reset allocations to equal distribution
     const nonPreTaxInvestments = investments.filter(
-      inv => inv.taxStatus !== "pre-tax" as TaxStatus
+      inv => inv.taxStatus !== ('pre-tax' as TaxStatus)
     );
     const equalShare = 100 / nonPreTaxInvestments.length;
     const initialAllocations: { [key: string]: number } = {};
@@ -214,7 +220,7 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
           <Input
             type="number"
             value={maxCash}
-            onChange={(e) => setMaxCash(e.target.value)}
+            onChange={e => setMaxCash(e.target.value)}
             placeholder="0"
             min="0"
             step="1"
@@ -222,24 +228,31 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
         </FormControl>
         <FormControl display="flex" alignItems="center">
           <FormLabel mb="0">Use Glide Path</FormLabel>
-          <Switch
-            isChecked={useGlidePath}
-            onChange={(e) => setUseGlidePath(e.target.checked)}
-          />
+          <Switch isChecked={useGlidePath} onChange={e => setUseGlidePath(e.target.checked)} />
         </FormControl>
         <Box>
-          <Text fontWeight="medium" mb={4}>Initial Asset Allocation</Text>
+          <Text fontWeight="medium" mb={4}>
+            Initial Asset Allocation
+          </Text>
           {renderAllocationInputs(false)}
         </Box>
         {useGlidePath && (
           <Box>
-            <Text fontWeight="medium" mb={4}>Final Asset Allocation</Text>
+            <Text fontWeight="medium" mb={4}>
+              Final Asset Allocation
+            </Text>
             {renderAllocationInputs(true)}
           </Box>
         )}
         <HStack spacing={4} justify="flex-end">
-          {onBack && <Button variant="ghost" onClick={onBack}>Cancel</Button>}
-          <Button type="submit" colorScheme="blue">Save</Button>
+          {onBack && (
+            <Button variant="ghost" onClick={onBack}>
+              Cancel
+            </Button>
+          )}
+          <Button type="submit" colorScheme="blue">
+            Save
+          </Button>
         </HStack>
       </VStack>
     </form>

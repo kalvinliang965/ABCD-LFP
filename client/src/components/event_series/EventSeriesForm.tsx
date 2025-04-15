@@ -1,10 +1,12 @@
-import React from "react";
-import { EventSeriesType } from "../../types/eventSeries";
-import { IncomeEventSeriesForm } from "./IncomeEventSeriesForm";
-import { ExpenseEventSeriesForm } from "./ExpenseEventSeriesForm";
-import { InvestEventSeriesForm } from "./InvestEventSeriesForm";
-import { RebalanceEventSeriesForm } from "./RebalanceEventSeriesForm";
-import { InvestmentRaw } from "../../types/Scenarios";
+import React from 'react';
+
+import { EventSeriesType } from '../../types/eventSeries';
+import { InvestmentRaw } from '../../types/Scenarios';
+
+import { ExpenseEventSeriesForm } from './ExpenseEventSeriesForm';
+import { IncomeEventSeriesForm } from './IncomeEventSeriesForm';
+import { InvestEventSeriesForm } from './InvestEventSeriesForm';
+import { RebalanceEventSeriesForm } from './RebalanceEventSeriesForm';
 
 export interface EventSeriesFormProps {
   initialType?: EventSeriesType;
@@ -28,7 +30,7 @@ export const EventSeriesForm: React.FC<EventSeriesFormProps> = ({
   const eventType = eventSeriesType || initialType;
 
   switch (eventType) {
-    case "income":
+    case 'income':
       return (
         <IncomeEventSeriesForm
           onBack={onBack}
@@ -36,7 +38,7 @@ export const EventSeriesForm: React.FC<EventSeriesFormProps> = ({
           existingEvents={existingEvents}
         />
       );
-    case "expense":
+    case 'expense':
       return (
         <ExpenseEventSeriesForm
           onBack={onBack}
@@ -44,7 +46,7 @@ export const EventSeriesForm: React.FC<EventSeriesFormProps> = ({
           existingEvents={existingEvents}
         />
       );
-    case "invest":
+    case 'invest':
       return (
         <InvestEventSeriesForm
           onBack={onBack}
@@ -53,7 +55,7 @@ export const EventSeriesForm: React.FC<EventSeriesFormProps> = ({
           investments={investments}
         />
       );
-    case "rebalance":
+    case 'rebalance':
       return (
         <RebalanceEventSeriesForm
           onBack={onBack}

@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -19,18 +18,20 @@ import {
   IconButton,
   Tooltip,
   Badge,
-} from "@chakra-ui/react";
-import { MdCheckCircle } from "react-icons/md";
-import { FaMoneyBillWave, FaArrowUp, FaArrowDown, FaTimes } from "react-icons/fa";
-import spendingStrategyStorage from "../../services/spendingStrategyStorage";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { FiArrowRight } from "react-icons/fi";
+} from '@chakra-ui/react';
+import React, { useState, useEffect } from 'react';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { FaMoneyBillWave, FaArrowUp, FaArrowDown, FaTimes } from 'react-icons/fa';
+import { FiArrowRight } from 'react-icons/fi';
+import { MdCheckCircle } from 'react-icons/md';
+
+import spendingStrategyStorage from '../../services/spendingStrategyStorage';
 
 export interface SpendingStrategy {
   id?: string;
   // This will be an array of expense names that are considered discretionary
-  availableExpenses: string[];  // All available expenses
-  selectedExpenses: string[];   // Selected discretionary expenses
+  availableExpenses: string[]; // All available expenses
+  selectedExpenses: string[]; // Selected discretionary expenses
 }
 
 interface SpendingStrategyFormProps {
@@ -46,39 +47,39 @@ export const SpendingStrategyForm: React.FC<SpendingStrategyFormProps> = ({
   onContinue,
   onBack,
 }) => {
-  const bgColor = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const listItemBg = useColorModeValue("gray.50", "gray.700");
-  const listItemHoverBg = useColorModeValue("gray.100", "gray.600");
-  
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const listItemBg = useColorModeValue('gray.50', 'gray.700');
+  const listItemHoverBg = useColorModeValue('gray.100', 'gray.600');
+
   // Add useEffect to log the current spending strategy whenever it changes
   useEffect(() => {
-    console.log("Current spending strategy:", spendingStrategy);
+    console.log('Current spending strategy:', spendingStrategy);
   }, [spendingStrategy]);
-  
+
   // Handle checkbox changes
   const handleExpenseToggle = (expenseName: string) => {
     const isSelected = spendingStrategy.selectedExpenses.includes(expenseName);
-    
+
     let updatedSelectedExpenses;
     if (isSelected) {
       // Remove from selected
       updatedSelectedExpenses = spendingStrategy.selectedExpenses.filter(
-        (name) => name !== expenseName
+        name => name !== expenseName
       );
     } else {
       // Add to selected
       updatedSelectedExpenses = [...spendingStrategy.selectedExpenses, expenseName];
     }
-    
+
     const updatedStrategy = {
       ...spendingStrategy,
       selectedExpenses: updatedSelectedExpenses,
     };
-    
+
     // Log the updated strategy before sending it to parent
-    console.log("Updated spending strategy:", updatedStrategy);
-    
+    console.log('Updated spending strategy:', updatedStrategy);
+
     // Save to localStorage immediately for auto-save functionality
     try {
       if (updatedStrategy.id) {
@@ -92,114 +93,115 @@ export const SpendingStrategyForm: React.FC<SpendingStrategyFormProps> = ({
         }
       }
     } catch (error) {
-      console.error("Error auto-saving to localStorage:", error);
+      console.error('Error auto-saving to localStorage:', error);
     }
-    
+
     onChangeSpendingStrategy(updatedStrategy);
   };
 
   // Handle drag and drop reordering
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
-    
+
     const items = Array.from(spendingStrategy.selectedExpenses);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
-    
+
     const updatedStrategy = {
       ...spendingStrategy,
       selectedExpenses: items,
     };
-    
+
     // Save to localStorage
     try {
       if (updatedStrategy.id) {
         spendingStrategyStorage.update(updatedStrategy.id, updatedStrategy);
       }
     } catch (error) {
-      console.error("Error auto-saving to localStorage:", error);
+      console.error('Error auto-saving to localStorage:', error);
     }
-    
+
     onChangeSpendingStrategy(updatedStrategy);
   };
 
   // Move an expense up in priority
   const moveUp = (index: number) => {
     if (index <= 0) return;
-    
+
     const newSelectedExpenses = [...spendingStrategy.selectedExpenses];
     const temp = newSelectedExpenses[index];
     newSelectedExpenses[index] = newSelectedExpenses[index - 1];
     newSelectedExpenses[index - 1] = temp;
-    
+
     const updatedStrategy = {
       ...spendingStrategy,
       selectedExpenses: newSelectedExpenses,
     };
-    
+
     // Save to localStorage
     try {
       if (updatedStrategy.id) {
         spendingStrategyStorage.update(updatedStrategy.id, updatedStrategy);
       }
     } catch (error) {
-      console.error("Error auto-saving to localStorage:", error);
+      console.error('Error auto-saving to localStorage:', error);
     }
-    
+
     onChangeSpendingStrategy(updatedStrategy);
   };
 
   // Move an expense down in priority
   const moveDown = (index: number) => {
     if (index >= spendingStrategy.selectedExpenses.length - 1) return;
-    
+
     const newSelectedExpenses = [...spendingStrategy.selectedExpenses];
     const temp = newSelectedExpenses[index];
     newSelectedExpenses[index] = newSelectedExpenses[index + 1];
     newSelectedExpenses[index + 1] = temp;
-    
+
     const updatedStrategy = {
       ...spendingStrategy,
       selectedExpenses: newSelectedExpenses,
     };
-    
+
     // Save to localStorage
     try {
       if (updatedStrategy.id) {
         spendingStrategyStorage.update(updatedStrategy.id, updatedStrategy);
       }
     } catch (error) {
-      console.error("Error auto-saving to localStorage:", error);
+      console.error('Error auto-saving to localStorage:', error);
     }
-    
+
     onChangeSpendingStrategy(updatedStrategy);
   };
 
   // Remove an expense from the selected list
   const removeExpense = (expenseName: string) => {
     const updatedSelectedExpenses = spendingStrategy.selectedExpenses.filter(
-      (name) => name !== expenseName
+      name => name !== expenseName
     );
-    
+
     const updatedStrategy = {
       ...spendingStrategy,
       selectedExpenses: updatedSelectedExpenses,
     };
-    
+
     // Save to localStorage
     try {
       if (updatedStrategy.id) {
         spendingStrategyStorage.update(updatedStrategy.id, updatedStrategy);
       }
     } catch (error) {
-      console.error("Error auto-saving to localStorage:", error);
+      console.error('Error auto-saving to localStorage:', error);
     }
-    
+
     onChangeSpendingStrategy(updatedStrategy);
   };
 
   // Add this near the other variable declarations at the top of the component
-  const isButtonDisabled = spendingStrategy.availableExpenses.length !== spendingStrategy.selectedExpenses.length ;
+  const isButtonDisabled =
+    spendingStrategy.availableExpenses.length !== spendingStrategy.selectedExpenses.length;
 
   return (
     <Box maxW="800px" mx="auto" p={5}>
@@ -217,7 +219,7 @@ export const SpendingStrategyForm: React.FC<SpendingStrategyFormProps> = ({
             Select which expenses are discretionary and can be reduced in difficult financial times
           </Text>
         </CardHeader>
-        
+
         <CardBody p={6}>
           <VStack spacing={6} align="stretch">
             <Box>
@@ -226,14 +228,14 @@ export const SpendingStrategyForm: React.FC<SpendingStrategyFormProps> = ({
                 Discretionary Expenses
               </Heading>
               <Text mb={4}>
-                Discretionary expenses are non-essential costs that can be reduced or eliminated 
+                Discretionary expenses are non-essential costs that can be reduced or eliminated
                 during financial hardship. Select the expenses that you consider discretionary:
               </Text>
-              
+
               {spendingStrategy.availableExpenses.length > 0 ? (
                 <List spacing={3} mt={4}>
-                  {spendingStrategy.availableExpenses.map((expense) => (
-                    <ListItem key={expense} p={2} borderRadius="md" _hover={{ bg: "gray.50" }}>
+                  {spendingStrategy.availableExpenses.map(expense => (
+                    <ListItem key={expense} p={2} borderRadius="md" _hover={{ bg: 'gray.50' }}>
                       <Checkbox
                         isChecked={spendingStrategy.selectedExpenses.includes(expense)}
                         onChange={() => handleExpenseToggle(expense)}
@@ -251,25 +253,25 @@ export const SpendingStrategyForm: React.FC<SpendingStrategyFormProps> = ({
                 </Text>
               )}
             </Box>
-            
+
             <Divider />
-            
+
             <Box>
-              <Heading size="sm" mb={3}>Selected Discretionary Expenses: </Heading>
-              <Text mb={4}>The order represents priority — the higher the item, the earlier it will be reduced.</Text>
-              
+              <Heading size="sm" mb={3}>
+                Selected Discretionary Expenses:{' '}
+              </Heading>
+              <Text mb={4}>
+                The order represents priority — the higher the item, the earlier it will be reduced.
+              </Text>
+
               {spendingStrategy.selectedExpenses.length > 0 ? (
                 <DragDropContext onDragEnd={handleDragEnd}>
                   <Droppable droppableId="discretionary-expenses">
-                    {(provided) => (
-                      <List 
-                        spacing={2} 
-                        {...provided.droppableProps}
-                        ref={provided.innerRef}
-                      >
+                    {provided => (
+                      <List spacing={2} {...provided.droppableProps} ref={provided.innerRef}>
                         {spendingStrategy.selectedExpenses.map((expense, index) => (
                           <Draggable key={expense} draggableId={expense} index={index}>
-                            {(provided) => (
+                            {provided => (
                               <ListItem
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
@@ -307,7 +309,9 @@ export const SpendingStrategyForm: React.FC<SpendingStrategyFormProps> = ({
                                       icon={<FaArrowDown />}
                                       size="sm"
                                       variant="ghost"
-                                      isDisabled={index === spendingStrategy.selectedExpenses.length - 1}
+                                      isDisabled={
+                                        index === spendingStrategy.selectedExpenses.length - 1
+                                      }
                                       onClick={() => moveDown(index)}
                                       mr={1}
                                     />
@@ -341,14 +345,14 @@ export const SpendingStrategyForm: React.FC<SpendingStrategyFormProps> = ({
           </VStack>
         </CardBody>
       </Card>
-      
+
       <Flex justify="space-between" mt={6}>
         <Button onClick={onBack} size="lg" variant="outline">
           Back
         </Button>
-        <Button 
-          onClick={onContinue} 
-          size="lg" 
+        <Button
+          onClick={onContinue}
+          size="lg"
           colorScheme="blue"
           isDisabled={isButtonDisabled}
           rightIcon={<FiArrowRight />}
@@ -356,18 +360,18 @@ export const SpendingStrategyForm: React.FC<SpendingStrategyFormProps> = ({
           borderRadius="lg"
           bgGradient="linear(to-r, blue.400, purple.500)"
           _hover={{
-            bgGradient: "linear(to-r, blue.500, purple.600)",
-            transform: "translateY(-2px)",
-            boxShadow: "lg",
+            bgGradient: 'linear(to-r, blue.500, purple.600)',
+            transform: 'translateY(-2px)',
+            boxShadow: 'lg',
           }}
           _disabled={{
-            bgGradient: "linear(to-r, gray.400, gray.500)",
+            bgGradient: 'linear(to-r, gray.400, gray.500)',
             opacity: 0.6,
-            cursor: "not-allowed",
+            cursor: 'not-allowed',
             _hover: {
-              transform: "none",
-              boxShadow: "none"
-            }
+              transform: 'none',
+              boxShadow: 'none',
+            },
           }}
           transition="all 0.2s"
         >
@@ -378,4 +382,4 @@ export const SpendingStrategyForm: React.FC<SpendingStrategyFormProps> = ({
   );
 };
 
-export default SpendingStrategyForm; 
+export default SpendingStrategyForm;

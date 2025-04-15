@@ -1,6 +1,7 @@
 //saving partial or complete scenario to db
-import axios from "axios";
-import { API_URL } from "./api";
+import axios from 'axios';
+
+import { API_URL } from './api';
 
 const SCENARIO_ENDPOINT = `${API_URL}/scenarios`;
 
@@ -19,14 +20,14 @@ const axios_instance = axios.create({
 
 //add request interceptor for JWT token
 axios_instance.interceptors.request.use(
-  (config) => {
+  config => {
     const token = get_auth_token();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
+  error => {
     return Promise.reject(error);
   }
 );
@@ -39,7 +40,7 @@ export const scenario_service = {
       const response = await axios_instance.post(SCENARIO_ENDPOINT, scenario_data);
       return response.data;
     } catch (error) {
-      console.error("error creating scenario:", error);
+      console.error('error creating scenario:', error);
       throw error;
     }
   },
@@ -47,10 +48,13 @@ export const scenario_service = {
   //for updating drafts or changes during form steps
   update_scenario: async (scenario_id: string, scenario_data: any) => {
     try {
-      const response = await axios_instance.put(`${SCENARIO_ENDPOINT}/${scenario_id}`, scenario_data);
+      const response = await axios_instance.put(
+        `${SCENARIO_ENDPOINT}/${scenario_id}`,
+        scenario_data
+      );
       return response.data;
     } catch (error) {
-      console.error("error updating scenario:", error);
+      console.error('error updating scenario:', error);
       throw error;
     }
   },
@@ -62,21 +66,21 @@ export const scenario_service = {
       const response = await axios_instance.get(`${SCENARIO_ENDPOINT}/${scenario_id}`);
       return response.data;
     } catch (error) {
-      console.error("error fetching scenario by id:", error);
+      console.error('error fetching scenario by id:', error);
       throw error;
     }
   },
 
   //get draft scenarioS for the logged in user
   //?is_draft=true so that only draft scenarios are returned.
-  // used to display unfinished drafts for user 
+  // used to display unfinished drafts for user
   // when he choses to finish scenario instead of starting new
   get_draft_scenarios: async () => {
     try {
       const response = await axios_instance.get(`${SCENARIO_ENDPOINT}?is_draft=true`);
       return response.data;
     } catch (error) {
-      console.error("error fetching drafts:", error);
+      console.error('error fetching drafts:', error);
       throw error;
     }
   },
@@ -87,7 +91,7 @@ export const scenario_service = {
       const response = await axios_instance.get(SCENARIO_ENDPOINT);
       return response.data;
     } catch (error) {
-      console.error("error fetching scenarios:", error);
+      console.error('error fetching scenarios:', error);
       throw error;
     }
   },
@@ -97,10 +101,10 @@ export const scenario_service = {
     try {
       await axios_instance.delete(`${SCENARIO_ENDPOINT}/${scenario_id}`);
     } catch (error) {
-      console.error("error deleting scenario:", error);
+      console.error('error deleting scenario:', error);
       throw error;
     }
-  }
+  },
 };
 
-export default scenario_service; 
+export default scenario_service;

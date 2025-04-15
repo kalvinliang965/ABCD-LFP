@@ -59,9 +59,7 @@ export interface ScenarioRaw {
   lifeExpectancy: Array<{ [key: string]: any }>; //! chen changed it to match with YAML
   investmentTypes: Set<InvestmentTypeRaw>;
   investments: Set<InvestmentRaw>;
-  eventSeries: Set<
-    IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw
-  >;
+  eventSeries: Set<IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw>;
   inflationAssumption: { [key: string]: any }; //! chen changed it to match with YAML
   afterTaxContributionLimit: number;
   spendingStrategy: Array<string>;

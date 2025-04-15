@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Box,
   Input,
@@ -9,8 +8,9 @@ import {
   InputLeftElement,
   Icon,
   useColorModeValue,
-} from "@chakra-ui/react";
-import { FaSearch } from "react-icons/fa";
+} from '@chakra-ui/react';
+import React from 'react';
+import { FaSearch } from 'react-icons/fa';
 
 /**
  * AI prompt : help me design a filter bar to filter the data by using the filter options and the sort options, I want to use the filter bar in the scenario list page and the investment list page
@@ -61,8 +61,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
   selectedSort,
   onSortChange,
 }) => {
-  const bgColor = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   return (
     <Box
@@ -75,39 +75,39 @@ const FilterBar: React.FC<FilterBarProps> = ({
       width="100%"
     >
       <Flex
-        direction={{ base: "column", md: "row" }}
+        direction={{ base: 'column', md: 'row' }}
         justifyContent="space-between"
-        alignItems={{ base: "flex-start", md: "center" }}
+        alignItems={{ base: 'flex-start', md: 'center' }}
         gap={{ base: 3, md: 4 }}
       >
-        <InputGroup width={{ base: "100%", md: "40%" }}>
+        <InputGroup width={{ base: '100%', md: '40%' }}>
           <InputLeftElement pointerEvents="none">
             <Icon as={FaSearch} color="gray.300" />
           </InputLeftElement>
           <Input
             placeholder={searchPlaceholder}
             value={searchValue}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={e => onSearchChange(e.target.value)}
             size="md"
           />
         </InputGroup>
 
         <HStack
           spacing={{ base: 2, md: 4 }}
-          width={{ base: "100%", md: "auto" }}
+          width={{ base: '100%', md: 'auto' }}
           alignItems="center"
         >
           {filterOptions.length > 0 && (
-            <Flex alignItems="center" width={{ base: "100%", md: "auto" }}>
+            <Flex alignItems="center" width={{ base: '100%', md: 'auto' }}>
               {filterIcon && <Icon as={filterIcon} color="gray.400" mr={2} />}
               <Select
                 value={selectedFilter}
-                onChange={(e) => onFilterChange(e.target.value)}
+                onChange={e => onFilterChange(e.target.value)}
                 size="md"
-                width={{ base: "full", md: "160px" }}
-                aria-label={filterLabel || "Filter"}
+                width={{ base: 'full', md: '160px' }}
+                aria-label={filterLabel || 'Filter'}
               >
-                {filterOptions.map((option) => (
+                {filterOptions.map(option => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -117,16 +117,16 @@ const FilterBar: React.FC<FilterBarProps> = ({
           )}
 
           {sortOptions.length > 0 && (
-            <Flex alignItems="center" width={{ base: "100%", md: "auto" }}>
+            <Flex alignItems="center" width={{ base: '100%', md: 'auto' }}>
               {sortIcon && <Icon as={sortIcon} color="gray.400" mr={2} />}
               <Select
                 value={selectedSort}
-                onChange={(e) => onSortChange(e.target.value)}
+                onChange={e => onSortChange(e.target.value)}
                 size="md"
-                width={{ base: "full", md: "150px" }}
-                aria-label={sortLabel || "Sort"}
+                width={{ base: 'full', md: '150px' }}
+                aria-label={sortLabel || 'Sort'}
               >
-                {sortOptions.map((option) => (
+                {sortOptions.map(option => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>

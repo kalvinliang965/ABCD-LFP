@@ -1,10 +1,10 @@
-import axios from "axios";
-import { API_URL } from "./api";
-import { ScenarioRaw } from "../types/Scenarios";
+import axios from 'axios';
+
+import { ScenarioRaw } from '../types/Scenarios';
+
+import { API_URL } from './api';
 // AI-generated code
 // Import serialization utility to handle Set objects in API calls
-import { serialize_scenario_for_api } from "../utils/serialization";
-import YamlImportForm from "../components/scenarios/YamlImportForm";
 
 const YAML_ENDPOINT = `${API_URL}/yaml`;
 
@@ -16,22 +16,19 @@ export const scenarioYAMLService = {
 
   create: async (yaml: string): Promise<ScenarioRaw> => {
     try {
-      console.log("you are in YAML scenario api");
+      console.log('you are in YAML scenario api');
       const response = await axios.post(YAML_ENDPOINT, yaml, {
         headers: {
-          'Content-Type': 'application/x-yaml'
-        }
+          'Content-Type': 'application/x-yaml',
+        },
       });
-      console.log("YAML scenario created:", yaml);
+      console.log('YAML scenario created:', yaml);
       return response.data;
-      
     } catch (error) {
-      console.error("Error creating YAML scenario:", error);
+      console.error('Error creating YAML scenario:', error);
       throw error;
     }
   },
-
-
 };
 
 export default scenarioYAMLService;

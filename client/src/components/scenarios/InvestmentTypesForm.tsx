@@ -1,7 +1,7 @@
 // AI-generated code
 // Create a more modern, beautiful and interactive component for managing investment types
 
-import React, { useState, useEffect } from "react";
+import { AddIcon, DeleteIcon, InfoIcon, EditIcon } from '@chakra-ui/icons';
 import {
   Box,
   Button,
@@ -44,8 +44,9 @@ import {
   Stat,
   StatLabel,
   StatNumber,
-} from "@chakra-ui/react";
-import { AddIcon, DeleteIcon, InfoIcon, EditIcon } from "@chakra-ui/icons";
+} from '@chakra-ui/react';
+import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
 import {
   FiChevronLeft,
   FiChevronRight,
@@ -56,11 +57,11 @@ import {
   FiPlus,
   FiSearch,
   FiShield,
-} from "react-icons/fi";
-import { motion, AnimatePresence } from "framer-motion";
-import { InvestmentTypeRaw } from "../../types/Scenarios";
-import { investmentTypeStorage } from "../../services/investmentTypeStorage";
-import AddInvestmentTypeModal from "../investment/AddInvestmentTypeModal";
+} from 'react-icons/fi';
+
+import { investmentTypeStorage } from '../../services/investmentTypeStorage';
+import { InvestmentTypeRaw } from '../../types/Scenarios';
+import AddInvestmentTypeModal from '../investment/AddInvestmentTypeModal';
 
 // Creating motion components by wrapping Chakra components
 const MotionBox = motion(Box);
@@ -74,52 +75,37 @@ interface InvestmentTypesFormProps {
   onContinue: () => void;
 }
 
-export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
-  onBack,
-  onContinue,
-}) => {
-  const [investmentTypes, set_investment_types] = useState<InvestmentTypeRaw[]>(
-    []
-  );
+export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({ onBack, onContinue }) => {
+  const [investmentTypes, set_investment_types] = useState<InvestmentTypeRaw[]>([]);
   const [typeToDelete, set_type_to_delete] = useState<string | null>(null);
-  const [typeToEdit, set_type_to_edit] = useState<InvestmentTypeRaw | null>(
-    null
-  );
-  const [searchQuery, setSearchQuery] = useState("");
+  const [typeToEdit, set_type_to_edit] = useState<InvestmentTypeRaw | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [newItemAdded, setNewItemAdded] = useState<string | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const {
-    isOpen: isDeleteOpen,
-    onOpen: onDeleteOpen,
-    onClose: onDeleteClose,
-  } = useDisclosure();
-  const {
-    isOpen: isEditOpen,
-    onOpen: onEditOpen,
-    onClose: onEditClose,
-  } = useDisclosure();
+  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
+  const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
   const cancelRef = React.useRef<any>();
   const toast = useToast();
 
   // Responsive values
   const isMobile = useBreakpointValue({ base: true, md: false });
-  const cardMaxWidth = useBreakpointValue({ base: "100%", md: "7xl" });
+  const cardMaxWidth = useBreakpointValue({ base: '100%', md: '7xl' });
 
   // UI colors - enhanced for more vibrancy and better contrast
-  const bg = useColorModeValue("gray.50", "gray.900");
-  const cardBg = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const hoverBg = useColorModeValue("blue.50", "blue.900");
-  const accentColor = useColorModeValue("blue.500", "blue.300");
-  const headerBg = useColorModeValue("blue.50", "blue.900");
-  const badgeColorTaxable = useColorModeValue("green.100", "green.800");
-  const badgeColorExempt = useColorModeValue("purple.100", "purple.800");
-  const badgeTextTaxable = useColorModeValue("green.800", "green.100");
-  const badgeTextExempt = useColorModeValue("purple.800", "purple.100");
-  const emptyStateIconColor = useColorModeValue("blue.300", "blue.500");
-  const buttonHoverBg = useColorModeValue("blue.600", "blue.400");
-  const highlightColor = useColorModeValue("yellow.100", "yellow.800");
-  const gradientEnd = useColorModeValue("white", "gray.800");
+  const bg = useColorModeValue('gray.50', 'gray.900');
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const hoverBg = useColorModeValue('blue.50', 'blue.900');
+  const accentColor = useColorModeValue('blue.500', 'blue.300');
+  const headerBg = useColorModeValue('blue.50', 'blue.900');
+  const badgeColorTaxable = useColorModeValue('green.100', 'green.800');
+  const badgeColorExempt = useColorModeValue('purple.100', 'purple.800');
+  const badgeTextTaxable = useColorModeValue('green.800', 'green.100');
+  const badgeTextExempt = useColorModeValue('purple.800', 'purple.100');
+  const emptyStateIconColor = useColorModeValue('blue.300', 'blue.500');
+  const buttonHoverBg = useColorModeValue('blue.600', 'blue.400');
+  const highlightColor = useColorModeValue('yellow.100', 'yellow.800');
+  const gradientEnd = useColorModeValue('white', 'gray.800');
 
   // Animation variants - enhanced for more fluidity
   const containerVariants = {
@@ -138,7 +124,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
     visible: {
       scale: 1,
       opacity: 1,
-      transition: { type: "spring", stiffness: 150, delay: 0.3 },
+      transition: { type: 'spring', stiffness: 150, delay: 0.3 },
     },
   };
 
@@ -157,19 +143,16 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
       // Update existing investment type
       investmentTypeStorage.update(typeToEdit.name, investmentType);
 
-      console.log(
-        "investmentType from handle_save_investment_type",
-        investmentType
-      );
+      console.log('investmentType from handle_save_investment_type', investmentType);
 
       toast({
-        title: "Investment Type Updated",
+        title: 'Investment Type Updated',
         description: `${investmentType.name} has been updated.`,
-        status: "success",
+        status: 'success',
         duration: 3000,
         isClosable: true,
-        position: "top-right",
-        variant: "subtle",
+        position: 'top-right',
+        variant: 'subtle',
       });
 
       set_type_to_edit(null);
@@ -185,13 +168,13 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
       }, 2000);
 
       toast({
-        title: "Investment Type Created",
+        title: 'Investment Type Created',
         description: `${investmentType.name} has been added to your investment types.`,
-        status: "success",
+        status: 'success',
         duration: 3000,
         isClosable: true,
-        position: "top-right",
-        variant: "subtle",
+        position: 'top-right',
+        variant: 'subtle',
       });
       onClose();
     }
@@ -210,10 +193,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
     const typeFromStorage = investmentTypeStorage.get_by_name(name);
 
     if (typeFromStorage) {
-      console.log(
-        "Found investment type to edit from storage:",
-        typeFromStorage
-      );
+      console.log('Found investment type to edit from storage:', typeFromStorage);
 
       // Ensure typeToEdit has valid returnDistribution and incomeDistribution arrays
       const editableType = {
@@ -222,25 +202,25 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
           Array.isArray(typeFromStorage.returnDistribution) &&
           typeFromStorage.returnDistribution.length > 0
             ? typeFromStorage.returnDistribution
-            : [{ type: "fixed", value: 0 }],
+            : [{ type: 'fixed', value: 0 }],
         incomeDistribution:
           Array.isArray(typeFromStorage.incomeDistribution) &&
           typeFromStorage.incomeDistribution.length > 0
             ? typeFromStorage.incomeDistribution
-            : [{ type: "fixed", value: 0 }],
+            : [{ type: 'fixed', value: 0 }],
       };
 
-      console.log("Prepared investment type for editing:", editableType);
+      console.log('Prepared investment type for editing:', editableType);
       set_type_to_edit(editableType);
       onEditOpen();
     } else {
       toast({
-        title: "Error",
+        title: 'Error',
         description: `Could not find investment type: ${name}`,
-        status: "error",
+        status: 'error',
         duration: 3000,
         isClosable: true,
-        position: "top-right",
+        position: 'top-right',
       });
     }
   };
@@ -253,21 +233,17 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
   const handle_confirm_delete = () => {
     if (!typeToDelete) return;
 
-    const typeToDeleteName = investmentTypes.find(
-      (type) => type.name === typeToDelete
-    )?.name;
+    const typeToDeleteName = investmentTypes.find(type => type.name === typeToDelete)?.name;
 
     if (investmentTypeStorage.delete(typeToDelete)) {
       toast({
-        title: "Investment Type Deleted",
-        description: `${
-          typeToDeleteName || "Investment type"
-        } has been removed.`,
-        status: "info",
+        title: 'Investment Type Deleted',
+        description: `${typeToDeleteName || 'Investment type'} has been removed.`,
+        status: 'info',
         duration: 3000,
         isClosable: true,
-        position: "top-right",
-        variant: "subtle",
+        position: 'top-right',
+        variant: 'subtle',
       });
     }
 
@@ -293,16 +269,14 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
   };
 
   const has_cash_investment_type = () => {
-    return investmentTypes.some((type) => type.name.toLowerCase() === "cash");
+    return investmentTypes.some(type => type.name.toLowerCase() === 'cash');
   };
 
-  const get_distribution_display = (
-    distribution: Array<{ [key: string]: any }>
-  ) => {
+  const get_distribution_display = (distribution: Array<{ [key: string]: any }>) => {
     if (distribution && distribution.length > 0) {
       return distribution[0].type;
     }
-    return "";
+    return '';
   };
 
   const format_percent = (value: number) => {
@@ -314,12 +288,12 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
   const handle_continue_click = () => {
     if (!has_cash_investment_type()) {
       toast({
-        title: "Cash Investment Type Required",
-        description: "You must have Cash as investment type",
-        status: "warning",
+        title: 'Cash Investment Type Required',
+        description: 'You must have Cash as investment type',
+        status: 'warning',
         duration: 5000,
         isClosable: true,
-        position: "top-right",
+        position: 'top-right',
       });
       return;
     }
@@ -327,16 +301,14 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
   };
 
   // Filter investment types based on search query
-  const filtered_investment_types = investmentTypes.filter((type) =>
+  const filtered_investment_types = investmentTypes.filter(type =>
     type.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Calculate stats
   const totalInvestmentTypes = investmentTypes.length;
-  const taxableCount = investmentTypes.filter((type) => type.taxability).length;
-  const taxExemptCount = investmentTypes.filter(
-    (type) => !type.taxability
-  ).length;
+  const taxableCount = investmentTypes.filter(type => type.taxability).length;
+  const taxExemptCount = investmentTypes.filter(type => !type.taxability).length;
 
   return (
     <Box minH="100vh" bg={bg} py={8}>
@@ -397,7 +369,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                 onClick={onBack}
                 leftIcon={<Icon as={FiChevronLeft} />}
                 size="md"
-                _hover={{ bg: "blue.50" }}
+                _hover={{ bg: 'blue.50' }}
               >
                 Back
               </Button>
@@ -408,11 +380,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
             <VStack spacing={8} align="stretch">
               {/* Stats Overview */}
               {investmentTypes.length > 0 && (
-                <MotionBox
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                >
+                <MotionBox variants={containerVariants} initial="hidden" animate="visible">
                   <SimpleGrid columns={3} spacing={4} mb={6}>
                     <MotionStat
                       variants={statVariants}
@@ -476,15 +444,15 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
 
               {/* Main content header */}
               <Flex
-                direction={isMobile ? "column" : "row"}
+                direction={isMobile ? 'column' : 'row'}
                 justifyContent="space-between"
-                alignItems={isMobile ? "flex-start" : "center"}
+                alignItems={isMobile ? 'flex-start' : 'center'}
                 gap={4}
                 mb={5}
               >
                 <Flex
-                  direction={isMobile ? "column" : "row"}
-                  alignItems={isMobile ? "flex-start" : "center"}
+                  direction={isMobile ? 'column' : 'row'}
+                  alignItems={isMobile ? 'flex-start' : 'center'}
                   width="100%"
                   justifyContent="space-between"
                 >
@@ -514,8 +482,8 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                       size="md"
                       shadow="md"
                       _hover={{
-                        transform: "translateY(-2px)",
-                        shadow: "lg",
+                        transform: 'translateY(-2px)',
+                        shadow: 'lg',
                         bg: buttonHoverBg,
                       }}
                       transition="all 0.3s"
@@ -551,26 +519,18 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                     </Thead>
                     {filtered_investment_types.length > 0 ? (
                       <Tbody>
-                        {filtered_investment_types.map((type) => (
+                        {filtered_investment_types.map(type => (
                           <Tr
                             key={type.name}
                             _hover={{ bg: hoverBg }}
                             transition="background 0.2s"
-                            bg={
-                              newItemAdded === type.name
-                                ? highlightColor
-                                : undefined
-                            }
+                            bg={newItemAdded === type.name ? highlightColor : undefined}
                           >
                             <Td>
                               <chakra.div maxW="300px">
                                 <Text fontWeight="semibold">{type.name}</Text>
                                 {type.description && (
-                                  <Text
-                                    fontSize="sm"
-                                    color="gray.500"
-                                    noOfLines={1}
-                                  >
+                                  <Text fontSize="sm" color="gray.500" noOfLines={1}>
                                     {type.description}
                                   </Text>
                                 )}
@@ -584,10 +544,8 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                                 borderRadius="full"
                               >
                                 <TagLabel>
-                                  {get_distribution_display(
-                                    type.returnDistribution
-                                  )}
-                                  {type.returnAmtOrPct === "percent" ? "%" : ""}
+                                  {get_distribution_display(type.returnDistribution)}
+                                  {type.returnAmtOrPct === 'percent' ? '%' : ''}
                                 </TagLabel>
                               </Tag>
                             </Td>
@@ -598,26 +556,16 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                                 py={1}
                                 borderRadius="full"
                                 textTransform="capitalize"
-                                bg={
-                                  type.taxability
-                                    ? badgeColorTaxable
-                                    : badgeColorExempt
-                                }
-                                color={
-                                  type.taxability
-                                    ? badgeTextTaxable
-                                    : badgeTextExempt
-                                }
+                                bg={type.taxability ? badgeColorTaxable : badgeColorExempt}
+                                color={type.taxability ? badgeTextTaxable : badgeTextExempt}
                               >
                                 <Flex align="center">
                                   <Icon
-                                    as={
-                                      type.taxability ? FiDollarSign : FiShield
-                                    }
+                                    as={type.taxability ? FiDollarSign : FiShield}
                                     mr={1}
                                     boxSize={3}
                                   />
-                                  {type.taxability ? "Taxable" : "Tax-exempt"}
+                                  {type.taxability ? 'Taxable' : 'Tax-exempt'}
                                 </Flex>
                               </Badge>
                             </Td>
@@ -629,9 +577,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                                     variant="ghost"
                                     colorScheme="blue"
                                     aria-label="Edit investment type"
-                                    onClick={() =>
-                                      handle_edit_click(type.name || "")
-                                    }
+                                    onClick={() => handle_edit_click(type.name || '')}
                                     isDisabled={!type.name}
                                     size="sm"
                                   />
@@ -642,9 +588,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                                     variant="ghost"
                                     colorScheme="red"
                                     aria-label="Delete investment type"
-                                    onClick={() =>
-                                      handle_delete_click(type.name || "")
-                                    }
+                                    onClick={() => handle_delete_click(type.name || '')}
                                     isDisabled={!type.name}
                                     size="sm"
                                   />
@@ -691,24 +635,15 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                                 animate={{ scale: 1 }}
                                 transition={{
                                   repeat: Infinity,
-                                  repeatType: "reverse",
+                                  repeatType: 'reverse',
                                   duration: 2,
                                 }}
                                 display="inline-block"
                                 mb={5}
                               >
-                                <Icon
-                                  as={FiInfo}
-                                  boxSize={14}
-                                  color={emptyStateIconColor}
-                                />
+                                <Icon as={FiInfo} boxSize={14} color={emptyStateIconColor} />
                               </MotionBox>
-                              <Heading
-                                size="md"
-                                color={accentColor}
-                                fontWeight="medium"
-                                mb={3}
-                              >
+                              <Heading size="md" color={accentColor} fontWeight="medium" mb={3}>
                                 No investment types created yet
                               </Heading>
                               <Text
@@ -719,9 +654,8 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                                 mt={2}
                                 mb={6}
                               >
-                                Add your first investment type to get started.
-                                You'll need at least one investment type to
-                                continue.
+                                Add your first investment type to get started. You'll need at least
+                                one investment type to continue.
                               </Text>
                               <Button
                                 leftIcon={<FiPlus />}
@@ -729,7 +663,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                                 onClick={handle_add_click}
                                 size="lg"
                                 shadow="lg"
-                                _hover={{ transform: "translateY(-2px)" }}
+                                _hover={{ transform: 'translateY(-2px)' }}
                                 transition="all 0.3s"
                                 borderRadius="md"
                               >
@@ -754,8 +688,8 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                   size="lg"
                   shadow="md"
                   _hover={{
-                    transform: can_continue ? "translateY(-2px)" : "none",
-                    shadow: "lg",
+                    transform: can_continue ? 'translateY(-2px)' : 'none',
+                    shadow: 'lg',
                     bg: can_continue ? buttonHoverBg : undefined,
                   }}
                   transition="all 0.3s"
@@ -763,7 +697,7 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                 >
                   Continue to Investments
                 </Button>
-                {import.meta.env.MODE === "development" && (
+                {import.meta.env.MODE === 'development' && (
                   <Button
                     rightIcon={<Icon as={FiChevronRight} />}
                     colorScheme="blue"
@@ -771,8 +705,8 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
                     size="lg"
                     shadow="md"
                     _hover={{
-                      transform: can_continue ? "translateY(-2px)" : "none",
-                      shadow: "lg",
+                      transform: can_continue ? 'translateY(-2px)' : 'none',
+                      shadow: 'lg',
                       bg: can_continue ? buttonHoverBg : undefined,
                     }}
                     transition="all 0.3s"
@@ -805,17 +739,15 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({
               <Heading size="sm">Tips for Investment Types</Heading>
             </Flex>
             <Text fontSize="sm" color="gray.600" mb={2}>
-              Create different investment types with varied risk profiles.
-              Consider adding tax-exempt options for retirement accounts and
-              taxable options for brokerage accounts.
+              Create different investment types with varied risk profiles. Consider adding
+              tax-exempt options for retirement accounts and taxable options for brokerage accounts.
             </Text>
             <Text
               fontSize="sm"
               fontWeight="medium"
-              color={!has_cash_investment_type() ? "red.500" : "blue.500"}
+              color={!has_cash_investment_type() ? 'red.500' : 'blue.500'}
             >
-              Note: You must have a "Cash" investment type to proceed to the
-              next step.
+              Note: You must have a "Cash" investment type to proceed to the next step.
             </Text>
           </MotionCard>
         )}

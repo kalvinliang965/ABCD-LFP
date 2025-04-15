@@ -19,7 +19,6 @@ For residence state, we only consider Ny, NJ and CT
 Please use sequential thinking to think about how to add this new page after the event series and implement it
  */
 
-import React from "react";
 import {
   Box,
   Heading,
@@ -35,7 +34,8 @@ import {
   useColorModeValue,
   Container,
   Badge,
-} from "@chakra-ui/react";
+} from '@chakra-ui/react';
+import React from 'react';
 import {
   FiChevronLeft,
   FiChevronRight,
@@ -43,17 +43,18 @@ import {
   FiTarget,
   FiMapPin,
   FiPercent,
-} from "react-icons/fi";
-import { StateType, DistributionType } from "../../types/Enum";
-import { DistributionTypeConfig } from "../../types/ConfigTypes";
-import { get_distribution_display } from "../../utils/DistributionTypeSwitch";
+} from 'react-icons/fi';
+
+import { DistributionTypeConfig } from '../../types/ConfigTypes';
+import { StateType, DistributionType } from '../../types/Enum';
+import { get_distribution_display } from '../../utils/DistributionTypeSwitch';
 
 import {
   InflationSettings,
   FinancialGoalSettings,
   StateOfResidenceSettings,
   AfterTaxContributionSettings,
-} from "./AdditionalSettings";
+} from './AdditionalSettings';
 
 export type AdditionalSettingsConfig = {
   inflationConfig: DistributionTypeConfig;
@@ -76,11 +77,11 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
   onContinue,
 }) => {
   // UI color values
-  const bg = useColorModeValue("gray.50", "gray.900");
-  const cardBg = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const statIconBg = useColorModeValue("blue.100", "blue.800");
-  const statTextColor = useColorModeValue("gray.600", "gray.400");
+  const bg = useColorModeValue('gray.50', 'gray.900');
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const statIconBg = useColorModeValue('blue.100', 'blue.800');
+  const statTextColor = useColorModeValue('gray.600', 'gray.400');
 
   // Handler functions for each component
   const handle_change_inflation_config = (config: DistributionTypeConfig) => {
@@ -115,11 +116,11 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
   const get_state_name = (code: StateType) => {
     switch (code) {
       case StateType.NY:
-        return "New York";
+        return 'New York';
       case StateType.NJ:
-        return "New Jersey";
+        return 'New Jersey';
       case StateType.CT:
-        return "Connecticut";
+        return 'Connecticut';
       default:
         return code;
     }
@@ -164,7 +165,7 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
           mb={8}
         >
           <CardHeader
-            bg={useColorModeValue("blue.50", "blue.900")}
+            bg={useColorModeValue('blue.50', 'blue.900')}
             py={6}
             px={8}
             borderBottomWidth="1px"
@@ -192,15 +193,15 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
           <CardBody p={0}>
             {/* Stats Overview */}
             <Flex
-              direction={{ base: "column", md: "row" }}
+              direction={{ base: 'column', md: 'row' }}
               borderBottomWidth="1px"
               borderBottomColor={borderColor}
             >
               <Box
                 p={6}
-                borderRightWidth={{ base: 0, md: "1px" }}
+                borderRightWidth={{ base: 0, md: '1px' }}
                 borderRightColor={borderColor}
-                borderBottomWidth={{ base: "1px", md: 0 }}
+                borderBottomWidth={{ base: '1px', md: 0 }}
                 borderBottomColor={borderColor}
                 flex="1"
               >
@@ -220,23 +221,19 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
                 </HStack>
                 <Flex align="center" gap={2}>
                   <Heading size="md" fontWeight="bold">
-                    {get_inflation_type_badge(
-                      additionalSettings.inflationConfig.type
-                    )}
+                    {get_inflation_type_badge(additionalSettings.inflationConfig.type)}
                   </Heading>
                   <Text color="gray.500" fontSize="sm">
-                    {get_distribution_display(
-                      additionalSettings.inflationConfig
-                    )}
+                    {get_distribution_display(additionalSettings.inflationConfig)}
                   </Text>
                 </Flex>
               </Box>
 
               <Box
                 p={6}
-                borderRightWidth={{ base: 0, md: "1px" }}
+                borderRightWidth={{ base: 0, md: '1px' }}
                 borderRightColor={borderColor}
-                borderBottomWidth={{ base: "1px", md: 0 }}
+                borderBottomWidth={{ base: '1px', md: 0 }}
                 borderBottomColor={borderColor}
                 flex="1"
               >
@@ -285,19 +282,14 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
 
             <Box p={8}>
               <Text fontSize="lg" fontWeight="medium" mb={6}>
-                Configure additional important settings for your financial
-                scenario, including inflation assumptions, financial goals, and
-                state of residence.
+                Configure additional important settings for your financial scenario, including
+                inflation assumptions, financial goals, and state of residence.
               </Text>
 
               {/* After tax contribution limit */}
               <AfterTaxContributionSettings
-                afterTaxContributionLimit={
-                  additionalSettings.afterTaxContributionLimit
-                }
-                onChangeAfterTaxContributionLimit={
-                  handle_change_after_tax_contribution_limit
-                }
+                afterTaxContributionLimit={additionalSettings.afterTaxContributionLimit}
+                onChangeAfterTaxContributionLimit={handle_change_after_tax_contribution_limit}
               />
 
               {/* Inflation Configuration */}
@@ -323,7 +315,7 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
           <CardFooter
             py={6}
             px={8}
-            bg={useColorModeValue("gray.50", "gray.700")}
+            bg={useColorModeValue('gray.50', 'gray.700')}
             borderTopWidth="1px"
             borderColor={borderColor}
           >

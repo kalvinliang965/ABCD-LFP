@@ -1,56 +1,50 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Box, Text, useToast, Button, HStack } from "@chakra-ui/react";
-import { useEventSeries } from "../../contexts/EventSeriesContext";
-import { useNavigate, useParams } from "react-router-dom";
-import ScenarioDetailsForm, {
-  ScenarioDetails,
-  ScenarioType,
-} from "../../components/scenarios/ScenarioDetailsForm";
-import LifeExpectancyForm, {
-  LifeExpectancyConfig,
-} from "../../components/scenarios/LifeExpectancyForm";
+import { Box, Text, useToast } from '@chakra-ui/react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+
+import EventSeriesSection, { AddedEvent } from '../../components/event_series/EventSeriesSection';
+import AdditionalSettingsForm, {
+  AdditionalSettingsConfig,
+} from '../../components/scenarios/AdditionalSettingsForm';
 import InvestmentsForm, {
   InvestmentsConfig,
   //TaxStatus,
-} from "../../components/scenarios/InvestmentsForm";
-import { InvestmentTypesForm } from "../../components/scenarios/InvestmentTypesForm";
-import AdditionalSettingsForm, {
-  AdditionalSettingsConfig,
-} from "../../components/scenarios/AdditionalSettingsForm";
+} from '../../components/scenarios/InvestmentsForm';
+import { InvestmentTypesForm } from '../../components/scenarios/InvestmentTypesForm';
+import LifeExpectancyForm, {
+  LifeExpectancyConfig,
+} from '../../components/scenarios/LifeExpectancyForm';
+import RMDSettingsForm, { RMDSettings } from '../../components/scenarios/RMDSettingsForm';
 import RothConversionOptimizerForm, {
   RothConversionStrategy,
-} from "../../components/scenarios/RothConversionForm";
+} from '../../components/scenarios/RothConversionForm';
+import ScenarioDetailsForm, {
+  ScenarioDetails,
+  ScenarioType,
+} from '../../components/scenarios/ScenarioDetailsForm';
 import ScenarioTypeSelector, {
   ScenarioCreationType,
-} from "../../components/scenarios/ScenarioTypeSelector";
-import YamlImportForm from "../../components/scenarios/YamlImportForm";
-import RMDSettingsForm, {
-  RMDSettings,
-} from "../../components/scenarios/RMDSettingsForm";
+} from '../../components/scenarios/ScenarioTypeSelector';
 import SpendingStrategyForm, {
   SpendingStrategy,
-} from "../../components/scenarios/SpendingStrategyForm";
+} from '../../components/scenarios/SpendingStrategyForm';
 import WithdrawalStrategyForm, {
   WithdrawalStrategy,
-} from "../../components/scenarios/WithdrawalStrategyForm";
+} from '../../components/scenarios/WithdrawalStrategyForm';
+import YamlImportForm from '../../components/scenarios/YamlImportForm';
 //import { InvestmentTaxStatus } from "../../types/scenario";
-import EventSeriesSection, {
-  AddedEvent,
-} from "../../components/event_series/EventSeriesSection";
-import { investmentTypeStorage } from "../../services/investmentTypeStorage";
-import { map_form_to_scenario_raw } from "../../utils/scenarioMapper";
-import { spendingStrategyApi } from "../../services/spendingStrategyApi";
-import spendingStrategyStorage from "../../services/spendingStrategyStorage";
-import { withdrawalStrategyApi } from "../../services/withdrawalStrategyApi";
-import withdrawalStrategyStorage from "../../services/withdrawalStrategyStorage";
-import rmdStrategyStorage from "../../services/rmdStrategyStorage";
-import lifeExpectancyStorage from "../../services/lifeExpectancyStorage";
-import { scenarioYAMLService } from "../../services/scenarioYAML";
-import { convert_scenario_to_yaml } from "../../utils/yamlExport";
-import use_draft_saver from "../../utils/useDraftSaver";
-import { create_draft_state_helper } from "../../utils/draftStateHelper";
-import { scenario_service } from "../../services/scenarioService";
-import { DistributionType, StateType } from "../../types/Enum";
+import { useEventSeries } from '../../contexts/EventSeriesContext';
+import { investmentTypeStorage } from '../../services/investmentTypeStorage';
+import lifeExpectancyStorage from '../../services/lifeExpectancyStorage';
+import rmdStrategyStorage from '../../services/rmdStrategyStorage';
+import { scenario_service } from '../../services/scenarioService';
+import { scenarioYAMLService } from '../../services/scenarioYAML';
+import spendingStrategyStorage from '../../services/spendingStrategyStorage';
+import withdrawalStrategyStorage from '../../services/withdrawalStrategyStorage';
+import { DistributionType, StateType } from '../../types/Enum';
+import { create_draft_state_helper } from '../../utils/draftStateHelper';
+import { map_form_to_scenario_raw } from '../../utils/scenarioMapper';
+import use_draft_saver from '../../utils/useDraftSaver';
 
 function NewScenarioPage() {
   const { id } = useParams();
@@ -61,23 +55,23 @@ function NewScenarioPage() {
 
   //! the correct order of the steps
   const [step, setStep] = useState<
-    | "typeSelection" // for user to select how they wanna create the scenario
-    | "Scenario_name&type" // for user to input the scenario name and user's age and use is single or couple
-    | "lifeExpectancy" // for user to input their life expectancy for both if couple
-    | "investmentTypes" // for user to input the investment types
-    | "investments" // for user to input the investment details
-    | "rothConversionOptimizer" // for user to input the roth conversion optimizer
-    | "eventSelection" // for user to select the event series
-    | "rmdSettings" // for user to input the rmd settings
-    | "spendingStrategy" // for user to input the spending strategy
-    | "withdrawalStrategy" // for user to input the withdrawal strategy
-    | "additionalSettings" // for user to input the additional settings
-    | "yamlImport" // for user to import the yaml file
-  >("typeSelection");
+    | 'typeSelection' // for user to select how they wanna create the scenario
+    | 'Scenario_name&type' // for user to input the scenario name and user's age and use is single or couple
+    | 'lifeExpectancy' // for user to input their life expectancy for both if couple
+    | 'investmentTypes' // for user to input the investment types
+    | 'investments' // for user to input the investment details
+    | 'rothConversionOptimizer' // for user to input the roth conversion optimizer
+    | 'eventSelection' // for user to select the event series
+    | 'rmdSettings' // for user to input the rmd settings
+    | 'spendingStrategy' // for user to input the spending strategy
+    | 'withdrawalStrategy' // for user to input the withdrawal strategy
+    | 'additionalSettings' // for user to input the additional settings
+    | 'yamlImport' // for user to import the yaml file
+  >('typeSelection');
 
   // Add useEffect to track step changes
   useEffect(() => {
-    console.log("NewScenarioPage: Step changed to:", step);
+    console.log('NewScenarioPage: Step changed to:', step);
   }, [step]);
 
   //cleanup when component unmount
@@ -89,33 +83,30 @@ function NewScenarioPage() {
   }, []);
 
   const [scenarioDetails, setScenarioDetails] = useState<ScenarioDetails>({
-    name: "",
-    type: "individual",
+    name: '',
+    type: 'individual',
     userBirthYear: new Date().getFullYear() - 20, //! this will help the user fill in a default value, which is the current date - 20 years
   });
   const [lifeExpectancyConfig, setLifeExpectancyConfig] =
     //this part is the default value for couple
     useState<LifeExpectancyConfig>({
-      userExpectancyType: "fixed",
+      userExpectancyType: 'fixed',
       userFixedAge: 85,
-      spouseExpectancyType: "fixed",
+      spouseExpectancyType: 'fixed',
       spouseFixedAge: 85,
     });
-  const [investmentsConfig, setInvestmentsConfig] = useState<InvestmentsConfig>(
-    {
-      investments: [],
-    }
-  );
-  const [additionalSettings, setAdditionalSettings] =
-    useState<AdditionalSettingsConfig>({
-      inflationConfig: {
-        type: DistributionType.FIXED,
-        value: 2.5, //! 2.5 is the default value, which means the user doesn't input anything, then it's 2.5
-      },
-      afterTaxContributionLimit: 0,
-      financialGoal: 0, //! 0 is the default value, which means the user doesn't input anything, then it's 0
-      stateOfResidence: StateType.NY, // ! state of residence, currently only has 3 values, NY, NJ, CT. need to modify when expanding.
-    });
+  const [investmentsConfig, setInvestmentsConfig] = useState<InvestmentsConfig>({
+    investments: [],
+  });
+  const [additionalSettings, setAdditionalSettings] = useState<AdditionalSettingsConfig>({
+    inflationConfig: {
+      type: DistributionType.FIXED,
+      value: 2.5, //! 2.5 is the default value, which means the user doesn't input anything, then it's 2.5
+    },
+    afterTaxContributionLimit: 0,
+    financialGoal: 0, //! 0 is the default value, which means the user doesn't input anything, then it's 0
+    stateOfResidence: StateType.NY, // ! state of residence, currently only has 3 values, NY, NJ, CT. need to modify when expanding.
+  });
 
   const toast = useToast();
   //! don't touch
@@ -129,20 +120,18 @@ function NewScenarioPage() {
     availableExpenses: [],
     selectedExpenses: [],
   });
-  const [withdrawalStrategy, setWithdrawalStrategy] =
-    useState<WithdrawalStrategy>({
-      availableAccounts: [],
-      accountPriority: [],
-    });
+  const [withdrawalStrategy, setWithdrawalStrategy] = useState<WithdrawalStrategy>({
+    availableAccounts: [],
+    accountPriority: [],
+  });
 
-  const [rothConversionStrategy, setRothConversionStrategy] =
-    useState<RothConversionStrategy>({
-      roth_conversion_start: 0,
-      roth_conversion_end: 0,
-      roth_conversion_opt: false,
-      availableAccounts: [],
-      accountPriority: [],
-    });
+  const [rothConversionStrategy, setRothConversionStrategy] = useState<RothConversionStrategy>({
+    roth_conversion_start: 0,
+    roth_conversion_end: 0,
+    roth_conversion_opt: false,
+    availableAccounts: [],
+    accountPriority: [],
+  });
   //! don't touch
 
   //draft saver hook
@@ -181,33 +170,51 @@ function NewScenarioPage() {
         try {
           const response = await scenario_service.get_scenario_by_id(id);
           const scenario = response.data;
-          
+
           //set the current scenario ID in localStorage
           localStorage.setItem('current_scenario_id', id);
-          
+
           //set the scenario details
           setScenarioDetails({
             name: scenario.name,
             type: scenario.maritalStatus,
             userBirthYear: scenario.birthYears[0],
-            spouseBirthYear: scenario.birthYears[1]
+            spouseBirthYear: scenario.birthYears[1],
           });
 
           //set life expectancy config
           setLifeExpectancyConfig({
             userExpectancyType: scenario.lifeExpectancy[0].type,
-            userFixedAge: scenario.lifeExpectancy[0].type === "fixed" ? scenario.lifeExpectancy[0].value : undefined,
-            userMeanAge: scenario.lifeExpectancy[0].type === "normal" ? scenario.lifeExpectancy[0].mean : undefined,
-            userStandardDeviation: scenario.lifeExpectancy[0].type === "normal" ? scenario.lifeExpectancy[0].stdev : undefined,
+            userFixedAge:
+              scenario.lifeExpectancy[0].type === 'fixed'
+                ? scenario.lifeExpectancy[0].value
+                : undefined,
+            userMeanAge:
+              scenario.lifeExpectancy[0].type === 'normal'
+                ? scenario.lifeExpectancy[0].mean
+                : undefined,
+            userStandardDeviation:
+              scenario.lifeExpectancy[0].type === 'normal'
+                ? scenario.lifeExpectancy[0].stdev
+                : undefined,
             spouseExpectancyType: scenario.lifeExpectancy[1]?.type,
-            spouseFixedAge: scenario.lifeExpectancy[1]?.type === "fixed" ? scenario.lifeExpectancy[1]?.value : undefined,
-            spouseMeanAge: scenario.lifeExpectancy[1]?.type === "normal" ? scenario.lifeExpectancy[1]?.mean : undefined,
-            spouseStandardDeviation: scenario.lifeExpectancy[1]?.type === "normal" ? scenario.lifeExpectancy[1]?.stdev : undefined
+            spouseFixedAge:
+              scenario.lifeExpectancy[1]?.type === 'fixed'
+                ? scenario.lifeExpectancy[1]?.value
+                : undefined,
+            spouseMeanAge:
+              scenario.lifeExpectancy[1]?.type === 'normal'
+                ? scenario.lifeExpectancy[1]?.mean
+                : undefined,
+            spouseStandardDeviation:
+              scenario.lifeExpectancy[1]?.type === 'normal'
+                ? scenario.lifeExpectancy[1]?.stdev
+                : undefined,
           });
 
           //set investments config
           setInvestmentsConfig({
-            investments: scenario.investments
+            investments: scenario.investments,
           });
 
           //set event series
@@ -217,25 +224,29 @@ function NewScenarioPage() {
           setRmdSettings({
             currentAge: new Date().getFullYear() - scenario.birthYears[0],
             accountPriority: scenario.RMDStrategy,
-            availableAccounts: scenario.investments.map((inv: { id: string; investmentType: string }) => ({
-              id: inv.id,
-              name: inv.investmentType
-            }))
+            availableAccounts: scenario.investments.map(
+              (inv: { id: string; investmentType: string }) => ({
+                id: inv.id,
+                name: inv.investmentType,
+              })
+            ),
           });
 
           //set spending strategy
           setSpendingStrategy({
             availableExpenses: scenario.spendingStrategy,
-            selectedExpenses: scenario.spendingStrategy
+            selectedExpenses: scenario.spendingStrategy,
           });
 
           //set withdrawal strategy
           setWithdrawalStrategy({
-            availableAccounts: scenario.investments.map((inv: { id: string; investmentType: string }) => ({
-              id: inv.id,
-              name: inv.investmentType
-            })),
-            accountPriority: scenario.expenseWithdrawalStrategy
+            availableAccounts: scenario.investments.map(
+              (inv: { id: string; investmentType: string }) => ({
+                id: inv.id,
+                name: inv.investmentType,
+              })
+            ),
+            accountPriority: scenario.expenseWithdrawalStrategy,
           });
 
           //set Roth conversion strategy
@@ -243,11 +254,13 @@ function NewScenarioPage() {
             roth_conversion_opt: scenario.RothConversionOpt,
             roth_conversion_start: scenario.RothConversionStart,
             roth_conversion_end: scenario.RothConversionEnd,
-            availableAccounts: scenario.investments.map((inv: { id: string; investmentType: string }) => ({
-              id: inv.id,
-              name: inv.investmentType
-            })),
-            accountPriority: scenario.RothConversionStrategy
+            availableAccounts: scenario.investments.map(
+              (inv: { id: string; investmentType: string }) => ({
+                id: inv.id,
+                name: inv.investmentType,
+              })
+            ),
+            accountPriority: scenario.RothConversionStrategy,
           });
 
           //set additional settings
@@ -255,19 +268,19 @@ function NewScenarioPage() {
             inflationConfig: scenario.inflationAssumption,
             afterTaxContributionLimit: scenario.afterTaxContributionLimit,
             financialGoal: scenario.financialGoal,
-            stateOfResidence: scenario.residenceState
+            stateOfResidence: scenario.residenceState,
           });
-          setStep("Scenario_name&type");
+          setStep('Scenario_name&type');
         } catch (error) {
-          console.error("Error loading scenario:", error);
+          console.error('Error loading scenario:', error);
           toast({
-            title: "Error",
-            description: "Failed to load scenario data",
-            status: "error",
+            title: 'Error',
+            description: 'Failed to load scenario data',
+            status: 'error',
             duration: 3000,
             isClosable: true,
           });
-          navigate("/scenarios");
+          navigate('/scenarios');
         }
       }
     };
@@ -279,15 +292,12 @@ function NewScenarioPage() {
   // *this part only has two values, FROM_SCRATCH and IMPORT_YAML.
   //! if the user choose IMPORT_YAML, then jump to yamlImport step.
   const handle_scenario_type_select = (type: ScenarioCreationType) => {
-    console.log(
-      "NewScenarioPage: handle_scenario_type_select called with:",
-      type
-    );
+    console.log('NewScenarioPage: handle_scenario_type_select called with:', type);
     investmentTypeStorage.clear();
     clearLocalStorage();
     //clear the current scenario ID when starting a new scenario
     localStorage.removeItem('current_scenario_id');
-    
+
     //reset withdrawal strategy to initial state
     setWithdrawalStrategy({
       availableAccounts: [],
@@ -300,15 +310,15 @@ function NewScenarioPage() {
       accountPriority: [],
       availableAccounts: [],
     });
-    
+
     if (type === ScenarioCreationType.FROM_SCRATCH) {
       console.log("NewScenarioPage: Changing step to 'Scenario_name&type'");
-      setStep("Scenario_name&type");
+      setStep('Scenario_name&type');
     } else {
       console.log("NewScenarioPage: Changing step to 'yamlImport'");
-      setStep("yamlImport");
+      setStep('yamlImport');
     }
-    console.log("NewScenarioPage: Current step after setState:", step); // This will still show the old value due to React's state update timing
+    console.log('NewScenarioPage: Current step after setState:', step); // This will still show the old value due to React's state update timing
   };
 
   //! check if the user choose IMPORT_YAML, then jump to yamlImport step.
@@ -318,41 +328,39 @@ function NewScenarioPage() {
     // console.log("NewScenarioPage: yaml:", yaml);
     try {
       const savedScenario = await scenarioYAMLService.create(data.rawYaml);
-      console.log("Scenario created:", savedScenario);
+      console.log('Scenario created:', savedScenario);
     } catch (error) {
-      console.error("Error creating scenario:", error);
+      console.error('Error creating scenario:', error);
     }
 
     toast({
-      title: "Import Successful",
+      title: 'Import Successful',
       description: `Scenario "${data.data.name}" imported successfully`,
-      status: "success",
+      status: 'success',
       duration: 3000,
       isClosable: true,
     });
-    navigate("/scenarios");
+    navigate('/scenarios');
   };
 
   //! from here on, all back and continue are changed to to, and call the same function.
   const handle_to_type_selection = () => {
-    setStep("typeSelection");
+    setStep('typeSelection');
   };
 
   const handleEventAdded = (event: AddedEvent) => {
     if (!event) {
-      console.error("Invalid event data");
+      console.error('Invalid event data');
       return;
     }
     //generate a temporary id
     const newEvent = { ...event, id: event.id || `temp-${Date.now()}` };
-    setAddedEvents((prev) => [newEvent, ...prev]);
+    setAddedEvents(prev => [newEvent, ...prev]);
     setSelectedType(null);
   };
 
   const handleDeleteEvent = async (id: string): Promise<void> => {
-    setAddedEvents((prev) =>
-      prev.filter((event) => (event.id || event._id) !== id)
-    );
+    setAddedEvents(prev => prev.filter(event => (event.id || event._id) !== id));
   };
 
   //! don't touch
@@ -365,35 +373,35 @@ function NewScenarioPage() {
   const handle_to_life_expectancy = async () => {
     try {
       await save_draft(get_current_draft_state());
-      console.log("Draft saved when moving to life expectancy");
-      setStep("lifeExpectancy");
+      console.log('Draft saved when moving to life expectancy');
+      setStep('lifeExpectancy');
     } catch (err) {
-      console.error("Error saving draft:", err);
+      console.error('Error saving draft:', err);
     }
   };
 
   const handle_to_Scenario_name_type = () => {
-    setStep("Scenario_name&type");
+    setStep('Scenario_name&type');
   };
 
   const handle_to_investments = async () => {
     try {
       await save_draft(get_current_draft_state());
-      console.log("Draft saved when moving to investments");
-      setStep("investments");
+      console.log('Draft saved when moving to investments');
+      setStep('investments');
     } catch (err) {
-      console.error("Error saving draft:", err);
+      console.error('Error saving draft:', err);
     }
   };
 
   const handle_to_investment_types = async () => {
     try {
       await save_draft(get_current_draft_state());
-      console.log("Draft saved when moving to investment types");
+      console.log('Draft saved when moving to investment types');
       await saveLifeExpectancyConfig();
-      setStep("investmentTypes");
+      setStep('investmentTypes');
     } catch (err) {
-      console.error("Error saving draft:", err);
+      console.error('Error saving draft:', err);
     }
   };
 
@@ -401,18 +409,15 @@ function NewScenarioPage() {
     // AI-generated code
     // Filter investments to only include those with tax status "pre-tax" or "PRE_TAX_RETIREMENT"
     const preTaxInvestments = investmentsConfig.investments.filter(
-      (inv) =>
-        inv.taxStatus === "pre-tax" || inv.taxStatus === "PRE_TAX_RETIREMENT"
+      inv => inv.taxStatus === 'pre-tax' || inv.taxStatus === 'PRE_TAX_RETIREMENT'
     );
 
-    const allAccounts = preTaxInvestments.map((inv) => ({
+    const allAccounts = preTaxInvestments.map(inv => ({
       id: inv.id || `inv-${Math.random().toString(36).substring(2, 9)}`,
-      name:
-        inv.investmentType ||
-        `Investment ${inv.id || Math.random().toString(36).substr(2, 9)}`,
+      name: inv.investmentType || `Investment ${inv.id || Math.random().toString(36).substr(2, 9)}`,
     }));
 
-    console.log("Pre-tax accounts for Roth conversion:", allAccounts);
+    console.log('Pre-tax accounts for Roth conversion:', allAccounts);
 
     setRothConversionStrategy({
       ...rothConversionStrategy,
@@ -422,9 +427,9 @@ function NewScenarioPage() {
 
     try {
       await save_draft(get_current_draft_state());
-      setStep("rothConversionOptimizer");
+      setStep('rothConversionOptimizer');
     } catch (err) {
-      console.error("Error saving draft:", err);
+      console.error('Error saving draft:', err);
     }
   };
 
@@ -433,27 +438,24 @@ function NewScenarioPage() {
     const currentYear = new Date().getFullYear();
     const currentAge = currentYear - scenarioDetails.userBirthYear;
 
-    console.log("Investments before filtering:", investmentsConfig.investments);
+    console.log('Investments before filtering:', investmentsConfig.investments);
 
     // Change this filter to match the actual tax status value
-    const preTaxInvestments = investmentsConfig.investments.filter((inv) => {
-      console.log("Investment tax status:", inv.taxStatus);
+    const preTaxInvestments = investmentsConfig.investments.filter(inv => {
+      console.log('Investment tax status:', inv.taxStatus);
       // Check for both possible formats to be safe
-      return (
-        inv.taxStatus === "pre-tax" || inv.taxStatus === "PRE_TAX_RETIREMENT"
-      );
+      return inv.taxStatus === 'pre-tax' || inv.taxStatus === 'PRE_TAX_RETIREMENT';
     });
 
     // Map to the format needed for RMDSettings
-    const preTaxAccounts = preTaxInvestments.map((inv) => ({
+    const preTaxAccounts = preTaxInvestments.map(inv => ({
       id: inv.id || `inv-${Math.random().toString(36).substring(2, 9)}`,
       name:
-        inv.investmentType ||
-        `Investment ${inv.id || Math.random().toString(36).substring(2, 9)}`,
+        inv.investmentType || `Investment ${inv.id || Math.random().toString(36).substring(2, 9)}`,
     }));
 
-    console.log("Filtered pre-tax accounts:", preTaxAccounts);
-    console.log("Current age:", currentAge);
+    console.log('Filtered pre-tax accounts:', preTaxAccounts);
+    console.log('Current age:', currentAge);
 
     setRmdSettings({
       ...rmdSettings,
@@ -461,7 +463,7 @@ function NewScenarioPage() {
       availableAccounts: preTaxAccounts,
     });
 
-    console.log("RMD Settings after update:", {
+    console.log('RMD Settings after update:', {
       ...rmdSettings,
       currentAge: currentAge,
       availableAccounts: preTaxAccounts,
@@ -469,9 +471,9 @@ function NewScenarioPage() {
 
     try {
       await save_draft(get_current_draft_state());
-      setStep("rmdSettings");
+      setStep('rmdSettings');
     } catch (err) {
-      console.error("Error saving draft:", err);
+      console.error('Error saving draft:', err);
     }
   };
 
@@ -479,10 +481,8 @@ function NewScenarioPage() {
     clearLocalStorage();
     // Get all expenses from added events
     const allExpenses = addedEvents
-      .filter(
-        (event) => event.type === "expense" && event.discretionary === true
-      )
-      .map((event) => event.name);
+      .filter(event => event.type === 'expense' && event.discretionary === true)
+      .map(event => event.name);
 
     setSpendingStrategy({
       availableExpenses: allExpenses,
@@ -491,18 +491,18 @@ function NewScenarioPage() {
 
     try {
       await save_draft(get_current_draft_state());
-      setStep("spendingStrategy");
+      setStep('spendingStrategy');
     } catch (err) {
-      console.error("Error saving draft:", err);
+      console.error('Error saving draft:', err);
     }
   };
 
   const handle_to_additional_settings = async () => {
     try {
       await save_draft(get_current_draft_state());
-      setStep("additionalSettings");
+      setStep('additionalSettings');
     } catch (err) {
-      console.error("Error saving draft:", err);
+      console.error('Error saving draft:', err);
     }
   };
 
@@ -519,25 +519,25 @@ function NewScenarioPage() {
 
       // Save the current draft state with RMD settings
       await save_draft(get_current_draft_state());
-      
+
       // Get all accounts from investments with their IDs
-      const allAccounts = investmentsConfig.investments.map((inv) => ({
+      const allAccounts = investmentsConfig.investments.map(inv => ({
         id: inv.id || `inv-${Math.random().toString(36).substring(2, 9)}`,
         name:
           inv.investmentType ||
           `Investment ${inv.id || Math.random().toString(36).substring(2, 9)}`,
       }));
 
-      console.log("Available accounts for withdrawal:", allAccounts);
+      console.log('Available accounts for withdrawal:', allAccounts);
 
       setWithdrawalStrategy({
         availableAccounts: allAccounts,
         accountPriority: withdrawalStrategy.accountPriority || [],
       });
 
-      setStep("withdrawalStrategy");
+      setStep('withdrawalStrategy');
     } catch (err) {
-      console.error("Error saving draft:", err);
+      console.error('Error saving draft:', err);
     }
   };
 
@@ -548,15 +548,15 @@ function NewScenarioPage() {
       await saveWithdrawalStrategy();
       //then save to database draft
       await save_draft(get_current_draft_state());
-      setStep("eventSelection");
+      setStep('eventSelection');
     } catch (err) {
-      console.error("Error saving draft:", err);
+      console.error('Error saving draft:', err);
     }
   };
 
   const handle_to_spending_strategy = () => {
     clearLocalStorage();
-    setStep("spendingStrategy");
+    setStep('spendingStrategy');
   };
   //! don't touch
 
@@ -576,50 +576,50 @@ function NewScenarioPage() {
     );
 
     // Console log the final ScenarioRaw object with helpful formatting
-    console.log("============== Final ScenarioRaw Object ==============");
-    console.log("Basic Info:", {
+    console.log('============== Final ScenarioRaw Object ==============');
+    console.log('Basic Info:', {
       name: scenarioRaw.name,
       maritalStatus: scenarioRaw.maritalStatus,
       birthYears: scenarioRaw.birthYears,
       residenceState: scenarioRaw.residenceState,
     });
-    console.log("Life Expectancy:", scenarioRaw.lifeExpectancy);
-    console.log("Investment Types:", Array.from(scenarioRaw.investmentTypes));
-    console.log("Investments:", Array.from(scenarioRaw.investments));
-    console.log("Event Series:", Array.from(scenarioRaw.eventSeries));
-    console.log("Inflation Assumption:", scenarioRaw.inflationAssumption);
-    console.log("Spending Strategy:", scenarioRaw.spendingStrategy);
-    console.log("Withdrawal Strategy:", scenarioRaw.expenseWithdrawalStrategy);
-    console.log("RMD Strategy:", scenarioRaw.RMDStrategy);
-    console.log("Roth Conversion:", {
+    console.log('Life Expectancy:', scenarioRaw.lifeExpectancy);
+    console.log('Investment Types:', Array.from(scenarioRaw.investmentTypes));
+    console.log('Investments:', Array.from(scenarioRaw.investments));
+    console.log('Event Series:', Array.from(scenarioRaw.eventSeries));
+    console.log('Inflation Assumption:', scenarioRaw.inflationAssumption);
+    console.log('Spending Strategy:', scenarioRaw.spendingStrategy);
+    console.log('Withdrawal Strategy:', scenarioRaw.expenseWithdrawalStrategy);
+    console.log('RMD Strategy:', scenarioRaw.RMDStrategy);
+    console.log('Roth Conversion:', {
       enabled: scenarioRaw.RothConversionOpt,
       start_year: scenarioRaw.RothConversionStart,
       end_yaer: scenarioRaw.RothConversionEnd,
       strategy: scenarioRaw.RothConversionStrategy,
     });
-    console.log("Inflation Assumption");
-    console.log("type:", scenarioRaw.inflationAssumption["type"]);
-    console.log("value: ", scenarioRaw.inflationAssumption["value"]);
-    console.log("min", scenarioRaw.inflationAssumption["min"]);
-    console.log("max:", scenarioRaw.inflationAssumption["max"]);
-    console.log("mean: ", scenarioRaw.inflationAssumption["mean"]);
-    console.log("stdev", scenarioRaw.inflationAssumption["stdev"]);
-    console.log("Financial Goal:", scenarioRaw.financialGoal);
-    console.log("Complete ScenarioRaw Object:", scenarioRaw);
-    console.log("=====================================================");
+    console.log('Inflation Assumption');
+    console.log('type:', scenarioRaw.inflationAssumption['type']);
+    console.log('value: ', scenarioRaw.inflationAssumption['value']);
+    console.log('min', scenarioRaw.inflationAssumption['min']);
+    console.log('max:', scenarioRaw.inflationAssumption['max']);
+    console.log('mean: ', scenarioRaw.inflationAssumption['mean']);
+    console.log('stdev', scenarioRaw.inflationAssumption['stdev']);
+    console.log('Financial Goal:', scenarioRaw.financialGoal);
+    console.log('Complete ScenarioRaw Object:', scenarioRaw);
+    console.log('=====================================================');
 
     try {
       // First save the final version
       await save_draft(get_current_draft_state(), false);
-      console.log("Complete scenario saved to database");
+      console.log('Complete scenario saved to database');
 
       // Only after successful save, delete the draft if we're in edit mode
       if (id) {
         try {
           await scenario_service.delete_scenario(id);
-          console.log("Deleted draft scenario:", id);
+          console.log('Deleted draft scenario:', id);
         } catch (err) {
-          console.error("Error deleting draft scenario:", err);
+          console.error('Error deleting draft scenario:', err);
         }
       }
 
@@ -629,24 +629,22 @@ function NewScenarioPage() {
       clearLocalStorage();
       //clear the current scenario ID when finishing
       localStorage.removeItem('current_editing_scenario_id');
-      
+
       // Show success toast and navigate to scenarios page
       toast({
-        title: "Scenario Created",
-        description: "Your scenario has been created successfully.",
-        status: "success",
+        title: 'Scenario Created',
+        description: 'Your scenario has been created successfully.',
+        status: 'success',
         duration: 3000,
         isClosable: true,
       });
-      navigate("/scenarios");
-
+      navigate('/scenarios');
     } catch (error) {
-      console.error("Error saving scenario:", error);
+      console.error('Error saving scenario:', error);
       toast({
-        title: "Error Creating Scenario",
-        description:
-          "There was a problem creating your scenario. Please try again.",
-        status: "error",
+        title: 'Error Creating Scenario',
+        description: 'There was a problem creating your scenario. Please try again.',
+        status: 'error',
         duration: 5000,
         isClosable: true,
       });
@@ -654,18 +652,18 @@ function NewScenarioPage() {
   };
 
   const handle_change_scenario_type = (value: string) => {
-    setScenarioDetails((prev) => ({
+    setScenarioDetails(prev => ({
       ...prev,
       type: value as ScenarioType,
       //initialize spouse birth year with a default value when switching to couple
-      spouseBirthYear: value === "couple" ? prev.userBirthYear : undefined
+      spouseBirthYear: value === 'couple' ? prev.userBirthYear : undefined,
     }));
 
     // Update spouse expectancy type if needed
-    if (value === "couple" && !lifeExpectancyConfig.spouseExpectancyType) {
-      setLifeExpectancyConfig((prev) => ({
+    if (value === 'couple' && !lifeExpectancyConfig.spouseExpectancyType) {
+      setLifeExpectancyConfig(prev => ({
         ...prev,
-        spouseExpectancyType: "fixed",
+        spouseExpectancyType: 'fixed',
         spouseFixedAge: 85,
       }));
     }
@@ -676,7 +674,7 @@ function NewScenarioPage() {
   };
 
   const handle_back_to_rmd = () => {
-    setStep("rmdSettings");
+    setStep('rmdSettings');
   };
 
   // Add this function to clear localStorage when a scenario is completed
@@ -686,9 +684,9 @@ function NewScenarioPage() {
       withdrawalStrategyStorage.clear();
       rmdStrategyStorage.clear();
       lifeExpectancyStorage.clear();
-      console.log("Cleared all strategies from localStorage");
+      console.log('Cleared all strategies from localStorage');
     } catch (error) {
-      console.error("Error clearing localStorage:", error);
+      console.error('Error clearing localStorage:', error);
     }
   };
 
@@ -700,7 +698,7 @@ function NewScenarioPage() {
       // Use the most recent one
       setWithdrawalStrategy(savedStrategies[savedStrategies.length - 1]);
       console.log(
-        "Loaded withdrawal strategy from localStorage:",
+        'Loaded withdrawal strategy from localStorage:',
         savedStrategies[savedStrategies.length - 1]
       );
     }
@@ -711,34 +709,29 @@ function NewScenarioPage() {
     try {
       // Only use localStorage
       if (withdrawalStrategy.id) {
-        withdrawalStrategyStorage.update(
-          withdrawalStrategy.id,
-          withdrawalStrategy
-        );
+        withdrawalStrategyStorage.update(withdrawalStrategy.id, withdrawalStrategy);
       } else {
-        const savedLocalStrategy =
-          withdrawalStrategyStorage.add(withdrawalStrategy);
+        const savedLocalStrategy = withdrawalStrategyStorage.add(withdrawalStrategy);
         setWithdrawalStrategy(savedLocalStrategy);
       }
 
       toast({
-        title: "Withdrawal strategy saved locally",
-        status: "success",
+        title: 'Withdrawal strategy saved locally',
+        status: 'success',
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
-      console.error("Error saving withdrawal strategy:", error);
+      console.error('Error saving withdrawal strategy:', error);
       toast({
-        title: "Error saving withdrawal strategy",
-        description: "Please try again later",
-        status: "error",
+        title: 'Error saving withdrawal strategy',
+        description: 'Please try again later',
+        status: 'error',
         duration: 5000,
         isClosable: true,
       });
     }
   };
-
 
   // Add a useEffect to load RMD settings from localStorage
   useEffect(() => {
@@ -748,7 +741,7 @@ function NewScenarioPage() {
       // Use the most recent one
       setRmdSettings(savedSettings[savedSettings.length - 1]);
       console.log(
-        "Loaded RMD settings from localStorage:",
+        'Loaded RMD settings from localStorage:',
         savedSettings[savedSettings.length - 1]
       );
     }
@@ -759,27 +752,24 @@ function NewScenarioPage() {
     try {
       // Only use localStorage
       if (lifeExpectancyConfig.id) {
-        lifeExpectancyStorage.update(
-          lifeExpectancyConfig.id,
-          lifeExpectancyConfig
-        );
+        lifeExpectancyStorage.update(lifeExpectancyConfig.id, lifeExpectancyConfig);
       } else {
         const savedConfig = lifeExpectancyStorage.add(lifeExpectancyConfig);
         setLifeExpectancyConfig(savedConfig);
       }
 
       toast({
-        title: "Life expectancy settings saved locally",
-        status: "success",
+        title: 'Life expectancy settings saved locally',
+        status: 'success',
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
-      console.error("Error saving life expectancy settings:", error);
+      console.error('Error saving life expectancy settings:', error);
       toast({
-        title: "Error saving life expectancy settings",
-        description: "Please try again later",
-        status: "error",
+        title: 'Error saving life expectancy settings',
+        description: 'Please try again later',
+        status: 'error',
         duration: 5000,
         isClosable: true,
       });
@@ -787,7 +777,7 @@ function NewScenarioPage() {
   };
 
   // Selection between creating from scratch or importing YAML
-  if (step === "typeSelection") {
+  if (step === 'typeSelection') {
     return (
       <Box position="relative" zIndex={10} width="100%" height="100%">
         <ScenarioTypeSelector onTypeSelect={handle_scenario_type_select} />
@@ -796,8 +786,8 @@ function NewScenarioPage() {
   }
 
   // YAML Import Form
-  if (step === "yamlImport") {
-    console.log("NewScenarioPage: Rendering YamlImportForm");
+  if (step === 'yamlImport') {
+    console.log('NewScenarioPage: Rendering YamlImportForm');
     return (
       <Box position="relative" zIndex={10} width="100%" height="100%">
         <YamlImportForm
@@ -809,8 +799,8 @@ function NewScenarioPage() {
   }
 
   // Scenario Details Form
-  if (step === "Scenario_name&type") {
-    console.log("NewScenarioPage: Rendering ScenarioDetailsForm");
+  if (step === 'Scenario_name&type') {
+    console.log('NewScenarioPage: Rendering ScenarioDetailsForm');
     return (
       <Box position="relative" zIndex={10} width="100%" height="100%">
         <ScenarioDetailsForm
@@ -825,11 +815,11 @@ function NewScenarioPage() {
   }
 
   // Life Expectancy Configuration Form
-  if (step === "lifeExpectancy") {
+  if (step === 'lifeExpectancy') {
     return (
       <LifeExpectancyForm
         lifeExpectancyConfig={lifeExpectancyConfig}
-        isCouple={scenarioDetails.type === "couple"}
+        isCouple={scenarioDetails.type === 'couple'}
         userBirthYear={scenarioDetails.userBirthYear}
         spouseBirthYear={scenarioDetails.spouseBirthYear}
         onContinue={handle_to_investment_types}
@@ -839,7 +829,7 @@ function NewScenarioPage() {
     );
   }
 
-  if (step === "rothConversionOptimizer") {
+  if (step === 'rothConversionOptimizer') {
     return (
       <RothConversionOptimizerForm
         rothConversionStrategy={rothConversionStrategy}
@@ -852,7 +842,7 @@ function NewScenarioPage() {
 
   // Investment Types Form
   //! AI modified this to be the first step
-  if (step === "investmentTypes") {
+  if (step === 'investmentTypes') {
     return (
       <Box position="relative" zIndex={10} width="100%" height="100%">
         <InvestmentTypesForm
@@ -865,7 +855,7 @@ function NewScenarioPage() {
 
   // Investments Configuration Form
   //! AI modified this to be the second step
-  if (step === "investments") {
+  if (step === 'investments') {
     return (
       <Box position="relative" zIndex={10} width="100%" height="100%">
         <InvestmentsForm
@@ -879,7 +869,7 @@ function NewScenarioPage() {
   }
 
   // Additional Settings Form
-  if (step === "additionalSettings") {
+  if (step === 'additionalSettings') {
     return (
       <AdditionalSettingsForm
         additionalSettings={additionalSettings}
@@ -891,7 +881,7 @@ function NewScenarioPage() {
   }
 
   // RMD Settings Form
-  if (step === "rmdSettings") {
+  if (step === 'rmdSettings') {
     return (
       <RMDSettingsForm
         rmdSettings={rmdSettings}
@@ -903,19 +893,19 @@ function NewScenarioPage() {
   }
 
   // Spending Strategy Form
-  if (step === "spendingStrategy") {
+  if (step === 'spendingStrategy') {
     return (
       <SpendingStrategyForm
         spendingStrategy={spendingStrategy}
         onChangeSpendingStrategy={setSpendingStrategy}
         onContinue={handle_to_roth_conversion_optimizer}
-        onBack={() => setStep("eventSelection")}
+        onBack={() => setStep('eventSelection')}
       />
     );
   }
 
   // Withdrawal Strategy Form
-  if (step === "withdrawalStrategy") {
+  if (step === 'withdrawalStrategy') {
     return (
       <WithdrawalStrategyForm
         withdrawalStrategy={withdrawalStrategy}
@@ -927,7 +917,7 @@ function NewScenarioPage() {
   }
 
   // Event Series Selection
-  if (step === "eventSelection") {
+  if (step === 'eventSelection') {
     return (
       <EventSeriesSection
         addedEvents={addedEvents}

@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Box,
   Heading,
@@ -29,10 +28,11 @@ import {
   InputGroup,
   InputLeftElement,
   useColorModeValue,
-} from "@chakra-ui/react";
-import { FiUser, FiUsers, FiCalendar, FiEdit3 } from "react-icons/fi";
+} from '@chakra-ui/react';
+import React from 'react';
+import { FiUser, FiUsers, FiCalendar, FiEdit3 } from 'react-icons/fi';
 
-export type ScenarioType = "individual" | "couple";
+export type ScenarioType = 'individual' | 'couple';
 
 export type ScenarioDetails = {
   name: string;
@@ -56,9 +56,9 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
   onContinue,
   onSkip,
 }) => {
-  const cardBg = useColorModeValue("white", "gray.800");
-  const headerBg = useColorModeValue("blue.50", "blue.900");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const headerBg = useColorModeValue('blue.50', 'blue.900');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   return (
     <Box minH="100vh" bg="gray.50" py={8}>
@@ -73,12 +73,7 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
         >
           <CardHeader bg={headerBg} py={5} px={6}>
             <Flex justify="space-between" align="center">
-              <Heading
-                size="lg"
-                color="gray.800"
-                display="flex"
-                alignItems="center"
-              >
+              <Heading size="lg" color="gray.800" display="flex" alignItems="center">
                 <Icon as={FiEdit3} mr={2} />
                 New Scenario
               </Heading>
@@ -94,9 +89,8 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
 
           <CardBody p={6}>
             <Text color="gray.600" mb={6} fontSize="md">
-              Enter the basic details for your financial scenario. This
-              information will help personalize your financial planning
-              experience.
+              Enter the basic details for your financial scenario. This information will help
+              personalize your financial planning experience.
             </Text>
 
             <VStack spacing={6} align="stretch">
@@ -108,7 +102,7 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                   </InputLeftElement>
                   <Input
                     value={scenarioDetails.name}
-                    onChange={(e) =>
+                    onChange={e =>
                       onChangeScenarioDetails({
                         ...scenarioDetails,
                         name: e.target.value,
@@ -126,10 +120,7 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                 <FormLabel as="legend" fontWeight="medium">
                   Scenario Type
                 </FormLabel>
-                <RadioGroup
-                  value={scenarioDetails.type}
-                  onChange={onChangeScenarioType}
-                >
+                <RadioGroup value={scenarioDetails.type} onChange={onChangeScenarioType}>
                   <Stack direction="row" spacing={5}>
                     <Radio value="individual" colorScheme="blue" size="lg">
                       <HStack spacing={2}>
@@ -151,7 +142,7 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
 
               <Box
                 p={4}
-                bg={useColorModeValue("gray.50", "gray.700")}
+                bg={useColorModeValue('gray.50', 'gray.700')}
                 borderRadius="md"
                 borderWidth="1px"
                 borderColor={borderColor}
@@ -179,11 +170,7 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                         }
                         w="100%"
                       >
-                        <NumberInputField
-                          pl={10}
-                          borderRadius="md"
-                          borderColor="blue.400"
-                        />
+                        <NumberInputField pl={10} borderRadius="md" borderColor="blue.400" />
                         <NumberInputStepper>
                           <NumberIncrementStepper />
                           <NumberDecrementStepper />
@@ -192,11 +179,9 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                     </InputGroup>
                   </FormControl>
 
-                  {scenarioDetails.type === "couple" && (
+                  {scenarioDetails.type === 'couple' && (
                     <FormControl isRequired>
-                      <FormLabel fontWeight="medium">
-                        Spouse Birth Year
-                      </FormLabel>
+                      <FormLabel fontWeight="medium">Spouse Birth Year</FormLabel>
                       <InputGroup>
                         <InputLeftElement pointerEvents="none">
                           <Icon as={FiCalendar} color="gray.400" />
@@ -213,11 +198,7 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                           }
                           w="100%"
                         >
-                          <NumberInputField
-                            pl={10}
-                            borderRadius="md"
-                            borderColor="blue.400"
-                          />
+                          <NumberInputField pl={10} borderRadius="md" borderColor="blue.400" />
                           <NumberInputStepper>
                             <NumberIncrementStepper />
                             <NumberDecrementStepper />
@@ -233,7 +214,7 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
 
           <CardFooter
             p={6}
-            bg={useColorModeValue("gray.50", "gray.700")}
+            bg={useColorModeValue('gray.50', 'gray.700')}
             borderTopWidth="1px"
             borderColor={borderColor}
           >

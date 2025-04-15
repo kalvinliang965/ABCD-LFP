@@ -1,14 +1,5 @@
-import React, { useState } from "react";
-import {
-  Box,
-  VStack,
-  Icon,
-  Text,
-  Flex,
-  Divider,
-  useColorModeValue,
-} from "@chakra-ui/react";
-import { Link, useLocation } from "react-router-dom";
+import { Box, VStack, Icon, Text, Flex, Divider, useColorModeValue } from '@chakra-ui/react';
+import React, { useState } from 'react';
 import {
   FaHome,
   FaClipboardList,
@@ -22,7 +13,8 @@ import {
   FaSignOutAlt,
   FaFileUpload,
   FaServer,
-} from "react-icons/fa";
+} from 'react-icons/fa';
+import { Link, useLocation } from 'react-router-dom';
 
 /**
  * AI prompt :based on the Prompt I gived to you earlier, I need you to help me design a sidebar to show the menu items and the menu groups and that the sidebar will be on the left and the header will be on the top
@@ -35,20 +27,14 @@ interface NavItemProps {
   sidebarOpen: boolean;
 }
 
-const NavItem: React.FC<NavItemProps> = ({
-  icon,
-  children,
-  to,
-  isActive,
-  sidebarOpen,
-}) => {
-  const activeBg = useColorModeValue("blue.500", "blue.200");
-  const inactiveBg = "transparent";
-  const activeColor = "white";
-  const inactiveColor = useColorModeValue("white", "gray.200");
+const NavItem: React.FC<NavItemProps> = ({ icon, children, to, isActive, sidebarOpen }) => {
+  const activeBg = useColorModeValue('blue.500', 'blue.200');
+  const inactiveBg = 'transparent';
+  const activeColor = 'white';
+  const inactiveColor = useColorModeValue('white', 'gray.200');
 
   return (
-    <Link to={to} style={{ textDecoration: "none", width: "100%" }}>
+    <Link to={to} style={{ textDecoration: 'none', width: '100%' }}>
       <Flex
         align="center"
         p="3"
@@ -62,15 +48,10 @@ const NavItem: React.FC<NavItemProps> = ({
           color: activeColor,
         }}
         transition="all 0.3s"
-        justifyContent={sidebarOpen ? "flex-start" : "center"}
+        justifyContent={sidebarOpen ? 'flex-start' : 'center'}
       >
         {icon && (
-          <Icon
-            fontSize="16"
-            as={icon}
-            className="menu-icon"
-            mr={sidebarOpen ? "3" : "0"}
-          />
+          <Icon fontSize="16" as={icon} className="menu-icon" mr={sidebarOpen ? '3' : '0'} />
         )}
         {sidebarOpen && <Text className="menu-text">{children}</Text>}
       </Flex>
@@ -84,11 +65,7 @@ interface NavGroupProps {
   sidebarOpen: boolean;
 }
 
-const NavGroup: React.FC<NavGroupProps> = ({
-  title,
-  children,
-  sidebarOpen,
-}) => {
+const NavGroup: React.FC<NavGroupProps> = ({ title, children, sidebarOpen }) => {
   return (
     <Box width="100%">
       {sidebarOpen && (
@@ -119,13 +96,13 @@ const Sidebar: React.FC = () => {
   return (
     <Box
       as="nav"
-      className={`sidebar ${sidebarOpen ? "open" : "closed"}`}
+      className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}
       onMouseEnter={() => setSidebarOpen(true)}
       onMouseLeave={() => setSidebarOpen(false)}
-      bg={useColorModeValue("#1e293b", "gray.800")}
+      bg={useColorModeValue('#1e293b', 'gray.800')}
       color="white"
       h="100vh"
-      w={sidebarOpen ? "250px" : "70px"}
+      w={sidebarOpen ? '250px' : '70px'}
       position="fixed"
       top="0"
       left="0"
@@ -135,12 +112,12 @@ const Sidebar: React.FC = () => {
       flexShrink={0}
       boxShadow="0 0 10px rgba(0, 0, 0, 0.1)"
       css={{
-        "&::-webkit-scrollbar": {
-          width: "6px",
+        '&::-webkit-scrollbar': {
+          width: '6px',
         },
-        "&::-webkit-scrollbar-thumb": {
-          backgroundColor: "rgba(255, 255, 255, 0.2)",
-          borderRadius: "3px",
+        '&::-webkit-scrollbar-thumb': {
+          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+          borderRadius: '3px',
         },
       }}
     >
@@ -149,9 +126,9 @@ const Sidebar: React.FC = () => {
         alignItems="center"
         px="20px"
         borderBottomWidth="1px"
-        borderBottomColor={useColorModeValue("#2c3e50", "gray.700")}
+        borderBottomColor={useColorModeValue('#2c3e50', 'gray.700')}
         className="sidebar-header"
-        justifyContent={sidebarOpen ? "flex-start" : "center"}
+        justifyContent={sidebarOpen ? 'flex-start' : 'center'}
       >
         {sidebarOpen ? (
           <Text fontSize="xl" fontWeight="bold">
@@ -169,7 +146,7 @@ const Sidebar: React.FC = () => {
           <NavItem
             icon={FaHome}
             to="/dashboard"
-            isActive={location.pathname === "/dashboard"}
+            isActive={location.pathname === '/dashboard'}
             sidebarOpen={sidebarOpen}
           >
             Dashboard
@@ -180,7 +157,9 @@ const Sidebar: React.FC = () => {
           <NavItem
             icon={FaClipboardList}
             to="/scenarios"
-            isActive={location.pathname === "/scenarios" || location.pathname.includes("/scenarios/")}
+            isActive={
+              location.pathname === '/scenarios' || location.pathname.includes('/scenarios/')
+            }
             sidebarOpen={sidebarOpen}
           >
             My Scenarios
@@ -191,7 +170,7 @@ const Sidebar: React.FC = () => {
           <NavItem
             icon={FaPlay}
             to="/simulation/run"
-            isActive={location.pathname === "/simulation/run"}
+            isActive={location.pathname === '/simulation/run'}
             sidebarOpen={sidebarOpen}
           >
             Run Simulation
@@ -199,7 +178,10 @@ const Sidebar: React.FC = () => {
           <NavItem
             icon={FaChartLine}
             to="/simulation/results"
-            isActive={location.pathname === "/simulation/results" || location.pathname.includes("/scenarios/") && location.pathname.includes("/results")}
+            isActive={
+              location.pathname === '/simulation/results' ||
+              (location.pathname.includes('/scenarios/') && location.pathname.includes('/results'))
+            }
             sidebarOpen={sidebarOpen}
           >
             Results & Charts
@@ -210,7 +192,7 @@ const Sidebar: React.FC = () => {
           <NavItem
             icon={FaSearch}
             to="/exploration/one-dimension"
-            isActive={location.pathname === "/exploration/one-dimension"}
+            isActive={location.pathname === '/exploration/one-dimension'}
             sidebarOpen={sidebarOpen}
           >
             One-Dimensional
@@ -218,7 +200,7 @@ const Sidebar: React.FC = () => {
           <NavItem
             icon={FaCubes}
             to="/exploration/two-dimension"
-            isActive={location.pathname === "/exploration/two-dimension"}
+            isActive={location.pathname === '/exploration/two-dimension'}
             sidebarOpen={sidebarOpen}
           >
             Two-Dimensional
@@ -229,7 +211,7 @@ const Sidebar: React.FC = () => {
           <NavItem
             icon={FaCog}
             to="/settings"
-            isActive={location.pathname === "/settings"}
+            isActive={location.pathname === '/settings'}
             sidebarOpen={sidebarOpen}
           >
             Settings
@@ -237,7 +219,7 @@ const Sidebar: React.FC = () => {
           <NavItem
             icon={FaSignOutAlt}
             to="/logout"
-            isActive={location.pathname === "/logout"}
+            isActive={location.pathname === '/logout'}
             sidebarOpen={sidebarOpen}
           >
             Logout

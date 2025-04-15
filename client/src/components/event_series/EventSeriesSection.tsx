@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { DeleteIcon } from '@chakra-ui/icons';
 import {
   Box,
   Heading,
@@ -10,50 +10,52 @@ import {
   HStack,
   VStack,
   IconButton,
-} from "@chakra-ui/react";
-import { DeleteIcon } from "@chakra-ui/icons";
-import { Building2, Wallet, TrendingUp, BarChart } from "lucide-react";
-import { EventSeriesForm } from "./EventSeriesForm";
-import { useEventSeries } from "../../contexts/EventSeriesContext";
-import { EventSeriesType, EventSeries } from "../../types/eventSeries";
-import { InvestmentRaw } from "../../types/Scenarios";
+} from '@chakra-ui/react';
+import { Building2, Wallet, TrendingUp, BarChart } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+
+import { useEventSeries } from '../../contexts/EventSeriesContext';
+import { EventSeriesType, EventSeries } from '../../types/eventSeries';
+import { InvestmentRaw } from '../../types/Scenarios';
+
+import { EventSeriesForm } from './EventSeriesForm';
 
 const eventTypeOptions = [
   {
-    id: "income",
-    name: "Income",
-    description: "Regular or one-time income sources",
+    id: 'income',
+    name: 'Income',
+    description: 'Regular or one-time income sources',
     icon: Building2,
-    header: "Sources of Income",
+    header: 'Sources of Income',
     subheader:
-      "Do your best to think of every source of income you expect to have throughout your life. Use the Income widget below to add different kinds of income streams. Some may happen one time, others may occur annually or monthly, and may increase or decrease over time.",
+      'Do your best to think of every source of income you expect to have throughout your life. Use the Income widget below to add different kinds of income streams. Some may happen one time, others may occur annually or monthly, and may increase or decrease over time.',
   },
   {
-    id: "expense",
-    name: "Expense",
-    description: "Regular or one-time expenses",
+    id: 'expense',
+    name: 'Expense',
+    description: 'Regular or one-time expenses',
     icon: Wallet,
-    header: "Expenses",
+    header: 'Expenses',
     subheader:
-      "Add your expected expenses throughout your life. Consider both regular recurring expenses and one-time costs. Remember to account for changes in expenses over time.",
+      'Add your expected expenses throughout your life. Consider both regular recurring expenses and one-time costs. Remember to account for changes in expenses over time.',
   },
   {
-    id: "invest",
-    name: "Investment Strategy",
-    description: "Define how to invest excess cash",
+    id: 'invest',
+    name: 'Investment Strategy',
+    description: 'Define how to invest excess cash',
     icon: TrendingUp,
-    header: "Investment Strategy",
+    header: 'Investment Strategy',
     subheader:
-      "Define how your excess cash should be invested. Set your asset allocation and maximum cash holdings to automate your investment strategy.",
+      'Define how your excess cash should be invested. Set your asset allocation and maximum cash holdings to automate your investment strategy.',
   },
   {
-    id: "rebalance",
-    name: "Rebalancing Strategy",
-    description: "Define how to rebalance investments",
+    id: 'rebalance',
+    name: 'Rebalancing Strategy',
+    description: 'Define how to rebalance investments',
     icon: BarChart,
-    header: "Rebalancing Strategy",
+    header: 'Rebalancing Strategy',
     subheader:
-      "Specify how your investment portfolio should be rebalanced over time. Set target allocations and conditions for maintaining your desired investment mix.",
+      'Specify how your investment portfolio should be rebalanced over time. Set target allocations and conditions for maintaining your desired investment mix.',
   },
 ];
 
@@ -68,7 +70,7 @@ interface EventSeriesSectionProps {
   handleSaveAndContinue: () => void;
   handleBackToInvestments: () => void;
   handleEventAdded: (event: AddedEvent) => void;
-  investments?: InvestmentRaw[]; 
+  investments?: InvestmentRaw[];
 }
 
 const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
@@ -86,7 +88,7 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
   useEffect(() => {
     //convert addedEvents to the format needed for existingEvents
     const events = addedEvents.map(event => ({
-      name: event.name
+      name: event.name,
     }));
     setExistingEvents(events);
   }, [addedEvents]);
@@ -105,12 +107,12 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                   <Button variant="ghost" onClick={handleBackToInvestments}>
                     Back
                   </Button>
-                  <Button 
-                    colorScheme="blue" 
+                  <Button
+                    colorScheme="blue"
                     onClick={handleSaveAndContinue}
                     bg="blue.500"
-                    _hover={{ bg: "blue.600" }}
-                    _active={{ bg: "blue.700" }}
+                    _hover={{ bg: 'blue.600' }}
+                    _active={{ bg: 'blue.700' }}
                   >
                     Continue
                   </Button>
@@ -122,7 +124,7 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                     Added Events
                   </Heading>
                   <Box bg="gray.50" p={4} borderRadius="md">
-                    {addedEvents.map((event) => (
+                    {addedEvents.map(event => (
                       <Flex
                         key={event.id || event._id}
                         p={4}
@@ -136,9 +138,10 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                         <Box>
                           <Text fontWeight="medium">{event.name}</Text>
                           <Text fontSize="sm" color="gray.600">
-                            ${event.initialAmount} • Starting{" "}
-                            {event.startYear.type === "fixed" ? event.startYear.value : "Variable"} •{" "}
-                            {event.duration.type === "fixed" ? event.duration.value : "Variable"} years
+                            ${event.initialAmount} • Starting{' '}
+                            {event.startYear.type === 'fixed' ? event.startYear.value : 'Variable'}{' '}
+                            • {event.duration.type === 'fixed' ? event.duration.value : 'Variable'}{' '}
+                            years
                           </Text>
                         </Box>
                         <HStack>
@@ -148,18 +151,18 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                             borderRadius="md"
                             fontSize="sm"
                             bg={
-                              event.type === "income"
-                                ? "green.100"
-                                : event.type === "expense"
-                                ? "red.100"
-                                : "blue.100"
+                              event.type === 'income'
+                                ? 'green.100'
+                                : event.type === 'expense'
+                                  ? 'red.100'
+                                  : 'blue.100'
                             }
                             color={
-                              event.type === "income"
-                                ? "green.700"
-                                : event.type === "expense"
-                                ? "red.700"
-                                : "blue.700"
+                              event.type === 'income'
+                                ? 'green.700'
+                                : event.type === 'expense'
+                                  ? 'red.700'
+                                  : 'blue.700'
                             }
                           >
                             {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
@@ -170,9 +173,7 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                             size="sm"
                             variant="ghost"
                             colorScheme="red"
-                            onClick={() =>
-                              handleDeleteEvent(event.id || event._id || "")
-                            }
+                            onClick={() => handleDeleteEvent(event.id || event._id || '')}
                           />
                         </HStack>
                       </Flex>
@@ -184,7 +185,7 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                 Select the type of event series you want to add to your financial plan.
               </Text>
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                {eventTypeOptions.map((option) => {
+                {eventTypeOptions.map(option => {
                   const IconComponent = option.icon;
                   return (
                     <Box
@@ -196,7 +197,7 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                       borderRadius="lg"
                       border="1px solid"
                       borderColor="gray.200"
-                      _hover={{ borderColor: "blue.500", bg: "blue.50" }}
+                      _hover={{ borderColor: 'blue.500', bg: 'blue.50' }}
                       transition="all 0.2s"
                       height="100%"
                       textAlign="left"
@@ -220,7 +221,7 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
     );
   }
 
-  const typeInfo = eventTypeOptions.find((opt) => opt.id === selectedType)!;
+  const typeInfo = eventTypeOptions.find(opt => opt.id === selectedType)!;
   return (
     <Box minH="100vh" bg="gray.50">
       <Box maxW="4xl" mx="auto" py={12} px={4}>
