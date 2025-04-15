@@ -3,7 +3,6 @@
  * Create a component for handling after tax contribution limit settings as part of decomposing AdditionalSettingsForm
  */
 
-import React from "react";
 import {
   Box,
   Text,
@@ -24,24 +23,23 @@ import {
   InputLeftElement,
   useColorModeValue,
   Tooltip,
-} from "@chakra-ui/react";
-import { FiMinusCircle, FiInfo } from "react-icons/fi";
+} from '@chakra-ui/react';
+import React from 'react';
+import { FiMinusCircle, FiInfo } from 'react-icons/fi';
 
 interface AfterTaxContributionSettingsProps {
   afterTaxContributionLimit: number;
   onChangeAfterTaxContributionLimit: (value: number) => void;
 }
 
-const AfterTaxContributionSettings: React.FC<
-  AfterTaxContributionSettingsProps
-> = ({ afterTaxContributionLimit, onChangeAfterTaxContributionLimit }) => {
-  const borderColor = useColorModeValue("gray.200", "gray.700");
+const AfterTaxContributionSettings: React.FC<AfterTaxContributionSettingsProps> = ({
+  afterTaxContributionLimit,
+  onChangeAfterTaxContributionLimit,
+}) => {
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
 
-  const handle_change_after_tax_contribution = (
-    valueString: string,
-    value: number
-  ) => {
-    if (valueString === "") {
+  const handle_change_after_tax_contribution = (valueString: string, value: number) => {
+    if (valueString === '') {
       onChangeAfterTaxContributionLimit(0);
     } else {
       onChangeAfterTaxContributionLimit(value);
@@ -58,7 +56,7 @@ const AfterTaxContributionSettings: React.FC<
       shadow="sm"
     >
       <CardHeader
-        bg={useColorModeValue("gray.50", "gray.700")}
+        bg={useColorModeValue('gray.50', 'gray.700')}
         borderBottomWidth="1px"
         borderBottomColor={borderColor}
         py={4}
@@ -80,15 +78,12 @@ const AfterTaxContributionSettings: React.FC<
       </CardHeader>
       <CardBody p={6}>
         <Text fontSize="md" color="gray.600" mb={6}>
-          Set the maximum amount you plan to contribute to after-tax accounts in
-          your financial plan. This helps model savings beyond traditional
-          retirement limits and can be adjusted to reflect your specific goals
-          or income strategies.
+          Set the maximum amount you plan to contribute to after-tax accounts in your financial
+          plan. This helps model savings beyond traditional retirement limits and can be adjusted to
+          reflect your specific goals or income strategies.
         </Text>
         <FormControl isRequired>
-          <FormLabel fontWeight="medium">
-            After Tax Contribution Limit
-          </FormLabel>
+          <FormLabel fontWeight="medium">After Tax Contribution Limit</FormLabel>
           <InputGroup size="lg">
             <InputLeftElement pointerEvents="none">
               <Icon as={FiMinusCircle} color="green.500" />

@@ -1,7 +1,8 @@
-import React from "react";
-import { Route, Navigate } from "react-router-dom";
-import { ProtectedRoute } from "../common";
-import { Layout } from "../layouts";
+import React from 'react';
+import { Route, Navigate } from 'react-router-dom';
+
+import { ProtectedRoute } from '../common';
+import { Layout } from '../layouts';
 
 // account related components
 const Settings = () => (
@@ -12,7 +13,7 @@ const Settings = () => (
 
 const Logout = () => {
   // Logic for logout - for example, clear the token in local storage
-  localStorage.removeItem("token");
+  localStorage.removeItem('token');
   return <Navigate to="/login" replace />;
 };
 

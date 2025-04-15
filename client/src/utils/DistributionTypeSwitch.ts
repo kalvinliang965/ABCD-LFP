@@ -1,5 +1,5 @@
-import { DistributionType } from "../types/Enum";
-import { DistributionTypeConfig } from "../types/ConfigTypes";
+import { DistributionTypeConfig } from '../types/ConfigTypes';
+import { DistributionType } from '../types/Enum';
 
 /**
  * Creates a new distribution configuration based on the target type,
@@ -21,26 +21,22 @@ export const create_distribution_config = (
       return {
         type: DistributionType.FIXED,
         value:
-          currentConfig.type === DistributionType.FIXED &&
-          currentConfig.value !== undefined
+          currentConfig.type === DistributionType.FIXED && currentConfig.value !== undefined
             ? currentConfig.value
-            : currentConfig.type === DistributionType.NORMAL &&
-              currentConfig.mean !== undefined
-            ? currentConfig.mean
-            : 0,
+            : currentConfig.type === DistributionType.NORMAL && currentConfig.mean !== undefined
+              ? currentConfig.mean
+              : 0,
       };
 
     case DistributionType.UNIFORM:
       return {
         type: DistributionType.UNIFORM,
         min:
-          currentConfig.type === DistributionType.UNIFORM &&
-          currentConfig.min !== undefined
+          currentConfig.type === DistributionType.UNIFORM && currentConfig.min !== undefined
             ? currentConfig.min
             : 0,
         max:
-          currentConfig.type === DistributionType.UNIFORM &&
-          currentConfig.max !== undefined
+          currentConfig.type === DistributionType.UNIFORM && currentConfig.max !== undefined
             ? currentConfig.max
             : 1,
       };
@@ -49,13 +45,11 @@ export const create_distribution_config = (
       return {
         type: DistributionType.NORMAL,
         mean:
-          currentConfig.type === DistributionType.NORMAL &&
-          currentConfig.mean !== undefined
+          currentConfig.type === DistributionType.NORMAL && currentConfig.mean !== undefined
             ? currentConfig.mean
-            : currentConfig.type === DistributionType.FIXED &&
-              currentConfig.value !== undefined
-            ? currentConfig.value
-            : 0,
+            : currentConfig.type === DistributionType.FIXED && currentConfig.value !== undefined
+              ? currentConfig.value
+              : 0,
         standardDeviation:
           currentConfig.type === DistributionType.NORMAL &&
           currentConfig.standardDeviation !== undefined
@@ -78,9 +72,7 @@ export const create_distribution_config = (
  * @param config - The distribution configuration to format
  * @returns A formatted string representation of the distribution
  */
-export const get_distribution_display = (
-  config: DistributionTypeConfig
-): string => {
+export const get_distribution_display = (config: DistributionTypeConfig): string => {
   switch (config.type) {
     case DistributionType.FIXED:
       return `${config.value}%`;
@@ -89,6 +81,6 @@ export const get_distribution_display = (
     case DistributionType.NORMAL:
       return `μ: ${config.mean}%, σ: ${config.standardDeviation}%`;
     default:
-      return "Not set";
+      return 'Not set';
   }
 };

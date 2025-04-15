@@ -1,8 +1,8 @@
 // Local storage service for RMD strategies
-import { RMDSettings } from "../components/scenarios/RMDSettingsForm";
+import { RMDSettings } from '../components/scenarios/RMDSettingsForm';
 
 // Local storage key
-const STORAGE_KEY = "rmd_strategies";
+const STORAGE_KEY = 'rmd_strategies';
 
 // Helper function to convert complex objects for storage
 function map_to_storage_object(rmdSettings: RMDSettings): any {
@@ -18,7 +18,7 @@ function object_to_rmd_settings(storedData: any): RMDSettings {
     enableRMD: storedData.enableRMD !== undefined ? storedData.enableRMD : true,
     currentAge: storedData.currentAge || 72,
     accountPriority: storedData.accountPriority || [],
-    availableAccounts: storedData.availableAccounts || []
+    availableAccounts: storedData.availableAccounts || [],
   };
 }
 
@@ -40,11 +40,9 @@ export const rmdStrategyStorage = {
       if (!storedData) return [];
 
       const parsedData = JSON.parse(storedData);
-      return Array.isArray(parsedData)
-        ? parsedData.map(object_to_rmd_settings)
-        : [];
+      return Array.isArray(parsedData) ? parsedData.map(object_to_rmd_settings) : [];
     } catch (error) {
-      console.error("Error fetching RMD strategies from localStorage:", error);
+      console.error('Error fetching RMD strategies from localStorage:', error);
       return [];
     }
   },
@@ -69,26 +67,26 @@ export const rmdStrategyStorage = {
   add: (rmdSettings: RMDSettings): RMDSettings => {
     try {
       const currentData = rmdStrategyStorage.get_all();
-      
+
       // Generate a new ID if one doesn't exist
       const id = rmdSettings.id || generate_id();
-      
+
       // Create the new strategy with ID
       const newStrategy = {
         ...rmdSettings,
         id,
       };
-      
+
       // Add to current data
       currentData.push(newStrategy);
-      
+
       // Convert and save to localStorage
       const storageData = currentData.map(map_to_storage_object);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
-      
+
       return newStrategy;
     } catch (error) {
-      console.error("Error adding RMD strategy to localStorage:", error);
+      console.error('Error adding RMD strategy to localStorage:', error);
       throw error;
     }
   },
@@ -100,24 +98,24 @@ export const rmdStrategyStorage = {
     try {
       const currentData = rmdStrategyStorage.get_all();
       const index = currentData.findIndex((s: any) => s.id === id);
-      
+
       if (index === -1) {
         console.error(`RMD strategy with id ${id} not found`);
         return null;
       }
-      
+
       // Update the strategy
       const updatedStrategy = {
         ...rmdSettings,
         id,
       };
-      
+
       currentData[index] = updatedStrategy;
-      
+
       // Convert and save to localStorage
       const storageData = currentData.map(map_to_storage_object);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
-      
+
       return updatedStrategy;
     } catch (error) {
       console.error(`Error updating RMD strategy with id ${id}:`, error);
@@ -132,15 +130,15 @@ export const rmdStrategyStorage = {
     try {
       const currentData = rmdStrategyStorage.get_all();
       const filteredData = currentData.filter((s: any) => s.id !== id);
-      
+
       if (filteredData.length === currentData.length) {
         return false; // Nothing was deleted
       }
-      
+
       // Convert and save to localStorage
       const storageData = filteredData.map(map_to_storage_object);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
-      
+
       return true;
     } catch (error) {
       console.error(`Error deleting RMD strategy with id ${id}:`, error);
@@ -155,7 +153,7 @@ export const rmdStrategyStorage = {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
-      console.error("Error clearing RMD strategies from localStorage:", error);
+      console.error('Error clearing RMD strategies from localStorage:', error);
     }
   },
 
@@ -167,7 +165,7 @@ export const rmdStrategyStorage = {
       const strategy = rmdStrategyStorage.get_by_id(id);
       return strategy && strategy.enableRMD ? strategy.accountPriority : [];
     } catch (error) {
-      console.error("Error getting simplified RMD strategy:", error);
+      console.error('Error getting simplified RMD strategy:', error);
       return [];
     }
   },
@@ -179,11 +177,11 @@ export const rmdStrategyStorage = {
     try {
       const strategies = rmdStrategyStorage.get_all();
       if (strategies.length === 0) return [];
-      
+
       const mostRecent = strategies[strategies.length - 1];
       return mostRecent.enableRMD ? mostRecent.accountPriority : [];
     } catch (error) {
-      console.error("Error getting most recent simplified RMD strategy:", error);
+      console.error('Error getting most recent simplified RMD strategy:', error);
       return [];
     }
   },

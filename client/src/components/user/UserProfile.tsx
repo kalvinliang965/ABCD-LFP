@@ -1,7 +1,3 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { API_URL } from '../../services/api';
 import {
   Box,
   Heading,
@@ -22,8 +18,6 @@ import {
   CardBody,
   SimpleGrid,
   useColorModeValue,
-  Icon,
-  Tooltip,
   useDisclosure,
   Modal,
   ModalOverlay,
@@ -37,9 +31,14 @@ import {
   Input,
   IconButton,
   useToast,
-} from "@chakra-ui/react";
-import { FaUser, FaFileUpload, FaShareAlt, FaEdit, FaTrash, FaFileAlt, FaArrowLeft } from "react-icons/fa";
-import { useAuth } from "../../contexts/AuthContext";
+} from '@chakra-ui/react';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { FaUser, FaShareAlt, FaEdit, FaArrowLeft } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+
+import { useAuth } from '../../contexts/AuthContext';
+import { API_URL } from '../../services/api';
 import { userService } from '../../services/userService';
 
 // Interface for user data
@@ -71,67 +70,78 @@ const UserProfile: React.FC = () => {
   const { user, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
-  
+
   const [userData, setUserData] = useState({
     name: '',
     email: '',
     profilePicture: '',
-    scenarios: [] as Scenario[]
+    scenarios: [] as Scenario[],
   });
-  
+
   // Modal states
-  const { isOpen: isEditProfileOpen, onOpen: onEditProfileOpen, onClose: onEditProfileClose } = useDisclosure();
-  const { isOpen: isShareScenarioOpen, onOpen: onShareScenarioOpen, onClose: onShareScenarioClose } = useDisclosure();
-  
+  const {
+    isOpen: isEditProfileOpen,
+    onOpen: onEditProfileOpen,
+    onClose: onEditProfileClose,
+  } = useDisclosure();
+  const {
+    isOpen: isShareScenarioOpen,
+    onOpen: onShareScenarioOpen,
+    onClose: onShareScenarioClose,
+  } = useDisclosure();
+
   // Form states
-  const [editName, setEditName] = useState<string>("");
+  const [editName, setEditName] = useState<string>('');
   const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(null);
-  const [shareEmail, setShareEmail] = useState<string>("");
-  const [sharePermission, setSharePermission] = useState<string>("read");
-  
+  const [shareEmail, setShareEmail] = useState<string>('');
+  const [sharePermission, setSharePermission] = useState<string>('read');
+
   // Add these state variables back
   const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
-  const { isOpen: isEditModalOpen, onOpen: onEditModalOpen, onClose: onEditModalClose } = useDisclosure();
-  const [editScenarioName, setEditScenarioName] = useState("");
+  const {
+    isOpen: isEditModalOpen,
+    onOpen: onEditModalOpen,
+    onClose: onEditModalClose,
+  } = useDisclosure();
+  const [editScenarioName, setEditScenarioName] = useState('');
 
   // Colors
-  const cardBg = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const textColor = useColorModeValue("gray.600", "gray.400");
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const textColor = useColorModeValue('gray.600', 'gray.400');
 
   // Define fetchUserProfile outside useEffect so it can be called elsewhere
   const fetchUserProfile = async () => {
     try {
-      console.log("usere is ", user);
+      console.log('usere is ', user);
       setIsLoading(true);
-      
+
       // Try to get user data from the API directly
       const token = localStorage.getItem('token');
       let profileData;
-      
+
       if (token) {
         // If we have a token, use it to fetch user data
         const response = await axios.get(`${API_URL}/users/me`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
         profileData = response.data;
       } else {
         // Otherwise try to use the userService (which might use cookies)
         profileData = await userService.getProfile();
       }
-      
-      console.log("profileData is ", profileData);
-      console.log("user is ", user);
-      
+
+      console.log('profileData is ', profileData);
+      console.log('user is ', user);
+
       if (profileData) {
         setUserData({
           name: profileData.name || '',
           email: profileData.email || '',
           profilePicture: profileData.profilePicture || '',
-          scenarios: profileData.scenarios || []
+          scenarios: profileData.scenarios || [],
         });
-        
+
         // Update the auth context if needed
         if (updateUser && !user) {
           updateUser(profileData);
@@ -166,30 +176,30 @@ const UserProfile: React.FC = () => {
   const handleSubmit = async () => {
     try {
       setIsLoading(true);
-      
+
       // Use the editName value from the modal
       const updatedProfile = await userService.updateProfile({
-        name: editName,  // Use editName instead of userData.name
+        name: editName, // Use editName instead of userData.name
         email: userData.email,
-        profilePicture: userData.profilePicture
+        profilePicture: userData.profilePicture,
       });
-      
+
       // Update local state with response data
       setUserData({
         name: updatedProfile.name,
         email: updatedProfile.email,
         profilePicture: updatedProfile.profilePicture,
-        scenarios: updatedProfile.scenarios
+        scenarios: updatedProfile.scenarios,
       });
-      
+
       // Update auth context if needed
       if (updateUser) {
         updateUser(updatedProfile);
       }
-      
+
       // Close the modal
       onEditProfileClose();
-      
+
       toast({
         title: 'Profile updated',
         description: 'Your profile has been successfully updated',
@@ -216,33 +226,37 @@ const UserProfile: React.FC = () => {
   const handleShareScenario = async () => {
     if (user && selectedScenario && shareEmail) {
       try {
-        await axios.post(`${API_BASE_URL}/api/scenarios/share`, {
-          userId: user.googleId,
-          scenarioId: selectedScenario._id,
-          shareWithEmail: shareEmail,
-          permission: sharePermission
-        }, { withCredentials: true });
-        
+        await axios.post(
+          `${API_BASE_URL}/api/scenarios/share`,
+          {
+            userId: user.googleId,
+            scenarioId: selectedScenario._id,
+            shareWithEmail: shareEmail,
+            permission: sharePermission,
+          },
+          { withCredentials: true }
+        );
+
         // Fetch updated user data to get the latest scenario sharing info
         fetchUserProfile();
-        
-        setShareEmail("");
-        setSharePermission("read");
+
+        setShareEmail('');
+        setSharePermission('read');
         onShareScenarioClose();
-        
+
         toast({
-          title: "Scenario shared",
+          title: 'Scenario shared',
           description: `Scenario "${selectedScenario.name}" has been shared with ${shareEmail}.`,
-          status: "success",
+          status: 'success',
           duration: 3000,
           isClosable: true,
         });
       } catch (err: any) {
-        console.error("Error sharing scenario:", err);
+        console.error('Error sharing scenario:', err);
         toast({
-          title: "Share failed",
-          description: err.response?.data?.message || "Failed to share scenario",
-          status: "error",
+          title: 'Share failed',
+          description: err.response?.data?.message || 'Failed to share scenario',
+          status: 'error',
           duration: 3000,
           isClosable: true,
         });
@@ -278,7 +292,7 @@ const UserProfile: React.FC = () => {
 
   // Show error if there was a problem fetching data
   if (!user) {
-    console.log("user2 is ", user);
+    console.log('user2 is ', user);
     return (
       <Box p={5} textAlign="center">
         <Text fontSize="xl">No profile data available.</Text>
@@ -293,21 +307,21 @@ const UserProfile: React.FC = () => {
   return (
     <Box p={5}>
       {/* Return to Dashboard Button */}
-      <Button 
-        leftIcon={<FaArrowLeft />} 
-        colorScheme="gray" 
-        variant="outline" 
-        size="sm" 
+      <Button
+        leftIcon={<FaArrowLeft />}
+        colorScheme="gray"
+        variant="outline"
+        size="sm"
         mb={4}
         onClick={handleReturnToDashboard}
       >
         Return to Dashboard
       </Button>
-      
+
       {/* Profile Header */}
-      <Flex 
-        direction={{ base: "column", md: "row" }} 
-        align={{ base: "center", md: "flex-start" }}
+      <Flex
+        direction={{ base: 'column', md: 'row' }}
+        align={{ base: 'center', md: 'flex-start' }}
         justify="space-between"
         mb={8}
         pb={5}
@@ -315,22 +329,24 @@ const UserProfile: React.FC = () => {
         borderColor={borderColor}
       >
         <Flex align="center" mb={{ base: 4, md: 0 }}>
-          <Avatar 
-            size="xl" 
-            name={userData.name} 
-            src={userData.profilePicture} 
-            mr={4} 
+          <Avatar
+            size="xl"
+            name={userData.name}
+            src={userData.profilePicture}
+            mr={4}
             icon={<FaUser fontSize="2rem" />}
           />
           <VStack align="flex-start" spacing={1}>
             <Heading size="xl">{userData.name}</Heading>
-            <Text fontSize="lg" color={textColor}>{userData.email}</Text>
+            <Text fontSize="lg" color={textColor}>
+              {userData.email}
+            </Text>
           </VStack>
         </Flex>
         <HStack spacing={4} mt={{ base: 4, md: 0 }}>
-          <Button 
-            leftIcon={<FaEdit />} 
-            colorScheme="blue" 
+          <Button
+            leftIcon={<FaEdit />}
+            colorScheme="blue"
             variant="outline"
             size="lg"
             onClick={() => {
@@ -346,20 +362,10 @@ const UserProfile: React.FC = () => {
       {/* Tabs for different sections */}
       <Tabs colorScheme="blue" variant="enclosed">
         <TabList>
-          <Tab 
-            fontSize="xl" 
-            fontWeight="semibold" 
-            py={4} 
-            px={6}
-          >
+          <Tab fontSize="xl" fontWeight="semibold" py={4} px={6}>
             My Scenarios
           </Tab>
-          <Tab 
-            fontSize="xl" 
-            fontWeight="semibold" 
-            py={4} 
-            px={6}
-          >
+          <Tab fontSize="xl" fontWeight="semibold" py={4} px={6}>
             Shared With Me
           </Tab>
         </TabList>
@@ -367,13 +373,21 @@ const UserProfile: React.FC = () => {
         <TabPanels>
           {/* My Scenarios Tab */}
           <TabPanel>
-            <Heading size="lg" mb={5}>My Financial Scenarios</Heading>
+            <Heading size="lg" mb={5}>
+              My Financial Scenarios
+            </Heading>
             {!userData.scenarios || userData.scenarios.length === 0 ? (
               <Text>You haven't created any scenarios yet.</Text>
             ) : (
               <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={5}>
                 {userData.scenarios.map(scenario => (
-                  <Card key={scenario._id} bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor}>
+                  <Card
+                    key={scenario._id}
+                    bg={cardBg}
+                    shadow="md"
+                    borderWidth="1px"
+                    borderColor={borderColor}
+                  >
                     <CardHeader>
                       <Flex justify="space-between" align="center">
                         <Heading size="md">{scenario.name}</Heading>
@@ -399,9 +413,9 @@ const UserProfile: React.FC = () => {
                     </CardHeader>
                     <CardBody pt={0}>
                       <Text fontSize="md" color={textColor} mb={3}>
-                        {scenario.description || "No description available"}
+                        {scenario.description || 'No description available'}
                       </Text>
-                      
+
                       {scenario.sharedWith && scenario.sharedWith.length > 0 && (
                         <Box mt={2}>
                           <Text fontSize="xs" fontWeight="bold" mb={1}>
@@ -423,7 +437,9 @@ const UserProfile: React.FC = () => {
 
           {/* Shared With Me Tab */}
           <TabPanel>
-            <Heading size="md" mb={4}>Scenarios Shared With Me</Heading>
+            <Heading size="md" mb={4}>
+              Scenarios Shared With Me
+            </Heading>
             <Text>No scenarios have been shared with you yet.</Text>
           </TabPanel>
         </TabPanels>
@@ -438,9 +454,9 @@ const UserProfile: React.FC = () => {
           <ModalBody>
             <FormControl>
               <FormLabel>Name</FormLabel>
-              <Input 
-                value={editName} 
-                onChange={(e) => setEditName(e.target.value)} 
+              <Input
+                value={editName}
+                onChange={e => setEditName(e.target.value)}
                 placeholder="Enter your name"
               />
             </FormControl>
@@ -465,14 +481,12 @@ const UserProfile: React.FC = () => {
           <ModalBody>
             {selectedScenario && (
               <>
-                <Text mb={4}>
-                  Share "{selectedScenario.name}" with another user:
-                </Text>
+                <Text mb={4}>Share "{selectedScenario.name}" with another user:</Text>
                 <FormControl mb={4}>
                   <FormLabel>User Email</FormLabel>
-                  <Input 
-                    value={shareEmail} 
-                    onChange={(e) => setShareEmail(e.target.value)} 
+                  <Input
+                    value={shareEmail}
+                    onChange={e => setShareEmail(e.target.value)}
                     placeholder="Enter email address"
                   />
                 </FormControl>
@@ -480,17 +494,17 @@ const UserProfile: React.FC = () => {
                   <FormLabel>Permission</FormLabel>
                   <HStack spacing={4}>
                     <Button
-                      variant={sharePermission === "read" ? "solid" : "outline"}
+                      variant={sharePermission === 'read' ? 'solid' : 'outline'}
                       colorScheme="blue"
-                      onClick={() => setSharePermission("read")}
+                      onClick={() => setSharePermission('read')}
                       size="sm"
                     >
                       Read Only
                     </Button>
                     <Button
-                      variant={sharePermission === "write" ? "solid" : "outline"}
+                      variant={sharePermission === 'write' ? 'solid' : 'outline'}
                       colorScheme="green"
-                      onClick={() => setSharePermission("write")}
+                      onClick={() => setSharePermission('write')}
                       size="sm"
                     >
                       Read & Write
@@ -518,9 +532,7 @@ const UserProfile: React.FC = () => {
           <ModalHeader>Edit Scenario</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Text mb={4}>
-              The following is the scenario will be implementation:
-            </Text>
+            <Text mb={4}>The following is the scenario will be implementation:</Text>
             <VStack align="start" spacing={2} pl={4}>
               <Text>• Change the scenario name</Text>
               <Text>• Modify financial parameters</Text>
@@ -529,10 +541,7 @@ const UserProfile: React.FC = () => {
             </VStack>
             <FormControl mt={4}>
               <FormLabel>Scenario Name</FormLabel>
-              <Input 
-                value={editScenarioName}
-                onChange={(e) => setEditScenarioName(e.target.value)}
-              />
+              <Input value={editScenarioName} onChange={e => setEditScenarioName(e.target.value)} />
             </FormControl>
           </ModalBody>
           <ModalFooter>

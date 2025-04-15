@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Box,
   Text,
@@ -7,7 +6,8 @@ import {
   StatNumber,
   StatHelpText,
   useColorModeValue,
-} from "@chakra-ui/react";
+} from '@chakra-ui/react';
+import React from 'react';
 
 //this is a component that displays a statistic for example in the investment dashboard
 //it displays a label, a value, a help text and a description
@@ -20,16 +20,10 @@ export interface StatDisplayProps {
   bg?: string;
 }
 
-const StatDisplay: React.FC<StatDisplayProps> = ({
-  label,
-  value,
-  helpText,
-  description,
-  bg,
-}) => {
-  const statBgColor = useColorModeValue("blue.50", "blue.900");
-  const textColor = useColorModeValue("gray.600", "gray.300");
-  const labelColor = useColorModeValue("gray.500", "gray.400");
+const StatDisplay: React.FC<StatDisplayProps> = ({ label, value, helpText, description, bg }) => {
+  const statBgColor = useColorModeValue('blue.50', 'blue.900');
+  const textColor = useColorModeValue('gray.600', 'gray.300');
+  const labelColor = useColorModeValue('gray.500', 'gray.400');
 
   return (
     <Box>

@@ -1,14 +1,12 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+
 import EventSeriesSection from '../components/event_series/EventSeriesSection';
-import { useEventSeries } from '../contexts/EventSeriesContext';
 import { AddedEvent } from '../components/event_series/EventSeriesSection';
+import { useEventSeries } from '../contexts/EventSeriesContext';
 
 export const EventSeriesRoutes: React.FC = () => {
-  const { 
-    eventSeries, 
-    handleAddEventSeries
-  } = useEventSeries();
+  const { eventSeries, handleAddEventSeries } = useEventSeries();
 
   const handleDeleteEvent = async (id: string) => {
     //to do?
@@ -30,4 +28,4 @@ export const EventSeriesRoutes: React.FC = () => {
       />
     </Routes>
   );
-}; 
+};

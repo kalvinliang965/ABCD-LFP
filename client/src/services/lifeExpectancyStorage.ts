@@ -1,8 +1,8 @@
 // Local storage service for life expectancy settings
-import { LifeExpectancyConfig } from "../components/scenarios/LifeExpectancyForm";
+import { LifeExpectancyConfig } from '../components/scenarios/LifeExpectancyForm';
 
 // Local storage key
-const STORAGE_KEY = "life_expectancy_settings";
+const STORAGE_KEY = 'life_expectancy_settings';
 
 // Helper function to convert complex objects for storage
 function map_to_storage_object(config: LifeExpectancyConfig): any {
@@ -15,14 +15,14 @@ function map_to_storage_object(config: LifeExpectancyConfig): any {
 function object_to_life_expectancy_config(storedData: any): LifeExpectancyConfig {
   return {
     id: storedData.id,
-    userExpectancyType: storedData.userExpectancyType || "fixed",
+    userExpectancyType: storedData.userExpectancyType || 'fixed',
     userFixedAge: storedData.userFixedAge || 85,
     userMeanAge: storedData.userMeanAge || 85,
     userStandardDeviation: storedData.userStandardDeviation || 5,
-    spouseExpectancyType: storedData.spouseExpectancyType || "fixed",
+    spouseExpectancyType: storedData.spouseExpectancyType || 'fixed',
     spouseFixedAge: storedData.spouseFixedAge || 85,
     spouseMeanAge: storedData.spouseMeanAge || 85,
-    spouseStandardDeviation: storedData.spouseStandardDeviation || 5
+    spouseStandardDeviation: storedData.spouseStandardDeviation || 5,
   };
 }
 
@@ -44,11 +44,9 @@ export const lifeExpectancyStorage = {
       if (!storedData) return [];
 
       const parsedData = JSON.parse(storedData);
-      return Array.isArray(parsedData)
-        ? parsedData.map(object_to_life_expectancy_config)
-        : [];
+      return Array.isArray(parsedData) ? parsedData.map(object_to_life_expectancy_config) : [];
     } catch (error) {
-      console.error("Error fetching life expectancy configs from localStorage:", error);
+      console.error('Error fetching life expectancy configs from localStorage:', error);
       return [];
     }
   },
@@ -73,22 +71,22 @@ export const lifeExpectancyStorage = {
   add: (config: LifeExpectancyConfig): LifeExpectancyConfig => {
     try {
       const configs = lifeExpectancyStorage.get_all();
-      
+
       // Generate ID if not provided
       const configWithId = {
         ...config,
-        id: config.id || generate_id()
+        id: config.id || generate_id(),
       };
-      
+
       // Add to array
       configs.push(map_to_storage_object(configWithId));
-      
+
       // Save to localStorage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(configs));
-      
+
       return configWithId;
     } catch (error) {
-      console.error("Error adding life expectancy config to localStorage:", error);
+      console.error('Error adding life expectancy config to localStorage:', error);
       throw error;
     }
   },
@@ -100,22 +98,22 @@ export const lifeExpectancyStorage = {
     try {
       const configs = lifeExpectancyStorage.get_all();
       const index = configs.findIndex((s: any) => s.id === id);
-      
+
       if (index === -1) {
         throw new Error(`Life expectancy config with id ${id} not found`);
       }
-      
+
       // Update the config
       const updatedConfig = {
         ...config,
-        id
+        id,
       };
-      
+
       configs[index] = map_to_storage_object(updatedConfig);
-      
+
       // Save to localStorage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(configs));
-      
+
       return updatedConfig;
     } catch (error) {
       console.error(`Error updating life expectancy config with id ${id}:`, error);
@@ -130,7 +128,7 @@ export const lifeExpectancyStorage = {
     try {
       const configs = lifeExpectancyStorage.get_all();
       const filteredConfigs = configs.filter((s: any) => s.id !== id);
-      
+
       // Save to localStorage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredConfigs));
     } catch (error) {
@@ -146,7 +144,7 @@ export const lifeExpectancyStorage = {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
-      console.error("Error clearing life expectancy configs from localStorage:", error);
+      console.error('Error clearing life expectancy configs from localStorage:', error);
     }
   },
 
@@ -157,13 +155,13 @@ export const lifeExpectancyStorage = {
     try {
       const configs = lifeExpectancyStorage.get_all();
       if (configs.length === 0) return null;
-      
+
       return configs[configs.length - 1];
     } catch (error) {
-      console.error("Error getting most recent life expectancy config:", error);
+      console.error('Error getting most recent life expectancy config:', error);
       return null;
     }
-  }
+  },
 };
 
-export default lifeExpectancyStorage; 
+export default lifeExpectancyStorage;
