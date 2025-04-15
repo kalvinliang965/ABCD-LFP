@@ -3,7 +3,6 @@
  * Create a component for handling inflation settings as part of decomposing AdditionalSettingsForm
  */
 
-import React, { useState } from "react";
 import {
   Box,
   Text,
@@ -26,11 +25,13 @@ import {
   SimpleGrid,
   Tooltip,
   Badge,
-} from "@chakra-ui/react";
-import { FiPercent, FiBarChart, FiInfo } from "react-icons/fi";
-import { DistributionType } from "../../../types/Enum";
-import { DistributionTypeConfig } from "../../../types/ConfigTypes";
-import {create_distribution_config} from "../../../utils/DistributionTypeSwitch";
+} from '@chakra-ui/react';
+import React, { useState } from 'react';
+import { FiPercent, FiBarChart, FiInfo } from 'react-icons/fi';
+
+import { DistributionTypeConfig } from '../../../types/ConfigTypes';
+import { DistributionType } from '../../../types/Enum';
+import { create_distribution_config } from '../../../utils/DistributionTypeSwitch';
 
 interface InflationSettingsProps {
   inflationConfig: DistributionTypeConfig;
@@ -41,14 +42,14 @@ const InflationSettings: React.FC<InflationSettingsProps> = ({
   inflationConfig,
   onChangeInflationConfig,
 }) => {
-  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
 
-  const [inflation_buffer1, set_inflation_buffer1] = useState("");
-  const [inflation_buffer2, set_inflation_buffer2] = useState("");
+  const [inflation_buffer1, set_inflation_buffer1] = useState('');
+  const [inflation_buffer2, set_inflation_buffer2] = useState('');
 
   const reset_inflation_buffer = () => {
-    set_inflation_buffer1("");
-    set_inflation_buffer2("");
+    set_inflation_buffer1('');
+    set_inflation_buffer2('');
   };
 
   const handle_change_inflation_type = (type: DistributionType) => {
@@ -67,27 +68,13 @@ const InflationSettings: React.FC<InflationSettingsProps> = ({
           p={4}
           borderWidth="2px"
           borderRadius="lg"
-          borderColor={
-            inflationConfig.type === DistributionType.FIXED
-              ? "green.500"
-              : "gray.200"
-          }
-          bg={
-            inflationConfig.type === DistributionType.FIXED
-              ? "green.50"
-              : "transparent"
-          }
-          _hover={{ bg: "green.50", borderColor: "green.300" }}
+          borderColor={inflationConfig.type === DistributionType.FIXED ? 'green.500' : 'gray.200'}
+          bg={inflationConfig.type === DistributionType.FIXED ? 'green.50' : 'transparent'}
+          _hover={{ bg: 'green.50', borderColor: 'green.300' }}
           _dark={{
-            borderColor:
-              inflationConfig.type === DistributionType.FIXED
-                ? "green.500"
-                : "gray.600",
-            bg:
-              inflationConfig.type === DistributionType.FIXED
-                ? "green.900"
-                : "transparent",
-            _hover: { bg: "green.900", borderColor: "green.700" },
+            borderColor: inflationConfig.type === DistributionType.FIXED ? 'green.500' : 'gray.600',
+            bg: inflationConfig.type === DistributionType.FIXED ? 'green.900' : 'transparent',
+            _hover: { bg: 'green.900', borderColor: 'green.700' },
           }}
           transition="all 0.2s"
           onClick={() => {
@@ -99,8 +86,8 @@ const InflationSettings: React.FC<InflationSettingsProps> = ({
           <Flex direction="column" align="center" height="100%">
             <Flex
               mb={3}
-              bg={useColorModeValue("green.100", "green.800")}
-              color={useColorModeValue("green.600", "green.300")}
+              bg={useColorModeValue('green.100', 'green.800')}
+              color={useColorModeValue('green.600', 'green.300')}
               p={2}
               borderRadius="md"
             >
@@ -122,26 +109,15 @@ const InflationSettings: React.FC<InflationSettingsProps> = ({
           borderWidth="2px"
           borderRadius="lg"
           borderColor={
-            inflationConfig.type === DistributionType.UNIFORM
-              ? "orange.500"
-              : "gray.200"
+            inflationConfig.type === DistributionType.UNIFORM ? 'orange.500' : 'gray.200'
           }
-          bg={
-            inflationConfig.type === DistributionType.UNIFORM
-              ? "orange.50"
-              : "transparent"
-          }
-          _hover={{ bg: "orange.50", borderColor: "orange.300" }}
+          bg={inflationConfig.type === DistributionType.UNIFORM ? 'orange.50' : 'transparent'}
+          _hover={{ bg: 'orange.50', borderColor: 'orange.300' }}
           _dark={{
             borderColor:
-              inflationConfig.type === DistributionType.UNIFORM
-                ? "orange.500"
-                : "gray.600",
-            bg:
-              inflationConfig.type === DistributionType.UNIFORM
-                ? "orange.900"
-                : "transparent",
-            _hover: { bg: "orange.900", borderColor: "orange.700" },
+              inflationConfig.type === DistributionType.UNIFORM ? 'orange.500' : 'gray.600',
+            bg: inflationConfig.type === DistributionType.UNIFORM ? 'orange.900' : 'transparent',
+            _hover: { bg: 'orange.900', borderColor: 'orange.700' },
           }}
           transition="all 0.2s"
           onClick={() => {
@@ -153,8 +129,8 @@ const InflationSettings: React.FC<InflationSettingsProps> = ({
           <Flex direction="column" align="center" height="100%">
             <Flex
               mb={3}
-              bg={useColorModeValue("orange.100", "orange.800")}
-              color={useColorModeValue("orange.600", "orange.300")}
+              bg={useColorModeValue('orange.100', 'orange.800')}
+              color={useColorModeValue('orange.600', 'orange.300')}
               p={2}
               borderRadius="md"
             >
@@ -175,27 +151,14 @@ const InflationSettings: React.FC<InflationSettingsProps> = ({
           p={4}
           borderWidth="2px"
           borderRadius="lg"
-          borderColor={
-            inflationConfig.type === DistributionType.NORMAL
-              ? "purple.500"
-              : "gray.200"
-          }
-          bg={
-            inflationConfig.type === DistributionType.NORMAL
-              ? "purple.50"
-              : "transparent"
-          }
-          _hover={{ bg: "purple.50", borderColor: "purple.300" }}
+          borderColor={inflationConfig.type === DistributionType.NORMAL ? 'purple.500' : 'gray.200'}
+          bg={inflationConfig.type === DistributionType.NORMAL ? 'purple.50' : 'transparent'}
+          _hover={{ bg: 'purple.50', borderColor: 'purple.300' }}
           _dark={{
             borderColor:
-              inflationConfig.type === DistributionType.NORMAL
-                ? "purple.500"
-                : "gray.600",
-            bg:
-              inflationConfig.type === DistributionType.NORMAL
-                ? "purple.900"
-                : "transparent",
-            _hover: { bg: "purple.900", borderColor: "purple.700" },
+              inflationConfig.type === DistributionType.NORMAL ? 'purple.500' : 'gray.600',
+            bg: inflationConfig.type === DistributionType.NORMAL ? 'purple.900' : 'transparent',
+            _hover: { bg: 'purple.900', borderColor: 'purple.700' },
           }}
           transition="all 0.2s"
           onClick={() => {
@@ -207,8 +170,8 @@ const InflationSettings: React.FC<InflationSettingsProps> = ({
           <Flex direction="column" align="center" height="100%">
             <Flex
               mb={3}
-              bg={useColorModeValue("purple.100", "purple.800")}
-              color={useColorModeValue("purple.600", "purple.300")}
+              bg={useColorModeValue('purple.100', 'purple.800')}
+              color={useColorModeValue('purple.600', 'purple.300')}
               p={2}
               borderRadius="md"
             >
@@ -229,7 +192,7 @@ const InflationSettings: React.FC<InflationSettingsProps> = ({
   // Render inflation fields based on type
   const render_inflation_fields = () => {
     const convertToValidNumber = (value: string): number => {
-      if (value === "" || value === ".") return 0;
+      if (value === '' || value === '.') return 0;
       const numValue = parseFloat(value);
       return isNaN(numValue) ? 0 : numValue;
     };
@@ -237,43 +200,37 @@ const InflationSettings: React.FC<InflationSettingsProps> = ({
     const handle_change_inflation = (
       field: string,
       value: string,
-      update_func: Function
+      update_func: (value: string) => void
     ) => {
       let processedValue = value;
       processedValue = processedValue
-        .replace(/,/g, ".")
-        .replace(/[^0-9.]/g, "")
-        .replace(/(\..*)\./g, "$1");
+        .replace(/,/g, '.')
+        .replace(/[^0-9.]/g, '')
+        .replace(/(\..*)\./g, '$1');
       if (
-        processedValue.startsWith("0") &&
+        processedValue.startsWith('0') &&
         processedValue.length > 1 &&
-        !processedValue.startsWith("0.")
+        !processedValue.startsWith('0.')
       ) {
         processedValue = processedValue.substring(1);
-      } else if (processedValue.startsWith(".")) {
+      } else if (processedValue.startsWith('.')) {
         processedValue = `0${processedValue}`;
       }
       update_func(processedValue);
 
       let finalValue = convertToValidNumber(processedValue);
       switch (field) {
-        case "value":
-        case "mean":
+        case 'value':
+        case 'mean':
           finalValue = Math.min(20, Math.max(0, finalValue));
           break;
-        case "min":
-          finalValue = Math.min(
-            inflationConfig.max ?? 20,
-            Math.max(0, finalValue)
-          );
+        case 'min':
+          finalValue = Math.min(inflationConfig.max ?? 20, Math.max(0, finalValue));
           break;
-        case "max":
-          finalValue = Math.max(
-            inflationConfig.min ?? 0,
-            Math.min(20, finalValue)
-          );
+        case 'max':
+          finalValue = Math.max(inflationConfig.min ?? 0, Math.min(20, finalValue));
           break;
-        case "standardDeviation":
+        case 'standardDeviation':
           finalValue = Math.min(10, Math.max(0.1, finalValue));
           break;
       }
@@ -303,11 +260,7 @@ const InflationSettings: React.FC<InflationSettingsProps> = ({
                 precision={4}
                 value={inflation_buffer1}
                 onChange={(valueAsString: string) =>
-                  handle_change_inflation(
-                    "value",
-                    valueAsString,
-                    set_inflation_buffer1
-                  )
+                  handle_change_inflation('value', valueAsString, set_inflation_buffer1)
                 }
                 w="100%"
               >
@@ -338,11 +291,7 @@ const InflationSettings: React.FC<InflationSettingsProps> = ({
                   pattern="[0-9.,]*"
                   value={inflation_buffer1}
                   onChange={(valueAsString: string) =>
-                    handle_change_inflation(
-                      "min",
-                      valueAsString,
-                      set_inflation_buffer1
-                    )
+                    handle_change_inflation('min', valueAsString, set_inflation_buffer1)
                   }
                   w="100%"
                 >
@@ -369,11 +318,7 @@ const InflationSettings: React.FC<InflationSettingsProps> = ({
                   pattern="[0-9.,]*"
                   value={inflation_buffer2}
                   onChange={(valueAsString: string) =>
-                    handle_change_inflation(
-                      "max",
-                      valueAsString,
-                      set_inflation_buffer2
-                    )
+                    handle_change_inflation('max', valueAsString, set_inflation_buffer2)
                   }
                   w="100%"
                 >
@@ -404,11 +349,7 @@ const InflationSettings: React.FC<InflationSettingsProps> = ({
                   inputMode="decimal"
                   value={inflation_buffer1}
                   onChange={(valueAsString: string) =>
-                    handle_change_inflation(
-                      "mean",
-                      valueAsString,
-                      set_inflation_buffer1
-                    )
+                    handle_change_inflation('mean', valueAsString, set_inflation_buffer1)
                   }
                   w="100%"
                 >
@@ -422,9 +363,7 @@ const InflationSettings: React.FC<InflationSettingsProps> = ({
             </FormControl>
 
             <FormControl isRequired>
-              <FormLabel fontWeight="medium">
-                Standard Deviation (σ) (%)
-              </FormLabel>
+              <FormLabel fontWeight="medium">Standard Deviation (σ) (%)</FormLabel>
               <InputGroup size="lg">
                 <InputLeftElement pointerEvents="none">
                   <Icon as={FiPercent} color="purple.500" />
@@ -436,7 +375,7 @@ const InflationSettings: React.FC<InflationSettingsProps> = ({
                   value={inflation_buffer2}
                   onChange={(valueAsString: string) =>
                     handle_change_inflation(
-                      "standardDeviation",
+                      'standardDeviation',
                       valueAsString,
                       set_inflation_buffer2
                     )
@@ -466,7 +405,7 @@ const InflationSettings: React.FC<InflationSettingsProps> = ({
       shadow="sm"
     >
       <CardHeader
-        bg={useColorModeValue("gray.50", "gray.700")}
+        bg={useColorModeValue('gray.50', 'gray.700')}
         borderBottomWidth="1px"
         borderBottomColor={borderColor}
         py={4}
@@ -488,9 +427,8 @@ const InflationSettings: React.FC<InflationSettingsProps> = ({
       </CardHeader>
       <CardBody p={6}>
         <Text fontSize="md" color="gray.600" mb={6}>
-          Choose how you want to model inflation in your financial plan. You can
-          use a fixed rate or statistical distributions for more sophisticated
-          modeling.
+          Choose how you want to model inflation in your financial plan. You can use a fixed rate or
+          statistical distributions for more sophisticated modeling.
         </Text>
 
         {render_inflation_type_options()}

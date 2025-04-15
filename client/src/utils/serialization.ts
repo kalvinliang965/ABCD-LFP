@@ -25,12 +25,12 @@ export function serialize_scenario_for_api(scenario: any) {
     serialized.eventSeries = Array.from(serialized.eventSeries).map((event: any) => {
       // Convert Map objects to plain objects
       const processedEvent = { ...event };
-      
+
       // Handle start Map
       if (event.start instanceof Map) {
         const entries = Array.from(event.start.entries()) as [string, any][];
         processedEvent.start = entries.map(([key, value]) => ({
-          [key]: value
+          [key]: value,
         }));
       }
 
@@ -38,7 +38,7 @@ export function serialize_scenario_for_api(scenario: any) {
       if (event.duration instanceof Map) {
         const entries = Array.from(event.duration.entries()) as [string, any][];
         processedEvent.duration = entries.map(([key, value]) => ({
-          [key]: value
+          [key]: value,
         }));
       }
 
@@ -46,7 +46,7 @@ export function serialize_scenario_for_api(scenario: any) {
       if (event.changeDistribution instanceof Map) {
         const entries = Array.from(event.changeDistribution.entries()) as [string, any][];
         processedEvent.changeDistribution = entries.map(([key, value]) => ({
-          [key]: value
+          [key]: value,
         }));
       }
 
@@ -55,7 +55,7 @@ export function serialize_scenario_for_api(scenario: any) {
         const entries = Array.from(event.assetAllocation.entries()) as [string, any][];
         processedEvent.assetAllocation = entries.map(([key, value]) => ({
           type: key,
-          value: value
+          value: value,
         }));
       }
 
@@ -64,13 +64,13 @@ export function serialize_scenario_for_api(scenario: any) {
         const entries = Array.from(event.assetAllocation2.entries()) as [string, any][];
         processedEvent.assetAllocation2 = entries.map(([key, value]) => ({
           type: key,
-          value: value
+          value: value,
         }));
       }
 
       return processedEvent;
     });
   }
-  
+
   return serialized;
 }

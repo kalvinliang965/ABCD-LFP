@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import {
   Box,
   Badge,
@@ -22,8 +21,8 @@ import {
   PopoverCloseButton,
   IconButton,
   useToast,
-} from "@chakra-ui/react";
-import { Link as RouterLink } from "react-router-dom";
+} from '@chakra-ui/react';
+import React, { useState } from 'react';
 import {
   FaCalendarAlt,
   FaMapMarkerAlt,
@@ -35,9 +34,11 @@ import {
   FaShoppingBag,
   FaDownload,
   FaTrash,
-} from "react-icons/fa";
-import { ScenarioRaw } from "../../types/Scenarios";
-import { download_scenario_as_yaml } from "../../utils/yamlExport";
+} from 'react-icons/fa';
+import { Link as RouterLink } from 'react-router-dom';
+
+import { ScenarioRaw } from '../../types/Scenarios';
+import { download_scenario_as_yaml } from '../../utils/yamlExport';
 
 /**
  * AI prompt : help me design a card to show the scenario details by using the card component and the scenario type
@@ -59,8 +60,8 @@ const InfoItem = ({
   value: string | number;
   tooltipContent: string;
 }) => {
-  const iconBg = useColorModeValue("blue.50", "blue.900");
-  const labelColor = useColorModeValue("gray.600", "gray.400");
+  const iconBg = useColorModeValue('blue.50', 'blue.900');
+  const labelColor = useColorModeValue('gray.600', 'gray.400');
 
   return (
     <GridItem>
@@ -88,32 +89,29 @@ const InfoItem = ({
   );
 };
 
-const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
-  scenario,
-  onDelete
-}) => {
+const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({ scenario, onDelete }) => {
   const toast = useToast();
-  const highlightColor = useColorModeValue("blue.500", "blue.300");
-  const cardBg = useColorModeValue("white", "gray.800");
-  const cardBorder = useColorModeValue("gray.200", "gray.700");
-  const headerBg = useColorModeValue("blue.500", "blue.600");
+  const highlightColor = useColorModeValue('blue.500', 'blue.300');
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const cardBorder = useColorModeValue('gray.200', 'gray.700');
+  const headerBg = useColorModeValue('blue.500', 'blue.600');
 
   const handle_download_yaml = () => {
     try {
       download_scenario_as_yaml(scenario);
       toast({
-        title: "YAML Downloaded",
+        title: 'YAML Downloaded',
         description: `Scenario "${scenario.name}" has been downloaded as YAML`,
-        status: "success",
+        status: 'success',
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
-      console.error("Error downloading YAML:", error);
+      console.error('Error downloading YAML:', error);
       toast({
-        title: "Download Failed",
-        description: "There was an error downloading the YAML file",
-        status: "error",
+        title: 'Download Failed',
+        description: 'There was an error downloading the YAML file',
+        status: 'error',
         duration: 3000,
         isClosable: true,
       });
@@ -130,9 +128,9 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
       borderColor={cardBorder}
       transition="all 0.3s"
       _hover={{
-        transform: "translateY(-4px)",
-        boxShadow: "xl",
-        borderColor: "blue.300",
+        transform: 'translateY(-4px)',
+        boxShadow: 'xl',
+        borderColor: 'blue.300',
       }}
     >
       {/* Header with name and badge */}
@@ -143,9 +141,7 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
           </Heading>
           <Flex gap={2} align="center">
             <Badge
-              colorScheme={
-                scenario.maritalStatus === 'individual' ? "purple" : "pink"
-              }
+              colorScheme={scenario.maritalStatus === 'individual' ? 'purple' : 'pink'}
               fontSize="0.8em"
               py={1}
               px={2}
@@ -171,7 +167,7 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
               bg="rgba(229, 62, 62, 0.85)"
               color="white"
               fontWeight="normal"
-              _hover={{ bg: "rgba(229, 62, 62, 0.95)" }}
+              _hover={{ bg: 'rgba(229, 62, 62, 0.95)' }}
               onClick={onDelete}
             />
           </Box>
@@ -198,7 +194,7 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
             icon={FaHourglass}
             label="Life Expectancy"
             value={
-              scenario.lifeExpectancy[0].type === "fixed"
+              scenario.lifeExpectancy[0].type === 'fixed'
                 ? scenario.lifeExpectancy[0].value
                 : `${scenario.lifeExpectancy[0].mean} ± ${scenario.lifeExpectancy[0].stdev}`
             }
@@ -209,7 +205,7 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
           <InfoItem
             icon={FaCalendarAlt}
             label="Birth Year"
-            value={scenario.birthYears.join(", ")}
+            value={scenario.birthYears.join(', ')}
             tooltipContent="Birth year(s) for scenario participants"
           />
         </Grid>
@@ -260,9 +256,7 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
                 <PopoverCloseButton />
                 <PopoverHeader fontWeight="bold">Investments</PopoverHeader>
                 <PopoverBody>
-                  <Text fontSize="sm">
-                    {scenario.investments.size} investment types configured
-                  </Text>
+                  <Text fontSize="sm">{scenario.investments.size} investment types configured</Text>
                 </PopoverBody>
               </PopoverContent>
             </Popover>
@@ -284,9 +278,7 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
                 <PopoverCloseButton />
                 <PopoverHeader fontWeight="bold">Events</PopoverHeader>
                 <PopoverBody>
-                  <Text fontSize="sm">
-                    {scenario.eventSeries.size} events configured
-                  </Text>
+                  <Text fontSize="sm">{scenario.eventSeries.size} events configured</Text>
                 </PopoverBody>
               </PopoverContent>
             </Popover>
@@ -309,8 +301,7 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
                 <PopoverHeader fontWeight="bold">Inflation</PopoverHeader>
                 <PopoverBody>
                   <Text fontSize="sm">
-                    Inflation rate:{" "}
-                    {scenario.inflationAssumption.value}%
+                    Inflation rate: {scenario.inflationAssumption.value * 100}%
                   </Text>
                 </PopoverBody>
               </PopoverContent>
@@ -342,7 +333,6 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
             <Icon as={FaChevronRight} boxSize={3} />
           </Flex>
         </Link> */}
-        
       </Flex>
     </Box>
   );

@@ -2,7 +2,6 @@
 Prompt: Create a more visually appealing and modern component that asks users whether they want to create a scenario from scratch or import from a YAML file
 */
 
-import React from "react";
 import {
   Box,
   Heading,
@@ -18,20 +17,14 @@ import {
   Image,
   Badge,
   useTheme,
-} from "@chakra-ui/react";
-import { motion } from "framer-motion";
-import {
-  PlusCircle,
-  FileUp,
-  ArrowRight,
-  Rocket,
-  FileCode,
-  Zap,
-} from "lucide-react";
+} from '@chakra-ui/react';
+import { motion } from 'framer-motion';
+import { PlusCircle, FileUp, ArrowRight, Rocket, FileCode, Zap } from 'lucide-react';
+import React from 'react';
 
 export enum ScenarioCreationType {
-  FROM_SCRATCH = "from_scratch",
-  IMPORT_YAML = "import_yaml",
+  FROM_SCRATCH = 'from_scratch',
+  IMPORT_YAML = 'import_yaml',
 }
 
 export interface ScenarioTypeSelectorProps {
@@ -41,35 +34,33 @@ export interface ScenarioTypeSelectorProps {
 const MotionBox = motion(Box);
 const MotionFlex = motion(Flex);
 
-const ScenarioTypeSelector: React.FC<ScenarioTypeSelectorProps> = ({
-  onTypeSelect,
-}) => {
+const ScenarioTypeSelector: React.FC<ScenarioTypeSelectorProps> = ({ onTypeSelect }) => {
   const theme = useTheme();
 
   // Add debugging function with direct state management for testing
   const handleTypeSelect = (type: ScenarioCreationType) => {
-    console.log("ScenarioTypeSelector: Type selected:", type);
+    console.log('ScenarioTypeSelector: Type selected:', type);
     // Call the onTypeSelect prop directly
     try {
       onTypeSelect(type);
-      console.log("ScenarioTypeSelector: onTypeSelect called successfully");
+      console.log('ScenarioTypeSelector: onTypeSelect called successfully');
     } catch (error) {
-      console.error("ScenarioTypeSelector: Error calling onTypeSelect:", error);
+      console.error('ScenarioTypeSelector: Error calling onTypeSelect:', error);
     }
   };
 
-  const headerBg = useColorModeValue("blue.50", "blue.900");
-  const headerTextColor = useColorModeValue("blue.800", "blue.100");
-  const cardBg = useColorModeValue("white", "gray.800");
-  const cardBorderColor = useColorModeValue("gray.200", "gray.700");
-  const cardHoverBg = useColorModeValue("gray.50", "gray.700");
+  const headerBg = useColorModeValue('blue.50', 'blue.900');
+  const headerTextColor = useColorModeValue('blue.800', 'blue.100');
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const cardBorderColor = useColorModeValue('gray.200', 'gray.700');
+  const cardHoverBg = useColorModeValue('gray.50', 'gray.700');
   const boxShadow = useColorModeValue(
-    "0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)",
-    "0 4px 20px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3)"
+    '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+    '0 4px 20px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3)'
   );
   const boxShadowHover = useColorModeValue(
-    "0 15px 30px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(0, 0, 0, 0.05)",
-    "0 15px 30px rgba(0, 0, 0, 0.5), 0 5px 15px rgba(0, 0, 0, 0.3)"
+    '0 15px 30px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(0, 0, 0, 0.05)',
+    '0 15px 30px rgba(0, 0, 0, 0.5), 0 5px 15px rgba(0, 0, 0, 0.3)'
   );
 
   const is_mobile = useBreakpointValue({ base: true, md: false });
@@ -101,7 +92,7 @@ const ScenarioTypeSelector: React.FC<ScenarioTypeSelectorProps> = ({
       animate="show"
       variants={container}
       minH="100vh"
-      bg={useColorModeValue("gray.50", "gray.900")}
+      bg={useColorModeValue('gray.50', 'gray.900')}
       pt={{ base: 6, md: 12 }}
       pb={{ base: 16, md: 20 }}
       position="relative"
@@ -138,7 +129,7 @@ const ScenarioTypeSelector: React.FC<ScenarioTypeSelectorProps> = ({
             transition={
               {
                 duration: 5,
-                ease: "easeInOut",
+                ease: 'easeInOut',
                 repeat: Infinity,
               } as any
             }
@@ -148,7 +139,7 @@ const ScenarioTypeSelector: React.FC<ScenarioTypeSelectorProps> = ({
 
           <Heading
             as="h1"
-            size={{ base: "xl", md: "2xl" }}
+            size={{ base: 'xl', md: '2xl' }}
             color={headerTextColor}
             mb={4}
             bgGradient="linear(to-r, blue.500, purple.500)"
@@ -156,14 +147,9 @@ const ScenarioTypeSelector: React.FC<ScenarioTypeSelectorProps> = ({
           >
             Create New Scenario
           </Heading>
-          <Text
-            color={headerTextColor}
-            fontSize={{ base: "md", md: "xl" }}
-            maxW="3xl"
-            mx="auto"
-          >
-            Start your financial journey by building a personalized plan that
-            meets your unique goals
+          <Text color={headerTextColor} fontSize={{ base: 'md', md: 'xl' }} maxW="3xl" mx="auto">
+            Start your financial journey by building a personalized plan that meets your unique
+            goals
           </Text>
         </MotionBox>
 
@@ -171,28 +157,19 @@ const ScenarioTypeSelector: React.FC<ScenarioTypeSelectorProps> = ({
           <MotionBox variants={item} textAlign="center" mb={{ base: 4, md: 6 }}>
             <Heading
               as="h2"
-              size={{ base: "lg", md: "xl" }}
+              size={{ base: 'lg', md: 'xl' }}
               mb={3}
               bgGradient="linear(to-r, blue.400, teal.400)"
               bgClip="text"
             >
               Choose Your Path
             </Heading>
-            <Text
-              fontSize={{ base: "md", md: "lg" }}
-              color="gray.500"
-              maxW="2xl"
-              mx="auto"
-            >
+            <Text fontSize={{ base: 'md', md: 'lg' }} color="gray.500" maxW="2xl" mx="auto">
               Select the option that best fits your planning approach
             </Text>
           </MotionBox>
 
-          <SimpleGrid
-            columns={grid_columns}
-            spacing={{ base: 8, md: 10 }}
-            mt={4}
-          >
+          <SimpleGrid columns={grid_columns} spacing={{ base: 8, md: 10 }} mt={4}>
             {/* Create from Scratch Option */}
             <MotionBox
               variants={item}
@@ -205,12 +182,12 @@ const ScenarioTypeSelector: React.FC<ScenarioTypeSelectorProps> = ({
               cursor="pointer"
               _hover={{
                 boxShadow: boxShadowHover,
-                transform: "translateY(-8px)",
-                borderColor: "green.400",
+                transform: 'translateY(-8px)',
+                borderColor: 'green.400',
               }}
-              style={{ transition: "all 0.3s ease" }}
+              style={{ transition: 'all 0.3s ease' }}
               onClick={() => {
-                console.log("Create from Scratch clicked");
+                console.log('Create from Scratch clicked');
                 handleTypeSelect(ScenarioCreationType.FROM_SCRATCH);
               }}
               position="relative"
@@ -243,13 +220,7 @@ const ScenarioTypeSelector: React.FC<ScenarioTypeSelectorProps> = ({
                 </Badge>
               </Box>
 
-              <Flex
-                justify="center"
-                align="center"
-                direction="column"
-                p={card_padding}
-                pt={12}
-              >
+              <Flex justify="center" align="center" direction="column" p={card_padding} pt={12}>
                 <MotionBox
                   animate={{
                     y: [0, -8, 0],
@@ -257,7 +228,7 @@ const ScenarioTypeSelector: React.FC<ScenarioTypeSelectorProps> = ({
                   transition={
                     {
                       duration: 3,
-                      ease: "easeInOut",
+                      ease: 'easeInOut',
                       repeat: Infinity,
                     } as any
                   }
@@ -266,16 +237,12 @@ const ScenarioTypeSelector: React.FC<ScenarioTypeSelectorProps> = ({
                   <Flex
                     justify="center"
                     align="center"
-                    boxSize={{ base: "100px", md: "120px" }}
+                    boxSize={{ base: '100px', md: '120px' }}
                     bg="green.50"
                     borderRadius="full"
                     boxShadow="0 4px 12px rgba(0,0,0,0.05)"
                   >
-                    <Icon
-                      as={PlusCircle}
-                      boxSize={{ base: 10, md: 12 }}
-                      color="green.400"
-                    />
+                    <Icon as={PlusCircle} boxSize={{ base: 10, md: 12 }} color="green.400" />
                   </Flex>
                 </MotionBox>
 
@@ -285,9 +252,8 @@ const ScenarioTypeSelector: React.FC<ScenarioTypeSelectorProps> = ({
                   </Heading>
 
                   <Text fontSize="md" color="gray.600" maxW="sm">
-                    Build your financial scenario step-by-step with our guided
-                    process. Customize every detail for a plan tailored to your
-                    unique situation.
+                    Build your financial scenario step-by-step with our guided process. Customize
+                    every detail for a plan tailored to your unique situation.
                   </Text>
 
                   <VStack mt={6} spacing={3} width="100%">
@@ -297,15 +263,11 @@ const ScenarioTypeSelector: React.FC<ScenarioTypeSelectorProps> = ({
                     </Flex>
                     <Flex align="center" width="100%">
                       <Icon as={Zap} color="green.400" mr={3} />
-                      <Text fontWeight="medium">
-                        Full customization options
-                      </Text>
+                      <Text fontWeight="medium">Full customization options</Text>
                     </Flex>
                     <Flex align="center" width="100%">
                       <Icon as={Zap} color="green.400" mr={3} />
-                      <Text fontWeight="medium">
-                        Perfect for first-time users
-                      </Text>
+                      <Text fontWeight="medium">Perfect for first-time users</Text>
                     </Flex>
                   </VStack>
 
@@ -339,12 +301,12 @@ const ScenarioTypeSelector: React.FC<ScenarioTypeSelectorProps> = ({
               cursor="pointer"
               _hover={{
                 boxShadow: boxShadowHover,
-                transform: "translateY(-8px)",
-                borderColor: "purple.400",
+                transform: 'translateY(-8px)',
+                borderColor: 'purple.400',
               }}
-              style={{ transition: "all 0.3s ease" }}
+              style={{ transition: 'all 0.3s ease' }}
               onClick={() => {
-                console.log("Import YAML clicked");
+                console.log('Import YAML clicked');
                 handleTypeSelect(ScenarioCreationType.IMPORT_YAML);
               }}
               position="relative"
@@ -377,13 +339,7 @@ const ScenarioTypeSelector: React.FC<ScenarioTypeSelectorProps> = ({
                 </Badge>
               </Box>
 
-              <Flex
-                justify="center"
-                align="center"
-                direction="column"
-                p={card_padding}
-                pt={12}
-              >
+              <Flex justify="center" align="center" direction="column" p={card_padding} pt={12}>
                 <MotionBox
                   animate={{
                     y: [0, -8, 0],
@@ -391,7 +347,7 @@ const ScenarioTypeSelector: React.FC<ScenarioTypeSelectorProps> = ({
                   transition={
                     {
                       duration: 3,
-                      ease: "easeInOut",
+                      ease: 'easeInOut',
                       repeat: Infinity,
                     } as any
                   }
@@ -400,16 +356,12 @@ const ScenarioTypeSelector: React.FC<ScenarioTypeSelectorProps> = ({
                   <Flex
                     justify="center"
                     align="center"
-                    boxSize={{ base: "100px", md: "120px" }}
+                    boxSize={{ base: '100px', md: '120px' }}
                     bg="purple.50"
                     borderRadius="full"
                     boxShadow="0 4px 12px rgba(0,0,0,0.05)"
                   >
-                    <Icon
-                      as={FileCode}
-                      boxSize={{ base: 10, md: 12 }}
-                      color="purple.400"
-                    />
+                    <Icon as={FileCode} boxSize={{ base: 10, md: 12 }} color="purple.400" />
                   </Flex>
                 </MotionBox>
 
@@ -419,8 +371,8 @@ const ScenarioTypeSelector: React.FC<ScenarioTypeSelectorProps> = ({
                   </Heading>
 
                   <Text fontSize="md" color="gray.600" maxW="sm">
-                    Already have a scenario configuration? Import a YAML file to
-                    quickly set up your financial plan without manual setup.
+                    Already have a scenario configuration? Import a YAML file to quickly set up your
+                    financial plan without manual setup.
                   </Text>
 
                   <VStack mt={6} spacing={3} width="100%">
@@ -430,15 +382,11 @@ const ScenarioTypeSelector: React.FC<ScenarioTypeSelectorProps> = ({
                     </Flex>
                     <Flex align="center" width="100%">
                       <Icon as={Zap} color="purple.400" mr={3} />
-                      <Text fontWeight="medium">
-                        Perfect for existing plans
-                      </Text>
+                      <Text fontWeight="medium">Perfect for existing plans</Text>
                     </Flex>
                     <Flex align="center" width="100%">
                       <Icon as={Zap} color="purple.400" mr={3} />
-                      <Text fontWeight="medium">
-                        Full control over configuration
-                      </Text>
+                      <Text fontWeight="medium">Full control over configuration</Text>
                     </Flex>
                   </VStack>
 

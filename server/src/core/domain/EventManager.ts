@@ -187,7 +187,7 @@ export function resolve_event_chain(
         
         event_map.set(event.name, event);
         const startType = event.start.get("type");
-        if (startType === "startWith" || startType === "endWith") {
+        if (startType === "startWith" || startType === "startAfter") {
           const dependencyName = event.start.get("eventSeries");
           if (!dependencyName) {
             simulation_logger.error(`Event ${event.name} missing eventSeries`);

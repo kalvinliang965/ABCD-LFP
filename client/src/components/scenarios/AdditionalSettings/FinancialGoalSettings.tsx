@@ -3,7 +3,6 @@
  * Create a component for handling financial goal settings as part of decomposing AdditionalSettingsForm
  */
 
-import React from "react";
 import {
   Box,
   Text,
@@ -25,8 +24,9 @@ import {
   useColorModeValue,
   SimpleGrid,
   Tooltip,
-} from "@chakra-ui/react";
-import { FiTarget, FiDollarSign, FiInfo, FiShield } from "react-icons/fi";
+} from '@chakra-ui/react';
+import React from 'react';
+import { FiTarget, FiDollarSign, FiInfo, FiShield } from 'react-icons/fi';
 
 interface FinancialGoalSettingsProps {
   financialGoal: number;
@@ -37,10 +37,10 @@ const FinancialGoalSettings: React.FC<FinancialGoalSettingsProps> = ({
   financialGoal,
   onChangeFinancialGoal,
 }) => {
-  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   const handle_change_financial_goal = (valueString: string, value: number) => {
-    if (valueString === "") {
+    if (valueString === '') {
       onChangeFinancialGoal(0); // ensure non-negative
     } else {
       onChangeFinancialGoal(Math.max(0, value)); // ensure non-negative
@@ -57,7 +57,7 @@ const FinancialGoalSettings: React.FC<FinancialGoalSettingsProps> = ({
       shadow="sm"
     >
       <CardHeader
-        bg={useColorModeValue("gray.50", "gray.700")}
+        bg={useColorModeValue('gray.50', 'gray.700')}
         borderBottomWidth="1px"
         borderBottomColor={borderColor}
         py={4}
@@ -81,25 +81,18 @@ const FinancialGoalSettings: React.FC<FinancialGoalSettingsProps> = ({
         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8}>
           <Box>
             <Text fontSize="md" color="gray.600" mb={4}>
-              Set your annual financial goal. A value of $0 indicates that you
-              wish to meet all your expenses. A positive value represents a
-              desired minimum total value of your investments.
+              Set your annual financial goal. A value of $0 indicates that you wish to meet all your
+              expenses. A positive value represents a desired minimum total value of your
+              investments.
             </Text>
 
             <Flex mt={6} gap={4} align="center">
-              <Icon
-                as={FiShield}
-                color="green.500"
-                boxSize={12}
-                opacity={0.8}
-              />
+              <Icon as={FiShield} color="green.500" boxSize={12} opacity={0.8} />
               <Box>
                 <Text fontWeight="medium" fontSize="sm" color="gray.500">
                   Recommended
                 </Text>
-                <Text fontWeight="bold">
-                  Set a safety margin of 10-20% of your annual expenses
-                </Text>
+                <Text fontWeight="bold">Set a safety margin of 10-20% of your annual expenses</Text>
               </Box>
             </Flex>
           </Box>

@@ -1,9 +1,10 @@
-import React from "react";
-import { Route, Navigate } from "react-router-dom";
-import { ProtectedRoute } from "../common";
-import { Layout } from "../layouts";
+import React from 'react';
+import { Route, Navigate } from 'react-router-dom';
 
-// 账户相关组件
+import { ProtectedRoute } from '../common';
+import { Layout } from '../layouts';
+
+// account related components
 const Settings = () => (
   <Layout title="Settings">
     <div>Settings</div>
@@ -11,8 +12,8 @@ const Settings = () => (
 );
 
 const Logout = () => {
-  // Logic for logout - 例如清除本地存储的token
-  localStorage.removeItem("token");
+  // Logic for logout - for example, clear the token in local storage
+  localStorage.removeItem('token');
   return <Navigate to="/login" replace />;
 };
 

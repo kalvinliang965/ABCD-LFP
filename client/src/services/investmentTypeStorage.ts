@@ -1,10 +1,10 @@
 // AI-generated code
 // Create a new localStorage service for investment types
 
-import { InvestmentTypeRaw } from "../types/Scenarios";
+import { InvestmentTypeRaw } from '../types/Scenarios';
 
 // Local storage key
-const STORAGE_KEY = "investment_types";
+const STORAGE_KEY = 'investment_types';
 
 // Helper function to convert Map objects to plain objects for storage
 function map_to_storage_object(investmentType: InvestmentTypeRaw): any {
@@ -38,15 +38,10 @@ export const investmentTypeStorage = {
       if (!storedData) return [];
 
       const parsedData = JSON.parse(storedData);
-      console.log("Parsed data:", parsedData);
-      return Array.isArray(parsedData)
-        ? parsedData.map(object_to_investment_type)
-        : [];
+      console.log('Parsed data:', parsedData);
+      return Array.isArray(parsedData) ? parsedData.map(object_to_investment_type) : [];
     } catch (error) {
-      console.error(
-        "Error fetching investment types from localStorage:",
-        error
-      );
+      console.error('Error fetching investment types from localStorage:', error);
       return [];
     }
   },
@@ -69,15 +64,13 @@ export const investmentTypeStorage = {
 
   // For backward compatibility with code that might still use get_by_id
   get_by_id: (id: string): InvestmentTypeRaw | null => {
-    console.warn(
-      `get_by_id is deprecated, use get_by_name instead. Called with id: "${id}"`
-    );
+    console.warn(`get_by_id is deprecated, use get_by_name instead. Called with id: "${id}"`);
     console.log(
-      "All available investment types:",
-      investmentTypeStorage.get_all().map((type) => type.name)
+      'All available investment types:',
+      investmentTypeStorage.get_all().map(type => type.name)
     );
     const result = investmentTypeStorage.get_by_name(id);
-    console.log("Result from get_by_name:", result);
+    console.log('Result from get_by_name:', result);
     return result;
   },
 
@@ -96,7 +89,7 @@ export const investmentTypeStorage = {
         (type: InvestmentTypeRaw) => type.name === investmentType.name
       );
       if (nameExists) {
-        throw new Error("Investment type name already exists");
+        throw new Error('Investment type name already exists');
       }
 
       // Add new type
@@ -110,7 +103,7 @@ export const investmentTypeStorage = {
 
       return investmentType;
     } catch (error) {
-      console.error("Error creating investment type in localStorage:", error);
+      console.error('Error creating investment type in localStorage:', error);
       throw error;
     }
   },
@@ -121,10 +114,7 @@ export const investmentTypeStorage = {
    * @param investmentType Updated investment type data
    * @returns The updated investment type
    */
-  update: (
-    name: string,
-    investmentType: InvestmentTypeRaw
-  ): InvestmentTypeRaw | null => {
+  update: (name: string, investmentType: InvestmentTypeRaw): InvestmentTypeRaw | null => {
     try {
       const currentData = investmentTypeStorage.get_all();
       const index = currentData.findIndex((type: any) => type.name === name);
@@ -138,7 +128,7 @@ export const investmentTypeStorage = {
 
       currentData[index] = updatedType;
 
-      console.log("updatedType from update", updatedType);
+      console.log('updatedType from update', updatedType);
 
       // Convert and save to localStorage
       const storageData = currentData.map(map_to_storage_object);
@@ -159,9 +149,7 @@ export const investmentTypeStorage = {
   delete: (name: string): boolean => {
     try {
       const currentData = investmentTypeStorage.get_all();
-      const filteredData = currentData.filter(
-        (type: any) => type.name !== name
-      );
+      const filteredData = currentData.filter((type: any) => type.name !== name);
 
       if (filteredData.length === currentData.length) {
         return false; // Nothing was deleted
@@ -185,10 +173,7 @@ export const investmentTypeStorage = {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
-      console.error(
-        "Error clearing investment types from localStorage:",
-        error
-      );
+      console.error('Error clearing investment types from localStorage:', error);
     }
   },
 };

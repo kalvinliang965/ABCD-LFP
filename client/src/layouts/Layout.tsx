@@ -1,7 +1,8 @@
-import React from "react";
-import { Box, useBreakpointValue, useColorModeValue } from "@chakra-ui/react";
-import Sidebar from "./Sidebar";
-import Header from "./Header";
+import { Box, useBreakpointValue, useColorModeValue } from '@chakra-ui/react';
+import React from 'react';
+
+import Header from './Header';
+import Sidebar from './Sidebar';
 
 // this component is used to wrap the page content
 // which is like the shell for the whole page
@@ -15,15 +16,15 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, title }) => {
   // Sidebar width values for proper margin
   const sidebarWidth = useBreakpointValue({
-    base: "0", // On mobile, the sidebar is hidden or in a different position
-    md: "70px", // Default closed sidebar width
+    base: '0', // On mobile, the sidebar is hidden or in a different position
+    md: '70px', // Default closed sidebar width
   });
 
   // Header height for content positioning
-  const headerHeight = "60px";
+  const headerHeight = '60px';
 
   // Optional: prepare for future background
-  const bgColor = useColorModeValue("gray.50", "gray.900");
+  const bgColor = useColorModeValue('gray.50', 'gray.900');
 
   return (
     <Box
@@ -68,14 +69,14 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
             width="100%"
             position="relative"
             sx={{
-              "&::-webkit-scrollbar": {
-                width: "10px",
-                borderRadius: "5px",
-                backgroundColor: "rgba(0, 0, 0, 0.05)",
+              '&::-webkit-scrollbar': {
+                width: '10px',
+                borderRadius: '5px',
+                backgroundColor: 'rgba(0, 0, 0, 0.05)',
               },
-              "&::-webkit-scrollbar-thumb": {
-                backgroundColor: "rgba(0, 0, 0, 0.1)",
-                borderRadius: "5px",
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                borderRadius: '5px',
               },
             }}
             className="main-content"

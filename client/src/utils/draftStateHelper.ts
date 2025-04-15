@@ -1,14 +1,15 @@
-import { ScenarioRaw } from "../types/Scenarios"; //using scenario raw since it matches the db 
-import { map_form_to_scenario_raw } from "./scenarioMapper"; //matches 
-import { ScenarioDetails } from "../components/scenarios/ScenarioDetailsForm";
-import { LifeExpectancyConfig } from "../components/scenarios/LifeExpectancyForm";
-import { InvestmentsConfig } from "../components/scenarios/InvestmentsForm";
-import { AdditionalSettingsConfig } from "../components/scenarios/AdditionalSettingsForm";
-import { RMDSettings } from "../components/scenarios/RMDSettingsForm";
-import { SpendingStrategy } from "../components/scenarios/SpendingStrategyForm";
-import { WithdrawalStrategy } from "../components/scenarios/WithdrawalStrategyForm";
-import { RothConversionStrategy } from "../components/scenarios/RothConversionForm";
-import { AddedEvent } from "../components/event_series/EventSeriesSection";
+import { AddedEvent } from '../components/event_series/EventSeriesSection';
+import { AdditionalSettingsConfig } from '../components/scenarios/AdditionalSettingsForm';
+import { InvestmentsConfig } from '../components/scenarios/InvestmentsForm';
+import { LifeExpectancyConfig } from '../components/scenarios/LifeExpectancyForm';
+import { RMDSettings } from '../components/scenarios/RMDSettingsForm';
+import { RothConversionStrategy } from '../components/scenarios/RothConversionForm';
+import { ScenarioDetails } from '../components/scenarios/ScenarioDetailsForm';
+import { SpendingStrategy } from '../components/scenarios/SpendingStrategyForm';
+import { WithdrawalStrategy } from '../components/scenarios/WithdrawalStrategyForm';
+import { ScenarioRaw } from '../types/Scenarios'; //using scenario raw since it matches the db
+
+import { map_form_to_scenario_raw } from './scenarioMapper'; //matches
 
 export interface DraftState {
   scenario_details: ScenarioDetails;
@@ -25,7 +26,7 @@ export interface DraftState {
 // helper function that returns the current draft state
 //when called returns the current state as a scenario raw object
 export function create_draft_state_helper(state: DraftState): () => ScenarioRaw {
-  return () => 
+  return () =>
     map_form_to_scenario_raw(
       state.scenario_details,
       state.life_expectancy_config,
@@ -37,4 +38,4 @@ export function create_draft_state_helper(state: DraftState): () => ScenarioRaw 
       state.roth_conversion_strategy,
       state.added_events
     );
-} 
+}

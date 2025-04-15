@@ -1,15 +1,17 @@
-import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import DashboardRoutes from "./dashboardRoutes";
-import ScenarioRoutes from "./scenarioRoutes";
-import SimulationRoutes from "./simulationRoutes";
-import AccountRoutes from "./accountRoutes";
-import UserProfile from "../components/user/UserProfile";
-//import "./config/passport"; 
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+
+import UserProfile from '../components/user/UserProfile';
+import Login from '../pages/Login';
+import SimulationResultsPage from '../pages/SimulationResultsPage';
+
+import AccountRoutes from './accountRoutes';
+import DashboardRoutes from './dashboardRoutes';
+import ScenarioRoutes from './scenarioRoutes';
+import SimulationRoutes from './simulationRoutes';
+//import "./config/passport";
 
 // Pages
-import Login from "../pages/Login";
-import SimulationResultsPage from "../pages/SimulationResultsPage";
 
 const AppRoutes = () => {
   return (

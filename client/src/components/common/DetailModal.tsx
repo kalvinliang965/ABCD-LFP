@@ -1,4 +1,3 @@
-import React, { ReactNode } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -11,7 +10,8 @@ import {
   Box,
   Divider,
   useColorModeValue,
-} from "@chakra-ui/react";
+} from '@chakra-ui/react';
+import React, { ReactNode } from 'react';
 
 export interface DetailModalProps {
   isOpen: boolean;
@@ -31,17 +31,17 @@ const DetailModal: React.FC<DetailModalProps> = ({
   onClose,
   title,
   children,
-  size = "lg",
-  primaryButtonText = "Close",
+  size = 'lg',
+  primaryButtonText = 'Close',
   secondaryButtonText,
   onPrimaryButtonClick,
   onSecondaryButtonClick,
   showFooter = true,
 }) => {
   // Color mode values
-  const bgColor = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const highlightColor = useColorModeValue("blue.500", "blue.300");
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const highlightColor = useColorModeValue('blue.500', 'blue.300');
 
   return (
     <Modal
@@ -54,13 +54,7 @@ const DetailModal: React.FC<DetailModalProps> = ({
     >
       <ModalOverlay />
       <ModalContent bg={bgColor} borderColor={borderColor} borderRadius="lg">
-        <ModalHeader
-          color={highlightColor}
-          fontWeight="bold"
-          pb={2}
-          pt={4}
-          px={5}
-        >
+        <ModalHeader color={highlightColor} fontWeight="bold" pb={2} pt={4} px={5}>
           {title}
         </ModalHeader>
         <ModalCloseButton />

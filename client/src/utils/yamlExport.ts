@@ -1,9 +1,11 @@
 // AI-generated code
 // Create utility functions for converting ScenarioRaw to YAML format for export
 
-import { dump } from "js-yaml";
-import { ScenarioRaw } from "../types/Scenarios";
-import { serialize_scenario_for_api } from "./serialization";
+import { dump } from 'js-yaml';
+
+import { ScenarioRaw } from '../types/Scenarios';
+
+import { serialize_scenario_for_api } from './serialization';
 
 /**
  * Converts a ScenarioRaw object to a YAML format string
@@ -14,14 +16,14 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
   // First, ensure all Sets are converted to Arrays
   const serializedScenario = serialize_scenario_for_api(scenario);
 
-  console.log("investmentTypes:", serializedScenario.investmentTypes);
+  console.log('eventSeries:', serializedScenario.eventSeries);
 
   // Helper function to ensure numbers are parsed correctly
   const ensure_number = (val: any, key?: string): any => {
     if (val === null || val === undefined) return val;
     // Skip number conversion for descriptions
-    if (key === "description") return String(val);
-    if (typeof val === "string") {
+    if (key === 'description') return String(val);
+    if (typeof val === 'string') {
       // Try to convert string to number if it looks like a number
       const num = Number(val);
       return !isNaN(num) ? num : val;
@@ -34,14 +36,13 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
     if (obj === null || obj === undefined) return obj;
 
     if (Array.isArray(obj)) {
-      return obj.map((item) => process_values(item));
+      return obj.map(item => process_values(item));
     }
 
-    if (typeof obj === "object") {
+    if (typeof obj === 'object') {
       const result: any = {};
       for (const key in obj) {
-        result[key] =
-          key === "description" ? String(obj[key]) : process_values(obj[key]);
+        result[key] = key === 'description' ? String(obj[key]) : process_values(obj[key]);
       }
       return result;
     }
@@ -60,7 +61,7 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
 
     // Convert array of investment types to the expected format
     investmentTypes: serializedScenario.investmentTypes.map((invType: any) => {
-      console.log("invType:", invType);
+      console.log('invType:', invType);
       const processed = process_values({
         name: invType.name,
         description: String(invType.description),
@@ -97,7 +98,7 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
       };
 
       // Add type-specific properties based on event type
-      if (event.type === "income") {
+      if (event.type === 'income') {
         return process_values({
           ...baseEvent,
           initialAmount: ensure_number(event.initialAmount),
@@ -107,7 +108,7 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
           userFraction: ensure_number(event.userFraction),
           socialSecurity: event.socialSecurity,
         });
-      } else if (event.type === "expense") {
+      } else if (event.type === 'expense') {
         return process_values({
           ...baseEvent,
           initialAmount: ensure_number(event.initialAmount),
@@ -117,21 +118,17 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
           userFraction: ensure_number(event.userFraction),
           discretionary: event.discretionary,
         });
-      } else if (event.type === "invest") {
+      } else if (event.type === 'invest') {
         // Convert assetAllocation format from array to object
         const assetAllocation: Record<string, number> = {};
         const assetAllocation2: Record<string, number> = {};
 
-        if (Array.isArray(event.assetAllocation)) {
-          event.assetAllocation.forEach((allocation: any) => {
-            assetAllocation[allocation.type] = ensure_number(allocation.value);
-          });
+        for (const [key, value] of Object.entries(event.assetAllocation)) {
+          assetAllocation[key] = ensure_number(value);
         }
-
-        if (Array.isArray(event.assetAllocation2)) {
-          event.assetAllocation2.forEach((allocation: any) => {
-            assetAllocation2[allocation.type] = ensure_number(allocation.value);
-          });
+        //! here is the issues
+        for (const [key, value] of Object.entries(event.assetAllocation2)) {
+          assetAllocation2[key] = ensure_number(value);
         }
 
         return process_values({
@@ -141,14 +138,12 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
           assetAllocation2: event.glidePath ? assetAllocation2 : undefined,
           maxCash: ensure_number(event.maxCash),
         });
-      } else if (event.type === "rebalance") {
+      } else if (event.type === 'rebalance') {
         // Convert assetAllocation format from array to object
         const assetAllocation: Record<string, number> = {};
-
-        if (Array.isArray(event.assetAllocation)) {
-          event.assetAllocation.forEach((allocation: any) => {
-            assetAllocation[allocation.type] = ensure_number(allocation.value);
-          });
+        console.log('checking if assetAllocation is an array:', typeof event.assetAllocation);
+        for (const [key, value] of Object.entries(event.assetAllocation)) {
+          assetAllocation[key] = ensure_number(value);
         }
 
         return process_values({
@@ -161,9 +156,7 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
     }),
 
     inflationAssumption: process_values(serializedScenario.inflationAssumption),
-    afterTaxContributionLimit: ensure_number(
-      serializedScenario.afterTaxContributionLimit
-    ),
+    afterTaxContributionLimit: ensure_number(serializedScenario.afterTaxContributionLimit),
     spendingStrategy: serializedScenario.spendingStrategy,
     expenseWithdrawalStrategy: serializedScenario.expenseWithdrawalStrategy,
     RMDStrategy: serializedScenario.RMDStrategy,
@@ -175,7 +168,7 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
     residenceState: serializedScenario.residenceState,
   };
 
-  console.log("yamlObject", yamlObject);
+  console.log('yamlObject', yamlObject);
 
   // Pass skipInvalid:false to ensure valid YAML and noQuotes:true to ensure strings are properly quoted only when needed
   return dump(yamlObject, {
@@ -194,15 +187,15 @@ export function download_scenario_as_yaml(scenario: ScenarioRaw) {
   const yamlString = convert_scenario_to_yaml(scenario);
 
   // Create a Blob from the YAML string
-  const blob = new Blob([yamlString], { type: "application/x-yaml" });
+  const blob = new Blob([yamlString], { type: 'application/x-yaml' });
 
   // Create a URL for the Blob
   const url = URL.createObjectURL(blob);
 
   // Create an anchor element and trigger download
-  const link = document.createElement("a");
+  const link = document.createElement('a');
   link.href = url;
-  link.download = `${scenario.name.replace(/\s+/g, "_")}.yaml`;
+  link.download = `${scenario.name.replace(/\s+/g, '_')}.yaml`;
   document.body.appendChild(link);
   link.click();
 

@@ -7,7 +7,7 @@ import { EventUnion } from "../event/Event";
 
 const create_cycle_event = (
     name: string, 
-    dependency_type: "startWith" | "endWith" | "none",
+    dependency_type: "startWith" | "startAfter" | "none",
     target_event?:string
 ): EventUnionRaw =>  {
 
@@ -133,7 +133,7 @@ describe("EventManager", () => {
             create_cycle_event("A", "none"),
             create_cycle_event("B1", "startWith", "A"),
             create_cycle_event("B2", "startWith", "A"),
-            create_cycle_event("C", "endWith", "B1"),
+            create_cycle_event("C", "startAfter", "B1"),
           ]);
           const result = resolve_event_chain(events);
           expect(result.map(e => e.name)).toEqual([

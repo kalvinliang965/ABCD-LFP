@@ -25,7 +25,7 @@
 
 -  `src/utils` pure tool function (no business logic, no state)
     - `validation.ts` validate data
-    - `logging.ts`
+    - `logger/logging.ts` contain our logger
     - `math/` contain math model for sampling data
     - `date.ts` format date
 
@@ -39,7 +39,7 @@ To run this project, you need to set up environment variables for both the serve
 ### Running our code setup
 1. run npm install for both `client` and `server` directory
 2. to run our frontend, run `npm start dev`
-3. to run our backend, run `npm start`
+3. to run our backend, run `npm start dev`
 4. to run our backend test case run `npm test`
 
 ### Authentication Setup

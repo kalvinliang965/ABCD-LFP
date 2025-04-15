@@ -42,7 +42,7 @@ async function initialize_application() {
   await connect_database();
 
   // run demo code below
-  //await simulation_engine_demo();
+  await simulation_engine_demo();
 }
 
 function start_server() {

@@ -1,4 +1,3 @@
-import React from "react";
 import {
   FormControl,
   FormLabel,
@@ -8,8 +7,10 @@ import {
   NumberInput,
   NumberInputField,
   Select,
-} from "@chakra-ui/react";
-import { StartYearConfig, DistributionConfig } from "../../types/eventSeries";
+} from '@chakra-ui/react';
+import React from 'react';
+
+import { StartYearConfig, DistributionConfig } from '../../types/eventSeries';
 
 interface CommonFieldsProps {
   name: string;
@@ -35,30 +36,30 @@ export const CommonFields: React.FC<CommonFieldsProps> = ({
   existingEvents,
 }) => {
   const startYearTypes = [
-    { value: "fixed", label: "Fixed Year" },
-    { value: "uniform", label: "Uniform Distribution" },
-    { value: "normal", label: "Normal Distribution" },
-    { value: "startWith", label: "Same as Existing Event" },
-    { value: "startAfter", label: "After Existing Event Ends" },
+    { value: 'fixed', label: 'Fixed Year' },
+    { value: 'uniform', label: 'Uniform Distribution' },
+    { value: 'normal', label: 'Normal Distribution' },
+    { value: 'startWith', label: 'Same as Existing Event' },
+    { value: 'startAfter', label: 'After Existing Event Ends' },
   ];
 
-  const handleStartYearTypeChange = (value: StartYearConfig["type"]) => {
+  const handleStartYearTypeChange = (value: StartYearConfig['type']) => {
     let newConfig: StartYearConfig;
     switch (value) {
-      case "fixed":
-        newConfig = { type: "fixed", value: new Date().getFullYear() };
+      case 'fixed':
+        newConfig = { type: 'fixed', value: new Date().getFullYear() };
         break;
-      case "uniform":
-        newConfig = { type: "uniform", min: 2024, max: 2030 };
+      case 'uniform':
+        newConfig = { type: 'uniform', min: 2024, max: 2030 };
         break;
       case "normal":
         newConfig = { type: "normal", mean: 2024, stdev: 2 };
         break;
-      case "startWith":
-        newConfig = { type: "startWith", eventSeries: "" };
+      case 'startWith':
+        newConfig = { type: 'startWith', eventSeries: '' };
         break;
-      case "startAfter":
-        newConfig = { type: "startAfter", eventSeries: "" };
+      case 'startAfter':
+        newConfig = { type: 'startAfter', eventSeries: '' };
         break;
       default:
         return;
@@ -68,32 +69,32 @@ export const CommonFields: React.FC<CommonFieldsProps> = ({
 
   const renderStartYearFields = () => {
     switch (startYear.type) {
-      case "fixed":
+      case 'fixed':
         return (
           <FormControl isRequired>
             <FormLabel>Start Year</FormLabel>
             <NumberInput
-              value={startYear.value || ""}
-              onChange={(valueString) => {
-                const value = valueString === "" ? undefined : parseInt(valueString);
-                setStartYear({ type: "fixed", value });
+              value={startYear.value || ''}
+              onChange={valueString => {
+                const value = valueString === '' ? undefined : parseInt(valueString);
+                setStartYear({ type: 'fixed', value });
               }}
               min={1900}
               max={2100}
-            > 
+            >
               <NumberInputField />
             </NumberInput>
           </FormControl>
         );
-      case "uniform":
+      case 'uniform':
         return (
           <VStack spacing={4}>
             <FormControl isRequired>
               <FormLabel>Minimum Year</FormLabel>
               <NumberInput
-                value={startYear.min || ""}
-                onChange={(valueString) => {
-                  const value = valueString === "" ? undefined : parseInt(valueString);
+                value={startYear.min || ''}
+                onChange={valueString => {
+                  const value = valueString === '' ? undefined : parseInt(valueString);
                   setStartYear({ ...startYear, min: value });
                 }}
                 min={1900}
@@ -104,9 +105,9 @@ export const CommonFields: React.FC<CommonFieldsProps> = ({
             <FormControl isRequired>
               <FormLabel>Maximum Year</FormLabel>
               <NumberInput
-                value={startYear.max || ""}
-                onChange={(valueString) => {
-                  const value = valueString === "" ? undefined : parseInt(valueString);
+                value={startYear.max || ''}
+                onChange={valueString => {
+                  const value = valueString === '' ? undefined : parseInt(valueString);
                   setStartYear({ ...startYear, max: value });
                 }}
                 min={1900}
@@ -116,15 +117,15 @@ export const CommonFields: React.FC<CommonFieldsProps> = ({
             </FormControl>
           </VStack>
         );
-      case "normal":
+      case 'normal':
         return (
           <VStack spacing={4}>
             <FormControl isRequired>
               <FormLabel>Mean Year</FormLabel>
               <NumberInput
-                value={startYear.mean || ""}
-                onChange={(valueString) => {
-                  const value = valueString === "" ? undefined : parseInt(valueString);
+                value={startYear.mean || ''}
+                onChange={valueString => {
+                  const value = valueString === '' ? undefined : parseInt(valueString);
                   setStartYear({ ...startYear, mean: value });
                 }}
                 min={1900}
@@ -147,19 +148,17 @@ export const CommonFields: React.FC<CommonFieldsProps> = ({
             </FormControl>
           </VStack>
         );
-      case "startWith":
-      case "startAfter":
+      case 'startWith':
+      case 'startAfter':
         return (
           <FormControl isRequired>
             <FormLabel>Select Event Series</FormLabel>
             <Select
-              value={startYear.eventSeries || ""}
-              onChange={(e) =>
-                setStartYear({ ...startYear, eventSeries: e.target.value })
-              }
+              value={startYear.eventSeries || ''}
+              onChange={e => setStartYear({ ...startYear, eventSeries: e.target.value })}
             >
               <option value="">Select an event series</option>
-              {existingEvents.map((event) => (
+              {existingEvents.map(event => (
                 <option key={event.name} value={event.name}>
                   {event.name}
                 </option>
@@ -177,15 +176,15 @@ export const CommonFields: React.FC<CommonFieldsProps> = ({
     onChange: (values: Partial<DistributionConfig>) => void
   ) => {
     switch (config.type) {
-      case "fixed":
+      case 'fixed':
         return (
           <FormControl isRequired>
             <FormLabel>Duration (Years)</FormLabel>
             <NumberInput
-              value={config.value || ""}
-              onChange={(valueString) => {
-                const value = valueString === "" ? undefined : parseInt(valueString);
-                onChange({ type: "fixed", value });
+              value={config.value || ''}
+              onChange={valueString => {
+                const value = valueString === '' ? undefined : parseInt(valueString);
+                onChange({ type: 'fixed', value });
               }}
               min={1}
               max={100}
@@ -194,15 +193,15 @@ export const CommonFields: React.FC<CommonFieldsProps> = ({
             </NumberInput>
           </FormControl>
         );
-      case "uniform":
+      case 'uniform':
         return (
           <VStack spacing={4}>
             <FormControl isRequired>
               <FormLabel>Minimum Duration</FormLabel>
               <NumberInput
-                value={config.min || ""}
-                onChange={(valueString) => {
-                  const value = valueString === "" ? undefined : parseInt(valueString);
+                value={config.min || ''}
+                onChange={valueString => {
+                  const value = valueString === '' ? undefined : parseInt(valueString);
                   onChange({ ...config, min: value });
                 }}
                 min={1}
@@ -213,9 +212,9 @@ export const CommonFields: React.FC<CommonFieldsProps> = ({
             <FormControl isRequired>
               <FormLabel>Maximum Duration</FormLabel>
               <NumberInput
-                value={config.max || ""}
-                onChange={(valueString) => {
-                  const value = valueString === "" ? undefined : parseInt(valueString);
+                value={config.max || ''}
+                onChange={valueString => {
+                  const value = valueString === '' ? undefined : parseInt(valueString);
                   onChange({ ...config, max: value });
                 }}
                 min={1}
@@ -225,15 +224,15 @@ export const CommonFields: React.FC<CommonFieldsProps> = ({
             </FormControl>
           </VStack>
         );
-      case "normal":
+      case 'normal':
         return (
           <VStack spacing={4}>
             <FormControl isRequired>
               <FormLabel>Mean Duration</FormLabel>
               <NumberInput
-                value={config.mean || ""}
-                onChange={(valueString) => {
-                  const value = valueString === "" ? undefined : parseInt(valueString);
+                value={config.mean || ''}
+                onChange={valueString => {
+                  const value = valueString === '' ? undefined : parseInt(valueString);
                   onChange({ ...config, mean: value });
                 }}
                 min={1}
@@ -267,7 +266,7 @@ export const CommonFields: React.FC<CommonFieldsProps> = ({
         <FormLabel>Name</FormLabel>
         <Input
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={e => setName(e.target.value)}
           placeholder="Enter name"
           required
         />
@@ -276,7 +275,7 @@ export const CommonFields: React.FC<CommonFieldsProps> = ({
         <FormLabel>Description (Optional)</FormLabel>
         <Textarea
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={e => setDescription(e.target.value)}
           placeholder="Enter description"
           rows={2}
         />
@@ -286,12 +285,10 @@ export const CommonFields: React.FC<CommonFieldsProps> = ({
           <FormLabel>Start Year Type</FormLabel>
           <Select
             value={startYear.type}
-            onChange={(e) =>
-              handleStartYearTypeChange(e.target.value as StartYearConfig["type"])
-            }
+            onChange={e => handleStartYearTypeChange(e.target.value as StartYearConfig['type'])}
             required
           >
-            {startYearTypes.map((type) => (
+            {startYearTypes.map(type => (
               <option key={type.value} value={type.value}>
                 {type.label}
               </option>
@@ -305,17 +302,17 @@ export const CommonFields: React.FC<CommonFieldsProps> = ({
           <FormLabel>Duration Type</FormLabel>
           <Select
             value={duration.type}
-            onChange={(e) => {
-              const type = e.target.value as DistributionConfig["type"];
+            onChange={e => {
+              const type = e.target.value as DistributionConfig['type'];
               switch (type) {
-                case "fixed":
-                  setDuration({ type: "fixed", value: 1 });
+                case 'fixed':
+                  setDuration({ type: 'fixed', value: 1 });
                   break;
-                case "uniform":
-                  setDuration({ type: "uniform", min: 1, max: 5 });
+                case 'uniform':
+                  setDuration({ type: 'uniform', min: 1, max: 5 });
                   break;
-                case "normal":
-                  setDuration({ type: "normal", mean: 3, stdev: 1 });
+                case 'normal':
+                  setDuration({ type: 'normal', mean: 3, stdev: 1 });
                   break;
               }
             }}
@@ -325,7 +322,7 @@ export const CommonFields: React.FC<CommonFieldsProps> = ({
             <option value="normal">Normal Distribution</option>
           </Select>
         </FormControl>
-        {renderDistributionFields(duration, (values) => {
+        {renderDistributionFields(duration, values => {
           const newDuration = { ...duration, ...values } as DistributionConfig;
           setDuration(newDuration);
         })}
