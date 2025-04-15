@@ -609,11 +609,6 @@ function NewScenarioPage() {
       await save_draft(get_current_draft_state(), false);
       console.log("Complete scenario saved to database");
 
-      // Then convert to YAML and send to backend
-      const yaml = convert_scenario_to_yaml(scenarioRaw);
-      const savedScenario = await scenarioYAMLService.create(yaml); 
-      console.log("Scenario saved to backend as YAML:", savedScenario);
-
       // Only after successful save, delete the draft if we're in edit mode
       if (id) {
         try {
