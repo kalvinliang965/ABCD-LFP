@@ -99,8 +99,8 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
             changeAmtOrPct === 'percent' ? (annualChange.mean || 0) / 100 : annualChange.mean || 0,
           stdev:
             changeAmtOrPct === 'percent'
-              ? (annualChange.stdDev || 0) / 100
-              : annualChange.stdDev || 0,
+              ? (annualChange.stdev || 0) / 100
+              : annualChange.stdev || 0,
         },
       ];
     }
@@ -184,7 +184,7 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
                   setAnnualChange({ type: 'uniform', min: undefined, max: undefined });
                   break;
                 case 'normal':
-                  setAnnualChange({ type: 'normal', mean: undefined, stdDev: undefined });
+                  setAnnualChange({ type: 'normal', mean: undefined, stdev: undefined });
                   break;
               }
             }}
@@ -344,9 +344,9 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
                 )}
                 <Input
                   type="number"
-                  value={annualChange.stdDev ?? ''}
+                  value={annualChange.stdev ?? ''}
                   onChange={e =>
-                    setAnnualChange({ ...annualChange, stdDev: parseInt(e.target.value) })
+                    setAnnualChange({ ...annualChange, stdev: parseInt(e.target.value) })
                   }
                   min="0"
                   step="1"

@@ -93,17 +93,40 @@ export const use_draft_saver = (): DraftSaverResult => {
           throw new Error('Failed to create scenario: No ID returned');
         }
       } else {
-        console.log('Updating existing draft with ID:', current_id);
-        const updated_draft = await scenario_service.update_scenario(current_id, final_data);
-        console.log('Draft updated successfully:', updated_draft);
-        console.log('Updated draft is_draft value:', updated_draft.data?.isDraft);
-
-        // Ensure we're using the correct ID
-        if (current_id !== scenario_id) {
-          set_scenario_id(current_id);
+        console.log("Updating existing draft with ID:", current_id);
+        try {
+          const updated_draft = await scenario_service.update_scenario(current_id, final_data);
+          console.log("Draft updated successfully:", updated_draft);
+          console.log("Updated draft is_draft value:", updated_draft.data?.isDraft);
+          
+          //ensure we're using the correct ID
+          if (current_id !== scenario_id) {
+            set_scenario_id(current_id);
+          }
+        } catch (err: any) {
+          //if we get a 404, the scenario doesn't exist, so create a new one
+          if (err.response?.status === 404) {
+            console.log("scenario not found, creating new draft");
+            const response = await scenario_service.create_scenario(final_data);
+            console.log("new draft created successfully:", response);
+            
+            const new_scenario_id = response.data?._id;
+            console.log("extracted new scenario_id:", new_scenario_id);
+            
+            if (new_scenario_id) {
+              console.log("setting new scenario_id:", new_scenario_id);
+              set_scenario_id(new_scenario_id);
+              localStorage.setItem('current_editing_scenario_id', new_scenario_id);
+            } else {
+              console.error("no _id found in response data:", response);
+              throw new Error("failed to create scenario: No ID returned");
+            }
+          } else {
+            throw err;
+          }
         }
       }
-      console.log('============== Draft Save Complete ==============');
+      console.log("============ Draft Save Complete ============");
     } catch (err) {
       console.error('error saving draft :', err);
       set_error(err as Error);

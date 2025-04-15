@@ -17,12 +17,11 @@ interface AssetAllocation {
 }
 
 //helper to sample from normal distribution
-function sampleNormal(mean: number, stdDev: number): number {
-  let u = 0,
-    v = 0;
+function sampleNormal(mean: number, stdev: number): number {
+  let u = 0, v = 0;
   while (u === 0) u = Math.random();
   while (v === 0) v = Math.random();
-  return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v) * stdDev + mean;
+  return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v) * stdev + mean;
 }
 
 //helper to sample from uniform distribution
@@ -49,13 +48,12 @@ export function calculateStartYear(
       const u2 = Math.random();
       const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
       const mean = startYear.mean || 0;
-      const stdDev = startYear.stdDev || 1;
+      const stdDev = startYear.stdev || 1;
       return Math.round(mean + z0 * stdDev);
     }
-    case 'startWith': {
+    case 'startWith':
       const startWithEvent = existingEvents.find(event => event.name === startYear.eventSeries);
       return startWithEvent ? calculateStartYear(startWithEvent.startYear, existingEvents) : 0;
-    }
     case 'startAfter': {
       const startAfterEvent = existingEvents.find(event => event.name === startYear.eventSeries);
       if (!startAfterEvent) return 0;
@@ -78,7 +76,7 @@ export function getDuration(duration: DistributionConfig): number {
       return sampleUniform(duration.min || 1, duration.max || 5);
     }
     case 'normal': {
-      return Math.round(sampleNormal(duration.mean || 3, duration.stdDev || 1));
+      return Math.round(sampleNormal(duration.mean || 3, duration.stdev || 1));
     }
   }
 }
@@ -96,7 +94,7 @@ export function getAmountChange(change: AmountChangeType, currentAmount: number)
       return sampleUniform(change.min || 0, change.max || 0);
     }
     case 'normal': {
-      return sampleNormal(change.mean || 0, change.stdDev || 0);
+      return sampleNormal(change.mean || 0, change.stdev || 0);
     }
   }
 }
@@ -165,7 +163,7 @@ export function calculateDuration(duration: DistributionConfig): number {
       const u2 = Math.random();
       const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
       const mean = duration.mean || 1;
-      const stdDev = duration.stdDev || 1;
+      const stdDev = duration.stdev || 1;
       return Math.max(1, Math.round(mean + z0 * stdDev));
     }
     default:

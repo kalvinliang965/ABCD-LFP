@@ -130,14 +130,26 @@ export function map_form_to_scenario_raw(
   // Map events
   const eventSeries = new Set(
     addedEvents.map((event: any) => {
-      //convert startYear and duration objects to arrays as expected by ScenarioRaw
-      const startArray = event.startYear ? [event.startYear] : [];
-      const durationArray = event.duration ? [event.duration] : [];
+      // Map start and duration to match YAML schema format
+      const startDist = event.startYear ? [{
+        type: event.startYear.type || "fixed",
+        ...(event.startYear.type === "fixed" ? { value: event.startYear.value } :
+          event.startYear.type === "normal" ? { mean: event.startYear.mean, stdev: event.startYear.stdev } :
+          event.startYear.type === "uniform" ? { lower: event.startYear.min, upper: event.startYear.max } :
+          event.startYear.type === "startWith" || event.startYear.type === "startAfter" ? { eventSeries: event.startYear.eventSeries } : {})
+      }] : [{ type: "fixed", value: 2025 }];
 
+      const durationDist = event.duration ? [{
+        type: event.duration.type || "fixed",
+        ...(event.duration.type === "fixed" ? { value: event.duration.value } :
+          event.duration.type === "normal" ? { mean: event.duration.mean, stdev: event.duration.stdev } :
+          event.duration.type === "uniform" ? { lower: event.duration.min, upper: event.duration.max } : {})
+      }] : [{ type: "fixed", value: 1 }];
+      
       const baseEvent = {
         name: event.name,
-        start: startArray,
-        duration: durationArray,
+        start: startDist,
+        duration: durationDist,
         type: event.type || '',
       };
 

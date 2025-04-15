@@ -74,7 +74,7 @@ function create_account_manager_clone(cash: Investment, non_retirement: AccountM
           all.forEach((inv: Investment) => {
             res += inv.get_cost_basis();
           })
-          return res;
+          return res + cash.get_value();
         },
         clone: () => create_account_manager_clone(
             cash.clone(),

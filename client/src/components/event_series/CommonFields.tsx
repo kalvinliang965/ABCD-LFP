@@ -52,8 +52,8 @@ export const CommonFields: React.FC<CommonFieldsProps> = ({
       case 'uniform':
         newConfig = { type: 'uniform', min: 2024, max: 2030 };
         break;
-      case 'normal':
-        newConfig = { type: 'normal', mean: 2024, stdDev: 2 };
+      case "normal":
+        newConfig = { type: "normal", mean: 2024, stdev: 2 };
         break;
       case 'startWith':
         newConfig = { type: 'startWith', eventSeries: '' };
@@ -136,10 +136,10 @@ export const CommonFields: React.FC<CommonFieldsProps> = ({
             <FormControl isRequired>
               <FormLabel>Standard Deviation</FormLabel>
               <NumberInput
-                value={startYear.stdDev || ''}
-                onChange={valueString => {
-                  const value = valueString === '' ? undefined : parseInt(valueString);
-                  setStartYear({ ...startYear, stdDev: value });
+                value={startYear.stdev || ""}
+                onChange={(valueString) => {
+                  const value = valueString === "" ? undefined : parseInt(valueString);
+                  setStartYear({ ...startYear, stdev: value });
                 }}
                 min={1}
               >
@@ -243,10 +243,10 @@ export const CommonFields: React.FC<CommonFieldsProps> = ({
             <FormControl isRequired>
               <FormLabel>Standard Deviation</FormLabel>
               <NumberInput
-                value={config.stdDev || ''}
-                onChange={valueString => {
-                  const value = valueString === '' ? undefined : parseInt(valueString);
-                  onChange({ ...config, stdDev: value });
+                value={config.stdev || ""}
+                onChange={(valueString) => {
+                  const value = valueString === "" ? undefined : parseInt(valueString);
+                  onChange({ ...config, stdev: value });
                 }}
                 min={0}
               >
@@ -312,7 +312,7 @@ export const CommonFields: React.FC<CommonFieldsProps> = ({
                   setDuration({ type: 'uniform', min: 1, max: 5 });
                   break;
                 case 'normal':
-                  setDuration({ type: 'normal', mean: 3, stdDev: 1 });
+                  setDuration({ type: 'normal', mean: 3, stdev: 1 });
                   break;
               }
             }}

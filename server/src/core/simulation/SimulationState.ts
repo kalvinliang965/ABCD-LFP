@@ -145,8 +145,10 @@ export async function create_simulation_state(
         let withdrawaled=0;
         const investments = state.account_manager.all;
         for (const inv_id of state.expense_withrawal_strategy) {
+          
           // withdrawaled enough money
           if (withdrawaled > withdrawal_amount) {
+            console.log("success");
             return withdrawaled;
           }
 
@@ -167,7 +169,6 @@ export async function create_simulation_state(
 
           simulation_logger.debug(`going to withdraw ${going_to_withdraw} from ${inv_id}`);
           investment.incr_cost_basis(-going_to_withdraw);
-
           // step) f.i
           // if sold investment from non-retirement accont
           // we have to calculate capital gains
@@ -195,7 +196,6 @@ export async function create_simulation_state(
           simulation_logger.debug(`recieved ${going_to_withdraw} from selling ${investment.id}`)
           simulation_logger.debug(`total withdrawaled: ${withdrawaled}`);
         }
-
         return withdrawaled;
       },
       process_tax: (): number => {

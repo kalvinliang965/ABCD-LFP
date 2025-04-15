@@ -70,39 +70,24 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
 
     //create the changeDistribution based on the annualChange type
     let changeDistribution;
-
-    if (annualChange.type === 'fixed') {
-      changeDistribution = [
-        {
-          type: 'fixed',
-          value:
-            changeAmtOrPct === 'percent'
-              ? (annualChange.value || 0) / 100
-              : annualChange.value || 0,
-        },
-      ];
-    } else if (annualChange.type === 'uniform') {
-      changeDistribution = [
-        {
-          type: 'uniform',
-          lower:
-            changeAmtOrPct === 'percent' ? (annualChange.min || 0) / 100 : annualChange.min || 0,
-          upper:
-            changeAmtOrPct === 'percent' ? (annualChange.max || 0) / 100 : annualChange.max || 0,
-        },
-      ];
-    } else if (annualChange.type === 'normal') {
-      changeDistribution = [
-        {
-          type: 'normal',
-          mean:
-            changeAmtOrPct === 'percent' ? (annualChange.mean || 0) / 100 : annualChange.mean || 0,
-          stdev:
-            changeAmtOrPct === 'percent'
-              ? (annualChange.stdDev || 0) / 100
-              : annualChange.stdDev || 0,
-        },
-      ];
+    
+    if (annualChange.type === "fixed") {
+      changeDistribution = [{ 
+        type: "fixed", 
+        value: changeAmtOrPct === "percent" ? (annualChange.value || 0) / 100 : annualChange.value || 0 
+      }];
+    } else if (annualChange.type === "uniform") {
+      changeDistribution = [{ 
+        type: "uniform", 
+        lower: changeAmtOrPct === "percent" ? (annualChange.min || 0) / 100 : annualChange.min || 0, 
+        upper: changeAmtOrPct === "percent" ? (annualChange.max || 0) / 100 : annualChange.max || 0 
+      }];
+    } else if (annualChange.type === "normal") {
+      changeDistribution = [{ 
+        type: "normal", 
+        mean: changeAmtOrPct === "percent" ? (annualChange.mean || 0) / 100 : annualChange.mean || 0, 
+        stdev: changeAmtOrPct === "percent" ? (annualChange.stdev || 0) / 100 : annualChange.stdev || 0 
+      }];
     }
 
     const eventData = {
@@ -184,7 +169,7 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
                   setAnnualChange({ type: 'uniform', min: undefined, max: undefined });
                   break;
                 case 'normal':
-                  setAnnualChange({ type: 'normal', mean: undefined, stdDev: undefined });
+                  setAnnualChange({ type: 'normal', mean: undefined, stdev: undefined });
                   break;
               }
             }}
@@ -344,9 +329,9 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
                 )}
                 <Input
                   type="number"
-                  value={annualChange.stdDev ?? ''}
-                  onChange={e =>
-                    setAnnualChange({ ...annualChange, stdDev: parseInt(e.target.value) })
+                  value={annualChange.stdev ?? ""}
+                  onChange={(e) =>
+                    setAnnualChange({ ...annualChange, stdev: parseInt(e.target.value) })
                   }
                   min="0"
                   step="1"
