@@ -123,8 +123,11 @@ export function create_tax_brackets(): TaxBrackets {
                     bracket.max = Math.round(bracket.max * (1 + rate));
                 }
             }
-            bracket_set.sort((a, b) => a.min - b.min);
 
+            // The code below is from gpt but i did modify a little
+            // i added check for last_bracket. during testing, i may not provide 
+            // married bracket
+            bracket_set.sort((a, b) => a.min - b.min);
             for (let i = 0; i < bracket_set.length - 1; i++) {
                 const current = bracket_set[i];
                 const next = bracket_set[i + 1];
