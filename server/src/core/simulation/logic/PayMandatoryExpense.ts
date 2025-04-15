@@ -25,6 +25,7 @@
 
 import { simulation_logger } from "../../../utils/logger/logger";
 import { ExpenseEvent } from "../../domain/event/ExpenseEvent";
+import { cash_investment_one } from "../../domain/raw/investment_raw";
 import { TaxStatus } from "../../Enums";
 import { SimulationState } from "../SimulationState";
 
@@ -64,5 +65,6 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
 
   // step f:
   // withdrawal from investments to fill withdrawal_amount
-  return withdrawal_amount === state.process_investment_withdrawal(withdrawal_amount);
+  const res = state.process_investment_withdrawal(withdrawal_amount);
+  return withdrawal_amount === res;
 }
