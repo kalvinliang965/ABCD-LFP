@@ -151,7 +151,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({ success: false, message: 'Not authenticated' });
     }
-    
+    console.log("Current user:", req.user);
     res.json(req.user);
   } catch (error) {
     console.error('Error getting current user:', error);

@@ -618,6 +618,27 @@ function NewScenarioPage() {
       const savedScenario = await scenarioYAMLService.create(yaml); 
       console.log("Scenario saved to backend as YAML:", savedScenario);
 
+      
+      // try {
+      //   await axios.post(`${API_URL}/api/scenarios`, {
+      //     userId: user?.googleId || user?.id, // depends on your user structure
+      //     scenario: {
+      //       name: scenarioRaw.name,
+      //       description: scenarioRaw.description || "",
+      //       createdAt: new Date(),
+      //       sharedWith: [],
+      //       data: yaml
+      //     }
+      //   }, {
+      //     withCredentials: true
+      //   });
+
+      //   console.log("✅ Scenario appended to user profile");
+      // } catch (err) {
+      //   console.error("❌ Failed to append scenario to user:", err);
+      // }
+
+
       // Only after successful save, delete the draft if we're in edit mode
       if (id) {
         try {
