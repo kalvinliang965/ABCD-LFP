@@ -88,7 +88,7 @@ To run this project, you need to set up environment variables for both the serve
    ```bash
    cd ABCD-LFP/server
    npm install
-   npm start
+   npm run dev 
    ```
 
 2. **Start the Client:**
