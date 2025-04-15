@@ -14,7 +14,7 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
   // First, ensure all Sets are converted to Arrays
   const serializedScenario = serialize_scenario_for_api(scenario);
 
-  console.log("investmentTypes:", serializedScenario.investmentTypes);
+  console.log("eventSeries:", serializedScenario.eventSeries);
 
   // Helper function to ensure numbers are parsed correctly
   const ensure_number = (val: any, key?: string): any => {
@@ -122,16 +122,12 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
         const assetAllocation: Record<string, number> = {};
         const assetAllocation2: Record<string, number> = {};
 
-        if (Array.isArray(event.assetAllocation)) {
-          event.assetAllocation.forEach((allocation: any) => {
-            assetAllocation[allocation.type] = ensure_number(allocation.value);
-          });
+        for (const [key, value] of Object.entries(event.assetAllocation)) {
+          assetAllocation[key] = ensure_number(value);
         }
-
-        if (Array.isArray(event.assetAllocation2)) {
-          event.assetAllocation2.forEach((allocation: any) => {
-            assetAllocation2[allocation.type] = ensure_number(allocation.value);
-          });
+        //! here is the issues
+        for (const [key, value] of Object.entries(event.assetAllocation2)) {
+          assetAllocation2[key] = ensure_number(value);
         }
 
         return process_values({
@@ -144,11 +140,9 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
       } else if (event.type === "rebalance") {
         // Convert assetAllocation format from array to object
         const assetAllocation: Record<string, number> = {};
-
-        if (Array.isArray(event.assetAllocation)) {
-          event.assetAllocation.forEach((allocation: any) => {
-            assetAllocation[allocation.type] = ensure_number(allocation.value);
-          });
+        console.log("checking if assetAllocation is an array:", typeof (event.assetAllocation));
+        for (const [key, value] of Object.entries(event.assetAllocation)) {
+          assetAllocation[key] = ensure_number(value);
         }
 
         return process_values({
