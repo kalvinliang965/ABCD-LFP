@@ -10,7 +10,7 @@ export interface DistributionConfig {
   min?: number;
   max?: number;
   mean?: number;
-  stdDev?: number;
+  stdev?: number;
 }
 
 export interface StartYearConfig {
@@ -19,7 +19,7 @@ export interface StartYearConfig {
   min?: number;
   max?: number;
   mean?: number;
-  stdDev?: number;
+  stdev?: number;
   eventSeries?: string;
 }
 
@@ -29,7 +29,7 @@ export interface AmountChangeType {
   min?: number;
   max?: number;
   mean?: number;
-  stdDev?: number;
+  stdev?: number;
 }
 
 export interface SeriesReference {
