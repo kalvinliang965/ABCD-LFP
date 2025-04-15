@@ -618,16 +618,6 @@ function NewScenarioPage() {
       const savedScenario = await scenarioYAMLService.create(yaml); 
       console.log("Scenario saved to backend as YAML:", savedScenario);
 
-      // Only after successful save, delete the draft if we're in edit mode
-      if (id) {
-        try {
-          await scenario_service.delete_scenario(id);
-          console.log("Deleted draft scenario:", id);
-        } catch (err) {
-          console.error("Error deleting draft scenario:", err);
-        }
-      }
-
       // Clean investment type data from localStorage
       investmentTypeStorage.clear();
       //need to check what is the correct way to clear the local storage
