@@ -1,6 +1,6 @@
 
 import { SimulationState, create_simulation_state } from './SimulationState';
-import { SimulationResult, create_simulation_result } from './SimulationResult';
+import { SimulationYearlyResult, create_simulation_yearly_result } from './SimulationYearlyResult';
 import { create_scenario, Scenario } from '../domain/scenario/Scenario';
 import run_roth_conversion_optimizer from './logic/RothConversion';
 import update_investment from './logic/UpdateInvestment';
@@ -11,7 +11,7 @@ import { ScenarioRaw } from '../domain/raw/scenario_raw';
 import run_income_event from './logic/RunIncomeEvent';
  
 export interface SimulationEngine {
-    run: (num_simulations: number) => Promise<SimulationResult[]>;
+    run: (num_simulations: number) => Promise<SimulationYearlyResult[]>;
 }
 
 import { simulation_logger } from '../../utils/logger/logger';
@@ -67,18 +67,19 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
     }
     
     // we will be using this one for now
-    async function run(num_simulations: number): Promise<SimulationResult[]> {
-        const res: SimulationResult[] = [];
+    async function run(num_simulations: number): Promise<SimulationYearlyResult[]> {
+        const res: SimulationYearlyResult[] = [];
         simulation_logger.info("Simulation started with config: ", {
             scenario: scenario,
         });
+        
         let i = 0
         let simulation_state;
         let simulation_result;
         try {
             for (; i < num_simulations; i++) {
                 simulation_state = await create_simulation_state(scenario, federal_tax_service, state_tax_service); 
-                simulation_result = create_simulation_result();
+                simulation_result = create_simulation_yearly_result();
                 // Run the simulation synchronously.
                 while (should_continue(simulation_state)) {
                     // adjust for tax, inflation, etc...
@@ -116,7 +117,7 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
 
 
 
-    function simulate_year(simulation_state: SimulationState, simulation_result: SimulationResult ): boolean {
+    function simulate_year(simulation_state: SimulationState, simulation_result: SimulationYearlyResult ): boolean {
         try {
             simulation_logger.debug(
                 "Simulating new year", 

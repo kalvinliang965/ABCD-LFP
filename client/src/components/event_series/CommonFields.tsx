@@ -187,7 +187,6 @@ export const CommonFields: React.FC<CommonFieldsProps> = ({
                 onChange({ type: 'fixed', value });
               }}
               min={1}
-              max={100}
             >
               <NumberInputField />
             </NumberInput>

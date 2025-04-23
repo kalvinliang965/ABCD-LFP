@@ -59,6 +59,9 @@ export interface AccountManager {
     after_tax: AccountMap;
     all: AccountMap;
     get_net_worth: () => number;
+    get_total_non_retirement: () => number;
+    get_total_pre_tax: () => number;
+    get_total_after_tax: () => number;
     clone(): AccountManager;
 } 
 
@@ -75,6 +78,27 @@ function create_account_manager_clone(cash: Investment, non_retirement: AccountM
             res += inv.get_cost_basis();
           })
           return res + cash.get_value();
+        },
+        get_total_non_retirement: (): number => {
+          let tot = 0
+          for (const investment of non_retirement.values()) {
+            tot += investment.get_value();
+          }
+          return tot;
+        },
+        get_total_pre_tax:():number => {
+          let tot = 0
+          for (const investment of pre_tax.values()) {
+            tot += investment.get_value();
+          }
+          return tot;
+        },
+        get_total_after_tax: (): number => {
+          let tot = 0;
+          for (const investment of after_tax.values()) {
+            tot += investment.get_value();
+          }
+          return tot;
         },
         clone: () => create_account_manager_clone(
             cash.clone(),
