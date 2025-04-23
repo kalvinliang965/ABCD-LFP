@@ -44,6 +44,8 @@ import { download_scenario_as_yaml } from '../../utils/yamlExport';
  * AI prompt : help me design a card to show the scenario details by using the card component and the scenario type
  * I need to show the scenario name, type, birth year, life expectancy, financial goal, state, event count, investment count, and last modified date
  */
+
+//! problem happens at this component
 interface ScenarioDetailCardProps {
   scenario: ScenarioRaw;
   onDelete?: () => void;
@@ -98,6 +100,7 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({ scenario, onDel
 
   const handle_download_yaml = () => {
     try {
+      console.log('ScenarioDetailCard: scenario:', scenario);
       download_scenario_as_yaml(scenario);
       toast({
         title: 'YAML Downloaded',
