@@ -352,6 +352,7 @@ const MyScenariosPage: React.FC = () => {
             <ScenarioDetailCard
               key={scenario._id}
               scenario={scenario}
+              //onDelete={() => console.log('delete scenario', scenario)}
               onDelete={() => handleDeleteScenario(scenario._id)}
             />
           ))}

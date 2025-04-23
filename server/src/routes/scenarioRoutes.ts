@@ -128,7 +128,6 @@ router.get("/", async (req: Request, res: Response) => {
       userId: user._id,
       isDraft: is_draft
     });
-
     res.json({
       success: true,
       message: "Scenarios retrieved successfully",

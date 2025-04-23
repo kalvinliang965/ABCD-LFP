@@ -16,7 +16,7 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
   // First, ensure all Sets are converted to Arrays
   const serializedScenario = serialize_scenario_for_api(scenario);
 
-  console.log('eventSeries:', serializedScenario.eventSeries);
+  console.log('investmentsTypes:', serializedScenario.investmentTypes);
 
   // Helper function to ensure numbers are parsed correctly
   const ensure_number = (val: any, key?: string): any => {
@@ -32,6 +32,7 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
   };
 
   // Recursive function to process all values in an object
+  //! redundant function with scenarioYAML.ts (could be extracted as a util function)
   const process_values = (obj: any): any => {
     if (obj === null || obj === undefined) return obj;
 
@@ -66,15 +67,16 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
         name: invType.name,
         description: String(invType.description),
         returnAmtOrPct: invType.returnAmtOrPct,
-        returnDistribution: process_values(invType.returnDistribution[0]),
+        returnDistribution: process_values(invType.returnDistribution),
         expenseRatio: ensure_number(invType.expenseRatio),
         incomeAmtOrPct: invType.incomeAmtOrPct,
-        incomeDistribution: process_values(invType.incomeDistribution[0]),
+        incomeDistribution: process_values(invType.incomeDistribution),
         taxability: invType.taxability,
       });
 
       // Ensure description is always a string after processing
       processed.description = String(processed.description);
+      console.log('processed:', processed);
       return processed;
     }),
 
@@ -92,8 +94,8 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
     eventSeries: serializedScenario.eventSeries.map((event: any) => {
       const baseEvent = {
         name: event.name,
-        start: process_values(event.start[0]),
-        duration: process_values(event.duration[0]),
+        start: process_values(event.start),
+        duration: process_values(event.duration),
         type: event.type,
       };
 
@@ -103,7 +105,7 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
           ...baseEvent,
           initialAmount: ensure_number(event.initialAmount),
           changeAmtOrPct: event.changeAmtOrPct,
-          changeDistribution: process_values(event.changeDistribution[0]),
+          changeDistribution: process_values(event.changeDistribution),
           inflationAdjusted: event.inflationAdjusted,
           userFraction: ensure_number(event.userFraction),
           socialSecurity: event.socialSecurity,
@@ -113,7 +115,7 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
           ...baseEvent,
           initialAmount: ensure_number(event.initialAmount),
           changeAmtOrPct: event.changeAmtOrPct,
-          changeDistribution: process_values(event.changeDistribution[0]),
+          changeDistribution: process_values(event.changeDistribution),
           inflationAdjusted: event.inflationAdjusted,
           userFraction: ensure_number(event.userFraction),
           discretionary: event.discretionary,
