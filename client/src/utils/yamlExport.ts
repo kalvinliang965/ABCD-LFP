@@ -32,6 +32,7 @@ export function convert_scenario_to_yaml(scenario: ScenarioRaw): string {
   };
 
   // Recursive function to process all values in an object
+  //! redundant function with scenarioYAML.ts (could be extracted as a util function)
   const process_values = (obj: any): any => {
     if (obj === null || obj === undefined) return obj;
 
