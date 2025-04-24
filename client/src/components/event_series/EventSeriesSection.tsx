@@ -151,10 +151,8 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                           <Text fontSize="sm" color="gray.600">
                             {event.type !== 'invest' && event.type !== 'rebalance' ? (
                               <>
-                                ${event.initialAmount || 0} • Starting{' '}
-                                {event.startYear?.type === 'fixed' ? event.startYear.value : 'Variable'}{' '}
-                                • {event.duration?.type === 'fixed' ? event.duration.value : 'Variable'}{' '}
-                                years
+                                <Text as="span" fontWeight="medium" color="gray.700">Initial Amount:</Text>{' '}
+                                <Text as="span" color="green.600" fontWeight="medium">${event.initialAmount?.toLocaleString() || 0}</Text>
                               </>
                             ) : event.type === 'invest' ? (
                               <>
@@ -178,8 +176,8 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                                       Glide Path
                                     </Text>}
                                   <Text fontSize="sm">
-                                    Max cash: ${event.maxCash || 0} • 
-                                    Year {event.startYear?.type === 'fixed' ? event.startYear.value : 'Variable'}
+                                    <Text as="span" fontWeight="medium" color="gray.700">Max cash:</Text>{' '}
+                                    <Text as="span" color="blue.600" fontWeight="medium">${event.maxCash?.toLocaleString() || 0}</Text>
                                   </Text>
                                 </Box>
                               </>
@@ -198,9 +196,6 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                                       </Flex>
                                     ))
                                     : <Text fontSize="sm">No allocations</Text>}
-                                  <Text fontSize="sm">
-                                    Year {event.startYear?.type === 'fixed' ? event.startYear.value : 'Variable'}
-                                  </Text>
                                 </Box>
                               </>
                             )}
