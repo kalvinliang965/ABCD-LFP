@@ -13,27 +13,14 @@ async function get_distribution_period(age: number): Promise<number> {
 }
 
 /**
- * Find a cash account in the non-retirement accounts
- */
-function find_cash_account(state: SimulationState & Partial<Scenario>): Investment | undefined {
-  for (const [id, investment] of state.account_manager.non_retirement) {
-    // Look for an account named "cash" (case insensitive)
-    if (id.toLowerCase() === "cash") {
-      return investment;
-    }
-  }
-  return undefined;
-}
-
-/**
  * Process Required Minimum Distributions (RMDs) for the user
  */
-export default async function process_rmds(
+export async function process_rmds(
   state: SimulationState & Partial<Scenario>
 ): Promise<number> {
   // Only process RMDs for the user (not spouse)
-  const userAge = state.user.get_age();
-  const userAlive = state.user.is_alive();
+  const user_age = state.user.get_age();
+  const user_alive = state.user.is_alive();
   const rmdStartAge = rmd_config.START_AGE; // Use the value from config
   
   // Check if the user is alive and old enough for RMD
@@ -133,8 +120,4 @@ export default async function process_rmds(
   }
   
   return totalRmdAmount;
-}
-
-export {
-  process_rmds,
 }
