@@ -10,6 +10,7 @@ import {
   HStack,
   VStack,
   IconButton,
+  Badge,
 } from '@chakra-ui/react';
 import { Building2, Wallet, TrendingUp, BarChart } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
@@ -62,6 +63,7 @@ const eventTypeOptions = [
 export interface AddedEvent extends Omit<EventSeries, 'id'> {
   id?: string;
   _id?: string;
+  glidePath?: boolean;
 }
 
 interface EventSeriesSectionProps {
@@ -136,7 +138,16 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                         align="center"
                       >
                         <Box>
-                          <Text fontWeight="medium">{event.name}</Text>
+                          <Text fontWeight="semibold" fontSize="md" color="gray.800" mb={1}>
+                            {event.name}
+                            <Badge ml={2} colorScheme={
+                              event.type === 'income' ? 'green' : 
+                              event.type === 'expense' ? 'red' : 
+                              event.type === 'invest' ? 'blue' : 'purple'
+                            } fontSize="xs" textTransform="uppercase">
+                              {event.type}
+                            </Badge>
+                          </Text>
                           <Text fontSize="sm" color="gray.600">
                             {event.type !== 'invest' && event.type !== 'rebalance' ? (
                               <>
@@ -145,39 +156,57 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                                 • {event.duration?.type === 'fixed' ? event.duration.value : 'Variable'}{' '}
                                 years
                               </>
+                            ) : event.type === 'invest' ? (
+                              <>
+                                <Box>
+                                  {event.assetAllocation ? 
+                                    Object.entries(event.assetAllocation).slice(0, 3).map(([key, value], idx) => (
+                                      <Flex key={idx} mb={0.5} width="100%">
+                                        <Text fontSize="sm" fontWeight="medium" flex="1" isTruncated>
+                                          {key}:
+                                        </Text>
+                                        <Text fontSize="sm" color="blue.600" fontWeight="medium" width="50px" textAlign="right">
+                                          {Math.round(Number(value) * 100)}%
+                                        </Text>
+                                      </Flex>
+                                    ))
+                                    : <Text fontSize="sm">No allocations</Text>}
+                                  {(event as any).glidePath && 
+                                    <Text fontSize="sm" fontWeight="medium" color="blue.600" px={1} py={0.5} 
+                                    bg="blue.50" borderRadius="md" display="inline-block" mt={1} mb={1}>
+                                      <Icon as={TrendingUp} boxSize={3} mr={1} />
+                                      Glide Path
+                                    </Text>}
+                                  <Text fontSize="sm">
+                                    Max cash: ${event.maxCash || 0} • 
+                                    Year {event.startYear?.type === 'fixed' ? event.startYear.value : 'Variable'}
+                                  </Text>
+                                </Box>
+                              </>
                             ) : (
                               <>
-                                Starting{' '}
-                                {event.startYear?.type === 'fixed' ? event.startYear.value : 'Variable'}{' '}
-                                • {event.duration?.type === 'fixed' ? event.duration.value : 'Variable'}{' '}
-                                years
+                                <Box>
+                                  {event.assetAllocation ? 
+                                    Object.entries(event.assetAllocation).slice(0, 3).map(([key, value], idx) => (
+                                      <Flex key={idx} mb={0.5} width="100%">
+                                        <Text fontSize="sm" fontWeight="medium" flex="1" isTruncated>
+                                          {key}:
+                                        </Text>
+                                        <Text fontSize="sm" color="purple.600" fontWeight="medium" width="50px" textAlign="right">
+                                          {Math.round(Number(value) * 100)}%
+                                        </Text>
+                                      </Flex>
+                                    ))
+                                    : <Text fontSize="sm">No allocations</Text>}
+                                  <Text fontSize="sm">
+                                    Year {event.startYear?.type === 'fixed' ? event.startYear.value : 'Variable'}
+                                  </Text>
+                                </Box>
                               </>
                             )}
                           </Text>
                         </Box>
                         <HStack>
-                          <Text
-                            px={2}
-                            py={1}
-                            borderRadius="md"
-                            fontSize="sm"
-                            bg={
-                              event.type === 'income'
-                                ? 'green.100'
-                                : event.type === 'expense'
-                                  ? 'red.100'
-                                  : 'blue.100'
-                            }
-                            color={
-                              event.type === 'income'
-                                ? 'green.700'
-                                : event.type === 'expense'
-                                  ? 'red.700'
-                                  : 'blue.700'
-                            }
-                          >
-                            {(event.type || 'unknown').charAt(0).toUpperCase() + (event.type || 'unknown').slice(1)}
-                          </Text>
                           <IconButton
                             aria-label="Delete event"
                             icon={<DeleteIcon />}
