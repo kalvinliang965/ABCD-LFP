@@ -4,7 +4,7 @@ import RMDFactorModel from '../models/RMDFactorModel';
  * Save RMD factors to the database
  * @param factors Map of age to distribution period
  */
-export async function saveRMDFactors(factors: Map<number, number>): Promise<void> {
+export async function save_rmd_factors_to_db(factors: Map<number, number>): Promise<void> {
   try {
     // Convert the map to an array of documents
     const documents = Array.from(factors.entries()).map(([age, distributionPeriod]) => ({
@@ -35,7 +35,7 @@ export async function saveRMDFactors(factors: Map<number, number>): Promise<void
  * Get RMD factors from the database
  * @returns Map of age to distribution period
  */
-export async function getRMDFactorsFromDB(): Promise<Map<number, number>> {
+export async function get_rmd_factors_from_db(): Promise<Map<number, number>> {
   try {
     const factors = await RMDFactorModel.find().sort({ age: 1 });
     
