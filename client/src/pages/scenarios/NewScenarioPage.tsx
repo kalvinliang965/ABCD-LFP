@@ -363,6 +363,7 @@ function NewScenarioPage() {
     setSelectedType(null);
   };
 
+  //todo: this logic should be moved to the eventSeries
   const handleDeleteEvent = async (id: string): Promise<void> => {
     console.log(`handling delete for event index: ${id}`);
     
@@ -399,6 +400,7 @@ function NewScenarioPage() {
   // };
   //! don't touch
 
+  //todo: this logic should be moved to the life expectancy
   const handle_to_life_expectancy = async () => {
     try {
       //validate scenario name is not empty
@@ -448,7 +450,6 @@ function NewScenarioPage() {
   const handle_to_investments = async () => {
     try {
       await save_draft(get_current_draft_state());
-      console.log('Draft saved when moving to investments');
       setStep('investments');
     } catch (err) {
       console.error('Error saving draft:', err);
@@ -458,7 +459,6 @@ function NewScenarioPage() {
   const handle_to_investment_types = async () => {
     try {
       await save_draft(get_current_draft_state());
-      console.log('Draft saved when moving to investment types');
       await saveLifeExpectancyConfig();
       setStep('investmentTypes');
     } catch (err) {
@@ -466,6 +466,7 @@ function NewScenarioPage() {
     }
   };
 
+  //todo: this logic should be moved to the roth conversion optimizer
   const handle_to_roth_conversion_optimizer = async () => {
     // AI-generated code
     // Filter investments to only include those with tax status "pre-tax" or "PRE_TAX_RETIREMENT"
@@ -478,7 +479,6 @@ function NewScenarioPage() {
       name: inv.investmentType || `Investment ${inv.id || Math.random().toString(36).substr(2, 9)}`,
     }));
 
-    console.log('Pre-tax accounts for Roth conversion:', allAccounts);
 
     setRothConversionStrategy({
       ...rothConversionStrategy,
@@ -494,16 +494,15 @@ function NewScenarioPage() {
     }
   };
 
+  //todo: this logic should be moved to the rmd settings
   const handle_continue_to_rmd_settings = async () => {
     // Calculate current age based on birth year
     const currentYear = new Date().getFullYear();
     const currentAge = currentYear - scenarioDetails.userBirthYear;
 
-    console.log('Investments before filtering:', investmentsConfig.investments);
 
     // Change this filter to match the actual tax status value
     const preTaxInvestments = investmentsConfig.investments.filter(inv => {
-      console.log('Investment tax status:', inv.taxStatus);
       // Check for both possible formats to be safe
       return inv.taxStatus === 'pre-tax' || inv.taxStatus === 'PRE_TAX_RETIREMENT';
     });
@@ -515,8 +514,6 @@ function NewScenarioPage() {
         inv.investmentType || `Investment ${inv.id || Math.random().toString(36).substring(2, 9)}`,
     }));
 
-    console.log('Filtered pre-tax accounts:', preTaxAccounts);
-    console.log('Current age:', currentAge);
 
     setRmdSettings({
       ...rmdSettings,
@@ -524,11 +521,6 @@ function NewScenarioPage() {
       availableAccounts: preTaxAccounts,
     });
 
-    console.log('RMD Settings after update:', {
-      ...rmdSettings,
-      currentAge: currentAge,
-      availableAccounts: preTaxAccounts,
-    });
 
     try {
       await save_draft(get_current_draft_state());
@@ -538,6 +530,7 @@ function NewScenarioPage() {
     }
   };
 
+  //todo: it should only handle continue to spending strategy, not from spending strategy
   const handle_continue_to_spending_strategy = async () => {
     clearLocalStorage();
     // Get all expenses from added events
@@ -622,6 +615,7 @@ function NewScenarioPage() {
   //! don't touch
 
   //* the final step
+  //todo: Chen gonna work on this now! 04/24/2025
   const handle_finish_scenario = async () => {
     // Map form data to ScenarioRaw
     const scenarioRaw = map_form_to_scenario_raw(

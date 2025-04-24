@@ -195,23 +195,21 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({ onBack
     if (typeFromStorage) {
       console.log('Found investment type to edit from storage:', typeFromStorage);
 
-      // Ensure typeToEdit has valid returnDistribution and incomeDistribution arrays
-      const editableType = {
+      // Ensure typeToEdit has valid returnDistribution and incomeDistribution
+      const typeToEdit = {
         ...typeFromStorage,
         returnDistribution:
-          Array.isArray(typeFromStorage.returnDistribution) &&
-          typeFromStorage.returnDistribution.length > 0
+          typeof typeFromStorage.returnDistribution === 'object'
             ? typeFromStorage.returnDistribution
-            : [{ type: 'fixed', value: 0 }],
+            : { type: 'fixed', value: 0 },
         incomeDistribution:
-          Array.isArray(typeFromStorage.incomeDistribution) &&
-          typeFromStorage.incomeDistribution.length > 0
+          typeof typeFromStorage.incomeDistribution === 'object'
             ? typeFromStorage.incomeDistribution
-            : [{ type: 'fixed', value: 0 }],
+            : { type: 'fixed', value: 0 },
       };
 
-      console.log('Prepared investment type for editing:', editableType);
-      set_type_to_edit(editableType);
+      console.log('Prepared investment type for editing:', typeToEdit);
+      set_type_to_edit(typeToEdit);
       onEditOpen();
     } else {
       toast({
@@ -272,11 +270,16 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({ onBack
     return investmentTypes.some(type => type.name.toLowerCase() === 'cash');
   };
 
-  const get_distribution_display = (distribution: Array<{ [key: string]: any }>) => {
-    if (distribution && distribution.length > 0) {
-      return distribution[0].type;
+  const get_distribution_display = (distribution: { [key: string]: any }) => {
+    if (!distribution || typeof distribution !== 'object') return '0';
+
+    if (distribution.type === 'fixed' && distribution.value !== undefined) {
+      return distribution.value.toFixed(2);
+    } else if (distribution.type === 'normal' && distribution.mean !== undefined) {
+      return distribution.mean.toFixed(2);
+    } else {
+      return '0';
     }
-    return '';
   };
 
   const format_percent = (value: number) => {

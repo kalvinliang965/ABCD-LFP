@@ -71,18 +71,21 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
     //reset error states
     setAmountError('');
     setAnnualChangeError('');
-    
+
     let hasErrors = false;
 
     //validate that amount is greater than 0
     if (amount <= 0) {
-      setAmountError("Amount must be greater than 0");
+      setAmountError('Amount must be greater than 0');
       hasErrors = true;
     }
 
     //validate that annual change values are specified if needed
-    if (annualChange.type === 'fixed' && (annualChange.value === undefined || annualChange.value <= 0)) {
-      setAnnualChangeError("Annual change amount must be greater than 0");
+    if (
+      annualChange.type === 'fixed' &&
+      (annualChange.value === undefined || annualChange.value <= 0)
+    ) {
+      setAnnualChangeError('Annual change amount must be greater than 0');
       hasErrors = true;
     }
 
@@ -92,31 +95,34 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
 
     //create the changeDistribution based on the annualChange type
     let changeDistribution;
-    
-    if (annualChange.type === "fixed") {
-      changeDistribution = [{ 
-        type: "fixed", 
-        value: changeAmtOrPct === "percent" ? (annualChange.value || 0) / 100 : annualChange.value || 0 
-      }];
-    } else if (annualChange.type === "uniform") {
-      changeDistribution = [{ 
-        type: "uniform", 
-        lower: changeAmtOrPct === "percent" ? (annualChange.min || 0) / 100 : annualChange.min || 0, 
-        upper: changeAmtOrPct === "percent" ? (annualChange.max || 0) / 100 : annualChange.max || 0 
-      }];
-    } else if (annualChange.type === "normal") {
-      changeDistribution = [{ 
-        type: "normal", 
-        mean: changeAmtOrPct === "percent" ? (annualChange.mean || 0) / 100 : annualChange.mean || 0, 
-        stdev: changeAmtOrPct === "percent" ? (annualChange.stdev || 0) / 100 : annualChange.stdev || 0 
-      }];
+
+    if (annualChange.type === 'fixed') {
+      changeDistribution = {
+        type: 'fixed',
+        value:
+          changeAmtOrPct === 'percent' ? (annualChange.value || 0) / 100 : annualChange.value || 0,
+      };
+    } else if (annualChange.type === 'uniform') {
+      changeDistribution = {
+        type: 'uniform',
+        lower: changeAmtOrPct === 'percent' ? (annualChange.min || 0) / 100 : annualChange.min || 0,
+        upper: changeAmtOrPct === 'percent' ? (annualChange.max || 0) / 100 : annualChange.max || 0,
+      };
+    } else if (annualChange.type === 'normal') {
+      changeDistribution = {
+        type: 'normal',
+        mean:
+          changeAmtOrPct === 'percent' ? (annualChange.mean || 0) / 100 : annualChange.mean || 0,
+        stdev:
+          changeAmtOrPct === 'percent' ? (annualChange.stdev || 0) / 100 : annualChange.stdev || 0,
+      };
     }
 
     const eventData = {
       type: 'expense',
       name,
       description,
-      startYear,
+      start: startYear,
       duration,
       initialAmount: amount || 0,
       annualChange,
@@ -168,7 +174,7 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
           <FormLabel>Initial Amount</FormLabel>
           <NumberInput
             value={amount}
-            onChange={(valueString) => {
+            onChange={valueString => {
               setAmount(Number(valueString) || 0);
               if (Number(valueString) > 0) setAmountError('');
             }}
@@ -229,7 +235,7 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
               <FormLabel>Annual Change {changeAmtOrPct === 'amount' ? '($)' : '(%)'}</FormLabel>
               <NumberInput
                 value={annualChange.value ?? 0}
-                onChange={(valueString) => {
+                onChange={valueString => {
                   const value = Number(valueString) || 0;
                   setAnnualChange({ type: 'fixed', value });
                   if (value > 0) setAnnualChangeError('');
@@ -267,7 +273,7 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
               <FormLabel>Minimum Change {changeAmtOrPct === 'amount' ? '($)' : '(%)'}</FormLabel>
               <NumberInput
                 value={annualChange.min ?? 0}
-                onChange={(valueString) => 
+                onChange={valueString =>
                   setAnnualChange({ ...annualChange, min: Number(valueString) || 0 })
                 }
                 min={0}
@@ -279,7 +285,7 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
               <FormLabel>Maximum Change {changeAmtOrPct === 'amount' ? '($)' : '(%)'}</FormLabel>
               <NumberInput
                 value={annualChange.max ?? 0}
-                onChange={(valueString) => 
+                onChange={valueString =>
                   setAnnualChange({ ...annualChange, max: Number(valueString) || 0 })
                 }
                 min={0}
@@ -314,7 +320,7 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
               <FormLabel>Mean Change {changeAmtOrPct === 'amount' ? '($)' : '(%)'}</FormLabel>
               <NumberInput
                 value={annualChange.mean ?? 0}
-                onChange={(valueString) => 
+                onChange={valueString =>
                   setAnnualChange({ ...annualChange, mean: Number(valueString) || 0 })
                 }
                 min={0}
@@ -328,7 +334,7 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
               </FormLabel>
               <NumberInput
                 value={annualChange.stdev ?? 0}
-                onChange={(valueString) => 
+                onChange={valueString =>
                   setAnnualChange({ ...annualChange, stdev: Number(valueString) || 0 })
                 }
                 min={0}

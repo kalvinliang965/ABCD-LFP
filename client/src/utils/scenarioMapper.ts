@@ -130,26 +130,39 @@ export function map_form_to_scenario_raw(
   // Map events
   const eventSeries = new Set(
     addedEvents.map((event: any) => {
-      // Map start and duration to match YAML schema format
-      const startDist = event.startYear ? [{
-        type: event.startYear.type || "fixed",
-        ...(event.startYear.type === "fixed" ? { value: event.startYear.value } :
-          event.startYear.type === "normal" ? { mean: event.startYear.mean, stdev: event.startYear.stdev } :
-          event.startYear.type === "uniform" ? { lower: event.startYear.min, upper: event.startYear.max } :
-          event.startYear.type === "startWith" || event.startYear.type === "startAfter" ? { eventSeries: event.startYear.eventSeries } : {})
-      }] : [{ type: "fixed", value: 2025 }];
+      // Map start and duration to match YAML schema format as direct objects, not arrays
+      const startObj = event.startYear
+        ? {
+            type: event.startYear.type || 'fixed',
+            ...(event.startYear.type === 'fixed'
+              ? { value: event.startYear.value }
+              : event.startYear.type === 'normal'
+                ? { mean: event.startYear.mean, stdev: event.startYear.stdev }
+                : event.startYear.type === 'uniform'
+                  ? { lower: event.startYear.min, upper: event.startYear.max }
+                  : event.startYear.type === 'startWith' || event.startYear.type === 'startAfter'
+                    ? { eventSeries: event.startYear.eventSeries }
+                    : {}),
+          }
+        : { type: 'fixed', value: 2025 };
 
-      const durationDist = event.duration ? [{
-        type: event.duration.type || "fixed",
-        ...(event.duration.type === "fixed" ? { value: event.duration.value } :
-          event.duration.type === "normal" ? { mean: event.duration.mean, stdev: event.duration.stdev } :
-          event.duration.type === "uniform" ? { lower: event.duration.min, upper: event.duration.max } : {})
-      }] : [{ type: "fixed", value: 1 }];
-      
+      const durationObj = event.duration
+        ? {
+            type: event.duration.type || 'fixed',
+            ...(event.duration.type === 'fixed'
+              ? { value: event.duration.value }
+              : event.duration.type === 'normal'
+                ? { mean: event.duration.mean, stdev: event.duration.stdev }
+                : event.duration.type === 'uniform'
+                  ? { lower: event.duration.min, upper: event.duration.max }
+                  : {}),
+          }
+        : { type: 'fixed', value: 1 };
+
       const baseEvent = {
         name: event.name,
-        start: startDist,
-        duration: durationDist,
+        start: startObj,
+        duration: durationObj,
         type: event.type || '',
       };
 
@@ -177,7 +190,7 @@ export function map_form_to_scenario_raw(
         return {
           ...baseEvent,
           assetAllocation: event.assetAllocation || {},
-          assetAllocation2: event.assetAllocation2 || event.assetAllocation || {}, 
+          assetAllocation2: event.assetAllocation2 || event.assetAllocation || {},
           glidePath: event.glidePath || false,
           maxCash: event.maxCash || 0,
         } as InvestmentEventRaw;
