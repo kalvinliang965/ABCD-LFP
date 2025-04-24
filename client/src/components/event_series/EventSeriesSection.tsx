@@ -14,6 +14,7 @@ import {
 } from '@chakra-ui/react';
 import { Building2, Wallet, TrendingUp, BarChart } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+import { FiArrowRight } from 'react-icons/fi';
 
 import { useEventSeries } from '../../contexts/EventSeriesContext';
 import { EventSeriesType, EventSeries } from '../../types/eventSeries';
@@ -100,26 +101,52 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
       <Box minH="100vh" bg="gray.50">
         <Box maxW="4xl" mx="auto" py={12} px={4}>
           <Box bg="white" rounded="lg" shadow="lg" overflow="hidden">
+            <Box 
+              p={6} 
+              bgGradient="linear(to-r, blue.400, purple.500)"
+              borderBottom="1px" 
+              borderColor="gray.200"
+              position="relative"
+              overflow="hidden"
+            >
+              <Box
+                position="absolute"
+                top={0}
+                right={0}
+                width="150px"
+                height="150px"
+                bg="rgba(255,255,255,0.1)"
+                borderRadius="50%"
+                transform="translate(30%, -50%)"
+              />
+              <Box
+                position="absolute"
+                bottom={0}
+                left={0}
+                width="100px"
+                height="100px"
+                bg="rgba(255,255,255,0.1)"
+                borderRadius="50%"
+                transform="translate(-30%, 50%)"
+              />
+              <Heading size="lg" color="white">
+                New Event Series
+              </Heading>
+              <Text color="whiteAlpha.800" mt={1}>
+                Add financial events to build your scenario plan
+              </Text>
+            </Box>
+
             <Box p={6}>
-              <Flex justify="space-between" align="center" mb={6}>
-                <Heading size="lg" color="gray.900">
-                  New Event Series
-                </Heading>
-                <HStack spacing={4} justify="flex-end" mt={6}>
-                  <Button variant="ghost" onClick={handleBackToInvestments}>
-                    Back
-                  </Button>
-                  <Button
-                    colorScheme="blue"
-                    onClick={handleSaveAndContinue}
-                    bg="blue.500"
-                    _hover={{ bg: 'blue.600' }}
-                    _active={{ bg: 'blue.700' }}
-                  >
-                    Continue
-                  </Button>
-                </HStack>
-              </Flex>
+              <Button 
+                variant="ghost" 
+                onClick={handleBackToInvestments}
+                mb={6}
+                leftIcon={<Text>←</Text>}
+              >
+                Back
+              </Button>
+
               {addedEvents.length > 0 && (
                 <VStack spacing={4} mb={8} align="stretch">
                   <Heading size="md" color="gray.700">
@@ -201,7 +228,7 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                                     </Text>}
                                   <Text fontSize="sm">
                                     <Text as="span" fontWeight="medium" color="gray.700">Max cash:</Text>{' '}
-                                    <Text as="span" color="blue.600" fontWeight="medium">${event.maxCash?.toLocaleString() || 0}</Text>
+                                    <Text as="span" color="green.600" fontWeight="medium">${event.maxCash?.toLocaleString() || 0}</Text>
                                   </Text>
                                 </Box>
                               </>
@@ -228,11 +255,10 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                         <HStack>
                           <IconButton
                             aria-label="Delete event"
-                            icon={<DeleteIcon />}
+                            icon={<DeleteIcon color="red.500" />}
                             size="md"
-                            variant="solid"
-                            colorScheme="red"
-                            _hover={{ bg: 'red.600' }}
+                            variant="ghost"
+                            _hover={{ bg: 'red.50' }}
                             onClick={() => {
                               handleDeleteEvent(index.toString());
                             }}
@@ -243,9 +269,11 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                   </Box>
                 </VStack>
               )}
+
               <Text color="gray.600" mb={6}>
                 Select the type of event series you want to add to your financial plan.
               </Text>
+
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                 {eventTypeOptions.map(option => {
                   const IconComponent = option.icon;
@@ -276,6 +304,26 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                   );
                 })}
               </SimpleGrid>
+
+              <Flex justify="flex-end" mt={8}>
+                <Button
+                  colorScheme="blue"
+                  onClick={handleSaveAndContinue}
+                  size="lg"
+                  px={8}
+                  borderRadius="lg"
+                  bgGradient="linear(to-r, blue.400, teal.500)"
+                  rightIcon={<FiArrowRight />}
+                  _hover={{
+                    bgGradient: 'linear(to-r, blue.500, teal.600)',
+                    transform: 'translateY(-2px)',
+                    boxShadow: 'lg',
+                  }}
+                  transition="all 0.2s"
+                >
+                  Continue
+                </Button>
+              </Flex>
             </Box>
           </Box>
         </Box>
