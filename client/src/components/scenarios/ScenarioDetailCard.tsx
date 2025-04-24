@@ -49,6 +49,7 @@ import { download_scenario_as_yaml } from '../../utils/yamlExport';
 interface ScenarioDetailCardProps {
   scenario: ScenarioRaw;
   onDelete?: () => void;
+  hideFooter?: boolean;
 }
 //moved up
 const InfoItem = ({
@@ -91,7 +92,11 @@ const InfoItem = ({
   );
 };
 
-const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({ scenario, onDelete }) => {
+const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
+  scenario,
+  onDelete,
+  hideFooter = false,
+}) => {
   const toast = useToast();
   const highlightColor = useColorModeValue('blue.500', 'blue.300');
   const cardBg = useColorModeValue('white', 'gray.800');
@@ -239,104 +244,110 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({ scenario, onDel
         </Box>
       )}
 
-      {/* Additional info indicators */}
-      <Divider mb={2} />
-      <Flex justify="space-between" align="center" p={3}>
-        <HStack spacing={3}>
-          {scenario.investments.size > 0 && (
-            <Popover placement="top" trigger="hover">
-              <PopoverTrigger>
-                <IconButton
-                  aria-label="Investment details"
-                  icon={<Icon as={FaMoneyBillWave} />}
-                  size="sm"
-                  colorScheme="blue"
-                  variant="ghost"
-                />
-              </PopoverTrigger>
-              <PopoverContent>
-                <PopoverArrow />
-                <PopoverCloseButton />
-                <PopoverHeader fontWeight="bold">Investments</PopoverHeader>
-                <PopoverBody>
-                  <Text fontSize="sm">{scenario.investments.size} investment types configured</Text>
-                </PopoverBody>
-              </PopoverContent>
-            </Popover>
-          )}
+      {/* Additional info indicators - Only show if hideFooter is false */}
+      {!hideFooter && (
+        <>
+          <Divider mb={2} />
+          <Flex justify="space-between" align="center" p={3}>
+            <HStack spacing={3}>
+              {scenario.investments.size > 0 && (
+                <Popover placement="top" trigger="hover">
+                  <PopoverTrigger>
+                    <IconButton
+                      aria-label="Investment details"
+                      icon={<Icon as={FaMoneyBillWave} />}
+                      size="sm"
+                      colorScheme="blue"
+                      variant="ghost"
+                    />
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <PopoverArrow />
+                    <PopoverCloseButton />
+                    <PopoverHeader fontWeight="bold">Investments</PopoverHeader>
+                    <PopoverBody>
+                      <Text fontSize="sm">
+                        {scenario.investments.size} investment types configured
+                      </Text>
+                    </PopoverBody>
+                  </PopoverContent>
+                </Popover>
+              )}
 
-          {scenario.eventSeries.size > 0 && (
-            <Popover placement="top" trigger="hover">
-              <PopoverTrigger>
-                <IconButton
-                  aria-label="Event details"
-                  icon={<Icon as={FaChartLine} />}
-                  size="sm"
-                  colorScheme="blue"
-                  variant="ghost"
-                />
-              </PopoverTrigger>
-              <PopoverContent>
-                <PopoverArrow />
-                <PopoverCloseButton />
-                <PopoverHeader fontWeight="bold">Events</PopoverHeader>
-                <PopoverBody>
-                  <Text fontSize="sm">{scenario.eventSeries.size} events configured</Text>
-                </PopoverBody>
-              </PopoverContent>
-            </Popover>
-          )}
+              {scenario.eventSeries.size > 0 && (
+                <Popover placement="top" trigger="hover">
+                  <PopoverTrigger>
+                    <IconButton
+                      aria-label="Event details"
+                      icon={<Icon as={FaChartLine} />}
+                      size="sm"
+                      colorScheme="blue"
+                      variant="ghost"
+                    />
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <PopoverArrow />
+                    <PopoverCloseButton />
+                    <PopoverHeader fontWeight="bold">Events</PopoverHeader>
+                    <PopoverBody>
+                      <Text fontSize="sm">{scenario.eventSeries.size} events configured</Text>
+                    </PopoverBody>
+                  </PopoverContent>
+                </Popover>
+              )}
 
-          {scenario.inflationAssumption && (
-            <Popover placement="top" trigger="hover">
-              <PopoverTrigger>
-                <IconButton
-                  aria-label="Inflation details"
-                  icon={<Icon as={FaPercentage} />}
-                  size="sm"
-                  colorScheme="blue"
-                  variant="ghost"
-                />
-              </PopoverTrigger>
-              <PopoverContent>
-                <PopoverArrow />
-                <PopoverCloseButton />
-                <PopoverHeader fontWeight="bold">Inflation</PopoverHeader>
-                <PopoverBody>
-                  <Text fontSize="sm">
-                    Inflation rate: {scenario.inflationAssumption.value * 100}%
-                  </Text>
-                </PopoverBody>
-              </PopoverContent>
-            </Popover>
-          )}
+              {scenario.inflationAssumption && (
+                <Popover placement="top" trigger="hover">
+                  <PopoverTrigger>
+                    <IconButton
+                      aria-label="Inflation details"
+                      icon={<Icon as={FaPercentage} />}
+                      size="sm"
+                      colorScheme="blue"
+                      variant="ghost"
+                    />
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <PopoverArrow />
+                    <PopoverCloseButton />
+                    <PopoverHeader fontWeight="bold">Inflation</PopoverHeader>
+                    <PopoverBody>
+                      <Text fontSize="sm">
+                        Inflation rate: {scenario.inflationAssumption.value * 100}%
+                      </Text>
+                    </PopoverBody>
+                  </PopoverContent>
+                </Popover>
+              )}
 
-          <Tooltip label="Download as YAML" placement="top">
-            <IconButton
-              aria-label="Download YAML"
-              icon={<Icon as={FaDownload} />}
-              size="sm"
-              colorScheme="green"
-              variant="ghost"
-              onClick={handle_download_yaml}
-            />
-          </Tooltip>
-        </HStack>
-        {/* <Link
-          as={RouterLink}
-          to={`/scenarios/${encodeURIComponent(scenario.name)}`}
-          color={highlightColor}
-          fontWeight="medium"
-          _hover={{
-            textDecoration: "none",
-          }}
-        >
-          <Flex align="center">
-            <Text mr={1}>View Details</Text>
-            <Icon as={FaChevronRight} boxSize={3} />
+              <Tooltip label="Download as YAML" placement="top">
+                <IconButton
+                  aria-label="Download YAML"
+                  icon={<Icon as={FaDownload} />}
+                  size="sm"
+                  colorScheme="green"
+                  variant="ghost"
+                  onClick={handle_download_yaml}
+                />
+              </Tooltip>
+            </HStack>
+            {/* <Link
+              as={RouterLink}
+              to={`/scenarios/${encodeURIComponent(scenario.name)}`}
+              color={highlightColor}
+              fontWeight="medium"
+              _hover={{
+                textDecoration: "none",
+              }}
+            >
+              <Flex align="center">
+                <Text mr={1}>View Details</Text>
+                <Icon as={FaChevronRight} boxSize={3} />
+              </Flex>
+            </Link> */}
           </Flex>
-        </Link> */}
-      </Flex>
+        </>
+      )}
     </Box>
   );
 };
