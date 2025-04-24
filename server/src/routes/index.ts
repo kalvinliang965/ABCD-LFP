@@ -6,6 +6,7 @@ import userRoutes from "./userRoutes";
 import scenarioYAMLRoutes from "./scenarioYAMLRoutes";
 import scenarioRoutes from "./scenarioRoutes";
 import investmentTypeRoutes from "./InvestmentType.routes";
+import simulationRoutes from "./simulationRoutes";
 
 export function initialize_route(app: Application) {
     // Register routes
@@ -17,6 +18,7 @@ export function initialize_route(app: Application) {
     router.use("/api/scenarios", scenarioRoutes);
     router.use("/api/yaml", scenarioYAMLRoutes);
     router.use("/auth", authRoutes);
+    router.use("/api/simulations", simulationRoutes);
     // Basic health check route
     router.get("/", (req, res) => {
         res.json({ status: "ok", message: "Server is running" });

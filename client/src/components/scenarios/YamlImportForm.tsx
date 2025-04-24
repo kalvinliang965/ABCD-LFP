@@ -143,8 +143,8 @@ const YamlImportForm: React.FC<YamlImportFormProps> = ({ onImportComplete, onBac
             const parsedData = yaml.load(yamlContent);
 
             // record the original content and parsed data for debugging
-            console.log('YAML原始内容:', yamlContent);
-            console.log('YAML解析后数据:', parsedData);
+            console.log('YAML content:', yamlContent);
+            console.log('YAML parsed data:', parsedData);
 
             // send the parsed data
             onImportComplete({
@@ -154,7 +154,7 @@ const YamlImportForm: React.FC<YamlImportFormProps> = ({ onImportComplete, onBac
               rawYaml: yamlContent, // keep the original content for debugging
             });
           } catch (parseError) {
-            console.error('YAML解析错误:', parseError);
+            console.error('YAML parsing error:', parseError);
             throw new Error('Invalid YAML format');
           } finally {
             set_is_loading(false);

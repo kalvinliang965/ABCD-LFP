@@ -34,6 +34,7 @@ import { FaExclamationTriangle } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 import { scenario_service } from '../../services/scenarioService';
+import { simulation_service } from '../../services/simulationService';
 import { ScenarioDetailCard } from '../scenarios';
 
 interface RunSimulationModalProps {
@@ -47,6 +48,7 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
   const [selected_scenario, set_selected_scenario] = useState<string>('');
   const [simulation_count, set_simulation_count] = useState<number>(100);
   const [count_error, set_count_error] = useState<string>('');
+  const [is_submitting, set_is_submitting] = useState<boolean>(false);
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -106,7 +108,7 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
     validate_simulation_count(num_value);
   };
 
-  const handle_run_simulation = () => {
+  const handle_run_simulation = async () => {
     if (!selected_scenario) {
       toast({
         title: 'No Scenario Selected',
@@ -122,20 +124,41 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
       return;
     }
 
-    // Here you would typically connect to the backend to run the simulation
-    // For now, just show a success toast
-    toast({
-      title: 'Simulation Started',
-      description: `Running ${simulation_count} simulations for the selected scenario`,
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    });
+    try {
+      set_is_submitting(true);
 
-    onClose();
+      // Call the simulation service to run the simulation
+      const result = await simulation_service.run_simulation(selected_scenario, simulation_count);
 
-    // Clear selection after running
-    set_selected_scenario('');
+      toast({
+        title: 'Simulation Started',
+        description: `Running ${simulation_count} simulations for the selected scenario`,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // After successful submission, navigate to results page if there's a simulation ID
+      if (result && result.simulationId) {
+        navigate(`/simulations/${result.simulationId}`);
+      }
+
+      onClose();
+
+      // Clear selection after running
+      set_selected_scenario('');
+    } catch (error) {
+      console.error('Error running simulation:', error);
+      toast({
+        title: 'Simulation Failed',
+        description: 'There was an error running the simulation',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      set_is_submitting(false);
+    }
   };
 
   const handle_card_selection = (scenarioId: string) => {
@@ -218,7 +241,8 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
                             Selected
                           </Badge>
                         )}
-                        <ScenarioDetailCard scenario={scenario} />
+                        {/* Pass hideFooter prop to hide the footer in this context */}
+                        <ScenarioDetailCard scenario={scenario} hideFooter={true} />
                       </Box>
                     ))}
                 </SimpleGrid>
@@ -258,8 +282,13 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
           <Button
             colorScheme="purple"
             onClick={handle_run_simulation}
+            isLoading={is_submitting}
+            loadingText="Running..."
             isDisabled={
-              scenarios.filter(s => !s.isDraft).length === 0 || !selected_scenario || !!count_error
+              scenarios.filter(s => !s.isDraft).length === 0 ||
+              !selected_scenario ||
+              !!count_error ||
+              is_submitting
             }
           >
             Run Simulation
