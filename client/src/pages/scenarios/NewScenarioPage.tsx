@@ -360,7 +360,32 @@ function NewScenarioPage() {
   };
 
   const handleDeleteEvent = async (id: string): Promise<void> => {
-    setAddedEvents(prev => prev.filter(event => (event.id || event._id) !== id));
+    console.log(`handling delete for event index: ${id}`);
+    
+    try {
+      //update the local state by filtering based on array index
+      setAddedEvents(prevEvents => {
+        //create a new array excluding the event at the specified index
+        const updatedEvents = [...prevEvents];
+        const indexToRemove = parseInt(id);
+        
+        if (!isNaN(indexToRemove) && indexToRemove >= 0 && indexToRemove < updatedEvents.length) {
+          updatedEvents.splice(indexToRemove, 1);
+        } else {
+          console.error('Invalid index for event deletion:', id);
+        }
+        
+        //save the updated events to the draft
+        const draftState = get_current_draft_state();
+        save_draft(draftState)
+          .then(() => console.log('Draft updated after event deletion'))
+          .catch(err => console.error('Error saving draft after event deletion:', err));
+        
+        return updatedEvents;
+      });
+    } catch (error) {
+      console.error('Error during event deletion:', error);
+    }
   };
 
   //! don't touch

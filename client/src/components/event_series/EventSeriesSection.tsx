@@ -126,9 +126,9 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                     Added Events
                   </Heading>
                   <Box bg="gray.50" p={4} borderRadius="md">
-                    {addedEvents.map(event => (
+                    {addedEvents.map((event, index) => (
                       <Flex
-                        key={event.id || event._id}
+                        key={index}
                         p={4}
                         bg="white"
                         borderRadius="md"
@@ -229,10 +229,13 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                           <IconButton
                             aria-label="Delete event"
                             icon={<DeleteIcon />}
-                            size="sm"
-                            variant="ghost"
+                            size="md"
+                            variant="solid"
                             colorScheme="red"
-                            onClick={() => handleDeleteEvent(event.id || event._id || '')}
+                            _hover={{ bg: 'red.600' }}
+                            onClick={() => {
+                              handleDeleteEvent(index.toString());
+                            }}
                           />
                         </HStack>
                       </Flex>
