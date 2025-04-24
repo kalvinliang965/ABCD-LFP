@@ -43,7 +43,7 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
     value: 1,
   });
 
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState<number>(0);
   const [annualChange, setAnnualChange] = useState<AmountChangeType>({
     type: 'fixed',
     value: undefined,
@@ -111,7 +111,7 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
       description,
       startYear,
       duration,
-      initialAmount: Number(amount) || 0,
+      initialAmount: amount || 0,
       annualChange,
       changeAmtOrPct,
       changeType: changeAmtOrPct,
@@ -130,7 +130,7 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
   const resetForm = () => {
     setName('');
     setDescription('');
-    setAmount('');
+    setAmount(0);
     setInflationAdjusted(false);
     setIsSocialSecurity(false);
     setUserPercentage(100);
@@ -157,19 +157,13 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
         />
         <FormControl isRequired>
           <FormLabel>Initial Amount</FormLabel>
-          <InputGroup>
-            <InputLeftElement pointerEvents="none" color="gray.500" children="$" />
-            <Input
-              type="number"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-              placeholder="0"
-              required
-              min="0"
-              step="1"
-              pl={7}
-            />
-          </InputGroup>
+          <NumberInput
+            value={amount}
+            onChange={(valueString) => setAmount(Number(valueString) || 0)}
+            min={0}
+          >
+            <NumberInputField placeholder="0" />
+          </NumberInput>
         </FormControl>
         <FormControl isRequired>
           <FormLabel>Annual Change Type</FormLabel>
@@ -218,22 +212,15 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
             </FormControl>
             <FormControl isRequired>
               <FormLabel>Annual Change {changeAmtOrPct === 'amount' ? '($)' : '(%)'}</FormLabel>
-              <InputGroup>
-                {changeAmtOrPct === 'amount' && (
-                  <InputLeftElement pointerEvents="none" color="gray.500" children="$" />
-                )}
-                <Input
-                  type="number"
-                  value={annualChange.value ?? ''}
-                  onChange={e =>
-                    setAnnualChange({ type: 'fixed', value: parseInt(e.target.value) })
-                  }
-                  placeholder="0"
-                  min="0"
-                  step="1"
-                  pl={changeAmtOrPct === 'amount' ? 7 : 4}
-                />
-              </InputGroup>
+              <NumberInput
+                value={annualChange.value ?? 0}
+                onChange={(valueString) => 
+                  setAnnualChange({ type: 'fixed', value: Number(valueString) || 0 })
+                }
+                min={0}
+              >
+                <NumberInputField placeholder="0" />
+              </NumberInput>
             </FormControl>
           </>
         )}
@@ -260,39 +247,27 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
             </FormControl>
             <FormControl isRequired>
               <FormLabel>Minimum Change {changeAmtOrPct === 'amount' ? '($)' : '(%)'}</FormLabel>
-              <InputGroup>
-                {changeAmtOrPct === 'amount' && (
-                  <InputLeftElement pointerEvents="none" color="gray.500" children="$" />
-                )}
-                <Input
-                  type="number"
-                  value={annualChange.min ?? ''}
-                  onChange={e =>
-                    setAnnualChange({ ...annualChange, min: parseInt(e.target.value) })
-                  }
-                  min="0"
-                  step="1"
-                  pl={changeAmtOrPct === 'amount' ? 7 : 4}
-                />
-              </InputGroup>
+              <NumberInput
+                value={annualChange.min ?? 0}
+                onChange={(valueString) => 
+                  setAnnualChange({ ...annualChange, min: Number(valueString) || 0 })
+                }
+                min={0}
+              >
+                <NumberInputField placeholder="0" />
+              </NumberInput>
             </FormControl>
             <FormControl isRequired>
               <FormLabel>Maximum Change {changeAmtOrPct === 'amount' ? '($)' : '(%)'}</FormLabel>
-              <InputGroup>
-                {changeAmtOrPct === 'amount' && (
-                  <InputLeftElement pointerEvents="none" color="gray.500" children="$" />
-                )}
-                <Input
-                  type="number"
-                  value={annualChange.max ?? ''}
-                  onChange={e =>
-                    setAnnualChange({ ...annualChange, max: parseInt(e.target.value) })
-                  }
-                  min="0"
-                  step="1"
-                  pl={changeAmtOrPct === 'amount' ? 7 : 4}
-                />
-              </InputGroup>
+              <NumberInput
+                value={annualChange.max ?? 0}
+                onChange={(valueString) => 
+                  setAnnualChange({ ...annualChange, max: Number(valueString) || 0 })
+                }
+                min={0}
+              >
+                <NumberInputField placeholder="0" />
+              </NumberInput>
             </FormControl>
           </Stack>
         )}
@@ -319,41 +294,29 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
             </FormControl>
             <FormControl isRequired>
               <FormLabel>Mean Change {changeAmtOrPct === 'amount' ? '($)' : '(%)'}</FormLabel>
-              <InputGroup>
-                {changeAmtOrPct === 'amount' && (
-                  <InputLeftElement pointerEvents="none" color="gray.500" children="$" />
-                )}
-                <Input
-                  type="number"
-                  value={annualChange.mean ?? ''}
-                  onChange={e =>
-                    setAnnualChange({ ...annualChange, mean: parseInt(e.target.value) })
-                  }
-                  min="0"
-                  step="1"
-                  pl={changeAmtOrPct === 'amount' ? 7 : 4}
-                />
-              </InputGroup>
+              <NumberInput
+                value={annualChange.mean ?? 0}
+                onChange={(valueString) => 
+                  setAnnualChange({ ...annualChange, mean: Number(valueString) || 0 })
+                }
+                min={0}
+              >
+                <NumberInputField placeholder="0" />
+              </NumberInput>
             </FormControl>
             <FormControl isRequired>
               <FormLabel>
                 Standard Deviation {changeAmtOrPct === 'amount' ? '($)' : '(%)'}
               </FormLabel>
-              <InputGroup>
-                {changeAmtOrPct === 'amount' && (
-                  <InputLeftElement pointerEvents="none" color="gray.500" children="$" />
-                )}
-                <Input
-                  type="number"
-                  value={annualChange.stdev ?? ''}
-                  onChange={e =>
-                    setAnnualChange({ ...annualChange, stdev: parseInt(e.target.value) })
-                  }
-                  min="0"
-                  step="1"
-                  pl={changeAmtOrPct === 'amount' ? 7 : 4}
-                />
-              </InputGroup>
+              <NumberInput
+                value={annualChange.stdev ?? 0}
+                onChange={(valueString) => 
+                  setAnnualChange({ ...annualChange, stdev: Number(valueString) || 0 })
+                }
+                min={0}
+              >
+                <NumberInputField placeholder="0" />
+              </NumberInput>
             </FormControl>
           </Stack>
         )}
