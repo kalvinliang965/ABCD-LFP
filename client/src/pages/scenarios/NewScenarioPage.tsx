@@ -163,6 +163,10 @@ function NewScenarioPage() {
     ]
   );
 
+  //state for name validation
+  const [isNameError, setIsNameError] = useState(false);
+  const [nameErrorMessage, setNameErrorMessage] = useState('');
+
   //add useEffect to load scenario data when in edit mode
   useEffect(() => {
     const loadScenarioData = async () => {
@@ -397,11 +401,43 @@ function NewScenarioPage() {
 
   const handle_to_life_expectancy = async () => {
     try {
+      //validate scenario name is not empty
+      if (scenarioDetails.name.trim() === '') {
+        setIsNameError(true);
+        setNameErrorMessage('Scenario name is required');
+        return;
+      }
+
+      try {
+        //check if the scenario name already exists using the dedicated function
+        const nameExists = await scenario_service.check_scenario_name_exists(scenarioDetails.name);
+        
+        if (nameExists) {
+          setIsNameError(true);
+          setNameErrorMessage('A scenario with this name already exists. Please choose a different name.');
+          return;
+        }
+      } catch (checkError) {
+        console.error('Error checking scenario names:', checkError);
+        //continue if name check fails - don't block the user
+      }
+
+      //reset error state if validation passes
+      setIsNameError(false);
+      setNameErrorMessage('');
+
       await save_draft(get_current_draft_state());
       console.log('Draft saved when moving to life expectancy');
       setStep('lifeExpectancy');
     } catch (err) {
       console.error('Error saving draft:', err);
+      toast({
+        title: 'Error',
+        description: 'There was an error saving your scenario. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -685,6 +721,11 @@ function NewScenarioPage() {
   };
 
   const handle_change_scenario_details = (details: ScenarioDetails) => {
+    //clear name error when user changes the name
+    if (details.name !== scenarioDetails.name) {
+      setIsNameError(false);
+      setNameErrorMessage('');
+    }
     setScenarioDetails(details);
   };
 
@@ -824,6 +865,8 @@ function NewScenarioPage() {
           onChangeScenarioDetails={handle_change_scenario_details}
           onContinue={handle_to_life_expectancy}
           onBack={handle_to_type_selection}
+          isNameError={isNameError}
+          nameErrorMessage={nameErrorMessage}
         />
       </Box>
     );

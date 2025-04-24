@@ -47,6 +47,8 @@ export interface ScenarioDetailsFormProps {
   onChangeScenarioDetails: (details: ScenarioDetails) => void;
   onContinue: () => void;
   onBack?: () => void;
+  isNameError?: boolean;
+  nameErrorMessage?: string;
 }
 
 const MotionBox = motion(Box);
@@ -57,6 +59,8 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
   onChangeScenarioDetails,
   onContinue,
   onBack,
+  isNameError,
+  nameErrorMessage,
 }) => {
   console.log('ScenarioDetailsForm: Rendering with details:', scenarioDetails);
 
@@ -166,7 +170,7 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
 
               <VStack spacing={8} align="stretch">
                 <MotionBox variants={item}>
-                  <FormControl isRequired>
+                  <FormControl isRequired isInvalid={isNameError}>
                     <FormLabel
                       fontWeight="medium"
                       fontSize="md"
@@ -190,12 +194,17 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                         placeholder="My Financial Plan"
                         pl={10}
                         borderRadius="lg"
-                        focusBorderColor="blue.400"
+                        focusBorderColor={isNameError ? "red.400" : "blue.300"}
                         borderWidth="2px"
-                        _hover={{ borderColor: 'blue.300' }}
+                        _hover={{ borderColor: isNameError ? 'red.300' : 'blue.300' }}
                         fontSize="md"
                       />
                     </InputGroup>
+                    {isNameError && (
+                      <Text color="red.500" fontSize="sm" mt={1}>
+                        {nameErrorMessage}
+                      </Text>
+                    )}
                   </FormControl>
                 </MotionBox>
 

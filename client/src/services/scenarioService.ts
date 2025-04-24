@@ -105,6 +105,27 @@ export const scenario_service = {
       throw error;
     }
   },
+
+  //check if a scenario name already exists
+  check_scenario_name_exists: async (name: string) => {
+    try {
+      //get all scenarios for the user
+      const response = await axios_instance.get(SCENARIO_ENDPOINT);
+      if (!response.data.success) {
+        return false;
+      }
+      
+      //check if any scenario has the same name
+      const scenarios = response.data.data || [];
+      return scenarios.some((scenario: any) => 
+        scenario.name.toLowerCase() === name.toLowerCase()
+      );
+    } catch (error) {
+      console.error('Error checking scenario name:', error);
+      //default to false on error aka allows user to continue
+      return false;
+    }
+  },
 };
 
 export default scenario_service;
