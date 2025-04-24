@@ -10,9 +10,11 @@ import {
   HStack,
   VStack,
   IconButton,
+  Badge,
 } from '@chakra-ui/react';
 import { Building2, Wallet, TrendingUp, BarChart } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+import { FiArrowRight } from 'react-icons/fi';
 
 import { useEventSeries } from '../../contexts/EventSeriesContext';
 import { EventSeriesType, EventSeries } from '../../types/eventSeries';
@@ -62,6 +64,7 @@ const eventTypeOptions = [
 export interface AddedEvent extends Omit<EventSeries, 'id'> {
   id?: string;
   _id?: string;
+  glidePath?: boolean;
 }
 
 interface EventSeriesSectionProps {
@@ -98,35 +101,61 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
       <Box minH="100vh" bg="gray.50">
         <Box maxW="4xl" mx="auto" py={12} px={4}>
           <Box bg="white" rounded="lg" shadow="lg" overflow="hidden">
+            <Box 
+              p={6} 
+              bgGradient="linear(to-r, blue.400, purple.500)"
+              borderBottom="1px" 
+              borderColor="gray.200"
+              position="relative"
+              overflow="hidden"
+            >
+              <Box
+                position="absolute"
+                top={0}
+                right={0}
+                width="150px"
+                height="150px"
+                bg="rgba(255,255,255,0.1)"
+                borderRadius="50%"
+                transform="translate(30%, -50%)"
+              />
+              <Box
+                position="absolute"
+                bottom={0}
+                left={0}
+                width="100px"
+                height="100px"
+                bg="rgba(255,255,255,0.1)"
+                borderRadius="50%"
+                transform="translate(-30%, 50%)"
+              />
+              <Heading size="lg" color="white">
+                New Event Series
+              </Heading>
+              <Text color="whiteAlpha.800" mt={1}>
+                Add financial events to build your scenario plan
+              </Text>
+            </Box>
+
             <Box p={6}>
-              <Flex justify="space-between" align="center" mb={6}>
-                <Heading size="lg" color="gray.900">
-                  New Event Series
-                </Heading>
-                <HStack spacing={4} justify="flex-end" mt={6}>
-                  <Button variant="ghost" onClick={handleBackToInvestments}>
-                    Back
-                  </Button>
-                  <Button
-                    colorScheme="blue"
-                    onClick={handleSaveAndContinue}
-                    bg="blue.500"
-                    _hover={{ bg: 'blue.600' }}
-                    _active={{ bg: 'blue.700' }}
-                  >
-                    Continue
-                  </Button>
-                </HStack>
-              </Flex>
+              <Button 
+                variant="ghost" 
+                onClick={handleBackToInvestments}
+                mb={6}
+                leftIcon={<Text>←</Text>}
+              >
+                Back
+              </Button>
+
               {addedEvents.length > 0 && (
                 <VStack spacing={4} mb={8} align="stretch">
                   <Heading size="md" color="gray.700">
                     Added Events
                   </Heading>
                   <Box bg="gray.50" p={4} borderRadius="md">
-                    {addedEvents.map(event => (
+                    {addedEvents.map((event, index) => (
                       <Flex
-                        key={event.id || event._id}
+                        key={index}
                         p={4}
                         bg="white"
                         borderRadius="md"
@@ -136,44 +165,103 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                         align="center"
                       >
                         <Box>
-                          <Text fontWeight="medium">{event.name}</Text>
+                          <Text fontWeight="semibold" fontSize="md" color="gray.800" mb={1}>
+                            {event.name}
+                            <Badge ml={2} colorScheme={
+                              event.type === 'income' ? 'green' : 
+                              event.type === 'expense' ? 'red' : 
+                              event.type === 'invest' ? 'blue' : 'purple'
+                            } fontSize="xs" textTransform="uppercase">
+                              {event.type}
+                            </Badge>
+                          </Text>
                           <Text fontSize="sm" color="gray.600">
-                            ${event.initialAmount} • Starting{' '}
-                            {event.startYear.type === 'fixed' ? event.startYear.value : 'Variable'}{' '}
-                            • {event.duration.type === 'fixed' ? event.duration.value : 'Variable'}{' '}
-                            years
+                            {event.type !== 'invest' && event.type !== 'rebalance' ? (
+                              <>
+                                <Text as="span" fontWeight="medium" color="gray.700">Initial Amount:</Text>{' '}
+                                <Text as="span" color="green.600" fontWeight="medium">${event.initialAmount?.toLocaleString() || 0}</Text>
+                                
+                                {/* Display properties for income and expense as badges */}
+                                <Flex mt={1} flexWrap="wrap" gap={1}>
+                                  {event.inflationAdjusted && (
+                                    <Text fontSize="sm" fontWeight="medium" color="orange.600" px={1} py={0.5} 
+                                      bg="orange.50" borderRadius="md" display="inline-block">
+                                      Inflation Adjusted
+                                    </Text>
+                                  )}
+                                  
+                                  {event.type === 'expense' && event.discretionary && (
+                                    <Text fontSize="sm" fontWeight="medium" color="purple.600" px={1} py={0.5} 
+                                      bg="purple.50" borderRadius="md" display="inline-block">
+                                      Discretionary
+                                    </Text>
+                                  )}
+                                  
+                                  {event.type === 'income' && event.isSocialSecurity && (
+                                    <Text fontSize="sm" fontWeight="medium" color="blue.600" px={1} py={0.5} 
+                                      bg="blue.50" borderRadius="md" display="inline-block">
+                                      Social Security
+                                    </Text>
+                                  )}
+                                </Flex>
+                              </>
+                            ) : event.type === 'invest' ? (
+                              <>
+                                <Box>
+                                  {event.assetAllocation ? 
+                                    Object.entries(event.assetAllocation).slice(0, 3).map(([key, value], idx) => (
+                                      <Flex key={idx} mb={0.5} width="100%">
+                                        <Text fontSize="sm" fontWeight="medium" flex="1" isTruncated>
+                                          {key}:
+                                        </Text>
+                                        <Text fontSize="sm" color="blue.600" fontWeight="medium" width="50px" textAlign="right">
+                                          {Math.round(Number(value) * 100)}%
+                                        </Text>
+                                      </Flex>
+                                    ))
+                                    : <Text fontSize="sm">No allocations</Text>}
+                                  {(event as any).glidePath && 
+                                    <Text fontSize="sm" fontWeight="medium" color="blue.600" px={1} py={0.5} 
+                                    bg="blue.50" borderRadius="md" display="inline-block" mt={1} mb={1}>
+                                      <Icon as={TrendingUp} boxSize={3} mr={1} />
+                                      Glide Path
+                                    </Text>}
+                                  <Text fontSize="sm">
+                                    <Text as="span" fontWeight="medium" color="gray.700">Max cash:</Text>{' '}
+                                    <Text as="span" color="green.600" fontWeight="medium">${event.maxCash?.toLocaleString() || 0}</Text>
+                                  </Text>
+                                </Box>
+                              </>
+                            ) : (
+                              <>
+                                <Box>
+                                  {event.assetAllocation ? 
+                                    Object.entries(event.assetAllocation).slice(0, 3).map(([key, value], idx) => (
+                                      <Flex key={idx} mb={0.5} width="100%">
+                                        <Text fontSize="sm" fontWeight="medium" flex="1" isTruncated>
+                                          {key}:
+                                        </Text>
+                                        <Text fontSize="sm" color="purple.600" fontWeight="medium" width="50px" textAlign="right">
+                                          {Math.round(Number(value) * 100)}%
+                                        </Text>
+                                      </Flex>
+                                    ))
+                                    : <Text fontSize="sm">No allocations</Text>}
+                                </Box>
+                              </>
+                            )}
                           </Text>
                         </Box>
                         <HStack>
-                          <Text
-                            px={2}
-                            py={1}
-                            borderRadius="md"
-                            fontSize="sm"
-                            bg={
-                              event.type === 'income'
-                                ? 'green.100'
-                                : event.type === 'expense'
-                                  ? 'red.100'
-                                  : 'blue.100'
-                            }
-                            color={
-                              event.type === 'income'
-                                ? 'green.700'
-                                : event.type === 'expense'
-                                  ? 'red.700'
-                                  : 'blue.700'
-                            }
-                          >
-                            {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
-                          </Text>
                           <IconButton
                             aria-label="Delete event"
-                            icon={<DeleteIcon />}
-                            size="sm"
+                            icon={<DeleteIcon color="red.500" />}
+                            size="md"
                             variant="ghost"
-                            colorScheme="red"
-                            onClick={() => handleDeleteEvent(event.id || event._id || '')}
+                            _hover={{ bg: 'red.50' }}
+                            onClick={() => {
+                              handleDeleteEvent(index.toString());
+                            }}
                           />
                         </HStack>
                       </Flex>
@@ -181,9 +269,11 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                   </Box>
                 </VStack>
               )}
+
               <Text color="gray.600" mb={6}>
                 Select the type of event series you want to add to your financial plan.
               </Text>
+
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                 {eventTypeOptions.map(option => {
                   const IconComponent = option.icon;
@@ -214,6 +304,26 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                   );
                 })}
               </SimpleGrid>
+
+              <Flex justify="flex-end" mt={8}>
+                <Button
+                  colorScheme="blue"
+                  onClick={handleSaveAndContinue}
+                  size="lg"
+                  px={8}
+                  borderRadius="lg"
+                  bgGradient="linear(to-r, blue.400, teal.500)"
+                  rightIcon={<FiArrowRight />}
+                  _hover={{
+                    bgGradient: 'linear(to-r, blue.500, teal.600)',
+                    transform: 'translateY(-2px)',
+                    boxShadow: 'lg',
+                  }}
+                  transition="all 0.2s"
+                >
+                  Continue
+                </Button>
+              </Flex>
             </Box>
           </Box>
         </Box>

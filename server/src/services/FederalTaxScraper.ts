@@ -6,7 +6,7 @@ import { IncomeType, TaxFilingStatus } from "../core/Enums";
 import { StandardDeduction, create_standard_deductions } from "../core/tax/StandardDeduction";
 import { create_taxbracket_in_db } from "../db/repositories/TaxBracketRepository";
 import { create_standard_deduction_in_db } from "../db/repositories/StandardDeductionRepository";
-
+import { extractNumbers } from "../utils/NumberUtils";
 import { simulation_logger } from "../utils/logger/logger";
 
 const SINGLE_TABLE: number = 0;
@@ -249,18 +249,6 @@ async function parse_capital_gains(
     }
 }
 
-export const extractNumbers = (sentence: string, num: number): number[] => {
-    const matches = sentence.match(/-?\d{1,3}(?:,\d{3})*(?:\.\d+)?/g) || [];
-    const res = matches.map(m => Number(m.replace(/,/g, ''))).filter(num => !isNaN(num)); 
-    if (res.length != num) {
-        simulation_logger.error(`Number of integer in this sentence should be equal to "${num}"`,{
-            res,
-            sentence,
-        })
-        throw new Error(`Number of integer in this sentence should be equal to "${num}"`);
-    }
-    return res;
-} 
     
 export {
     parse_capital_gains,

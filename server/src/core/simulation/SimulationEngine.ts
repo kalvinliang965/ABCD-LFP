@@ -15,12 +15,14 @@ export interface SimulationEngine {
 }
 
 import { simulation_logger } from '../../utils/logger/logger';
-import perform_rmds from './logic/ProcessRMD';
+import { process_rmds } from './logic/ProcessRMD';
 import { pay_mandatory_expenses } from './logic/PayMandatoryExpense';
 import { pay_discretionary_expenses } from './logic/PayDiscretionaryExpense';
 import { invest_excess_cash as run_invest_event } from './logic/InvestExcessCash';
 import { run_rebalance_investment } from './logic/RebalanceInvestments';
 import { delete_state_tax_brackets_by_state } from '../../db/repositories/StateTaxBracketRepository';
+import { get_rmd_factors_from_db, save_rmd_factors_to_db } from '../../db/repositories/RMDFactorRepository';
+import { fetch_and_parse_rmd } from '../../services/RMDScraper';
 
 export async function create_simulation_engine(scenario_yaml: string, state_yaml: string): Promise<SimulationEngine> {
 
@@ -56,6 +58,16 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
             state_tax_service = await create_state_tax_service_db(scenario.residence_state); 
             simulation_logger.info("Successfully initialize state tax service from db");
         }
+
+
+        // TODO: Maybe i could do something like this(bulk write) for federal tax scraping to optimize my code.
+        let rmd_factor = await get_rmd_factors_from_db();
+        // if rmd factor is not already scrapped.
+        if (rmd_factor.size == 0) {
+            rmd_factor = await fetch_and_parse_rmd();
+            await save_rmd_factors_to_db(rmd_factor);
+        } 
+
         simulation_logger.info("Successfully initialize state tax service");
         simulation_logger.info("Successfully initialize simulation engine");
     } catch (error) {
@@ -63,7 +75,7 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
             `Failed to setup the simulation engine`,
             {error:  error instanceof Error? error.stack: error}
         );
-        process.exit(1);
+        throw new Error("Failed to setup the simulation engine");
     }
     
     // we will be using this one for now
@@ -130,7 +142,7 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
             
             if (simulation_state.user.get_age() >= 74) {
                 simulation_logger.debug("Performing rmd...");
-                perform_rmds(simulation_state);
+                process_rmds(simulation_state);
             }
             simulation_logger.debug("Updating investments...");
             update_investment(simulation_state);
