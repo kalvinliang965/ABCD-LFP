@@ -14,6 +14,7 @@ import {
   AlertIcon,
   AlertTitle,
   AlertDescription,
+  FormErrorMessage,
 } from '@chakra-ui/react';
 import React, { useState, useEffect } from 'react';
 
@@ -46,7 +47,8 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
     type: 'fixed',
     value: 1,
   });
-  const [maxCash, setMaxCash] = useState('');
+  const [maxCash, setMaxCash] = useState<number>(0);
+  const [maxCashError, setMaxCashError] = useState<string>('');
   const [useGlidePath, setUseGlidePath] = useState(false);
   const [allocations, setAllocations] = useState<{ [key: string]: number }>({});
   const [finalAllocations, setFinalAllocations] = useState<{ [key: string]: number }>({});
@@ -142,26 +144,39 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    //reset error states
+    setMaxCashError('');
+    
+    let hasErrors = false;
+    
+    //validate max cash is greater than 0
+    if (maxCash <= 0) {
+      setMaxCashError("Maximum cash must be greater than 0");
+      hasErrors = true;
+    }
 
     if (
+      hasErrors ||
       !validateAllocationPercentages(allocations) ||
       (useGlidePath && !validateAllocationPercentages(finalAllocations))
     ) {
       return;
     }
 
-    //convert allocations to the correct format for ScenarioRaw
-    const assetAllocationArray = Object.entries(allocations).map(([type, value]) => ({
-      type,
-      value: value / 100, //divide by 100 to convert from percentage to decimal
-    }));
+    //convert allocations to direct object format
+    const assetAllocation = Object.entries(allocations).reduce((acc, [type, value]) => {
+      acc[type] = value / 100; //convert percentage to decimal
+      return acc;
+    }, {} as { [key: string]: number });
 
-    const assetAllocation2Array = useGlidePath
-      ? Object.entries(finalAllocations).map(([type, value]) => ({
-          type,
-          value: value / 100, //divide by 100 to convert from percentage to decimal
-        }))
-      : [];
+    //convert final allocations to direct object format if using glide path
+    const assetAllocation2 = useGlidePath
+      ? Object.entries(finalAllocations).reduce((acc, [type, value]) => {
+          acc[type] = value / 100; //convert percentage to decimal
+          return acc;
+        }, {} as { [key: string]: number })
+      : {};
 
     const eventData = {
       type: 'invest',
@@ -170,8 +185,8 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
       startYear,
       duration,
       maxCash: Number(maxCash) || 0,
-      assetAllocation: assetAllocationArray,
-      assetAllocation2: assetAllocation2Array,
+      assetAllocation,
+      assetAllocation2,
       glidePath: useGlidePath,
       initialAmount: 0, //required by EventSeries type
       inflationAdjusted: false, //required by EventSeries type
@@ -186,7 +201,8 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
   const resetForm = () => {
     setName('');
     setDescription('');
-    setMaxCash('');
+    setMaxCash(0);
+    setMaxCashError('');
     setUseGlidePath(false);
     //reset allocations to equal distribution
     const nonPreTaxInvestments = investments.filter(
@@ -215,16 +231,20 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
           setDuration={setDuration}
           existingEvents={existingEvents}
         />
-        <FormControl isRequired>
+        <FormControl isRequired isInvalid={!!maxCashError}>
           <FormLabel>Maximum Cash Holdings ($)</FormLabel>
-          <Input
-            type="number"
+          <NumberInput
             value={maxCash}
-            onChange={e => setMaxCash(e.target.value)}
-            placeholder="0"
-            min="0"
-            step="1"
-          />
+            onChange={(valueString) => {
+              const value = Number(valueString) || 0;
+              setMaxCash(value);
+              if (value > 0) setMaxCashError('');
+            }}
+            min={0}
+          >
+            <NumberInputField placeholder="0" />
+          </NumberInput>
+          {maxCashError && <FormErrorMessage>{maxCashError}</FormErrorMessage>}
         </FormControl>
         <FormControl display="flex" alignItems="center">
           <FormLabel mb="0">Use Glide Path</FormLabel>
