@@ -138,10 +138,21 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                         <Box>
                           <Text fontWeight="medium">{event.name}</Text>
                           <Text fontSize="sm" color="gray.600">
-                            ${event.initialAmount} • Starting{' '}
-                            {event.startYear.type === 'fixed' ? event.startYear.value : 'Variable'}{' '}
-                            • {event.duration.type === 'fixed' ? event.duration.value : 'Variable'}{' '}
-                            years
+                            {event.type !== 'invest' && event.type !== 'rebalance' ? (
+                              <>
+                                ${event.initialAmount || 0} • Starting{' '}
+                                {event.startYear?.type === 'fixed' ? event.startYear.value : 'Variable'}{' '}
+                                • {event.duration?.type === 'fixed' ? event.duration.value : 'Variable'}{' '}
+                                years
+                              </>
+                            ) : (
+                              <>
+                                Starting{' '}
+                                {event.startYear?.type === 'fixed' ? event.startYear.value : 'Variable'}{' '}
+                                • {event.duration?.type === 'fixed' ? event.duration.value : 'Variable'}{' '}
+                                years
+                              </>
+                            )}
                           </Text>
                         </Box>
                         <HStack>
@@ -165,7 +176,7 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                                   : 'blue.700'
                             }
                           >
-                            {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
+                            {(event.type || 'unknown').charAt(0).toUpperCase() + (event.type || 'unknown').slice(1)}
                           </Text>
                           <IconButton
                             aria-label="Delete event"

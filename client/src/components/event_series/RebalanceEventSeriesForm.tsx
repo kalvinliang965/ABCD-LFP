@@ -138,10 +138,14 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
       return;
     }
 
-    const assetAllocationArray = Object.entries(allocations).map(([type, value]) => ({
-      type,
-      value: value / 100, //divide by 100 to convert from percentage to decimal
-    }));
+    //convert allocations to direct object format
+    const assetAllocation = Object.entries(allocations).reduce((acc, [type, value]) => {
+      const investment = investments.find(inv => inv.investmentType === type && inv.taxStatus === selectedTaxStatus);
+      if (investment) {
+        acc[investment.id] = value / 100; //convert percentage to decimal
+      }
+      return acc;
+    }, {} as { [key: string]: number });
 
     const eventData = {
       type: 'rebalance',
@@ -150,7 +154,7 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
       startYear,
       duration,
       selectedTaxStatus,
-      assetAllocation: assetAllocationArray,
+      assetAllocation,
       initialAmount: 0,
       inflationAdjusted: false,
     };

@@ -176,15 +176,15 @@ export function map_form_to_scenario_raw(
       } else if (event.type === 'invest') {
         return {
           ...baseEvent,
-          assetAllocation: event.assetAllocation || [],
-          assetAllocation2: event.assetAllocation2 || event.assetAllocation || [], // Use assetAllocation2 if provided, otherwise fallback to assetAllocation
+          assetAllocation: event.assetAllocation || {},
+          assetAllocation2: event.assetAllocation2 || event.assetAllocation || {}, 
           glidePath: event.glidePath || false,
           maxCash: event.maxCash || 0,
         } as InvestmentEventRaw;
       } else if (event.type === 'rebalance') {
         return {
           ...baseEvent,
-          assetAllocation: event.assetAllocation || [],
+          assetAllocation: event.assetAllocation || {},
         } as RebalanceEventRaw;
       }
       return baseEvent as EventRaw;

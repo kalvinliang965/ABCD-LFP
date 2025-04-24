@@ -150,18 +150,19 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
       return;
     }
 
-    //convert allocations to the correct format for ScenarioRaw
-    const assetAllocationArray = Object.entries(allocations).map(([type, value]) => ({
-      type,
-      value: value / 100, //divide by 100 to convert from percentage to decimal
-    }));
+    //convert allocations to direct object format
+    const assetAllocation = Object.entries(allocations).reduce((acc, [type, value]) => {
+      acc[type] = value / 100; //convert percentage to decimal
+      return acc;
+    }, {} as { [key: string]: number });
 
-    const assetAllocation2Array = useGlidePath
-      ? Object.entries(finalAllocations).map(([type, value]) => ({
-          type,
-          value: value / 100, //divide by 100 to convert from percentage to decimal
-        }))
-      : [];
+    //convert final allocations to direct object format if using glide path
+    const assetAllocation2 = useGlidePath
+      ? Object.entries(finalAllocations).reduce((acc, [type, value]) => {
+          acc[type] = value / 100; //convert percentage to decimal
+          return acc;
+        }, {} as { [key: string]: number })
+      : {};
 
     const eventData = {
       type: 'invest',
@@ -170,8 +171,8 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
       startYear,
       duration,
       maxCash: Number(maxCash) || 0,
-      assetAllocation: assetAllocationArray,
-      assetAllocation2: assetAllocation2Array,
+      assetAllocation,
+      assetAllocation2,
       glidePath: useGlidePath,
       initialAmount: 0, //required by EventSeries type
       inflationAdjusted: false, //required by EventSeries type
