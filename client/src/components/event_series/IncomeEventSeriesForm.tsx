@@ -114,6 +114,7 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
       initialAmount: Number(amount) || 0,
       annualChange,
       changeAmtOrPct,
+      changeType: changeAmtOrPct,
       changeDistribution,
       inflationAdjusted,
       userPercentage,

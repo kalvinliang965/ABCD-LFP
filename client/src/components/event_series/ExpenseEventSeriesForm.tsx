@@ -99,6 +99,7 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
       initialAmount: Number(amount) || 0,
       annualChange,
       changeAmtOrPct,
+      changeType: changeAmtOrPct,
       changeDistribution,
       discretionary: isDiscretionary,
       userPercentage,
@@ -188,6 +189,7 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
                   size="sm"
                   colorScheme={changeAmtOrPct === 'amount' ? 'blue' : 'gray'}
                   onClick={() => setChangeAmtOrPct('amount')}
+                  type="button"
                 >
                   Amount ($)
                 </Button>
@@ -195,6 +197,7 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
                   size="sm"
                   colorScheme={changeAmtOrPct === 'percent' ? 'blue' : 'gray'}
                   onClick={() => setChangeAmtOrPct('percent')}
+                  type="button"
                 >
                   Percentage (%)
                 </Button>
