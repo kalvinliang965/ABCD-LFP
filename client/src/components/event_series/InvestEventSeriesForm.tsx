@@ -218,14 +218,13 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
         />
         <FormControl isRequired>
           <FormLabel>Maximum Cash Holdings ($)</FormLabel>
-          <Input
-            type="number"
-            value={maxCash}
-            onChange={e => setMaxCash(e.target.value)}
-            placeholder="0"
-            min="0"
-            step="1"
-          />
+          <NumberInput
+            value={maxCash ? Number(maxCash) : 0}
+            onChange={(valueString) => setMaxCash(valueString)}
+            min={0}
+          >
+            <NumberInputField placeholder="0" />
+          </NumberInput>
         </FormControl>
         <FormControl display="flex" alignItems="center">
           <FormLabel mb="0">Use Glide Path</FormLabel>
