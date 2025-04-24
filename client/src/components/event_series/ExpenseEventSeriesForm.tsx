@@ -68,13 +68,13 @@ export const ExpenseEventSeriesForm: React.FC<ExpenseEventSeriesFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Reset error states
+    //reset error states
     setAmountError('');
     setAnnualChangeError('');
     
     let hasErrors = false;
 
-    // Validate that amount is greater than 0
+    //validate that amount is greater than 0
     if (amount <= 0) {
       setAmountError("Amount must be greater than 0");
       hasErrors = true;

@@ -3,9 +3,6 @@ import {
   Select,
   FormControl,
   FormLabel,
-  InputGroup,
-  InputLeftElement,
-  Input,
   Switch,
   HStack,
   NumberInput,
@@ -14,6 +11,7 @@ import {
   Stack,
   Button,
   Box,
+  FormErrorMessage,
 } from '@chakra-ui/react';
 import React, { useState } from 'react';
 
@@ -44,10 +42,12 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
   });
 
   const [amount, setAmount] = useState<number>(0);
+  const [amountError, setAmountError] = useState<string>('');
   const [annualChange, setAnnualChange] = useState<AmountChangeType>({
     type: 'fixed',
     value: undefined,
   });
+  const [annualChangeError, setAnnualChangeError] = useState<string>('');
   const [changeAmtOrPct, setChangeAmtOrPct] = useState<'amount' | 'percent'>('amount');
   const [inflationAdjusted, setInflationAdjusted] = useState(false);
   const [isSocialSecurity, setIsSocialSecurity] = useState(false);
@@ -67,6 +67,28 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    //reset error states
+    setAmountError('');
+    setAnnualChangeError('');
+    
+    let hasErrors = false;
+
+    //validate that amount is greater than 0
+    if (amount <= 0) {
+      setAmountError("Amount must be greater than 0");
+      hasErrors = true;
+    }
+
+    //validate that annual change values are specified if needed
+    if (annualChange.type === 'fixed' && (annualChange.value === undefined || annualChange.value <= 0)) {
+      setAnnualChangeError("Annual change amount must be greater than 0");
+      hasErrors = true;
+    }
+
+    if (hasErrors) {
+      return;
+    }
 
     //create the changeDistribution based on the annualChange type
     let changeDistribution;
@@ -131,6 +153,7 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
     setName('');
     setDescription('');
     setAmount(0);
+    setAmountError('');
     setInflationAdjusted(false);
     setIsSocialSecurity(false);
     setUserPercentage(100);
@@ -138,6 +161,7 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
     setStartYear({ type: 'fixed', value: new Date().getFullYear() });
     setDuration({ type: 'fixed', value: 1 });
     setAnnualChange({ type: 'fixed', value: undefined });
+    setAnnualChangeError('');
     setChangeAmtOrPct('amount');
   };
 
@@ -155,15 +179,19 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
           setDuration={setDuration}
           existingEvents={existingEvents}
         />
-        <FormControl isRequired>
+        <FormControl isRequired isInvalid={!!amountError}>
           <FormLabel>Initial Amount</FormLabel>
           <NumberInput
             value={amount}
-            onChange={(valueString) => setAmount(Number(valueString) || 0)}
+            onChange={(valueString) => {
+              setAmount(Number(valueString) || 0);
+              if (Number(valueString) > 0) setAmountError('');
+            }}
             min={0}
           >
             <NumberInputField placeholder="0" />
           </NumberInput>
+          {amountError && <FormErrorMessage>{amountError}</FormErrorMessage>}
         </FormControl>
         <FormControl isRequired>
           <FormLabel>Annual Change Type</FormLabel>
@@ -210,17 +238,20 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
                 </Button>
               </HStack>
             </FormControl>
-            <FormControl isRequired>
+            <FormControl isRequired isInvalid={!!annualChangeError}>
               <FormLabel>Annual Change {changeAmtOrPct === 'amount' ? '($)' : '(%)'}</FormLabel>
               <NumberInput
                 value={annualChange.value ?? 0}
-                onChange={(valueString) => 
-                  setAnnualChange({ type: 'fixed', value: Number(valueString) || 0 })
-                }
+                onChange={(valueString) => {
+                  const value = Number(valueString) || 0;
+                  setAnnualChange({ type: 'fixed', value });
+                  if (value > 0) setAnnualChangeError('');
+                }}
                 min={0}
               >
                 <NumberInputField placeholder="0" />
               </NumberInput>
+              {annualChangeError && <FormErrorMessage>{annualChangeError}</FormErrorMessage>}
             </FormControl>
           </>
         )}
