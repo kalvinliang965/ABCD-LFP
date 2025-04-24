@@ -153,6 +153,30 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                               <>
                                 <Text as="span" fontWeight="medium" color="gray.700">Initial Amount:</Text>{' '}
                                 <Text as="span" color="green.600" fontWeight="medium">${event.initialAmount?.toLocaleString() || 0}</Text>
+                                
+                                {/* Display properties for income and expense as badges */}
+                                <Flex mt={1} flexWrap="wrap" gap={1}>
+                                  {event.inflationAdjusted && (
+                                    <Text fontSize="sm" fontWeight="medium" color="orange.600" px={1} py={0.5} 
+                                      bg="orange.50" borderRadius="md" display="inline-block">
+                                      Inflation Adjusted
+                                    </Text>
+                                  )}
+                                  
+                                  {event.type === 'expense' && event.discretionary && (
+                                    <Text fontSize="sm" fontWeight="medium" color="purple.600" px={1} py={0.5} 
+                                      bg="purple.50" borderRadius="md" display="inline-block">
+                                      Discretionary
+                                    </Text>
+                                  )}
+                                  
+                                  {event.type === 'income' && event.isSocialSecurity && (
+                                    <Text fontSize="sm" fontWeight="medium" color="blue.600" px={1} py={0.5} 
+                                      bg="blue.50" borderRadius="md" display="inline-block">
+                                      Social Security
+                                    </Text>
+                                  )}
+                                </Flex>
                               </>
                             ) : event.type === 'invest' ? (
                               <>
