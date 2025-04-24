@@ -144,15 +144,15 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     //reset error states
     setMaxCashError('');
-    
+
     let hasErrors = false;
-    
+
     //validate max cash is greater than 0
     if (maxCash <= 0) {
-      setMaxCashError("Maximum cash must be greater than 0");
+      setMaxCashError('Maximum cash must be greater than 0');
       hasErrors = true;
     }
 
@@ -165,24 +165,30 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
     }
 
     //convert allocations to direct object format
-    const assetAllocation = Object.entries(allocations).reduce((acc, [type, value]) => {
-      acc[type] = value / 100; //convert percentage to decimal
-      return acc;
-    }, {} as { [key: string]: number });
+    const assetAllocation = Object.entries(allocations).reduce(
+      (acc, [type, value]) => {
+        acc[type] = value / 100; //convert percentage to decimal
+        return acc;
+      },
+      {} as { [key: string]: number }
+    );
 
     //convert final allocations to direct object format if using glide path
     const assetAllocation2 = useGlidePath
-      ? Object.entries(finalAllocations).reduce((acc, [type, value]) => {
-          acc[type] = value / 100; //convert percentage to decimal
-          return acc;
-        }, {} as { [key: string]: number })
+      ? Object.entries(finalAllocations).reduce(
+          (acc, [type, value]) => {
+            acc[type] = value / 100; //convert percentage to decimal
+            return acc;
+          },
+          {} as { [key: string]: number }
+        )
       : {};
 
     const eventData = {
       type: 'invest',
       name,
       description,
-      startYear,
+      start: startYear,
       duration,
       maxCash: Number(maxCash) || 0,
       assetAllocation,
@@ -235,7 +241,7 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
           <FormLabel>Maximum Cash Holdings ($)</FormLabel>
           <NumberInput
             value={maxCash}
-            onChange={(valueString) => {
+            onChange={valueString => {
               const value = Number(valueString) || 0;
               setMaxCash(value);
               if (value > 0) setMaxCashError('');

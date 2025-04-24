@@ -81,8 +81,8 @@ export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
     eventSeries: new Set([
       {
         name: 'salary',
-        start: [{ type: 'fixed', value: 2025 }],
-        duration: [{ type: 'fixed', value: 40 }],
+        start: { type: 'fixed', value: 2025 },
+        duration: { type: 'fixed', value: 40 },
         type: 'income',
         initialAmount: 75000,
         changeAmtOrPct: 'amount',
@@ -93,8 +93,8 @@ export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
       },
       {
         name: 'food',
-        start: [{ type: 'startWith', eventSeries: 'salary' }],
-        duration: [{ type: 'fixed', value: 200 }],
+        start: { type: 'startWith', eventSeries: 'salary' },
+        duration: { type: 'fixed', value: 200 },
         type: 'expense',
         initialAmount: 5000,
         changeAmtOrPct: 'percent',
@@ -105,8 +105,8 @@ export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
       },
       {
         name: 'vacation',
-        start: [{ type: 'startWith', eventSeries: 'salary' }],
-        duration: [{ type: 'fixed', value: 40 }],
+        start: { type: 'startWith', eventSeries: 'salary' },
+        duration: { type: 'fixed', value: 40 },
         type: 'expense',
         initialAmount: 1200,
         changeAmtOrPct: 'amount',
@@ -117,8 +117,8 @@ export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
       },
       {
         name: 'streaming services',
-        start: [{ type: 'startWith', eventSeries: 'salary' }],
-        duration: [{ type: 'fixed', value: 40 }],
+        start: { type: 'startWith', eventSeries: 'salary' },
+        duration: { type: 'fixed', value: 40 },
         type: 'expense',
         initialAmount: 500,
         changeAmtOrPct: 'amount',
@@ -129,8 +129,8 @@ export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
       },
       {
         name: 'my investments',
-        start: [{ type: 'uniform', lower: 2025, upper: 2030 }],
-        duration: [{ type: 'fixed', value: 10 }],
+        start: { type: 'uniform', lower: 2025, upper: 2030 },
+        duration: { type: 'fixed', value: 10 },
         type: 'invest',
         assetAllocation: [
           { type: 'S&P 500 non-retirement', value: 0.6 },
@@ -145,8 +145,8 @@ export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
       },
       {
         name: 'rebalance',
-        start: [{ type: 'uniform', lower: 2025, upper: 2030 }],
-        duration: [{ type: 'fixed', value: 10 }],
+        start: { type: 'uniform', lower: 2025, upper: 2030 },
+        duration: { type: 'fixed', value: 10 },
         type: 'rebalance',
         assetAllocation: [
           { type: 'S&P 500 non-retirement', value: 0.7 },

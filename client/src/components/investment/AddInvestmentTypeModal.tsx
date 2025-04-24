@@ -152,23 +152,18 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
 
   // Function to convert initialData to form data format
   const convert_initial_data_to_form = (data: InvestmentTypeRaw): InvestmentTypeForm => {
-    // Check if return distribution array exists and has content
-    if (
-      !data.returnDistribution ||
-      !Array.isArray(data.returnDistribution) ||
-      data.returnDistribution.length === 0
-    ) {
-      data.returnDistribution = [{ type: DistributionType.FIXED, value: 0 }];
+    // If data is undefined or missing critical properties, initialize with defaults
+    if (!data || !data.returnDistribution || typeof data.returnDistribution !== 'object') {
+      data.returnDistribution = { type: DistributionType.FIXED, value: 0 };
     }
 
-    // Check if income distribution array exists and has content
-    if (
-      !data.incomeDistribution ||
-      !Array.isArray(data.incomeDistribution) ||
-      data.incomeDistribution.length === 0
-    ) {
-      data.incomeDistribution = [{ type: DistributionType.FIXED, value: 0 }];
+    if (!data || !data.incomeDistribution || typeof data.incomeDistribution !== 'object') {
+      data.incomeDistribution = { type: DistributionType.FIXED, value: 0 };
     }
+
+    // Get the distribution data
+    const returnDistItem = data.returnDistribution || {};
+    const incomeDistItem = data.incomeDistribution || {};
 
     // Normalize distribution type (handles case sensitivity)
     const normalizeType = (type: string): string => {
@@ -178,7 +173,6 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
     };
 
     // Extract values from return distribution
-    const returnDistItem = data.returnDistribution[0] || {};
     const returnType = normalizeType(returnDistItem.type);
 
     // Determine which key to use for the value
@@ -218,7 +212,6 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
         : undefined;
 
     // Extract values from income distribution - same approach as return
-    const incomeDistItem = data.incomeDistribution[0] || {};
     const dividendType = normalizeType(incomeDistItem.type);
 
     const dividendRateKey = dividendType === DistributionType.FIXED ? 'value' : 'mean';
@@ -409,64 +402,56 @@ const AddInvestmentTypeModal: React.FC<AddInvestmentTypeModalProps> = ({
         expenseRatio: parseFloat(formData.expenseRatio) / 100, // Convert from percentage to decimal
         incomeAmtOrPct: formData.dividendInputMode,
         taxability: formData.taxability,
-        returnDistribution: [], // Initialize with empty array
-        incomeDistribution: [], // Initialize with empty array
+        returnDistribution: {}, // Initialize with empty object
+        incomeDistribution: {}, // Initialize with empty object
       };
 
       console.log('investmentType form AddInvestmentTypeModal', investmentType);
 
       // Create return distribution based on type
       if (formData.returnType === DistributionType.FIXED) {
-        investmentType.returnDistribution = [
-          {
-            type: DistributionType.FIXED,
-            value:
-              formData.returnInputMode === ValueInputMode.PERCENT
-                ? parseFloat(formData.returnRate) / 100
-                : parseFloat(formData.returnRate),
-          },
-        ];
+        investmentType.returnDistribution = {
+          type: DistributionType.FIXED,
+          value:
+            formData.returnInputMode === ValueInputMode.PERCENT
+              ? parseFloat(formData.returnRate) / 100
+              : parseFloat(formData.returnRate),
+        };
       } else if (formData.returnType === DistributionType.NORMAL) {
-        investmentType.returnDistribution = [
-          {
-            type: DistributionType.NORMAL,
-            mean:
-              formData.returnInputMode === ValueInputMode.PERCENT
-                ? parseFloat(formData.returnRate) / 100
-                : parseFloat(formData.returnRate),
-            stdev:
-              formData.returnInputMode === ValueInputMode.PERCENT
-                ? parseFloat(formData.returnRateStdDev || '0') / 100
-                : parseFloat(formData.returnRateStdDev || '0'),
-          },
-        ];
+        investmentType.returnDistribution = {
+          type: DistributionType.NORMAL,
+          mean:
+            formData.returnInputMode === ValueInputMode.PERCENT
+              ? parseFloat(formData.returnRate) / 100
+              : parseFloat(formData.returnRate),
+          stdev:
+            formData.returnInputMode === ValueInputMode.PERCENT
+              ? parseFloat(formData.returnRateStdDev || '0') / 100
+              : parseFloat(formData.returnRateStdDev || '0'),
+        };
       }
 
       // Create income distribution based on type
       if (formData.dividendType === DistributionType.FIXED) {
-        investmentType.incomeDistribution = [
-          {
-            type: DistributionType.FIXED,
-            value:
-              formData.dividendInputMode === ValueInputMode.PERCENT
-                ? parseFloat(formData.dividendRate) / 100
-                : parseFloat(formData.dividendRate),
-          },
-        ];
+        investmentType.incomeDistribution = {
+          type: DistributionType.FIXED,
+          value:
+            formData.dividendInputMode === ValueInputMode.PERCENT
+              ? parseFloat(formData.dividendRate) / 100
+              : parseFloat(formData.dividendRate),
+        };
       } else if (formData.dividendType === DistributionType.NORMAL) {
-        investmentType.incomeDistribution = [
-          {
-            type: DistributionType.NORMAL,
-            mean:
-              formData.dividendInputMode === ValueInputMode.PERCENT
-                ? parseFloat(formData.dividendRate) / 100
-                : parseFloat(formData.dividendRate),
-            stdev:
-              formData.dividendInputMode === ValueInputMode.PERCENT
-                ? parseFloat(formData.dividendRateStdDev || '0') / 100
-                : parseFloat(formData.dividendRateStdDev || '0'),
-          },
-        ];
+        investmentType.incomeDistribution = {
+          type: DistributionType.NORMAL,
+          mean:
+            formData.dividendInputMode === ValueInputMode.PERCENT
+              ? parseFloat(formData.dividendRate) / 100
+              : parseFloat(formData.dividendRate),
+          stdev:
+            formData.dividendInputMode === ValueInputMode.PERCENT
+              ? parseFloat(formData.dividendRateStdDev || '0') / 100
+              : parseFloat(formData.dividendRateStdDev || '0'),
+        };
       }
 
       // Pass the data to the parent component
