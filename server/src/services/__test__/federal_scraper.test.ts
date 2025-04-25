@@ -1,5 +1,4 @@
-import fs from 'fs';
-import path from 'path';
+import { loadFixture } from './common';
 import { parse_capital_gains } from '../FederalTaxScraper';
 import { TaxFilingStatus } from '../../core/Enums';
 import { extractNumbers } from '../../utils/NumberUtils';
@@ -28,12 +27,6 @@ const toComparableObject = <T>(obj: T): T => {
   };
   
 
-const loadFixture = (filename: string): string => {
-    return fs.readFileSync(
-        path.join(__dirname, 'fixtures', filename),
-        'utf-8'
-    );
-};
 
 jest.mock( '../../db/repositories/TaxBracketRepository');
 
