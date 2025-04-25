@@ -9,6 +9,7 @@ import cheerio from 'cheerio';
 import { tax_config } from '../config/tax';
 import { simulation_logger } from '../utils/logger/logger';
 import { extractNumbers } from '../utils/NumberUtils';
+import { dev } from '../config/environment';
 
 const RMD_URL = tax_config.RMD_URL;
 
@@ -82,11 +83,18 @@ export async function scrape_rmd_table(html: string): Promise<Map<number, number
       }
     });
     
-    if (rmd_factors.size === 0) {
-      simulation_logger.error("Failed to extract RMD factors from the table");
-      throw new Error("Failed to extract the RMD factor from the table");
+    // it is require to start doing rmd at 73 for previous yera that is 72
+    for (let i = 72; i <= tax_config.MAX_RMD_AGE; ++i) {
+      if (!rmd_factors.has(i)) {
+        console.log(rmd_factors.get(i));
+        simulation_logger.error(`RMD table is missing age ${i}`);
+        throw new Error(`RMD table is missing age ${i}`);
+      }
+      if (dev.is_dev) {
+        simulation_logger.debug(`RMD table contain age: ${i}, factor: ${rmd_factors.get(i)!}`);
+      }
     }
-    
+
     // console.log(`Successfully scraped ${rmdFactors.size} RMD factors`);
     return rmd_factors;
   } catch (error) {

@@ -1,123 +1,61 @@
 import { SimulationState } from "../SimulationState";
-import { Scenario } from "../../domain/scenario/Scenario";
-//import { TaxStatus } from "../Enums";
-import { Investment } from "../../domain/investment/Investment";
-import { getRMDFactorForAge } from "../../../services/RMDScraper";
-import { rmd_urls, rmd_config } from "../../../config/rmd";
-
-/**
- * Get the RMD distribution period for a given age
- */
-async function get_distribution_period(age: number): Promise<number> {
-  return await getRMDFactorForAge(age, rmd_urls.RMD_PUBLICATION);
-}
+import { tax_config } from "../../../config/tax";
+import { simulation_logger } from "../../../utils/logger/logger";
+import { transfer_investment_value } from "./common";
 
 /**
  * Process Required Minimum Distributions (RMDs) for the user
  */
-export async function process_rmds(
-  state: SimulationState & Partial<Scenario>
-): Promise<number> {
-  // Only process RMDs for the user (not spouse)
-  const user_age = state.user.get_age();
-  const user_alive = state.user.is_alive();
-  const rmdStartAge = rmd_config.START_AGE; // Use the value from config
-  
-  // Check if the user is alive and old enough for RMD
-  if (!userAlive || userAge < rmdStartAge) {
-    // No RMD needed
-    return 0;
-  }
-  
-  // Get total pre-tax retirement account balance
-  let totalRmdAmount = 0;
-  let totalPreTaxBalance = 0;
-  
-  // Calculate total balance in pre-tax accounts
-  for (const [_, account] of state.account_manager.pre_tax) {
-    totalPreTaxBalance += (account as any).value;
-  }
-  
-  if (totalPreTaxBalance <= 0) {
-    // No RMD needed if there are no pre-tax funds
-    return 0;
-  }
-  
-  // Get distribution period from RMD table
-  const distributionPeriod = await get_distribution_period(userAge);
-  
-  if (distributionPeriod <= 0) {
-    console.warn(`Invalid distribution period for age ${userAge}`);
-    return 0;
-  }
-  
-  // Calculate Required Minimum Distribution (RMD)
-  const requiredRmd = totalPreTaxBalance / distributionPeriod;
-  
-  // Process the RMD withdrawal
-  let remainingRmd = requiredRmd;
-  
-  // Find cash account for receiving the RMD
-  let cashAccount = find_cash_account(state);
-  
-  if (!cashAccount) {
-    console.warn("No cash account found for RMD distributions, creating one");
-    cashAccount = { value: 0 } as any; // Simplified version using type assertion
-    state.account_manager.non_retirement.set('cash', cashAccount as Investment);
-  }
-  
-  // Calculate RMD amount for each account proportionally
-  const accountRmds = new Map<string, number>();
-  let totalRmdAccountsValue = 0;
-  
-  // First, calculate the total value of accounts in the RMD strategy
-  for (const accountId of state.rmd_strategy || []) {
-    const account = state.account_manager.pre_tax.get(accountId);
-    if (account) {
-      totalRmdAccountsValue += (account as any).value;
+export async function process_rmd(
+  simulation_state: SimulationState,
+  rmd_factor: Map<number, number>
+) {
+  try {
+
+    // user age from previous year
+    const prev_user_age = simulation_state.user.get_age() - 1;
+    simulation_logger.debug(`User's previous year age ${prev_user_age}`);
+    
+    // step a: The first RMD is for the year in which the user turns 73, and is paid in the year in which the user turns 74.
+    if (prev_user_age < tax_config.RMD_START_AGE) {
+      return;
     }
+    
+    // step b: Distribution period d = result from lookup of the user’s age in the most recent available RMD table
+    const distribution_period = rmd_factor.get(prev_user_age);
+    if (!distribution_period) {
+      simulation_logger.error(`RMD table is incomplete. Missing age ${prev_user_age}`)
+      throw new Error(`RMD table is incomplete. Missing age ${prev_user_age}`)
+    }
+    
+    // step c: get sum of values of the investments with tax status = pre-tax, as of the end of the previous year.
+    const total_prev_tax_balance = simulation_state.total_pre_tax_value.get(prev_user_age);
+    simulation_logger.debug(`pre tax value from preivous year ${total_prev_tax_balance}`);
+
+    // there are no investment with tax status = "pre tax" user own
+    if (!total_prev_tax_balance || total_prev_tax_balance <= 0) {
+      return;
+    }
+
+    // step d
+    const rmd = total_prev_tax_balance / distribution_period;
+    simulation_logger.debug(`rmd to process ${rmd}`);
+
+    // step e: incrase cur year income
+    simulation_state.user_tax_data.incr_cur_year_income(rmd);
+    
+    if (rmd > 0) {
+        const transferred = transfer_investment_value(
+            simulation_state.rmd_strategy,
+            rmd,
+            simulation_state.account_manager.pre_tax,
+            simulation_state.account_manager.non_retirement
+        );
+        simulation_logger.info(`${transferred} is transferred from pre tax to non retirement for rmd processing`);
+    }
+  } catch (error) {
+
+    simulation_logger.error(`Failed to process rmd: ${error instanceof Error? error.stack: String(error)}`);
+    throw new Error(`Failed to process rmd: ${error instanceof Error? error.message: String(error)}`);
   }
-  //show add a rmd_strategy to the InvestmentType ????
-  // Then calculate proportional RMD for each account
-  for (const accountId of state.rmd_strategy || []) {
-    const account = state.account_manager.pre_tax.get(accountId);
-    if (!account) continue;
-    
-    const accountValue = (account as any).value;
-    // Calculate this account's share of the total RMD
-    const accountRmd = (accountValue / totalRmdAccountsValue) * requiredRmd;
-    accountRmds.set(accountId, accountRmd);
-  }
-  
-  // Now process the withdrawals
-  for (const [accountId, withdrawAmount] of accountRmds.entries()) {
-    if (withdrawAmount <= 0) continue;
-    
-    const account = state.account_manager.pre_tax.get(accountId);
-    if (!account) continue;
-    
-    // Update account balance
-    (account as any).value -= withdrawAmount;
-    
-    // Transfer to cash account (non-retirement)
-    (cashAccount as any).value += withdrawAmount;
-    
-    // Update tracking
-    //transfer RMD funds directly to non-retirement accounts
-    totalRmdAmount += withdrawAmount;
-    
-    console.log(`RMD withdrawal from ${accountId}: $${withdrawAmount.toFixed(2)}`);
-  }
-  
-  // Mark that RMD was processed
-  (state as any).rmd_triggered = (totalRmdAmount > 0);
-  
-  // Add the total RMD to ordinary income (call once with total)
-  if (totalRmdAmount > 0) {
-    // Round to 2 decimal places for currency
-    const roundedAmount = Math.round(totalRmdAmount * 100) / 100;
-    state.user_tax_data.incr_cur_year_income(roundedAmount);
-  }
-  
-  return totalRmdAmount;
 }
