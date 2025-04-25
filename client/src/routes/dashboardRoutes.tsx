@@ -1,8 +1,9 @@
-import React from "react";
-import { Route } from "react-router-dom";
-import { ProtectedRoute } from "../common";
-import { Layout } from "../layouts";
-import Dashboard from "../pages/Dashboard";
+import React from 'react';
+import { Route } from 'react-router-dom';
+
+import { ProtectedRoute } from '../common';
+import { Layout } from '../layouts';
+import Dashboard from '../pages/Dashboard';
 /**
  * AI prompt : make our sidebar functional, and make the dashboard page and the investment dashboard page functional
  */
@@ -17,7 +18,7 @@ const DashboardRoutes = [
         </Layout>
       </ProtectedRoute>
     }
-  />
+  />,
 ];
 
 export default DashboardRoutes;

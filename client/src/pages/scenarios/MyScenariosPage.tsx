@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from "react";
 import {
   Box,
   Heading,
@@ -11,25 +10,18 @@ import {
   useColorModeValue,
   useToast,
   useDisclosure,
-} from "@chakra-ui/react";
-import {
-  FaInfoCircle,
-  FaPlus,
-  FaPlayCircle,
-  FaRegLightbulb,
-  FaEdit,
-} from "react-icons/fa";
-import { ScenarioDetailCard } from "../../components/scenarios";
-import { RunSimulationModal } from "../../components/simulation";
-import { SAMPLE_SCENARIOS } from "../../types/scenario"; //! temporary
-import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { ScenarioRaw } from "../../types/Scenarios";
-import { scenarioYAMLService } from "../../services/scenarioYAML";
-import { scenario_service } from "../../services/scenarioService";
-import {
-  convert_scenario_to_yaml,
-  download_scenario_as_yaml,
-} from "../../utils/yamlExport";
+} from '@chakra-ui/react';
+import React, { useState, useEffect } from 'react';
+import { FaInfoCircle, FaPlus, FaPlayCircle, FaRegLightbulb, FaEdit } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+
+import { ScenarioDetailCard } from '../../components/scenarios';
+import { RunSimulationModal } from '../../components/simulation';
+import { scenario_service } from '../../services/scenarioService';
+import { scenarioYAMLService } from '../../services/scenarioYAML';
+import { SAMPLE_SCENARIOS } from '../../types/scenario'; //! temporary
+import { ScenarioRaw } from '../../types/Scenarios';
+import { convert_scenario_to_yaml } from '../../utils/yamlExport';
 
 const MyScenariosPage: React.FC = () => {
   const [drafts, setDrafts] = useState<any[]>([]);
@@ -39,13 +31,13 @@ const MyScenariosPage: React.FC = () => {
   const toast = useToast();
   const navigate = useNavigate();
 
-  const headingColor = useColorModeValue("gray.700", "white");
-  const noteColor = useColorModeValue("blue.700", "blue.200");
-  const noteBgColor = useColorModeValue("blue.50", "blue.900");
-  const infoColor = useColorModeValue("gray.600", "gray.400");
-  const bgColor = useColorModeValue("white", "gray.800");
-  const cardBgColor = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const headingColor = useColorModeValue('gray.700', 'white');
+  const noteColor = useColorModeValue('blue.700', 'blue.200');
+  const noteBgColor = useColorModeValue('blue.50', 'blue.900');
+  const infoColor = useColorModeValue('gray.600', 'gray.400');
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const cardBgColor = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   useEffect(() => {
     fetchDrafts();
@@ -66,11 +58,11 @@ const MyScenariosPage: React.FC = () => {
       setDrafts(draftScenarios.data);
       setLoading(false);
     } catch (error) {
-      console.error("error fetching drafts:", error);
+      console.error('error fetching drafts:', error);
       toast({
-        title: "Error",
-        description: "failed to fetch draft scenarios",
-        status: "error",
+        title: 'Error',
+        description: 'failed to fetch draft scenarios',
+        status: 'error',
         duration: 3000,
         isClosable: true,
       });
@@ -83,11 +75,11 @@ const MyScenariosPage: React.FC = () => {
       const scenarios = await scenario_service.get_all_scenarios();
       setActualScenarios(scenarios.data);
     } catch (error) {
-      console.error("error fetching actual scenarios:", error);
+      console.error('error fetching actual scenarios:', error);
       toast({
-        title: "Error",
-        description: "failed to fetch scenarios",
-        status: "error",
+        title: 'Error',
+        description: 'failed to fetch scenarios',
+        status: 'error',
         duration: 3000,
         isClosable: true,
       });
@@ -99,9 +91,9 @@ const MyScenariosPage: React.FC = () => {
       // Download the scenario as YAML before creating it
       const yaml = convert_scenario_to_yaml(scenario);
       const savedScenario = await scenarioYAMLService.create(yaml);
-      console.log("yaml in myScenariosPage:", yaml);
+      console.log('yaml in myScenariosPage:', savedScenario);
     } catch (error) {
-      console.error("Error creating scenario:", error);
+      console.error('Error creating scenario:', error);
     }
   };
 
@@ -112,20 +104,20 @@ const MyScenariosPage: React.FC = () => {
   const handleDeleteDraft = async (draftId: string) => {
     try {
       await scenario_service.delete_scenario(draftId);
-      setDrafts(drafts.filter((draft) => draft._id !== draftId));
+      setDrafts(drafts.filter(draft => draft._id !== draftId));
       toast({
-        title: "Draft Deleted",
-        description: "Draft scenario was deleted successfully",
-        status: "success",
+        title: 'Draft Deleted',
+        description: 'Draft scenario was deleted successfully',
+        status: 'success',
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
-      console.error("Error deleting draft:", error);
+      console.error('Error deleting draft:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete draft scenario",
-        status: "error",
+        title: 'Error',
+        description: 'Failed to delete draft scenario',
+        status: 'error',
         duration: 3000,
         isClosable: true,
       });
@@ -135,22 +127,20 @@ const MyScenariosPage: React.FC = () => {
   const handleDeleteScenario = async (scenarioId: string) => {
     try {
       await scenario_service.delete_scenario(scenarioId);
-      setActualScenarios(
-        actualScenarios.filter((scenario) => scenario._id !== scenarioId)
-      );
+      setActualScenarios(actualScenarios.filter(scenario => scenario._id !== scenarioId));
       toast({
-        title: "Scenario Deleted",
-        description: "Scenario has been deleted successfully",
-        status: "success",
+        title: 'Scenario Deleted',
+        description: 'Scenario has been deleted successfully',
+        status: 'success',
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
-      console.error("Error deleting scenario:", error);
+      console.error('Error deleting scenario:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete scenario",
-        status: "error",
+        title: 'Error',
+        description: 'Failed to delete scenario',
+        status: 'error',
         duration: 3000,
         isClosable: true,
       });
@@ -160,21 +150,10 @@ const MyScenariosPage: React.FC = () => {
   return (
     <Box py={4} px={4} w="100%" position="relative">
       {/* Header section with more visual appeal */}
-      <Flex
-        direction="column"
-        mb={6}
-        pb={4}
-        borderBottom="1px solid"
-        borderColor={borderColor}
-      >
+      <Flex direction="column" mb={6} pb={4} borderBottom="1px solid" borderColor={borderColor}>
         <Flex justify="space-between" align="center" wrap="wrap" mb={2}>
           <Box>
-            <Heading
-              as="h1"
-              size="xl"
-              color={headingColor}
-              fontWeight="extrabold"
-            >
+            <Heading as="h1" size="xl" color={headingColor} fontWeight="extrabold">
               Financial Scenarios
             </Heading>
             <Text fontSize="sm" color="gray.500" mt={1}>
@@ -187,7 +166,7 @@ const MyScenariosPage: React.FC = () => {
             colorScheme="blue"
             leftIcon={<FaPlus />}
             boxShadow="sm"
-            _hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
+            _hover={{ transform: 'translateY(-2px)', boxShadow: 'md' }}
             transition="all 0.2s"
           >
             New Scenario
@@ -204,32 +183,19 @@ const MyScenariosPage: React.FC = () => {
           borderLeftColor="blue.400"
         >
           <Flex align="start">
-            <Icon
-              as={FaInfoCircle}
-              color="blue.400"
-              mt={1}
-              mr={3}
-              boxSize={5}
-            />
+            <Icon as={FaInfoCircle} color="blue.400" mt={1} mr={3} boxSize={5} />
             <Text fontSize="sm" color={infoColor} lineHeight="1.6">
-              A scenario is a collection of information defining your financial
-              plan. It includes your financial goals, investment strategies,
-              income/expense events, and market assumptions needed to run
-              simulations. Each scenario can be for an individual or a couple,
-              with different life expectancies and financial objectives.
+              A scenario is a collection of information defining your financial plan. It includes
+              your financial goals, investment strategies, income/expense events, and market
+              assumptions needed to run simulations. Each scenario can be for an individual or a
+              couple, with different life expectancies and financial objectives.
             </Text>
           </Flex>
         </Box>
       </Flex>
 
       {/* Action Cards with enhanced visual appeal */}
-      <Heading
-        as="h2"
-        size="md"
-        mb={4}
-        color={headingColor}
-        fontWeight="semibold"
-      >
+      <Heading as="h2" size="md" mb={4} color={headingColor} fontWeight="semibold">
         Quick Actions
       </Heading>
       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5} mb={8}>
@@ -241,10 +207,10 @@ const MyScenariosPage: React.FC = () => {
           boxShadow="md"
           borderTop="4px solid"
           borderTopColor="blue.500"
-          _hover={{ transform: "translateY(-5px)", boxShadow: "lg" }}
+          _hover={{ transform: 'translateY(-5px)', boxShadow: 'lg' }}
           transition="all 0.3s"
           cursor="pointer"
-          onClick={() => navigate("/scenarios/new")}
+          onClick={() => navigate('/scenarios/new')}
         >
           <Flex direction="column" align="center" textAlign="center">
             <Flex
@@ -262,9 +228,7 @@ const MyScenariosPage: React.FC = () => {
             <Heading as="h3" size="md" mb={2} color="blue.500">
               Create New Scenario
             </Heading>
-            <Text color={infoColor}>
-              Start planning your financial future with a new scenario
-            </Text>
+            <Text color={infoColor}>Start planning your financial future with a new scenario</Text>
           </Flex>
         </Box>
 
@@ -276,7 +240,7 @@ const MyScenariosPage: React.FC = () => {
           boxShadow="md"
           borderTop="4px solid"
           borderTopColor="purple.500"
-          _hover={{ transform: "translateY(-5px)", boxShadow: "lg" }}
+          _hover={{ transform: 'translateY(-5px)', boxShadow: 'lg' }}
           transition="all 0.3s"
           cursor="pointer"
           onClick={onOpen}
@@ -297,9 +261,7 @@ const MyScenariosPage: React.FC = () => {
             <Heading as="h3" size="md" mb={2} color="purple.500">
               Run Simulation
             </Heading>
-            <Text color={infoColor}>
-              Test and validate your financial strategies
-            </Text>
+            <Text color={infoColor}>Test and validate your financial strategies</Text>
           </Flex>
         </Box>
       </SimpleGrid>
@@ -315,26 +277,15 @@ const MyScenariosPage: React.FC = () => {
             borderBottom="1px solid"
             borderColor={borderColor}
           >
-            <Heading
-              as="h2"
-              size="md"
-              color={headingColor}
-              fontWeight="semibold"
-            >
+            <Heading as="h2" size="md" color={headingColor} fontWeight="semibold">
               Your Draft Scenarios
             </Heading>
-            <Badge
-              colorScheme="blue"
-              fontSize="sm"
-              borderRadius="full"
-              px={3}
-              py={1}
-            >
+            <Badge colorScheme="blue" fontSize="sm" borderRadius="full" px={3} py={1}>
               {drafts.length} drafts
             </Badge>
           </Flex>
           <SimpleGrid columns={{ base: 1, md: 1 }} spacing={6}>
-            {drafts.map((draft) => (
+            {drafts.map(draft => (
               <Box
                 key={draft._id}
                 bg={cardBgColor}
@@ -350,8 +301,7 @@ const MyScenariosPage: React.FC = () => {
                       {draft.name}
                     </Heading>
                     <Text color={infoColor}>
-                      Last updated:{" "}
-                      {new Date(draft.updatedAt).toLocaleDateString()}
+                      Last updated: {new Date(draft.updatedAt).toLocaleDateString()}
                     </Text>
                   </Box>
                   <Flex gap={2}>
@@ -393,18 +343,12 @@ const MyScenariosPage: React.FC = () => {
           <Heading as="h2" size="md" color={headingColor} fontWeight="semibold">
             Your Scenarios
           </Heading>
-          <Badge
-            colorScheme="blue"
-            fontSize="sm"
-            borderRadius="full"
-            px={3}
-            py={1}
-          >
+          <Badge colorScheme="blue" fontSize="sm" borderRadius="full" px={3} py={1}>
             {actualScenarios.length} scenarios
           </Badge>
         </Flex>
         <SimpleGrid columns={{ base: 1, md: 1 }} spacing={6}>
-          {actualScenarios.map((scenario) => (
+          {actualScenarios.map(scenario => (
             <ScenarioDetailCard
               key={scenario._id}
               scenario={scenario}
@@ -434,14 +378,7 @@ const MyScenariosPage: React.FC = () => {
           borderBottom="1px solid"
           borderColor={borderColor}
         >
-          <Flex
-            bg="yellow.100"
-            p={2}
-            borderRadius="full"
-            justify="center"
-            align="center"
-            mr={3}
-          >
+          <Flex bg="yellow.100" p={2} borderRadius="full" justify="center" align="center" mr={3}>
             <Icon as={FaRegLightbulb} color="yellow.500" boxSize={5} />
           </Flex>
           <Heading as="h3" size="sm" fontWeight="bold" color={noteColor}>
@@ -450,10 +387,10 @@ const MyScenariosPage: React.FC = () => {
         </Flex>
         <Box p={4} bg={cardBgColor}>
           <Text fontSize="sm" color={infoColor} lineHeight="1.7">
-            A complete scenario includes your investment types, event series
-            (like income/expenses), inflation assumptions, and strategies for
-            withdrawals and spending. You can run simulations on each scenario
-            to see how different decisions might affect your financial future.
+            A complete scenario includes your investment types, event series (like income/expenses),
+            inflation assumptions, and strategies for withdrawals and spending. You can run
+            simulations on each scenario to see how different decisions might affect your financial
+            future.
           </Text>
         </Box>
       </Box>

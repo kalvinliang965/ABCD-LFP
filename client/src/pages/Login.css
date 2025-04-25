@@ -183,9 +183,9 @@ body{
 }
 
 .a-container{
-  /* 登录容器 */
-  /* 登录容器在注册容器右边，所以left为100% - 600px */
-  /* z-index为100，表示登录容器在注册容器之上 ,z-index越大，表示越在上面 */
+  /* login container */
+  /* login container is on the right of the register container, so left is 100% - 600px */
+  /* z-index is 100, which means login container is above register container, and the larger the z-index, the higher it is */
   left: calc(100% - 600px);
   z-index: 1;
 }
@@ -196,9 +196,9 @@ body{
 }
 
 .switch{
-  /* 滑动容器 */
-  /* 滑动容器在登录容器和注册容器之间，所以left为0 */
-  /* z-index为200，表示滑动容器在登录容器和注册容器之上 ,z-index越大，表示越在上面 */
+  /* slide container */
+  /* slide container is between the login container and the register container, so left is 0 */
+  /* z-index is 200, which means slide container is above the login container and register container, and the larger the z-index, the higher it is */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -262,29 +262,29 @@ body{
   transform: scale(0.95);
 }
 
-/* 这个是点击之后给 .switch、.switch_circle 添加的类 */
+/* this is the class added when the button is clicked */
 .is_txr{
-  /* 当元素带有is-txr时，会向右移动，left为100% - 400px */
+  /* when the element has is-txr, it will move to the right, and left is 100% - 400px */
   left: calc(100% - 400px);
   transition:1.25s;
   transform-origin: left;
 }
 
 .is_txl{
-  /* 当元素带有is-txl时，会向左移动，left为0 */
+  /* when the element has is-txl, it will move to the left, and left is 0 */
   left: 0;
   transition:1.25s;
   transform-origin: right;
 }
 
 .is-z{
-  /*修改z-index，让拥有is-z的元素在滑动容器之上*/
+  /* modify the z-index, so that the element with is-z is above the slide container */
   z-index:1;
   transition:1.25s;
 }
 
 .is-hidden{
-   /* 当元素带有is-hidden时，会隐藏元素 */
+   /* when the element has is-hidden, it will hide the element */
   opacity: 0;
   visibility: hidden;
   transition:0.25s;
@@ -292,8 +292,8 @@ body{
 }
 
 .is-gx{
-  /* 当元素带有is-gx时，会执行is-gx动画，这个动画在@keyframes is-gx中定义 */
-  /* 效果是，让组件在切换时有一个膨胀-缩回的动画效果*/
+  /* when the element has is-gx, it will execute the is-gx animation, this animation is defined in @keyframes is-gx */
+  /* the effect is that the component has an expanding-shrinking animation effect when switching */
   animation: is-gx 1.25s;
 }
 

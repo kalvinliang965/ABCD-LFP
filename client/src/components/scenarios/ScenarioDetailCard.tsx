@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import {
   Box,
   Badge,
@@ -22,8 +21,8 @@ import {
   PopoverCloseButton,
   IconButton,
   useToast,
-} from "@chakra-ui/react";
-import { Link as RouterLink } from "react-router-dom";
+} from '@chakra-ui/react';
+import React, { useState } from 'react';
 import {
   FaCalendarAlt,
   FaMapMarkerAlt,
@@ -35,17 +34,22 @@ import {
   FaShoppingBag,
   FaDownload,
   FaTrash,
-} from "react-icons/fa";
-import { ScenarioRaw } from "../../types/Scenarios";
-import { download_scenario_as_yaml } from "../../utils/yamlExport";
+} from 'react-icons/fa';
+import { Link as RouterLink } from 'react-router-dom';
+
+import { ScenarioRaw } from '../../types/Scenarios';
+import { download_scenario_as_yaml } from '../../utils/yamlExport';
 
 /**
  * AI prompt : help me design a card to show the scenario details by using the card component and the scenario type
  * I need to show the scenario name, type, birth year, life expectancy, financial goal, state, event count, investment count, and last modified date
  */
+
+//! problem happens at this component
 interface ScenarioDetailCardProps {
   scenario: ScenarioRaw;
   onDelete?: () => void;
+  hideFooter?: boolean;
 }
 //moved up
 const InfoItem = ({
@@ -59,8 +63,8 @@ const InfoItem = ({
   value: string | number;
   tooltipContent: string;
 }) => {
-  const iconBg = useColorModeValue("blue.50", "blue.900");
-  const labelColor = useColorModeValue("gray.600", "gray.400");
+  const iconBg = useColorModeValue('blue.50', 'blue.900');
+  const labelColor = useColorModeValue('gray.600', 'gray.400');
 
   return (
     <GridItem>
@@ -90,30 +94,32 @@ const InfoItem = ({
 
 const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
   scenario,
-  onDelete
+  onDelete,
+  hideFooter = false,
 }) => {
   const toast = useToast();
-  const highlightColor = useColorModeValue("blue.500", "blue.300");
-  const cardBg = useColorModeValue("white", "gray.800");
-  const cardBorder = useColorModeValue("gray.200", "gray.700");
-  const headerBg = useColorModeValue("blue.500", "blue.600");
+  const highlightColor = useColorModeValue('blue.500', 'blue.300');
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const cardBorder = useColorModeValue('gray.200', 'gray.700');
+  const headerBg = useColorModeValue('blue.500', 'blue.600');
 
   const handle_download_yaml = () => {
     try {
+      console.log('ScenarioDetailCard: scenario:', scenario);
       download_scenario_as_yaml(scenario);
       toast({
-        title: "YAML Downloaded",
+        title: 'YAML Downloaded',
         description: `Scenario "${scenario.name}" has been downloaded as YAML`,
-        status: "success",
+        status: 'success',
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
-      console.error("Error downloading YAML:", error);
+      console.error('Error downloading YAML:', error);
       toast({
-        title: "Download Failed",
-        description: "There was an error downloading the YAML file",
-        status: "error",
+        title: 'Download Failed',
+        description: 'There was an error downloading the YAML file',
+        status: 'error',
         duration: 3000,
         isClosable: true,
       });
@@ -130,9 +136,9 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
       borderColor={cardBorder}
       transition="all 0.3s"
       _hover={{
-        transform: "translateY(-4px)",
-        boxShadow: "xl",
-        borderColor: "blue.300",
+        transform: 'translateY(-4px)',
+        boxShadow: 'xl',
+        borderColor: 'blue.300',
       }}
     >
       {/* Header with name and badge */}
@@ -143,9 +149,7 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
           </Heading>
           <Flex gap={2} align="center">
             <Badge
-              colorScheme={
-                scenario.maritalStatus === 'individual' ? "purple" : "pink"
-              }
+              colorScheme={scenario.maritalStatus === 'individual' ? 'purple' : 'pink'}
               fontSize="0.8em"
               py={1}
               px={2}
@@ -171,7 +175,7 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
               bg="rgba(229, 62, 62, 0.85)"
               color="white"
               fontWeight="normal"
-              _hover={{ bg: "rgba(229, 62, 62, 0.95)" }}
+              _hover={{ bg: 'rgba(229, 62, 62, 0.95)' }}
               onClick={onDelete}
             />
           </Box>
@@ -198,7 +202,7 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
             icon={FaHourglass}
             label="Life Expectancy"
             value={
-              scenario.lifeExpectancy[0].type === "fixed"
+              scenario.lifeExpectancy[0].type === 'fixed'
                 ? scenario.lifeExpectancy[0].value
                 : `${scenario.lifeExpectancy[0].mean} ± ${scenario.lifeExpectancy[0].stdev}`
             }
@@ -209,7 +213,7 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
           <InfoItem
             icon={FaCalendarAlt}
             label="Birth Year"
-            value={scenario.birthYears.join(", ")}
+            value={scenario.birthYears.join(', ')}
             tooltipContent="Birth year(s) for scenario participants"
           />
         </Grid>
@@ -240,110 +244,110 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
         </Box>
       )}
 
-      {/* Additional info indicators */}
-      <Divider mb={2} />
-      <Flex justify="space-between" align="center" p={3}>
-        <HStack spacing={3}>
-          {scenario.investments.size > 0 && (
-            <Popover placement="top" trigger="hover">
-              <PopoverTrigger>
-                <IconButton
-                  aria-label="Investment details"
-                  icon={<Icon as={FaMoneyBillWave} />}
-                  size="sm"
-                  colorScheme="blue"
-                  variant="ghost"
-                />
-              </PopoverTrigger>
-              <PopoverContent>
-                <PopoverArrow />
-                <PopoverCloseButton />
-                <PopoverHeader fontWeight="bold">Investments</PopoverHeader>
-                <PopoverBody>
-                  <Text fontSize="sm">
-                    {scenario.investments.size} investment types configured
-                  </Text>
-                </PopoverBody>
-              </PopoverContent>
-            </Popover>
-          )}
+      {/* Additional info indicators - Only show if hideFooter is false */}
+      {!hideFooter && (
+        <>
+          <Divider mb={2} />
+          <Flex justify="space-between" align="center" p={3}>
+            <HStack spacing={3}>
+              {scenario.investments.size > 0 && (
+                <Popover placement="top" trigger="hover">
+                  <PopoverTrigger>
+                    <IconButton
+                      aria-label="Investment details"
+                      icon={<Icon as={FaMoneyBillWave} />}
+                      size="sm"
+                      colorScheme="blue"
+                      variant="ghost"
+                    />
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <PopoverArrow />
+                    <PopoverCloseButton />
+                    <PopoverHeader fontWeight="bold">Investments</PopoverHeader>
+                    <PopoverBody>
+                      <Text fontSize="sm">
+                        {scenario.investments.size} investment types configured
+                      </Text>
+                    </PopoverBody>
+                  </PopoverContent>
+                </Popover>
+              )}
 
-          {scenario.eventSeries.size > 0 && (
-            <Popover placement="top" trigger="hover">
-              <PopoverTrigger>
-                <IconButton
-                  aria-label="Event details"
-                  icon={<Icon as={FaChartLine} />}
-                  size="sm"
-                  colorScheme="blue"
-                  variant="ghost"
-                />
-              </PopoverTrigger>
-              <PopoverContent>
-                <PopoverArrow />
-                <PopoverCloseButton />
-                <PopoverHeader fontWeight="bold">Events</PopoverHeader>
-                <PopoverBody>
-                  <Text fontSize="sm">
-                    {scenario.eventSeries.size} events configured
-                  </Text>
-                </PopoverBody>
-              </PopoverContent>
-            </Popover>
-          )}
+              {scenario.eventSeries.size > 0 && (
+                <Popover placement="top" trigger="hover">
+                  <PopoverTrigger>
+                    <IconButton
+                      aria-label="Event details"
+                      icon={<Icon as={FaChartLine} />}
+                      size="sm"
+                      colorScheme="blue"
+                      variant="ghost"
+                    />
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <PopoverArrow />
+                    <PopoverCloseButton />
+                    <PopoverHeader fontWeight="bold">Events</PopoverHeader>
+                    <PopoverBody>
+                      <Text fontSize="sm">{scenario.eventSeries.size} events configured</Text>
+                    </PopoverBody>
+                  </PopoverContent>
+                </Popover>
+              )}
 
-          {scenario.inflationAssumption && (
-            <Popover placement="top" trigger="hover">
-              <PopoverTrigger>
-                <IconButton
-                  aria-label="Inflation details"
-                  icon={<Icon as={FaPercentage} />}
-                  size="sm"
-                  colorScheme="blue"
-                  variant="ghost"
-                />
-              </PopoverTrigger>
-              <PopoverContent>
-                <PopoverArrow />
-                <PopoverCloseButton />
-                <PopoverHeader fontWeight="bold">Inflation</PopoverHeader>
-                <PopoverBody>
-                  <Text fontSize="sm">
-                    Inflation rate:{" "}
-                    {scenario.inflationAssumption.value}%
-                  </Text>
-                </PopoverBody>
-              </PopoverContent>
-            </Popover>
-          )}
+              {scenario.inflationAssumption && (
+                <Popover placement="top" trigger="hover">
+                  <PopoverTrigger>
+                    <IconButton
+                      aria-label="Inflation details"
+                      icon={<Icon as={FaPercentage} />}
+                      size="sm"
+                      colorScheme="blue"
+                      variant="ghost"
+                    />
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <PopoverArrow />
+                    <PopoverCloseButton />
+                    <PopoverHeader fontWeight="bold">Inflation</PopoverHeader>
+                    <PopoverBody>
+                      <Text fontSize="sm">
+                        Inflation rate: {scenario.inflationAssumption.value * 100}%
+                      </Text>
+                    </PopoverBody>
+                  </PopoverContent>
+                </Popover>
+              )}
 
-          <Tooltip label="Download as YAML" placement="top">
-            <IconButton
-              aria-label="Download YAML"
-              icon={<Icon as={FaDownload} />}
-              size="sm"
-              colorScheme="green"
-              variant="ghost"
-              onClick={handle_download_yaml}
-            />
-          </Tooltip>
-        </HStack>
-        {/* <Link
-          as={RouterLink}
-          to={`/scenarios/${encodeURIComponent(scenario.name)}`}
-          color={highlightColor}
-          fontWeight="medium"
-          _hover={{
-            textDecoration: "none",
-          }}
-        >
-          <Flex align="center">
-            <Text mr={1}>View Details</Text>
-            <Icon as={FaChevronRight} boxSize={3} />
+              <Tooltip label="Download as YAML" placement="top">
+                <IconButton
+                  aria-label="Download YAML"
+                  icon={<Icon as={FaDownload} />}
+                  size="sm"
+                  colorScheme="green"
+                  variant="ghost"
+                  onClick={handle_download_yaml}
+                />
+              </Tooltip>
+            </HStack>
+            {/* <Link
+              as={RouterLink}
+              to={`/scenarios/${encodeURIComponent(scenario.name)}`}
+              color={highlightColor}
+              fontWeight="medium"
+              _hover={{
+                textDecoration: "none",
+              }}
+            >
+              <Flex align="center">
+                <Text mr={1}>View Details</Text>
+                <Icon as={FaChevronRight} boxSize={3} />
+              </Flex>
+            </Link> */}
           </Flex>
-        </Link> */}
-        
-      </Flex>
+        </>
+      )}
     </Box>
   );
 };

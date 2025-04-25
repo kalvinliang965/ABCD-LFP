@@ -1,4 +1,3 @@
-import React, { ReactNode } from "react";
 import {
   Card as ChakraCard,
   Flex,
@@ -9,7 +8,8 @@ import {
   Box,
   Spacer,
   CardProps as ChakraCardProps,
-} from "@chakra-ui/react";
+} from '@chakra-ui/react';
+import React, { ReactNode } from 'react';
 
 /**
  * AI prompt :take out the card component and make it a reusable component
@@ -20,7 +20,7 @@ export interface BadgeInfo {
   variant?: string;
 }
 
-export interface CardProps extends Omit<ChakraCardProps, "title"> {
+export interface CardProps extends Omit<ChakraCardProps, 'title'> {
   title?: string;
   subtitle?: string;
   description?: string;
@@ -36,9 +36,7 @@ export interface CardProps extends Omit<ChakraCardProps, "title"> {
 }
 
 const truncateText = (text: string, maxLength: number) => {
-  return text && text.length > maxLength
-    ? text.substring(0, maxLength) + "..."
-    : text;
+  return text && text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
 };
 
 const CommonCard: React.FC<CardProps> = ({
@@ -49,18 +47,18 @@ const CommonCard: React.FC<CardProps> = ({
   leftBadge,
   rightBadge,
   children,
-  minHeight = "200px",
+  minHeight = '200px',
   contentPadding = 4,
   footerPadding = 3,
-  footerHeight = "45px",
+  footerHeight = '45px',
   dashed = true,
   ...restProps
 }) => {
-  const cardBg = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
-  const textColor = useColorModeValue("gray.600", "gray.300");
-  const highlightColor = useColorModeValue("blue.500", "blue.300");
-  const subtitleColor = useColorModeValue("gray.500", "gray.400");
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const textColor = useColorModeValue('gray.600', 'gray.300');
+  const highlightColor = useColorModeValue('blue.500', 'blue.300');
+  const subtitleColor = useColorModeValue('gray.500', 'gray.400');
 
   return (
     <ChakraCard
@@ -69,11 +67,11 @@ const CommonCard: React.FC<CardProps> = ({
       borderRadius="md"
       borderWidth="1px"
       borderColor={borderColor}
-      borderStyle={dashed ? "dashed" : "solid"}
+      borderStyle={dashed ? 'dashed' : 'solid'}
       overflow="hidden"
       transition="all 0.3s"
-      _hover={{ transform: "translateY(-5px)", boxShadow: "lg" }}
-      cursor={onClick ? "pointer" : "default"}
+      _hover={{ transform: 'translateY(-5px)', boxShadow: 'lg' }}
+      cursor={onClick ? 'pointer' : 'default'}
       height="100%"
       minHeight={minHeight}
       display="flex"
@@ -85,13 +83,7 @@ const CommonCard: React.FC<CardProps> = ({
       <Box p={contentPadding} flex="1" display="flex" flexDirection="column">
         {/* Title */}
         {title && (
-          <Text
-            fontWeight="bold"
-            fontSize="md"
-            color={highlightColor}
-            noOfLines={1}
-            mb={2}
-          >
+          <Text fontWeight="bold" fontSize="md" color={highlightColor} noOfLines={1} mb={2}>
             {title}
           </Text>
         )}
@@ -127,7 +119,7 @@ const CommonCard: React.FC<CardProps> = ({
               {leftBadge && (
                 <Badge
                   colorScheme={leftBadge.colorScheme}
-                  variant={leftBadge.variant || "solid"}
+                  variant={leftBadge.variant || 'solid'}
                   px={2}
                   py={0.5}
                   borderRadius="md"
@@ -143,7 +135,7 @@ const CommonCard: React.FC<CardProps> = ({
               {rightBadge && (
                 <Badge
                   colorScheme={rightBadge.colorScheme}
-                  variant={rightBadge.variant || "outline"}
+                  variant={rightBadge.variant || 'outline'}
                   px={2}
                   py={0.5}
                   borderRadius="md"

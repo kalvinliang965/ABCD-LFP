@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Box,
   Button,
@@ -17,11 +16,13 @@ import {
   Tooltip,
   IconButton,
   Badge,
-} from "@chakra-ui/react";
-import { FaArrowUp, FaArrowDown, FaWallet } from "react-icons/fa";
-import { FiArrowRight } from "react-icons/fi";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import withdrawalStrategyStorage from "../../services/withdrawalStrategyStorage";
+} from '@chakra-ui/react';
+import React from 'react';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { FaArrowUp, FaArrowDown, FaWallet } from 'react-icons/fa';
+import { FiArrowRight } from 'react-icons/fi';
+
+import withdrawalStrategyStorage from '../../services/withdrawalStrategyStorage';
 
 // Simplified interface to match YAML format
 export interface WithdrawalStrategy {
@@ -29,12 +30,12 @@ export interface WithdrawalStrategy {
   availableAccounts: Array<{
     id: string;
     name: string;
-  }>;  // All available investment accounts with ID and name
-  accountPriority: string[];    // Selected account IDs in priority order
+  }>; // All available investment accounts with ID and name
+  accountPriority: string[]; // Selected account IDs in priority order
 }
 
 // Helper to get account name by ID
-const getAccountNameById = (accounts: Array<{id: string; name: string}>, id: string): string => {
+const getAccountNameById = (accounts: Array<{ id: string; name: string }>, id: string): string => {
   const account = accounts.find(acc => acc.id === id);
   return account ? account.name : id; // Fallback to ID if name not found
 };
@@ -52,19 +53,19 @@ export const WithdrawalStrategyForm: React.FC<WithdrawalStrategyFormProps> = ({
   onContinue,
   onBack,
 }) => {
-  const bgColor = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const listItemBg = useColorModeValue("gray.50", "gray.700");
-  const listItemHoverBg = useColorModeValue("gray.100", "gray.600");
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const listItemBg = useColorModeValue('gray.50', 'gray.700');
+  const listItemHoverBg = useColorModeValue('gray.100', 'gray.600');
 
   // Handle drag and drop reordering
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
-    
+
     const items = Array.from(withdrawalStrategy.accountPriority);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
-    
+
     handleAccountPriorityChange(items);
   };
 
@@ -83,24 +84,24 @@ export const WithdrawalStrategyForm: React.FC<WithdrawalStrategyFormProps> = ({
   // Move an account up in priority
   const moveUp = (index: number) => {
     if (index <= 0) return;
-    
+
     const newPriority = [...withdrawalStrategy.accountPriority];
     const temp = newPriority[index];
     newPriority[index] = newPriority[index - 1];
     newPriority[index - 1] = temp;
-    
+
     handleAccountPriorityChange(newPriority);
   };
 
   // Move an account down in priority
   const moveDown = (index: number) => {
     if (index >= withdrawalStrategy.accountPriority.length - 1) return;
-    
+
     const newPriority = [...withdrawalStrategy.accountPriority];
     const temp = newPriority[index];
     newPriority[index] = newPriority[index + 1];
     newPriority[index + 1] = temp;
-    
+
     handleAccountPriorityChange(newPriority);
   };
 
@@ -114,12 +115,12 @@ export const WithdrawalStrategyForm: React.FC<WithdrawalStrategyFormProps> = ({
   const handleAccountPriorityChange = (newPriority: string[]) => {
     const updatedStrategy = {
       ...withdrawalStrategy,
-      accountPriority: newPriority
+      accountPriority: newPriority,
     };
-    
+
     // Log the updated strategy
-    console.log("Updated withdrawal strategy:", updatedStrategy);
-    
+    console.log('Updated withdrawal strategy:', updatedStrategy);
+
     // Save to localStorage immediately for auto-save functionality
     try {
       if (updatedStrategy.id) {
@@ -133,9 +134,9 @@ export const WithdrawalStrategyForm: React.FC<WithdrawalStrategyFormProps> = ({
         }
       }
     } catch (error) {
-      console.error("Error auto-saving to localStorage:", error);
+      console.error('Error auto-saving to localStorage:', error);
     }
-    
+
     onChangeWithdrawalStrategy(updatedStrategy);
   };
 
@@ -160,7 +161,7 @@ export const WithdrawalStrategyForm: React.FC<WithdrawalStrategyFormProps> = ({
             Define the order in which your investments will be used to cover expenses
           </Text>
         </CardHeader>
-        
+
         <CardBody p={6}>
           <VStack spacing={6} align="stretch">
             <Box>
@@ -169,23 +170,18 @@ export const WithdrawalStrategyForm: React.FC<WithdrawalStrategyFormProps> = ({
                 Withdrawal Priority Order
               </Heading>
               <Text mb={4}>
-                Arrange your investment accounts in the order you want them to be used for withdrawals.
-                Accounts at the top will be used first.
+                Arrange your investment accounts in the order you want them to be used for
+                withdrawals. Accounts at the top will be used first.
               </Text>
-              
+
               {withdrawalStrategy.accountPriority.length > 0 ? (
                 <DragDropContext onDragEnd={handleDragEnd}>
                   <Droppable droppableId="withdrawal-priority">
-                    {(provided) => (
-                      <List 
-                        spacing={3} 
-                        mt={4}
-                        {...provided.droppableProps}
-                        ref={provided.innerRef}
-                      >
+                    {provided => (
+                      <List spacing={3} mt={4} {...provided.droppableProps} ref={provided.innerRef}>
                         {withdrawalStrategy.accountPriority.map((accountId, index) => (
                           <Draggable key={accountId} draggableId={accountId} index={index}>
-                            {(provided) => (
+                            {provided => (
                               <ListItem
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
@@ -204,7 +200,10 @@ export const WithdrawalStrategyForm: React.FC<WithdrawalStrategyFormProps> = ({
                                     {index + 1}.
                                   </Text>
                                   <Text>
-                                    {getAccountNameById(withdrawalStrategy.availableAccounts, accountId)}
+                                    {getAccountNameById(
+                                      withdrawalStrategy.availableAccounts,
+                                      accountId
+                                    )}
                                   </Text>
                                   <Badge ml={2} colorScheme="blue" fontSize="xs">
                                     ID: {accountId}
@@ -228,7 +227,9 @@ export const WithdrawalStrategyForm: React.FC<WithdrawalStrategyFormProps> = ({
                                       icon={<FaArrowDown />}
                                       size="sm"
                                       variant="ghost"
-                                      isDisabled={index === withdrawalStrategy.accountPriority.length - 1}
+                                      isDisabled={
+                                        index === withdrawalStrategy.accountPriority.length - 1
+                                      }
                                       onClick={() => moveDown(index)}
                                       mr={1}
                                     />
@@ -259,23 +260,27 @@ export const WithdrawalStrategyForm: React.FC<WithdrawalStrategyFormProps> = ({
                 </Text>
               )}
             </Box>
-            
+
             <Divider />
-            
+
             <Box>
-              <Heading size="sm" mb={3}>Available Investments:</Heading>
+              <Heading size="sm" mb={3}>
+                Available Investments:
+              </Heading>
               {getAvailableAccounts().length > 0 ? (
                 <List spacing={2}>
-                  {getAvailableAccounts().map((account) => (
-                    <ListItem 
-                      key={account.id} 
-                      p={2} 
-                      borderRadius="md" 
-                      _hover={{ bg: "gray.50", cursor: "pointer" }}
+                  {getAvailableAccounts().map(account => (
+                    <ListItem
+                      key={account.id}
+                      p={2}
+                      borderRadius="md"
+                      _hover={{ bg: 'gray.50', cursor: 'pointer' }}
                       onClick={() => addAccount(account.id)}
                     >
                       <Flex align="center">
-                        <Badge colorScheme="purple" mr={2}>{account.id}</Badge>
+                        <Badge colorScheme="purple" mr={2}>
+                          {account.id}
+                        </Badge>
                         {/* <Text>{account.name}</Text> */}
                         <Text ml={2} fontSize="sm" color="blue.500">
                           (Click to add)
@@ -293,14 +298,14 @@ export const WithdrawalStrategyForm: React.FC<WithdrawalStrategyFormProps> = ({
           </VStack>
         </CardBody>
       </Card>
-      
+
       <Flex justify="space-between" mt={6}>
         <Button onClick={onBack} size="lg" variant="outline">
           Back
         </Button>
-        <Button 
-          onClick={onContinue} 
-          size="lg" 
+        <Button
+          onClick={onContinue}
+          size="lg"
           colorScheme="blue"
           //isDisabled={isButtonDisabled}
           rightIcon={<FiArrowRight />}
@@ -308,18 +313,18 @@ export const WithdrawalStrategyForm: React.FC<WithdrawalStrategyFormProps> = ({
           borderRadius="lg"
           bgGradient="linear(to-r, blue.400, purple.500)"
           _hover={{
-            bgGradient: "linear(to-r, blue.500, purple.600)",
-            transform: "translateY(-2px)",
-            boxShadow: "lg",
+            bgGradient: 'linear(to-r, blue.500, purple.600)',
+            transform: 'translateY(-2px)',
+            boxShadow: 'lg',
           }}
           _disabled={{
-            bgGradient: "linear(to-r, gray.400, gray.500)",
+            bgGradient: 'linear(to-r, gray.400, gray.500)',
             opacity: 0.6,
-            cursor: "not-allowed",
+            cursor: 'not-allowed',
             _hover: {
-              transform: "none",
-              boxShadow: "none"
-            }
+              transform: 'none',
+              boxShadow: 'none',
+            },
           }}
           transition="all 0.2s"
         >
@@ -330,4 +335,4 @@ export const WithdrawalStrategyForm: React.FC<WithdrawalStrategyFormProps> = ({
   );
 };
 
-export default WithdrawalStrategyForm; 
+export default WithdrawalStrategyForm;

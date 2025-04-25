@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Box,
   Heading,
@@ -31,8 +30,10 @@ import {
   Badge,
   Container,
   IconButton,
-} from "@chakra-ui/react";
-
+} from '@chakra-ui/react';
+import React from 'react';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { FaArrowUp, FaArrowDown, FaWallet } from 'react-icons/fa';
 import {
   FiRefreshCcw,
   FiCalendar,
@@ -40,15 +41,12 @@ import {
   FiChevronRight,
   FiInfo,
   FiRepeat,
-} from "react-icons/fi";
-
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { FaArrowUp, FaArrowDown, FaWallet } from "react-icons/fa";
+} from 'react-icons/fi';
 
 export type RothConversionOptimizer = {
   roth_conversion_start: number;
   roth_conversion_end: number;
-  roth_conversion_strategy: Array<String>;
+  roth_conversion_strategy: Array<string>;
 };
 
 export interface RothConversionStrategy {
@@ -71,44 +69,36 @@ export interface RothConversionOptimizerFormProps {
 }
 
 // Helper to get account name by ID
-const getAccountNameById = (
-  accounts: Array<{ id: string; name: string }>,
-  id: string
-): string => {
-  const account = accounts.find((acc) => acc.id === id);
+const getAccountNameById = (accounts: Array<{ id: string; name: string }>, id: string): string => {
+  const account = accounts.find(acc => acc.id === id);
   return account ? account.name : id; // Fallback to ID if name not found
 };
 
-export const RothConversionOptimizerForm: React.FC<
-  RothConversionOptimizerFormProps
-> = ({
+export const RothConversionOptimizerForm: React.FC<RothConversionOptimizerFormProps> = ({
   rothConversionStrategy,
   onChangeRothConversionStrategy,
   onBack,
   onFinish,
   onContinue,
 }) => {
-  const cardBg = useColorModeValue("white", "gray.800");
-  const headerBg = useColorModeValue("blue.50", "blue.900");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const infoBg = useColorModeValue("blue.50", "blue.900");
-  const stepBg = useColorModeValue("blue.100", "blue.800");
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const headerBg = useColorModeValue('blue.50', 'blue.900');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const infoBg = useColorModeValue('blue.50', 'blue.900');
+  const stepBg = useColorModeValue('blue.100', 'blue.800');
   const cardShadow = useColorModeValue(
-    "0 4px 6px rgba(0, 0, 0, 0.1)",
-    "0 4px 6px rgba(0, 0, 0, 0.3)"
+    '0 4px 6px rgba(0, 0, 0, 0.1)',
+    '0 4px 6px rgba(0, 0, 0, 0.3)'
   );
 
-  const bgColor = useColorModeValue("white", "gray.800");
-  const listItemBg = useColorModeValue("gray.50", "gray.700");
-  const listItemHoverBg = useColorModeValue("gray.100", "gray.600");
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const listItemBg = useColorModeValue('gray.50', 'gray.700');
+  const listItemHoverBg = useColorModeValue('gray.100', 'gray.600');
 
   const current_year = new Date().getFullYear();
 
   function handle_opt_change(checked: boolean) {
-    console.log(
-      "check aviliable accounts",
-      rothConversionStrategy.availableAccounts
-    );
+    console.log('check aviliable accounts', rothConversionStrategy.availableAccounts);
     onChangeRothConversionStrategy({
       ...rothConversionStrategy,
       roth_conversion_opt: checked,
@@ -131,9 +121,7 @@ export const RothConversionOptimizerForm: React.FC<
 
   const is_opt_in = rothConversionStrategy.roth_conversion_opt;
   const conversion_years =
-    rothConversionStrategy.roth_conversion_end -
-    rothConversionStrategy.roth_conversion_start +
-    1;
+    rothConversionStrategy.roth_conversion_end - rothConversionStrategy.roth_conversion_start + 1;
 
   // Handle drag and drop reordering
   const handleDragEnd = (result: any) => {
@@ -163,9 +151,7 @@ export const RothConversionOptimizerForm: React.FC<
   const removeAccount = (accountId: string) => {
     onChangeRothConversionStrategy({
       ...rothConversionStrategy,
-      accountPriority: rothConversionStrategy.accountPriority.filter(
-        (id) => id !== accountId
-      ),
+      accountPriority: rothConversionStrategy.accountPriority.filter(id => id !== accountId),
     });
   };
 
@@ -202,11 +188,11 @@ export const RothConversionOptimizerForm: React.FC<
   // Get available accounts that aren't already in the priority list
   const getAvailableAccounts = () => {
     return rothConversionStrategy.availableAccounts.filter(
-      (account) => !rothConversionStrategy.accountPriority.includes(account.id)
+      account => !rothConversionStrategy.accountPriority.includes(account.id)
     );
   };
   return (
-    <Box minH="100vh" bg={useColorModeValue("gray.50", "gray.900")} py={8}>
+    <Box minH="100vh" bg={useColorModeValue('gray.50', 'gray.900')} py={8}>
       <Container maxW="4xl" px={{ base: 4, md: 6 }}>
         <Card
           borderRadius="xl"
@@ -269,10 +255,9 @@ export const RothConversionOptimizerForm: React.FC<
                 borderLeftColor="blue.400"
               >
                 <Text color="blue.700" fontSize="md">
-                  Roth conversion allows you to transfer funds from traditional
-                  retirement accounts to Roth accounts. While you'll pay taxes
-                  on the converted amount now, all future growth and qualified
-                  withdrawals will be tax-free.
+                  Roth conversion allows you to transfer funds from traditional retirement accounts
+                  to Roth accounts. While you'll pay taxes on the converted amount now, all future
+                  growth and qualified withdrawals will be tax-free.
                 </Text>
               </Box>
 
@@ -281,22 +266,17 @@ export const RothConversionOptimizerForm: React.FC<
                 <Flex
                   justify="space-between"
                   align="center"
-                  wrap={{ base: "wrap", md: "nowrap" }}
+                  wrap={{ base: 'wrap', md: 'nowrap' }}
                   gap={4}
                 >
                   <Box flex="1">
-                    <Heading
-                      size="md"
-                      mb={2}
-                      display="flex"
-                      alignItems="center"
-                    >
+                    <Heading size="md" mb={2} display="flex" alignItems="center">
                       <Icon as={FiRepeat} mr={2} color="purple.500" />
                       Enable Roth Conversion Strategy
                     </Heading>
                     <Text color="gray.600" fontSize="sm">
-                      Automatically convert traditional IRA funds to Roth IRA
-                      over time to minimize tax impact
+                      Automatically convert traditional IRA funds to Roth IRA over time to minimize
+                      tax impact
                     </Text>
                   </Box>
                   <FormControl display="flex" alignItems="center" width="auto">
@@ -305,17 +285,17 @@ export const RothConversionOptimizerForm: React.FC<
                       colorScheme="purple"
                       size="lg"
                       isChecked={is_opt_in}
-                      onChange={(e) => handle_opt_change(e.target.checked)}
+                      onChange={e => handle_opt_change(e.target.checked)}
                     />
                     <FormLabel htmlFor="roth-opt-in" mb="0" ml={3}>
                       <Badge
-                        colorScheme={is_opt_in ? "green" : "gray"}
+                        colorScheme={is_opt_in ? 'green' : 'gray'}
                         fontSize="sm"
                         py={1}
                         px={2}
                         borderRadius="full"
                       >
-                        {is_opt_in ? "Enabled" : "Disabled"}
+                        {is_opt_in ? 'Enabled' : 'Disabled'}
                       </Badge>
                     </FormLabel>
                   </FormControl>
@@ -332,11 +312,7 @@ export const RothConversionOptimizerForm: React.FC<
 
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} mb={4}>
                     <FormControl>
-                      <FormLabel
-                        htmlFor="roth-start-year"
-                        fontWeight="medium"
-                        color="gray.700"
-                      >
+                      <FormLabel htmlFor="roth-start-year" fontWeight="medium" color="gray.700">
                         Start Year
                       </FormLabel>
                       <InputGroup>
@@ -355,7 +331,7 @@ export const RothConversionOptimizerForm: React.FC<
                             id="roth-start-year"
                             borderRadius="md"
                             borderColor="blue.300"
-                            _hover={{ borderColor: "blue.400" }}
+                            _hover={{ borderColor: 'blue.400' }}
                             fontSize="md"
                           />
                           <NumberInputStepper>
@@ -367,11 +343,7 @@ export const RothConversionOptimizerForm: React.FC<
                     </FormControl>
 
                     <FormControl>
-                      <FormLabel
-                        htmlFor="roth-end-year"
-                        fontWeight="medium"
-                        color="gray.700"
-                      >
+                      <FormLabel htmlFor="roth-end-year" fontWeight="medium" color="gray.700">
                         End Year
                       </FormLabel>
                       <InputGroup>
@@ -390,7 +362,7 @@ export const RothConversionOptimizerForm: React.FC<
                             id="roth-end-year"
                             borderRadius="md"
                             borderColor="blue.300"
-                            _hover={{ borderColor: "blue.400" }}
+                            _hover={{ borderColor: 'blue.400' }}
                             fontSize="md"
                           />
                           <NumberInputStepper>
@@ -412,11 +384,9 @@ export const RothConversionOptimizerForm: React.FC<
                   >
                     <Icon as={FiInfo} mr={3} color="purple.500" />
                     <Text fontSize="sm" color="purple.800">
-                      Your conversion will be spread over{" "}
-                      <strong>{conversion_years} years</strong> (
-                      {rothConversionStrategy.roth_conversion_start} -{" "}
-                      {rothConversionStrategy.roth_conversion_end}) to minimize
-                      tax impact.
+                      Your conversion will be spread over <strong>{conversion_years} years</strong>{' '}
+                      ({rothConversionStrategy.roth_conversion_start} -{' '}
+                      {rothConversionStrategy.roth_conversion_end}) to minimize tax impact.
                     </Text>
                   </Flex>
                   <Box maxW="800px" mx="auto" p={5}>
@@ -431,34 +401,26 @@ export const RothConversionOptimizerForm: React.FC<
                       <CardHeader bg="blue.600" color="white" p={4}>
                         <Heading size="lg">Roth Conversion Strategy</Heading>
                         <Text mt={2}>
-                          Define the order in which your investments will be
-                          used to cover expenses
+                          Define the order in which your investments will be used to cover expenses
                         </Text>
                       </CardHeader>
 
                       <CardBody p={6}>
                         <VStack spacing={6} align="stretch">
                           <Box>
-                            <Heading
-                              size="md"
-                              mb={4}
-                              display="flex"
-                              alignItems="center"
-                            >
+                            <Heading size="md" mb={4} display="flex" alignItems="center">
                               <Icon as={FaWallet} mr={2} color="blue.500" />
                               Roth Conversion Priority Order
                             </Heading>
                             <Text mb={4}>
-                              Arrange your investment accounts in the order you
-                              want them to be used for roth conversions.
-                              Accounts at the top will be used first.
+                              Arrange your investment accounts in the order you want them to be used
+                              for roth conversions. Accounts at the top will be used first.
                             </Text>
 
-                            {rothConversionStrategy.accountPriority.length >
-                            0 ? (
+                            {rothConversionStrategy.accountPriority.length > 0 ? (
                               <DragDropContext onDragEnd={handleDragEnd}>
                                 <Droppable droppableId="roth-conversion-priority">
-                                  {(provided) => (
+                                  {provided => (
                                     <List
                                       spacing={3}
                                       mt={4}
@@ -472,7 +434,7 @@ export const RothConversionOptimizerForm: React.FC<
                                             draggableId={accountId}
                                             index={index}
                                           >
-                                            {(provided) => (
+                                            {provided => (
                                               <ListItem
                                                 ref={provided.innerRef}
                                                 {...provided.draggableProps}
@@ -487,33 +449,25 @@ export const RothConversionOptimizerForm: React.FC<
                                                 _hover={{ bg: listItemHoverBg }}
                                               >
                                                 <Text fontWeight="medium">
-                                                  {index + 1}.{" "}
+                                                  {index + 1}.{' '}
                                                   {getAccountNameById(
                                                     rothConversionStrategy.availableAccounts,
                                                     accountId
                                                   )}
                                                 </Text>
                                                 <Flex>
-                                                  <Tooltip
-                                                    label="Move up"
-                                                    placement="top"
-                                                  >
+                                                  <Tooltip label="Move up" placement="top">
                                                     <IconButton
                                                       aria-label="Move up"
                                                       icon={<FaArrowUp />}
                                                       size="sm"
                                                       variant="ghost"
                                                       isDisabled={index === 0}
-                                                      onClick={() =>
-                                                        moveUp(index)
-                                                      }
+                                                      onClick={() => moveUp(index)}
                                                       mr={1}
                                                     />
                                                   </Tooltip>
-                                                  <Tooltip
-                                                    label="Move down"
-                                                    placement="top"
-                                                  >
+                                                  <Tooltip label="Move down" placement="top">
                                                     <IconButton
                                                       aria-label="Move down"
                                                       icon={<FaArrowDown />}
@@ -521,32 +475,22 @@ export const RothConversionOptimizerForm: React.FC<
                                                       variant="ghost"
                                                       isDisabled={
                                                         index ===
-                                                        rothConversionStrategy
-                                                          .accountPriority
+                                                        rothConversionStrategy.accountPriority
                                                           .length -
                                                           1
                                                       }
-                                                      onClick={() =>
-                                                        moveDown(index)
-                                                      }
+                                                      onClick={() => moveDown(index)}
                                                       mr={1}
                                                     />
                                                   </Tooltip>
-                                                  <Tooltip
-                                                    label="Remove"
-                                                    placement="top"
-                                                  >
+                                                  <Tooltip label="Remove" placement="top">
                                                     <IconButton
                                                       aria-label="Remove account"
-                                                      icon={
-                                                        <Icon name="close" />
-                                                      }
+                                                      icon={<Icon name="close" />}
                                                       size="sm"
                                                       variant="ghost"
                                                       colorScheme="red"
-                                                      onClick={() =>
-                                                        removeAccount(accountId)
-                                                      }
+                                                      onClick={() => removeAccount(accountId)}
                                                     />
                                                   </Tooltip>
                                                 </Flex>
@@ -562,8 +506,7 @@ export const RothConversionOptimizerForm: React.FC<
                               </DragDropContext>
                             ) : (
                               <Text color="gray.500" fontStyle="italic">
-                                No accounts selected for roth conversion
-                                priority
+                                No accounts selected for roth conversion priority
                               </Text>
                             )}
                           </Box>
@@ -576,14 +519,14 @@ export const RothConversionOptimizerForm: React.FC<
                             </Heading>
                             {getAvailableAccounts().length > 0 ? (
                               <List spacing={2}>
-                                {getAvailableAccounts().map((account) => (
+                                {getAvailableAccounts().map(account => (
                                   <ListItem
                                     key={account.id}
                                     p={2}
                                     borderRadius="md"
                                     _hover={{
-                                      bg: "gray.50",
-                                      cursor: "pointer",
+                                      bg: 'gray.50',
+                                      cursor: 'pointer',
                                     }}
                                     onClick={() => addAccount(account.id)}
                                   >
@@ -592,11 +535,7 @@ export const RothConversionOptimizerForm: React.FC<
                                         {account.id}
                                       </Badge>
                                       <Text>{account.name}</Text>
-                                      <Text
-                                        ml={2}
-                                        fontSize="sm"
-                                        color="blue.500"
-                                      >
+                                      <Text ml={2} fontSize="sm" color="blue.500">
                                         (Click to add)
                                       </Text>
                                     </Flex>
@@ -605,8 +544,7 @@ export const RothConversionOptimizerForm: React.FC<
                               </List>
                             ) : (
                               <Text color="gray.500" fontStyle="italic">
-                                All accounts have been added to the priority
-                                list
+                                All accounts have been added to the priority list
                               </Text>
                             )}
                           </Box>
@@ -623,7 +561,7 @@ export const RothConversionOptimizerForm: React.FC<
             p={6}
             borderTopWidth="1px"
             borderColor={borderColor}
-            bg={useColorModeValue("gray.50", "gray.700")}
+            bg={useColorModeValue('gray.50', 'gray.700')}
           >
             <Flex width="100%" justify="space-between">
               <Button
@@ -643,9 +581,9 @@ export const RothConversionOptimizerForm: React.FC<
                 rounded="lg"
                 bgGradient="linear(to-r, blue.400, purple.500)"
                 _hover={{
-                  bgGradient: "linear(to-r, blue.500, purple.600)",
-                  transform: "translateY(-2px)",
-                  boxShadow: "lg",
+                  bgGradient: 'linear(to-r, blue.500, purple.600)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: 'lg',
                 }}
                 transition="all 0.2s"
               >

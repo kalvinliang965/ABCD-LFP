@@ -26,6 +26,7 @@ export interface SimulationState {
   roth_conversion_start: number;
   roth_conversion_end: number;
   roth_conversion_strategy: Array<string>;
+  rmd_strategy: Array<string>;
   user: PersonDetails;
   spouse?: PersonDetails;
   get_tax_filing_status(): TaxFilingStatus;
@@ -47,6 +48,12 @@ export interface SimulationState {
   setup(): void;
   advance_year(): void;
   get_after_tax_contribution_limit(): number;
+  
+
+  // calculate investment market value
+  total_after_tax_value:Map<number, number>;
+  total_pre_tax_value: Map<number, number>; 
+  total_non_retirement_value: Map<number, number>;
 }
 
 // Create person details object
@@ -100,8 +107,18 @@ export async function create_simulation_state(
     const cloned_federal_tax_service = federal_tax_service.clone();
     const cloned_state_tax_service = state_tax_service.clone();
     // Account and event organization
+    
+    // total investment value for given year
+    const total_after_tax_value:Map<number, number> = new Map();
+    const total_pre_tax_value: Map<number, number> = new Map(); 
+    const total_non_retirement_value: Map<number, number> = new Map();
 
     const state: SimulationState = {
+      rmd_strategy: scenario.rmd_strategy,
+      total_after_tax_value,
+      total_non_retirement_value,
+      total_pre_tax_value,
+      
       roth_conversion_opt: scenario.roth_conversion_opt,
       roth_conversion_start: scenario.roth_conversion_start,
       roth_conversion_end: scenario.roth_conversion_end,
@@ -129,6 +146,11 @@ export async function create_simulation_state(
         investment_type_manager.resample_all();
       },
       advance_year: () => {
+
+        total_after_tax_value.set(current_year, account_manager.get_total_after_tax_value());
+        total_non_retirement_value.set(current_year, account_manager.get_total_non_retirement_value());
+        total_pre_tax_value.set(current_year, account_manager.get_total_pre_tax_value());
+
         current_year++;
         if (!spouse?.is_alive) {
           tax_filing_status = TaxFilingStatus.SINGLE;
@@ -145,8 +167,10 @@ export async function create_simulation_state(
         let withdrawaled=0;
         const investments = state.account_manager.all;
         for (const inv_id of state.expense_withrawal_strategy) {
+          
           // withdrawaled enough money
           if (withdrawaled > withdrawal_amount) {
+            console.log("success");
             return withdrawaled;
           }
 
@@ -167,7 +191,6 @@ export async function create_simulation_state(
 
           simulation_logger.debug(`going to withdraw ${going_to_withdraw} from ${inv_id}`);
           investment.incr_cost_basis(-going_to_withdraw);
-
           // step) f.i
           // if sold investment from non-retirement accont
           // we have to calculate capital gains
@@ -195,7 +218,6 @@ export async function create_simulation_state(
           simulation_logger.debug(`recieved ${going_to_withdraw} from selling ${investment.id}`)
           simulation_logger.debug(`total withdrawaled: ${withdrawaled}`);
         }
-
         return withdrawaled;
       },
       process_tax: (): number => {
@@ -241,7 +263,7 @@ export async function create_simulation_state(
         const total_tax = fed_tax + state_tax + withdrawal_tax + capital_gain_tax;
         simulation_logger.info(`Successfully process tax for ${state.get_current_year() - 1}: ${total_tax}`)
         return total_tax
-      }
+      },
     };
 
     return state;

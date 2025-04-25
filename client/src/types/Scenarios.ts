@@ -2,17 +2,17 @@ export type InvestmentTypeRaw = {
   name: string;
   description: string;
   returnAmtOrPct: string; // amount or percent
-  returnDistribution: Array<{ [key: string]: any }>; //! chen changed it to match with YAML
+  returnDistribution: { [key: string]: any };
   expenseRatio: number;
   incomeAmtOrPct: string;
-  incomeDistribution: Array<{ [key: string]: any }>; //! chen changed it to match with YAML
+  incomeDistribution: { [key: string]: any };
   taxability: boolean;
 };
 
 export type EventRaw = {
   name: string;
-  start: Array<{ [key: string]: any }>; //! chen changed it to match with YAML
-  duration: Array<{ [key: string]: any }>; //! chen changed it to match with YAML
+  start: { [key: string]: any };
+  duration: { [key: string]: any };
   type: string;
 };
 
@@ -26,7 +26,7 @@ export type InvestmentRaw = {
 export type IncomeEventRaw = EventRaw & {
   initialAmount: number;
   changeAmtOrPct: string;
-  changeDistribution: Array<{ [key: string]: any }>; //! chen changed it to match with YAML
+  changeDistribution: { [key: string]: any };
   inflationAdjusted: boolean;
   userFraction: number;
   socialSecurity: boolean;
@@ -35,7 +35,7 @@ export type IncomeEventRaw = EventRaw & {
 export type ExpenseEventRaw = EventRaw & {
   initialAmount: number;
   changeAmtOrPct: string;
-  changeDistribution: Array<{ [key: string]: any }>; //! chen changed it to match with YAML
+  changeDistribution: { [key: string]: any };
   inflationAdjusted: boolean;
   userFraction: number;
   discretionary: boolean;
@@ -59,9 +59,7 @@ export interface ScenarioRaw {
   lifeExpectancy: Array<{ [key: string]: any }>; //! chen changed it to match with YAML
   investmentTypes: Set<InvestmentTypeRaw>;
   investments: Set<InvestmentRaw>;
-  eventSeries: Set<
-    IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw
-  >;
+  eventSeries: Set<IncomeEventRaw | ExpenseEventRaw | InvestmentEventRaw | RebalanceEventRaw>;
   inflationAssumption: { [key: string]: any }; //! chen changed it to match with YAML
   afterTaxContributionLimit: number;
   spendingStrategy: Array<string>;

@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from "react";
 import {
   VStack,
   FormControl,
@@ -14,10 +13,13 @@ import {
   AlertIcon,
   AlertTitle,
   AlertDescription,
-} from "@chakra-ui/react";
-import { CommonFields } from "./CommonFields";
-import { InvestmentRaw } from "../../types/Scenarios";
-import { TaxStatus } from "../../components/scenarios/InvestmentsForm";
+} from '@chakra-ui/react';
+import React, { useState, useEffect } from 'react';
+
+import { TaxStatus } from '../../components/scenarios/InvestmentsForm';
+import { InvestmentRaw } from '../../types/Scenarios';
+
+import { CommonFields } from './CommonFields';
 
 interface RebalanceEventSeriesFormProps {
   onBack?: () => void;
@@ -32,25 +34,23 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
   existingEvents,
   investments = [],
 }) => {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [startYear, setStartYear] = useState<any>({
-    type: "fixed",
+    type: 'fixed',
     value: new Date().getFullYear(),
   });
   const [duration, setDuration] = useState<any>({
-    type: "fixed",
+    type: 'fixed',
     value: 1,
   });
-  const [selectedTaxStatus, setSelectedTaxStatus] = useState<TaxStatus | "">("");
+  const [selectedTaxStatus, setSelectedTaxStatus] = useState<TaxStatus | ''>('');
   const [allocations, setAllocations] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
     if (selectedTaxStatus) {
-      const matchingInvestments = investments.filter(
-        inv => inv.taxStatus === selectedTaxStatus
-      );
-      
+      const matchingInvestments = investments.filter(inv => inv.taxStatus === selectedTaxStatus);
+
       //initialize allocations with empty values
       const initialAllocations: { [key: string]: number } = {};
       matchingInvestments.forEach(inv => {
@@ -73,10 +73,8 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
 
   const renderAllocationInputs = () => {
     if (!selectedTaxStatus) return null;
-    
-    const matchingInvestments = investments.filter(
-      inv => inv.taxStatus === selectedTaxStatus
-    );
+
+    const matchingInvestments = investments.filter(inv => inv.taxStatus === selectedTaxStatus);
 
     if (matchingInvestments.length === 0) {
       return (
@@ -103,17 +101,17 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
             </AlertDescription>
           </Box>
         </Alert>
-        {matchingInvestments.map((inv) => (
+        {matchingInvestments.map(inv => (
           <FormControl key={inv.id} isRequired>
-            <FormLabel>
-              {inv.investmentType || `Investment ${inv.id}`} (%)
-            </FormLabel>
+            <FormLabel>{inv.investmentType || `Investment ${inv.id}`} (%)</FormLabel>
             <NumberInput
               value={allocations[inv.investmentType || `Investment ${inv.id}`] || 0}
-              onChange={(value) => handleAllocationChange(
-                inv.investmentType || `Investment ${inv.id}`,
-                parseFloat(value) || 0
-              )}
+              onChange={value =>
+                handleAllocationChange(
+                  inv.investmentType || `Investment ${inv.id}`,
+                  parseFloat(value) || 0
+                )
+              }
               min={0}
               max={100}
               precision={2}
@@ -122,9 +120,12 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
             </NumberInput>
           </FormControl>
         ))}
-        <Text color={validateAllocationPercentages(allocations) ? "green.500" : "red.500"}>
-          Total: {Object.values(allocations).reduce((acc, val) => acc + val, 0).toFixed(2)}%
-          {!validateAllocationPercentages(allocations) && " (must equal 100%)"}
+        <Text color={validateAllocationPercentages(allocations) ? 'green.500' : 'red.500'}>
+          Total:{' '}
+          {Object.values(allocations)
+            .reduce((acc, val) => acc + val, 0)
+            .toFixed(2)}
+          %{!validateAllocationPercentages(allocations) && ' (must equal 100%)'}
         </Text>
       </VStack>
     );
@@ -132,26 +133,35 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateAllocationPercentages(allocations)) {
       return;
     }
 
-    const assetAllocationArray = Object.entries(allocations).map(([type, value]) => ({
-      type,
-      value: value / 100 //divide by 100 to convert from percentage to decimal
-    }));
+    //convert allocations to direct object format
+    const assetAllocation = Object.entries(allocations).reduce(
+      (acc, [type, value]) => {
+        const investment = investments.find(
+          inv => inv.investmentType === type && inv.taxStatus === selectedTaxStatus
+        );
+        if (investment) {
+          acc[investment.id] = value / 100; //convert percentage to decimal
+        }
+        return acc;
+      },
+      {} as { [key: string]: number }
+    );
 
     const eventData = {
-      type: "rebalance",
+      type: 'rebalance',
       name,
       description,
-      startYear,
+      start: startYear,
       duration,
       selectedTaxStatus,
-      assetAllocation: assetAllocationArray,
-      initialAmount: 0, 
-      inflationAdjusted: false
+      assetAllocation,
+      initialAmount: 0,
+      inflationAdjusted: false,
     };
 
     if (onEventAdded) {
@@ -161,9 +171,9 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
   };
 
   const resetForm = () => {
-    setName("");
-    setDescription("");
-    setSelectedTaxStatus("");
+    setName('');
+    setDescription('');
+    setSelectedTaxStatus('');
     setAllocations({});
   };
 
@@ -185,7 +195,7 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
           <FormLabel>Account Tax Status</FormLabel>
           <Select
             value={selectedTaxStatus}
-            onChange={(e) => setSelectedTaxStatus(e.target.value as TaxStatus)}
+            onChange={e => setSelectedTaxStatus(e.target.value as TaxStatus)}
             placeholder="Select account type"
           >
             <option value="non-retirement">Non-Retirement</option>
@@ -193,14 +203,16 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
             <option value="after-tax">After-Tax</option>
           </Select>
         </FormControl>
-        {selectedTaxStatus && (
-          <Box>
-            {renderAllocationInputs()}
-          </Box>
-        )}
+        {selectedTaxStatus && <Box>{renderAllocationInputs()}</Box>}
         <HStack spacing={4} justify="flex-end">
-          {onBack && <Button variant="ghost" onClick={onBack}>Cancel</Button>}
-          <Button type="submit" colorScheme="blue">Save</Button>
+          {onBack && (
+            <Button variant="ghost" onClick={onBack}>
+              Cancel
+            </Button>
+          )}
+          <Button type="submit" colorScheme="blue">
+            Save
+          </Button>
         </HStack>
       </VStack>
     </form>

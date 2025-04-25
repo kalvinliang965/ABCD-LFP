@@ -1,6 +1,8 @@
-import axios from "axios";
-import { API_URL } from "./api";
-import { SpendingStrategy } from "../components/scenarios/SpendingStrategyForm";
+import axios from 'axios';
+
+import { SpendingStrategy } from '../components/scenarios/SpendingStrategyForm';
+
+import { API_URL } from './api';
 
 // API endpoint for spending strategies
 const SPENDING_STRATEGY_ENDPOINT = `${API_URL}/spendingStrategies`;
@@ -12,10 +14,10 @@ const SPENDING_STRATEGY_ENDPOINT = `${API_URL}/spendingStrategies`;
 function map_to_backend_model(spendingStrategy: SpendingStrategy): any {
   // Create a deep clone to avoid modifying the original
   const clonedStrategy = JSON.parse(JSON.stringify(spendingStrategy));
-  
+
   // Add any specific transformations needed for the backend
   // For example, if you need to convert any complex data structures
-  
+
   return clonedStrategy;
 }
 
@@ -30,10 +32,10 @@ function map_to_frontend_model(serverData: any): SpendingStrategy {
     createdAt: serverData.createdAt ? new Date(serverData.createdAt) : undefined,
     updatedAt: serverData.updatedAt ? new Date(serverData.updatedAt) : undefined,
   };
-  
+
   // Add any specific transformations needed for the frontend
   // For example, if you need to convert any complex data structures
-  
+
   return baseConversion;
 }
 
@@ -47,11 +49,11 @@ export const spendingStrategyApi = {
   getAll: async (): Promise<SpendingStrategy[]> => {
     try {
       const response = await axios.get(SPENDING_STRATEGY_ENDPOINT, {
-        withCredentials: true
+        withCredentials: true,
       });
       return response.data.map(map_to_frontend_model);
     } catch (error) {
-      console.error("Error fetching spending strategies:", error);
+      console.error('Error fetching spending strategies:', error);
       throw error;
     }
   },
@@ -62,7 +64,7 @@ export const spendingStrategyApi = {
   getById: async (id: string): Promise<SpendingStrategy> => {
     try {
       const response = await axios.get(`${SPENDING_STRATEGY_ENDPOINT}/${id}`, {
-        withCredentials: true
+        withCredentials: true,
       });
       return map_to_frontend_model(response.data);
     } catch (error) {
@@ -78,11 +80,11 @@ export const spendingStrategyApi = {
     try {
       const backendData = map_to_backend_model(spendingStrategy);
       const response = await axios.post(SPENDING_STRATEGY_ENDPOINT, backendData, {
-        withCredentials: true
+        withCredentials: true,
       });
       return map_to_frontend_model(response.data);
     } catch (error) {
-      console.error("Error creating spending strategy:", error);
+      console.error('Error creating spending strategy:', error);
       throw error;
     }
   },
@@ -94,7 +96,7 @@ export const spendingStrategyApi = {
     try {
       const backendData = map_to_backend_model(spendingStrategy);
       const response = await axios.put(`${SPENDING_STRATEGY_ENDPOINT}/${id}`, backendData, {
-        withCredentials: true
+        withCredentials: true,
       });
       return map_to_frontend_model(response.data);
     } catch (error) {
@@ -109,14 +111,14 @@ export const spendingStrategyApi = {
   delete: async (id: string): Promise<boolean> => {
     try {
       await axios.delete(`${SPENDING_STRATEGY_ENDPOINT}/${id}`, {
-        withCredentials: true
+        withCredentials: true,
       });
       return true;
     } catch (error) {
       console.error(`Error deleting spending strategy with id ${id}:`, error);
       return false;
     }
-  }
+  },
 };
 
-export default spendingStrategyApi; 
+export default spendingStrategyApi;

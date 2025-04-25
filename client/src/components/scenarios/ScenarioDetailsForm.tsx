@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Box,
   Heading,
@@ -28,17 +27,12 @@ import {
   InputLeftElement,
   useColorModeValue,
   Container,
-} from "@chakra-ui/react";
-import {
-  FiUser,
-  FiUsers,
-  FiCalendar,
-  FiEdit3,
-  FiArrowRight,
-} from "react-icons/fi";
-import { motion } from "framer-motion";
+} from '@chakra-ui/react';
+import { motion } from 'framer-motion';
+import React from 'react';
+import { FiUser, FiUsers, FiCalendar, FiEdit3, FiArrowRight } from 'react-icons/fi';
 
-export type ScenarioType = "individual" | "couple";
+export type ScenarioType = 'individual' | 'couple';
 
 export type ScenarioDetails = {
   name: string;
@@ -53,6 +47,8 @@ export interface ScenarioDetailsFormProps {
   onChangeScenarioDetails: (details: ScenarioDetails) => void;
   onContinue: () => void;
   onBack?: () => void;
+  isNameError?: boolean;
+  nameErrorMessage?: string;
 }
 
 const MotionBox = motion(Box);
@@ -63,12 +59,14 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
   onChangeScenarioDetails,
   onContinue,
   onBack,
+  isNameError,
+  nameErrorMessage,
 }) => {
-  console.log("ScenarioDetailsForm: Rendering with details:", scenarioDetails);
+  console.log('ScenarioDetailsForm: Rendering with details:', scenarioDetails);
 
-  const cardBg = useColorModeValue("white", "gray.800");
-  const headerBg = useColorModeValue("blue.50", "blue.900");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const headerBg = useColorModeValue('blue.50', 'blue.900');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   const container = {
     hidden: { opacity: 0 },
@@ -97,7 +95,7 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
       animate="show"
       variants={container}
       minH="100vh"
-      bg={useColorModeValue("gray.50", "gray.900")}
+      bg={useColorModeValue('gray.50', 'gray.900')}
       py={{ base: 8, md: 12 }}
     >
       <Container maxW="4xl" px={{ base: 4, md: 6 }}>
@@ -110,13 +108,7 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
             borderColor={borderColor}
             bg={cardBg}
           >
-            <CardHeader
-              bg={headerBg}
-              py={6}
-              px={6}
-              position="relative"
-              overflow="hidden"
-            >
+            <CardHeader bg={headerBg} py={6} px={6} position="relative" overflow="hidden">
               <Box
                 position="absolute"
                 top={0}
@@ -142,13 +134,13 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                     <Button
                       variant="outline"
                       onClick={() => {
-                        console.log("ScenarioDetailsForm: Back button clicked");
+                        console.log('ScenarioDetailsForm: Back button clicked');
                         onBack();
                       }}
                       size="md"
                       rounded="lg"
                       borderColor="blue.300"
-                      _hover={{ bg: "blue.50" }}
+                      _hover={{ bg: 'blue.50' }}
                     >
                       Back
                     </Button>
@@ -170,20 +162,19 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                   borderLeftColor="blue.400"
                 >
                   <Text color="blue.700" fontSize="md">
-                    Enter the basic details for your financial scenario. This
-                    information will help personalize your financial planning
-                    experience.
+                    Enter the basic details for your financial scenario. This information will help
+                    personalize your financial planning experience.
                   </Text>
                 </Box>
               </MotionBox>
 
               <VStack spacing={8} align="stretch">
                 <MotionBox variants={item}>
-                  <FormControl isRequired>
+                  <FormControl isRequired isInvalid={isNameError}>
                     <FormLabel
                       fontWeight="medium"
                       fontSize="md"
-                      color={useColorModeValue("gray.700", "gray.300")}
+                      color={useColorModeValue('gray.700', 'gray.300')}
                       mb={2}
                     >
                       Scenario Name
@@ -194,7 +185,7 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                       </InputLeftElement>
                       <Input
                         value={scenarioDetails.name}
-                        onChange={(e) =>
+                        onChange={e =>
                           onChangeScenarioDetails({
                             ...scenarioDetails,
                             name: e.target.value,
@@ -203,12 +194,17 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                         placeholder="My Financial Plan"
                         pl={10}
                         borderRadius="lg"
-                        focusBorderColor="blue.400"
+                        focusBorderColor={isNameError ? "red.400" : "blue.300"}
                         borderWidth="2px"
-                        _hover={{ borderColor: "blue.300" }}
+                        _hover={{ borderColor: isNameError ? 'red.300' : 'blue.300' }}
                         fontSize="md"
                       />
                     </InputGroup>
+                    {isNameError && (
+                      <Text color="red.500" fontSize="sm" mt={1}>
+                        {nameErrorMessage}
+                      </Text>
+                    )}
                   </FormControl>
                 </MotionBox>
 
@@ -218,15 +214,12 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                       as="legend"
                       fontWeight="medium"
                       fontSize="md"
-                      color={useColorModeValue("gray.700", "gray.300")}
+                      color={useColorModeValue('gray.700', 'gray.300')}
                       mb={3}
                     >
                       Scenario Type
                     </FormLabel>
-                    <RadioGroup
-                      value={scenarioDetails.type}
-                      onChange={onChangeScenarioType}
-                    >
+                    <RadioGroup value={scenarioDetails.type} onChange={onChangeScenarioType}>
                       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                         <Box
                           as="label"
@@ -236,39 +229,20 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                           py={4}
                           cursor="pointer"
                           borderColor={
-                            scenarioDetails.type === "individual"
-                              ? "blue.400"
-                              : "gray.200"
+                            scenarioDetails.type === 'individual' ? 'blue.400' : 'gray.200'
                           }
-                          bg={
-                            scenarioDetails.type === "individual"
-                              ? "blue.50"
-                              : "white"
-                          }
+                          bg={scenarioDetails.type === 'individual' ? 'blue.50' : 'white'}
                           transition="all 0.2s"
                           _hover={{
-                            borderColor: "blue.300",
-                            bg:
-                              scenarioDetails.type === "individual"
-                                ? "blue.50"
-                                : "gray.50",
+                            borderColor: 'blue.300',
+                            bg: scenarioDetails.type === 'individual' ? 'blue.50' : 'gray.50',
                           }}
                         >
                           <Flex align="center">
-                            <Radio
-                              value="individual"
-                              colorScheme="blue"
-                              size="lg"
-                              mr={3}
-                            />
+                            <Radio value="individual" colorScheme="blue" size="lg" mr={3} />
                             <Box>
                               <Flex align="center" mb={1}>
-                                <Icon
-                                  as={FiUser}
-                                  color="blue.500"
-                                  mr={2}
-                                  boxSize={5}
-                                />
+                                <Icon as={FiUser} color="blue.500" mr={2} boxSize={5} />
                                 <Text fontWeight="semibold">Individual</Text>
                               </Flex>
                               <Text fontSize="sm" color="gray.500">
@@ -286,39 +260,20 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                           py={4}
                           cursor="pointer"
                           borderColor={
-                            scenarioDetails.type === "couple"
-                              ? "purple.400"
-                              : "gray.200"
+                            scenarioDetails.type === 'couple' ? 'purple.400' : 'gray.200'
                           }
-                          bg={
-                            scenarioDetails.type === "couple"
-                              ? "purple.50"
-                              : "white"
-                          }
+                          bg={scenarioDetails.type === 'couple' ? 'purple.50' : 'white'}
                           transition="all 0.2s"
                           _hover={{
-                            borderColor: "purple.300",
-                            bg:
-                              scenarioDetails.type === "couple"
-                                ? "purple.50"
-                                : "gray.50",
+                            borderColor: 'purple.300',
+                            bg: scenarioDetails.type === 'couple' ? 'purple.50' : 'gray.50',
                           }}
                         >
                           <Flex align="center">
-                            <Radio
-                              value="couple"
-                              colorScheme="purple"
-                              size="lg"
-                              mr={3}
-                            />
+                            <Radio value="couple" colorScheme="purple" size="lg" mr={3} />
                             <Box>
                               <Flex align="center" mb={1}>
-                                <Icon
-                                  as={FiUsers}
-                                  color="purple.500"
-                                  mr={2}
-                                  boxSize={5}
-                                />
+                                <Icon as={FiUsers} color="purple.500" mr={2} boxSize={5} />
                                 <Text fontWeight="semibold">Couple</Text>
                               </Flex>
                               <Text fontSize="sm" color="gray.500">
@@ -339,18 +294,13 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                 <MotionBox variants={item}>
                   <Box
                     p={6}
-                    bg={useColorModeValue("gray.50", "gray.700")}
+                    bg={useColorModeValue('gray.50', 'gray.700')}
                     borderRadius="xl"
                     borderWidth="1px"
                     borderColor={borderColor}
                   >
                     <Flex align="center" mb={5}>
-                      <Icon
-                        as={FiCalendar}
-                        color="teal.500"
-                        mr={3}
-                        boxSize={5}
-                      />
+                      <Icon as={FiCalendar} color="teal.500" mr={3} boxSize={5} />
                       <Heading size="md" color="teal.600">
                         Birth Information
                       </Heading>
@@ -360,7 +310,7 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                       <FormControl isRequired>
                         <FormLabel
                           fontWeight="medium"
-                          color={useColorModeValue("gray.700", "gray.300")}
+                          color={useColorModeValue('gray.700', 'gray.300')}
                         >
                           Your Birth Year
                         </FormLabel>
@@ -385,7 +335,7 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                               borderRadius="lg"
                               borderWidth="2px"
                               borderColor="teal.300"
-                              _hover={{ borderColor: "teal.400" }}
+                              _hover={{ borderColor: 'teal.400' }}
                               fontSize="md"
                             />
                             <NumberInputStepper>
@@ -396,11 +346,11 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                         </InputGroup>
                       </FormControl>
 
-                      {scenarioDetails.type === "couple" && (
+                      {scenarioDetails.type === 'couple' && (
                         <FormControl isRequired>
                           <FormLabel
                             fontWeight="medium"
-                            color={useColorModeValue("gray.700", "gray.300")}
+                            color={useColorModeValue('gray.700', 'gray.300')}
                           >
                             Spouse Birth Year
                           </FormLabel>
@@ -425,7 +375,7 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                                 borderRadius="lg"
                                 borderWidth="2px"
                                 borderColor="purple.300"
-                                _hover={{ borderColor: "purple.400" }}
+                                _hover={{ borderColor: 'purple.400' }}
                                 fontSize="md"
                               />
                               <NumberInputStepper>
@@ -444,7 +394,7 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
 
             <CardFooter
               p={6}
-              bg={useColorModeValue("gray.50", "gray.700")}
+              bg={useColorModeValue('gray.50', 'gray.700')}
               borderTopWidth="1px"
               borderColor={borderColor}
             >
@@ -458,9 +408,7 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                     colorScheme="blue"
                     size="lg"
                     onClick={() => {
-                      console.log(
-                        "ScenarioDetailsForm: Continue button clicked"
-                      );
+                      console.log('ScenarioDetailsForm: Continue button clicked');
                       onContinue();
                     }}
                     isDisabled={!scenarioDetails.name}
@@ -469,23 +417,21 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                     borderRadius="lg"
                     bgGradient="linear(to-r, blue.400, purple.500)"
                     _hover={{
-                      bgGradient: "linear(to-r, blue.500, purple.600)",
-                      transform: "translateY(-2px)",
-                      boxShadow: "lg",
+                      bgGradient: 'linear(to-r, blue.500, purple.600)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: 'lg',
                     }}
                     transition="all 0.2s"
                   >
                     Continue
                   </Button>
                   {/* Will only display during development mode*/}
-                  {(import.meta.env.MODE === "development") && (
-                      <Button
+                  {import.meta.env.MODE === 'development' && (
+                    <Button
                       colorScheme="blue"
                       size="lg"
                       onClick={() => {
-                        console.log(
-                          "ScenarioDetailsForm: Skip button clicked"
-                        );
+                        console.log('ScenarioDetailsForm: Skip button clicked');
                         onContinue();
                       }}
                       rightIcon={<FiArrowRight />}
@@ -494,9 +440,9 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                       borderRadius="lg"
                       bgGradient="linear(to-r, blue.400, purple.500)"
                       _hover={{
-                        bgGradient: "linear(to-r, blue.500, purple.600)",
-                        transform: "translateY(-2px)",
-                        boxShadow: "lg",
+                        bgGradient: 'linear(to-r, blue.500, purple.600)',
+                        transform: 'translateY(-2px)',
+                        boxShadow: 'lg',
                       }}
                       transition="all 0.2s"
                     >

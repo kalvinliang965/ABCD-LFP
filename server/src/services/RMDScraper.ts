@@ -4,202 +4,101 @@
  * This service provides functions to get Required Minimum Distribution (RMD) factors
  * from IRS Publication 590-B.
  */
-
 import axios from 'axios';
 import cheerio from 'cheerio';
-import { saveRMDFactors, getRMDFactorsFromDB } from '../db/repositories/RMDFactorRepository';
 import { tax_config } from '../config/tax';
-import { rmd_urls, rmd_config, default_rmd_factors } from "../config/rmd";
+import { simulation_logger } from '../utils/logger/logger';
+import { extractNumbers } from '../utils/NumberUtils';
+import { dev } from '../config/environment';
 
 const RMD_URL = tax_config.RMD_URL;
 
-// Default RMD factors based on IRS Uniform Lifetime Table (2022+)
-// These will be used as a fallback if scraping fails
-const DEFAULT_RMD_FACTORS: Map<number, number> = new Map(default_rmd_factors);
-
-// Helper function to extract numbers from text
-function extractNumbers(text: string): number[] {
-  const matches = text.match(/\d+(\.\d+)?/g);
-  return matches ? matches.map(Number) : [];
-}
-
-// Cache for RMD factors to avoid repeated scraping
-let cachedRMDFactors: Map<number, number> | null = null;
-let lastScrapedTime: number = 0;
-const CACHE_DURATION = rmd_config.CACHE_DURATION;
-
-//Scrape RMD factors from the IRS publication 590-B
-
-export async function scrapeRMDFactors(): Promise<Map<number, number>> {
-  try {
-    console.log("Scraping RMD factors from IRS website...");
-    
-    // Test URL access first
-    console.log(`Attempting to access ${RMD_URL}...`);
+export async function fetch_and_parse_rmd(url: string): Promise<Map<number, number>> {
     try {
-      const response = await axios.get(RMD_URL);
-      console.log(`Successfully accessed URL. Status: ${response.status}`);
+        // Fetch the IRS page with RMD tables
+        const { data: html } = await axios.get(RMD_URL);
+        return await scrape_rmd_table(html);
     } catch (error) {
-      console.error(`Failed to access URL: ${error instanceof Error ? error.message : String(error)}`);
-      return new Map(DEFAULT_RMD_FACTORS);
+        simulation_logger.error("Failed to fetch capital gains data:", error);
+        throw new Error("Capital gains data acquisition failed");
     }
-    
-    // Fetch the IRS page with RMD tables
-    const { data: html } = await axios.get(RMD_URL);
-    console.log(`Received HTML content of length: ${html.length}`);
-    
+}
+export async function scrape_rmd_table(html: string): Promise<Map<number, number>> {
+  try {
     const $ = cheerio.load(html);
-    
     // Find all tables and log their content
     const tables = $('table');
     console.log(`Found ${tables.length} tables on the page`);
-    
-    tables.each((i, table) => {
-      const tableText = $(table).text().substring(0, 100);
-      console.log(`Table ${i+1} preview: ${tableText}...`);
-    });
-    
     // Find the Uniform Lifetime Table
     // Look for a table with a caption or heading containing "Uniform Lifetime Table"
-    const uniformLifetimeTable = $('table').filter((_, table) => {
+    const uniformLifetimeTable = $('table.table.table-condensed[summary*="Uniform Lifetime"]').filter((_, table) => {
       const tableHtml = $(table).html() || '';
-      const tableText = $(table).text() || '';
-      
+      const tableText = $(table).text() || '';      
       // Look for the table with "Uniform Lifetime" in its caption or content
       return (
-        tableHtml.toLowerCase().includes('uniform lifetime') || 
-        tableText.toLowerCase().includes('table iii') ||
-        tableText.toLowerCase().includes('uniform lifetime')
+        tableHtml.toLowerCase().includes('uniform lifetime') && 
+        tableText.toLowerCase().includes('table iii') 
       );
     });
     
     if (uniformLifetimeTable.length === 0) {
-      console.warn("Uniform Lifetime Table not found on the IRS website");
-      console.log("Using default RMD factors");
-      return new Map(DEFAULT_RMD_FACTORS);
+      simulation_logger.error("Uniform Lifetime Table not found on the IRS website");
+      throw new Error("Uniform Lifetime Table not found on the IRS website");
     }
     
     // Parse the table rows to extract age and distribution period
-    const rmdFactors = new Map<number, number>();
-    const rows = $(uniformLifetimeTable).find('tr');
-    
-    // Skip the header rows (there might be multiple header rows in this publication)
-    let headerRowsSkipped = false;
-    
-    rows.each((_, row) => {
-      const cells = $(row).find('td');
-      
-      // Skip header rows until we find a row with numeric data
-      if (!headerRowsSkipped) {
-        const firstCellText = cells.first().text().trim();
-        if (!firstCellText.match(/^\d+$/)) {
-          return; // Continue to next row
-        }
-        headerRowsSkipped = true;
+    const rmd_factors = new Map<number, number>();
+    const $rows = $(uniformLifetimeTable).find('tr');
+    const num_headers = 5;
+    // remove headers
+    $rows.slice(num_headers).each((_, row) => {
+      const $cells = $(row).find('td');
+
+      const N = $cells.length
+      if (N < 4 || N % 2 != 0) {
+        simulation_logger.error(`Not enough cell in the rmd table row`, {
+          row: $cells.text(),
+        })
+        throw new Error("Not enough cells");
       }
-      
-      // Process data rows - Table III might have multiple columns of age/distribution pairs
-      // Each pair of columns represents an age and its distribution period
-      for (let i = 0; i < cells.length; i += 2) {
-        if (i + 1 < cells.length) {
-          const ageText = $(cells[i]).text().trim();
-          const distributionPeriodText = $(cells[i + 1]).text().trim();
-          
-          // Extract numbers from the text
-          const ageNumbers = extractNumbers(ageText);
-          const distributionPeriodNumbers = extractNumbers(distributionPeriodText);
-          
-          if (ageNumbers.length > 0 && distributionPeriodNumbers.length > 0) {
-            const age = ageNumbers[0];
-            const distributionPeriod = distributionPeriodNumbers[0];
-            
-            rmdFactors.set(age, distributionPeriod);
-            console.log(`Scraped: Age ${age} -> Distribution Period ${distributionPeriod}`);
-          }
+
+
+      for (let i = 0; i < N; i += 2) {
+        const age_string = $cells.eq(i).text().trim();
+        const factor_string = $cells.eq(i + 1).text().trim();
+        
+        if (age_string === "" || factor_string === "") 
+          continue;
+        const age = extractNumbers(age_string,1)[0];
+        const factor = extractNumbers(factor_string, 1)[0];
+
+
+        if (rmd_factors.has(age)) {
+          simulation_logger.error(`row contain duplicated data`, {
+            row: $cells.text(),
+          })
+          throw new Error("row contian duplicated data");
         }
+        rmd_factors.set(age, factor);
       }
     });
     
-    if (rmdFactors.size === 0) {
-      console.warn("Failed to extract RMD factors from the table");
-      return new Map(DEFAULT_RMD_FACTORS);
+    // it is require to start doing rmd at 73 for previous yera that is 72
+    for (let i = 72; i <= tax_config.MAX_RMD_AGE; ++i) {
+      if (!rmd_factors.has(i)) {
+        console.log(rmd_factors.get(i));
+        simulation_logger.error(`RMD table is missing age ${i}`);
+        throw new Error(`RMD table is missing age ${i}`);
+      }
+      if (dev.is_dev) {
+        simulation_logger.debug(`RMD table contain age: ${i}, factor: ${rmd_factors.get(i)!}`);
+      }
     }
-    
-    console.log(`Successfully scraped ${rmdFactors.size} RMD factors`);
-    return rmdFactors;
+
+    // console.log(`Successfully scraped ${rmdFactors.size} RMD factors`);
+    return rmd_factors;
   } catch (error) {
-    console.error("Error scraping RMD factors:", error);
-    // Return default factors if scraping fails
-    return new Map(DEFAULT_RMD_FACTORS);
+    simulation_logger.error(`Failed to scrape rmd table: ${error instanceof Error ? error.stack : String(error)}`);
+    throw new Error(`Failed to scrape RMD table: ${error instanceof Error? error.message: String(error)}`);
   }
 }
-
-/**
- * Get RMD factors, using cached values if available and not expired
- */
-export async function getRMDFactors(): Promise<Map<number, number>> {
-  const currentTime = Date.now();
-  
-  // If cache is valid, return cached factors
-  if (cachedRMDFactors && (currentTime - lastScrapedTime < CACHE_DURATION)) {
-    return cachedRMDFactors;
-  }
-  
-  try {
-    // First try to get factors from the database
-    const dbFactors = await getRMDFactorsFromDB();
-    
-    if (dbFactors.size > 0) {
-      console.log(`Retrieved ${dbFactors.size} RMD factors from database`);
-      cachedRMDFactors = dbFactors;
-      lastScrapedTime = currentTime;
-      return dbFactors;
-    }
-    
-    // If no factors in database, scrape them
-    console.log('No RMD factors found in database, scraping from IRS website...');
-    const scrapedFactors = await scrapeRMDFactors();
-    
-    // Save the scraped factors to the database
-    if (scrapedFactors.size > 0) {
-      await saveRMDFactors(scrapedFactors);
-    }
-    
-    // Update cache
-    cachedRMDFactors = scrapedFactors;
-    lastScrapedTime = currentTime;
-    console.log("RMD factors updated");
-    
-    return scrapedFactors;
-  } catch (error) {
-    console.error('Error in getRMDFactors:', error);
-    
-    // If all else fails, return default factors
-    return new Map(DEFAULT_RMD_FACTORS);
-  }
-}
-
-/**
- * Get the RMD factor for a specific age
- */
-export async function getRMDFactorForAge(age: number, url = rmd_urls.RMD_PUBLICATION): Promise<number> {
-  // Use the provided URL or fall back to the default from config
-  const RMD_URL = url;
-  
-  // Check if age is in the valid range
-  if (age < rmd_config.START_AGE || age > 120) {
-    console.log(`Age ${age} is outside the valid range for RMD calculations (${rmd_config.START_AGE}-120)`);
-    return 0;
-  }
-  
-  const factors = await getRMDFactors();
-  const factor = factors.get(age);
-  
-  if (factor === undefined) {
-    console.log(`No RMD factor found for age ${age}`);
-    return 0;
-  }
-  
-  return factor;
-}
-

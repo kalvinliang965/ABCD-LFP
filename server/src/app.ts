@@ -7,6 +7,7 @@ import { api_config } from "./config/api";
 import { simulation_engine_demo } from "./demos/demo";
 import { Server } from "http";
 import { initialize_route as initialize_routes } from "./routes";
+import { fetch_and_parse_rmd } from "./services/RMDScraper";
 
 
 // Graceful shutdown
@@ -42,7 +43,9 @@ async function initialize_application() {
   await connect_database();
 
   // run demo code below
-  //await simulation_engine_demo();
+  
+  // await fetch_and_parse_rmd();
+  // await simulation_engine_demo();
 }
 
 function start_server() {

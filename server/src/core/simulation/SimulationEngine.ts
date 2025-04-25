@@ -1,6 +1,6 @@
 
 import { SimulationState, create_simulation_state } from './SimulationState';
-import { SimulationResult, create_simulation_result } from './SimulationResult';
+import { SimulationYearlyResult, create_simulation_yearly_result } from './SimulationYearlyResult';
 import { create_scenario, Scenario } from '../domain/scenario/Scenario';
 import run_roth_conversion_optimizer from './logic/RothConversion';
 import update_investment from './logic/UpdateInvestment';
@@ -11,22 +11,25 @@ import { ScenarioRaw } from '../domain/raw/scenario_raw';
 import run_income_event from './logic/RunIncomeEvent';
  
 export interface SimulationEngine {
-    run: (num_simulations: number) => Promise<SimulationResult[]>;
+    run: (num_simulations: number) => Promise<SimulationYearlyResult[]>;
 }
 
 import { simulation_logger } from '../../utils/logger/logger';
-import perform_rmds from './logic/ProcessRMD';
+import { process_rmds } from './logic/ProcessRMD';
 import { pay_mandatory_expenses } from './logic/PayMandatoryExpense';
 import { pay_discretionary_expenses } from './logic/PayDiscretionaryExpense';
 import { invest_excess_cash as run_invest_event } from './logic/InvestExcessCash';
 import { run_rebalance_investment } from './logic/RebalanceInvestments';
 import { delete_state_tax_brackets_by_state } from '../../db/repositories/StateTaxBracketRepository';
+import { get_rmd_factors_from_db, save_rmd_factors_to_db } from '../../db/repositories/RMDFactorRepository';
+import { fetch_and_parse_rmd } from '../../services/RMDScraper';
+import { tax_config } from '../../config/tax';
 
 export async function create_simulation_engine(scenario_yaml: string, state_yaml: string): Promise<SimulationEngine> {
 
     simulation_logger.info("Initializing the simulation engine...");
 
-    let scenario: Scenario, federal_tax_service: FederalTaxService, state_tax_service: StateTaxService;
+    let scenario: Scenario, federal_tax_service: FederalTaxService, state_tax_service: StateTaxService, rmd_factor: Map<number, number>;
     // Create tax services
     try {
         // initialize scenario object
@@ -56,6 +59,16 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
             state_tax_service = await create_state_tax_service_db(scenario.residence_state); 
             simulation_logger.info("Successfully initialize state tax service from db");
         }
+
+
+        // TODO: Maybe i could do something like this(bulk write) for federal tax scraping to optimize my code.
+        rmd_factor = await get_rmd_factors_from_db();
+        // if rmd factor is not already scrapped.
+        if (rmd_factor.size == 0) {
+            rmd_factor = await fetch_and_parse_rmd(tax_config.RMD_URL);
+            await save_rmd_factors_to_db(rmd_factor);
+        } 
+
         simulation_logger.info("Successfully initialize state tax service");
         simulation_logger.info("Successfully initialize simulation engine");
     } catch (error) {
@@ -63,22 +76,23 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
             `Failed to setup the simulation engine`,
             {error:  error instanceof Error? error.stack: error}
         );
-        process.exit(1);
+        throw new Error("Failed to setup the simulation engine");
     }
     
     // we will be using this one for now
-    async function run(num_simulations: number): Promise<SimulationResult[]> {
-        const res: SimulationResult[] = [];
+    async function run(num_simulations: number): Promise<SimulationYearlyResult[]> {
+        const res: SimulationYearlyResult[] = [];
         simulation_logger.info("Simulation started with config: ", {
             scenario: scenario,
         });
+        
         let i = 0
         let simulation_state;
         let simulation_result;
         try {
             for (; i < num_simulations; i++) {
                 simulation_state = await create_simulation_state(scenario, federal_tax_service, state_tax_service); 
-                simulation_result = create_simulation_result();
+                simulation_result = create_simulation_yearly_result();
                 // Run the simulation synchronously.
                 while (should_continue(simulation_state)) {
                     // adjust for tax, inflation, etc...
@@ -93,7 +107,7 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
                     simulation_state.advance_year();
                 }
                 simulation_logger.info(
-                    `${i} simulation completed`,
+                    `${i + 1} simulation completed`,
                     {
                         simulaiton_result: simulation_result,
                     }
@@ -116,7 +130,7 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
 
 
 
-    function simulate_year(simulation_state: SimulationState, simulation_result: SimulationResult ): boolean {
+    function simulate_year(simulation_state: SimulationState, simulation_result: SimulationYearlyResult ): boolean {
         try {
             simulation_logger.debug(
                 "Simulating new year", 
@@ -129,7 +143,7 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
             
             if (simulation_state.user.get_age() >= 74) {
                 simulation_logger.debug("Performing rmd...");
-                perform_rmds(simulation_state);
+                process_rmds(simulation_state, rmd_factor);
             }
             simulation_logger.debug("Updating investments...");
             update_investment(simulation_state);

@@ -1,81 +1,80 @@
-import React, { useEffect, useState } from "react";
-import "./Login.css";
-import axios, { AxiosError } from "axios";
-import { useNavigate } from "react-router-dom";
-import { FaGoogle } from "react-icons/fa"; // 导入Google图标
-import { Box, Button, Center, Container, Heading, Text, VStack, useColorModeValue } from '@chakra-ui/react';
-import { FcGoogle } from 'react-icons/fc'; // Install react-icons if not already installed
-import { appConfig } from "../config/appConfig";
-import { useAuth } from "../contexts/AuthContext";
+import React, { useEffect, useState } from 'react';
+import './Login.css';
+import axios, { AxiosError } from 'axios';
+import { FaGoogle } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+
+import { appConfig } from '../config/appConfig';
+import { useAuth } from '../contexts/AuthContext';
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const navigate = useNavigate();
   const { checkAuthStatus } = useAuth();
 
   useEffect(() => {
-    // 获取DOM元素，querySelector获取的是第一个元素，querySelectorAll获取的是所有元素
-    //我们为获取到的元素重新赋值，这样我们就可以使用这些元素了
-    const switchCtn = document.querySelector("#switch-cnt") as HTMLElement;
-    const switchC1 = document.querySelector("#switch-c1") as HTMLElement;
-    const switchC2 = document.querySelector("#switch-c2") as HTMLElement;
-    const switchCircle = document.querySelectorAll(".switch_circle");
-    const switchBtn = document.querySelectorAll(".switch-btn");
-    const aContainer = document.querySelector("#a-container") as HTMLElement;
-    const bContainer = document.querySelector("#b-container") as HTMLElement;
-    const allButtons = document.querySelectorAll(".submit"); //只要带有submit类的按钮，都会触发这个函数
+    // get the DOM elements, querySelector gets the first element, querySelectorAll gets all elements
+    // we reassign the elements we get, so we can use them
+    const switchCtn = document.querySelector('#switch-cnt') as HTMLElement;
+    const switchC1 = document.querySelector('#switch-c1') as HTMLElement;
+    const switchC2 = document.querySelector('#switch-c2') as HTMLElement;
+    const switchCircle = document.querySelectorAll('.switch_circle');
+    const switchBtn = document.querySelectorAll('.switch-btn');
+    const aContainer = document.querySelector('#a-container') as HTMLElement;
+    const bContainer = document.querySelector('#b-container') as HTMLElement;
+    const allButtons = document.querySelectorAll('.submit'); //as all buttons with submit class will trigger this function
 
-    // 修改这个函数，只阻止切换按钮的默认行为
+    // modify this function, only prevent the default behavior of the switch button
     const getButtons = (e: Event) => {
       const target = e.target as HTMLElement;
-      // 只有当点击的是切换按钮时才阻止默认行为
-      if (target.classList.contains("switch-btn")) {
+      // only prevent the default behavior when the button is clicked
+      if (target.classList.contains('switch-btn')) {
         e.preventDefault();
       }
     };
 
-    // 切换表单动画，当用户点击登录或者注册按钮时，会触发这个函数
-    //这个函数会切换一些css类，从而实现动画效果
+    // switch form animation, when the user clicks the login or register button, this function will be triggered
+    // this function will switch some css classes, thus achieving an animation effect
     const changeForm = (e: Event) => {
-      // 添加渐入动画
-      switchCtn.classList.add("is-gx"); //给所有switch-cnt的元素添加is-gx类，is-gx会让组件在切换时有一个膨胀-缩回的动画效果
+      // add the fade in animation
+      switchCtn.classList.add('is-gx'); //add the is-gx class to all switch-cnt elements, is-gx will make the component have an expanding-shrinking animation effect when switching
       setTimeout(() => {
-        switchCtn.classList.remove("is-gx"); //1.5秒后，移除is-gx类，从而实现动画效果
+        switchCtn.classList.remove('is-gx'); //1.5秒后，移除is-gx类，从而实现动画效果
       }, 1500);
 
-      // 切换表单显示
-      switchCtn.classList.toggle("is_txr"); //给所有switch-cnt的元素添加is_txr类，is_txr会让组件在切换时有一个向右移动的动画效果
-      switchCircle[0].classList.toggle("is_txr"); //switchCircle[0]是第一个switch_circle元素，取决于你的html结构谁时第一个
-      switchCircle[1].classList.toggle("is_txr");
+      // switch form display
+      switchCtn.classList.toggle('is_txr'); //add the is_txr class to all switch-cnt elements, is_txr will make the component have an animation effect when switching
+      switchCircle[0].classList.toggle('is_txr'); //switchCircle[0] is the first switch_circle element, depending on your html structure, who is the first
+      switchCircle[1].classList.toggle('is_txr');
 
-      // 切换内容显示
-      switchC1.classList.toggle("is-hidden"); //给所有switch-c1的元素添加is-hidden类，is-hidden会让组件在切换时隐藏
-      switchC2.classList.toggle("is-hidden"); //给所有switch-c2的元素添加is-hidden类，is-hidden会让组件在切换时隐藏
-      aContainer.classList.toggle("is_txl"); //当元素带有is_txl时，会向左移动，aContainer是登录的容器,会向左移动
-      bContainer.classList.toggle("is_txl"); //当元素带有is_txl时，会向左移动，bContainer是注册的容器，会向左移动
-      bContainer.classList.toggle("is-z"); //当元素带有is-z时，会增加z-index，从而让元素在滑动容器之上
+      // switch content display
+      switchC1.classList.toggle('is-hidden'); //add the is-hidden class to all switch-c1 elements, is-hidden will make the component hidden when switching
+      switchC2.classList.toggle('is-hidden'); //add the is-hidden class to all switch-c2 elements, is-hidden will make the component hidden when switching
+      aContainer.classList.toggle('is_txl'); //when the element has is_txl, it will move to the left, aContainer is the login container, it will move to the left
+      bContainer.classList.toggle('is_txl'); //when the element has is_txl, it will move to the left, bContainer is the register container, it will move to the left
+      bContainer.classList.toggle('is-z'); //when the element has is-z, it will increase the z-index, thus making the element above the slide container
     };
 
-    // 添加事件监听
+    // add event listeners
     const addEventListeners = () => {
       for (let i = 0; i < allButtons.length; i++) {
-        allButtons[i].addEventListener("click", getButtons);
+        allButtons[i].addEventListener('click', getButtons);
       }
       for (let i = 0; i < switchBtn.length; i++) {
-        switchBtn[i].addEventListener("click", changeForm);
+        switchBtn[i].addEventListener('click', changeForm);
       }
     };
 
     addEventListeners();
 
-    // 卸载时移除监听，如果不卸载，每次切换表单时，都会触发这个函数，造成内存泄漏
+    // remove the event listeners when the component is unmounted, if not removed, the event listeners will be triggered every time the form is switched, causing memory leaks
     return () => {
       for (let i = 0; i < allButtons.length; i++) {
-        allButtons[i].removeEventListener("click", getButtons);
+        allButtons[i].removeEventListener('click', getButtons);
       }
       for (let i = 0; i < switchBtn.length; i++) {
-        switchBtn[i].removeEventListener("click", changeForm);
+        switchBtn[i].removeEventListener('click', changeForm);
       }
     };
   }, []);
@@ -84,56 +83,62 @@ const Login: React.FC = () => {
     e.preventDefault();
 
     try {
-      console.log("Attempting login with:", { email }); // Log the attempt
-      
-      const response = await axios.post(`${appConfig.api.baseURL}/auth/login`, {
-        email,
-        password,
-      }, {
-        withCredentials: true // Add this line
-      });
+      console.log('Attempting login with:', { email }); // Log the attempt
+
+      const response = await axios.post(
+        `${appConfig.api.baseURL}/auth/login`,
+        {
+          email,
+          password,
+        },
+        {
+          withCredentials: true, // Add this line
+        }
+      );
 
       if (response.data.success) {
         localStorage.setItem('token', response.data.token);
         await checkAuthStatus();
-        navigate(response.data.redirectUrl || "/dashboard");
+        navigate(response.data.redirectUrl || '/dashboard');
       } else {
-        console.error("Login failed");
+        console.error('Login failed');
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const message = error.response?.data?.message || "Login failed.";
+        const message = error.response?.data?.message || 'Login failed.';
         alert(message);
       } else {
         // fallback for unexpected errors
-        alert("An unexpected error occurred.");
+        alert('An unexpected error occurred.');
       }
     }
   };
 
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    const username = (e.currentTarget.elements.namedItem('register-username') as HTMLInputElement).value;
+
+    const username = (e.currentTarget.elements.namedItem('register-username') as HTMLInputElement)
+      .value;
     const email = (e.currentTarget.elements.namedItem('register-email') as HTMLInputElement).value;
-    const password = (e.currentTarget.elements.namedItem('register-password') as HTMLInputElement).value;
-    
+    const password = (e.currentTarget.elements.namedItem('register-password') as HTMLInputElement)
+      .value;
+
     try {
       const response = await axios.post(`${appConfig.api.baseURL}/auth/signup`, {
         name: username,
         email,
-        password
+        password,
       });
-      
+
       if (response.data.success) {
         localStorage.setItem('token', response.data.token);
-        
-        navigate(response.data.redirectUrl || "/dashboard");
+
+        navigate(response.data.redirectUrl || '/dashboard');
       } else {
-        console.error("Signup failed");
+        console.error('Signup failed');
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.error('Error:', error);
     }
   };
 
@@ -147,12 +152,7 @@ const Login: React.FC = () => {
   return (
     <div className="shell">
       <div className="container a-container" id="a-container">
-        <form
-          className="form"
-          id="a-form"
-          onSubmit={handleSubmit}
-          autoComplete="off"
-        >
+        <form className="form" id="a-form" onSubmit={handleSubmit} autoComplete="off">
           <h2 className="form_title title">Sign In</h2>
 
           <span className="form_span">Use your email account</span>
@@ -164,7 +164,7 @@ const Login: React.FC = () => {
               placeholder=" "
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               autoComplete="new-email"
               name="user-email"
             />
@@ -178,7 +178,7 @@ const Login: React.FC = () => {
               placeholder=" "
               required
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
               autoComplete="new-password"
               name="user-password"
             />
@@ -187,11 +187,7 @@ const Login: React.FC = () => {
 
           {/* google login button */}
           <div className="google-sign-in">
-            <button
-              type="button"
-              className="google-button"
-              onClick={handleGoogleSignIn}
-            >
+            <button type="button" className="google-button" onClick={handleGoogleSignIn}>
               <FaGoogle className="google-icon" />
               <span>Sign in with Google</span>
             </button>
@@ -247,11 +243,7 @@ const Login: React.FC = () => {
 
           {/* google sign up button */}
           <div className="google-sign-in">
-            <button
-              type="button"
-              className="google-button"
-              onClick={handleGoogleSignIn}
-            >
+            <button type="button" className="google-button" onClick={handleGoogleSignIn}>
               <FaGoogle className="google-icon" />
               <span>Sign up with Google</span>
             </button>

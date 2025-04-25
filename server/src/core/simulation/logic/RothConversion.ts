@@ -3,37 +3,7 @@ import { SimulationState } from "../SimulationState";
 import { IncomeType, TaxStatus } from "../../Enums";
 import { AccountMap } from "../../domain/AccountManager";
 import { simulation_logger } from "../../../utils/logger/logger";
-import { state } from "@stdlib/random-base-normal";
-
-function transfer_investment(
-    roth_conversion_strategy: string[], 
-    amt: number, 
-    source_pool: AccountMap, 
-    target_pool: AccountMap) {
-    
-    // the amount been transferred
-    let transferred = 0;
-
-    for (let i = 0; i < roth_conversion_strategy.length && transferred < amt; i++) {
-        const label = roth_conversion_strategy[i];
-        const from_investment = source_pool.get(label);
-        if (!from_investment) {
-            simulation_logger.error(`Investment with label ${label} not exist`);
-            throw new Error(`Investment with ${label} not exist`);
-        }
-        if (!target_pool.has(label)) {
-            const cloned_investment = from_investment.clone();
-            cloned_investment.tax_status = TaxStatus.AFTER_TAX
-            target_pool.set(label, cloned_investment);
-        }
-        const to_investment = target_pool.get(label);
-        // if we have nothing in investment, nothing is transferred
-        const transfer_amt = Math.min(from_investment.get_value(), amt);
-        from_investment.incr_value(-transfer_amt);
-        to_investment?.incr_value(transfer_amt);
-        transferred += transfer_amt;
-    }
-}
+import { transfer_investment_value } from "./common";
 
 function process_roth_conversion(simulation_state: SimulationState) {
 
@@ -60,7 +30,7 @@ function process_roth_conversion(simulation_state: SimulationState) {
         const transfer_amt = upper - (taxable_income - standard_deduction);
         // does not go into annual contribution for after tax
         if (transfer_amt > 0) {
-            transfer_investment(
+            transfer_investment_value(
                 simulation_state.roth_conversion_strategy,
                 transfer_amt,
                 simulation_state.account_manager.pre_tax,

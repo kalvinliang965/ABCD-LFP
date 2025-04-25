@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Box,
   Heading,
@@ -33,7 +32,9 @@ import {
   StatLabel,
   StatNumber,
   StatHelpText,
-} from "@chakra-ui/react";
+} from '@chakra-ui/react';
+import { motion } from 'framer-motion';
+import React from 'react';
 import {
   FiActivity,
   FiCalendar,
@@ -42,11 +43,11 @@ import {
   FiHeart,
   FiUser,
   FiUsers,
-} from "react-icons/fi";
-import { motion } from "framer-motion";
-import lifeExpectancyStorage from "../../services/lifeExpectancyStorage";
+} from 'react-icons/fi';
 
-export type ExpectancyType = "fixed" | "normal";
+import lifeExpectancyStorage from '../../services/lifeExpectancyStorage';
+
+export type ExpectancyType = 'fixed' | 'normal';
 
 export interface LifeExpectancyConfig {
   id?: string;
@@ -82,17 +83,15 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
   onBack,
   onContinue,
 }) => {
-  const cardBg = useColorModeValue("white", "gray.800");
-  const headerBg = useColorModeValue("blue.50", "blue.900");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const headerBg = useColorModeValue('blue.50', 'blue.900');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
   const user_current_age = new Date().getFullYear() - userBirthYear;
-  const spouse_current_age = spouseBirthYear
-    ? new Date().getFullYear() - spouseBirthYear
-    : 0;
+  const spouse_current_age = spouseBirthYear ? new Date().getFullYear() - spouseBirthYear : 0;
 
   const boxShadow = useColorModeValue(
-    "0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)",
-    "0 4px 20px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3)"
+    '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+    '0 4px 20px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3)'
   );
 
   const container = {
@@ -121,12 +120,11 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
     };
 
     // Initialize appropriate fields based on the type
-    if (newType === "fixed" && !lifeExpectancyConfig.userFixedAge) {
+    if (newType === 'fixed' && !lifeExpectancyConfig.userFixedAge) {
       updates.userFixedAge = 85;
-    } else if (newType === "normal") {
+    } else if (newType === 'normal') {
       if (!lifeExpectancyConfig.userMeanAge) updates.userMeanAge = 85;
-      if (!lifeExpectancyConfig.userStandardDeviation)
-        updates.userStandardDeviation = 5;
+      if (!lifeExpectancyConfig.userStandardDeviation) updates.userStandardDeviation = 5;
     }
 
     handleLifeExpectancyChange({
@@ -142,12 +140,11 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
     };
 
     // Initialize appropriate fields based on the type
-    if (newType === "fixed" && !lifeExpectancyConfig.spouseFixedAge) {
+    if (newType === 'fixed' && !lifeExpectancyConfig.spouseFixedAge) {
       updates.spouseFixedAge = 85;
-    } else if (newType === "normal") {
+    } else if (newType === 'normal') {
       if (!lifeExpectancyConfig.spouseMeanAge) updates.spouseMeanAge = 85;
-      if (!lifeExpectancyConfig.spouseStandardDeviation)
-        updates.spouseStandardDeviation = 5;
+      if (!lifeExpectancyConfig.spouseStandardDeviation) updates.spouseStandardDeviation = 5;
     }
 
     handleLifeExpectancyChange({
@@ -157,8 +154,8 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
   };
 
   const handleLifeExpectancyChange = (updatedConfig: LifeExpectancyConfig) => {
-    console.log("Updated life expectancy config:", updatedConfig);
-    
+    console.log('Updated life expectancy config:', updatedConfig);
+
     try {
       if (updatedConfig.id) {
         lifeExpectancyStorage.update(updatedConfig.id, updatedConfig);
@@ -167,9 +164,9 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
         updatedConfig.id = savedConfig.id;
       }
     } catch (error) {
-      console.error("Error auto-saving to localStorage:", error);
+      console.error('Error auto-saving to localStorage:', error);
     }
-    
+
     onChangeConfig(updatedConfig);
   };
 
@@ -179,7 +176,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
       animate="show"
       variants={container}
       minH="100vh"
-      bg={useColorModeValue("gray.50", "gray.900")}
+      bg={useColorModeValue('gray.50', 'gray.900')}
       py={{ base: 8, md: 12 }}
     >
       <Container maxW="4xl" px={{ base: 4, md: 6 }}>
@@ -192,13 +189,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
             borderColor={borderColor}
             bg={cardBg}
           >
-            <CardHeader
-              bg={headerBg}
-              py={6}
-              px={6}
-              position="relative"
-              overflow="hidden"
-            >
+            <CardHeader bg={headerBg} py={6} px={6} position="relative" overflow="hidden">
               <Box
                 position="absolute"
                 top={0}
@@ -228,7 +219,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                     size="md"
                     rounded="lg"
                     borderColor="blue.300"
-                    _hover={{ bg: "blue.50" }}
+                    _hover={{ bg: 'blue.50' }}
                   >
                     Back
                   </Button>
@@ -240,7 +231,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                     rounded="lg"
                     bgGradient="linear(to-r, blue.400, teal.500)"
                     _hover={{
-                      bgGradient: "linear(to-r, blue.500, teal.600)",
+                      bgGradient: 'linear(to-r, blue.500, teal.600)',
                     }}
                   >
                     Continue
@@ -262,9 +253,8 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                   borderLeftColor="teal.400"
                 >
                   <Text color="teal.700" fontSize="md">
-                    Configure life expectancy settings for your scenario. These
-                    settings help simulate how long your financial plan needs to
-                    support you.
+                    Configure life expectancy settings for your scenario. These settings help
+                    simulate how long your financial plan needs to support you.
                   </Text>
                 </Box>
               </MotionBox>
@@ -320,44 +310,35 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                   >
                     <Stat>
                       <StatLabel color="gray.600">Current Age</StatLabel>
-                      <StatNumber color="blue.500">
-                        {user_current_age}
-                      </StatNumber>
+                      <StatNumber color="blue.500">{user_current_age}</StatNumber>
                       <StatHelpText>Born in {userBirthYear}</StatHelpText>
                     </Stat>
 
                     <Stat>
                       <StatLabel color="gray.600">Expected Lifespan</StatLabel>
                       <StatNumber color="blue.500">
-                        {lifeExpectancyConfig.userExpectancyType === "fixed"
+                        {lifeExpectancyConfig.userExpectancyType === 'fixed'
                           ? lifeExpectancyConfig.userFixedAge
                           : lifeExpectancyConfig.userMeanAge}
                       </StatNumber>
                       <StatHelpText>
-                        {lifeExpectancyConfig.userExpectancyType === "fixed"
-                          ? "Fixed Age"
-                          : "Mean Age (with variation)"}
+                        {lifeExpectancyConfig.userExpectancyType === 'fixed'
+                          ? 'Fixed Age'
+                          : 'Mean Age (with variation)'}
                       </StatHelpText>
                     </Stat>
                   </SimpleGrid>
 
                   <Box mb={5}>
                     <FormControl as="fieldset" mb={4}>
-                      <FormLabel
-                        as="legend"
-                        fontWeight="semibold"
-                        color="blue.700"
-                      >
+                      <FormLabel as="legend" fontWeight="semibold" color="blue.700">
                         Calculation Method
                       </FormLabel>
                       <RadioGroup
                         value={lifeExpectancyConfig.userExpectancyType}
                         onChange={handle_change_user_expectancy_type}
                       >
-                        <Stack
-                          direction={{ base: "column", md: "row" }}
-                          spacing={5}
-                        >
+                        <Stack direction={{ base: 'column', md: 'row' }} spacing={5}>
                           <Box
                             as="label"
                             borderWidth="2px"
@@ -366,30 +347,23 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                             py={3}
                             cursor="pointer"
                             borderColor={
-                              lifeExpectancyConfig.userExpectancyType ===
-                              "fixed"
-                                ? "blue.400"
-                                : "gray.200"
+                              lifeExpectancyConfig.userExpectancyType === 'fixed'
+                                ? 'blue.400'
+                                : 'gray.200'
                             }
                             bg={
-                              lifeExpectancyConfig.userExpectancyType ===
-                              "fixed"
-                                ? "white"
-                                : "gray.50"
+                              lifeExpectancyConfig.userExpectancyType === 'fixed'
+                                ? 'white'
+                                : 'gray.50'
                             }
                             transition="all 0.2s"
                             _hover={{
-                              borderColor: "blue.300",
+                              borderColor: 'blue.300',
                             }}
                             flex={1}
                           >
                             <Flex align="center">
-                              <Radio
-                                value="fixed"
-                                colorScheme="blue"
-                                size="lg"
-                                mr={3}
-                              />
+                              <Radio value="fixed" colorScheme="blue" size="lg" mr={3} />
                               <Box>
                                 <Text fontWeight="medium">Fixed Age</Text>
                                 <Text fontSize="sm" color="gray.500">
@@ -407,34 +381,25 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                             py={3}
                             cursor="pointer"
                             borderColor={
-                              lifeExpectancyConfig.userExpectancyType ===
-                              "normal"
-                                ? "blue.400"
-                                : "gray.200"
+                              lifeExpectancyConfig.userExpectancyType === 'normal'
+                                ? 'blue.400'
+                                : 'gray.200'
                             }
                             bg={
-                              lifeExpectancyConfig.userExpectancyType ===
-                              "normal"
-                                ? "white"
-                                : "gray.50"
+                              lifeExpectancyConfig.userExpectancyType === 'normal'
+                                ? 'white'
+                                : 'gray.50'
                             }
                             transition="all 0.2s"
                             _hover={{
-                              borderColor: "blue.300",
+                              borderColor: 'blue.300',
                             }}
                             flex={1}
                           >
                             <Flex align="center">
-                              <Radio
-                                value="normal"
-                                colorScheme="blue"
-                                size="lg"
-                                mr={3}
-                              />
+                              <Radio value="normal" colorScheme="blue" size="lg" mr={3} />
                               <Box>
-                                <Text fontWeight="medium">
-                                  Normal Distribution
-                                </Text>
+                                <Text fontWeight="medium">Normal Distribution</Text>
                                 <Text fontSize="sm" color="gray.500">
                                   Statistical probability
                                 </Text>
@@ -446,7 +411,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                     </FormControl>
                   </Box>
 
-                  {lifeExpectancyConfig.userExpectancyType === "fixed" ? (
+                  {lifeExpectancyConfig.userExpectancyType === 'fixed' ? (
                     <FormControl isRequired>
                       <FormLabel fontWeight="medium" color="blue.700">
                         Expected Age
@@ -472,7 +437,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                             borderRadius="lg"
                             borderWidth="2px"
                             borderColor="blue.300"
-                            _hover={{ borderColor: "blue.400" }}
+                            _hover={{ borderColor: 'blue.400' }}
                             fontSize="md"
                           />
                           <NumberInputStepper>
@@ -509,7 +474,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                               borderRadius="lg"
                               borderWidth="2px"
                               borderColor="blue.300"
-                              _hover={{ borderColor: "blue.400" }}
+                              _hover={{ borderColor: 'blue.400' }}
                               fontSize="md"
                             />
                             <NumberInputStepper>
@@ -545,7 +510,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                               borderRadius="lg"
                               borderWidth="2px"
                               borderColor="blue.300"
-                              _hover={{ borderColor: "blue.400" }}
+                              _hover={{ borderColor: 'blue.400' }}
                               fontSize="md"
                             />
                             <NumberInputStepper>
@@ -594,12 +559,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                       display="flex"
                       alignItems="center"
                     >
-                      <Icon
-                        as={FiHeart}
-                        mr={3}
-                        boxSize={5}
-                        color="purple.500"
-                      />
+                      <Icon as={FiHeart} mr={3} boxSize={5} color="purple.500" />
                       Spouse Life Expectancy
                     </Heading>
 
@@ -615,46 +575,35 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                     >
                       <Stat>
                         <StatLabel color="gray.600">Current Age</StatLabel>
-                        <StatNumber color="purple.500">
-                          {spouse_current_age}
-                        </StatNumber>
+                        <StatNumber color="purple.500">{spouse_current_age}</StatNumber>
                         <StatHelpText>Born in {spouseBirthYear}</StatHelpText>
                       </Stat>
 
                       <Stat>
-                        <StatLabel color="gray.600">
-                          Expected Lifespan
-                        </StatLabel>
+                        <StatLabel color="gray.600">Expected Lifespan</StatLabel>
                         <StatNumber color="purple.500">
-                          {lifeExpectancyConfig.spouseExpectancyType === "fixed"
+                          {lifeExpectancyConfig.spouseExpectancyType === 'fixed'
                             ? lifeExpectancyConfig.spouseFixedAge
                             : lifeExpectancyConfig.spouseMeanAge}
                         </StatNumber>
                         <StatHelpText>
-                          {lifeExpectancyConfig.spouseExpectancyType === "fixed"
-                            ? "Fixed Age"
-                            : "Mean Age (with variation)"}
+                          {lifeExpectancyConfig.spouseExpectancyType === 'fixed'
+                            ? 'Fixed Age'
+                            : 'Mean Age (with variation)'}
                         </StatHelpText>
                       </Stat>
                     </SimpleGrid>
 
                     <Box mb={5}>
                       <FormControl as="fieldset" mb={4}>
-                        <FormLabel
-                          as="legend"
-                          fontWeight="semibold"
-                          color="purple.700"
-                        >
+                        <FormLabel as="legend" fontWeight="semibold" color="purple.700">
                           Calculation Method
                         </FormLabel>
                         <RadioGroup
                           value={lifeExpectancyConfig.spouseExpectancyType}
                           onChange={handle_change_spouse_expectancy_type}
                         >
-                          <Stack
-                            direction={{ base: "column", md: "row" }}
-                            spacing={5}
-                          >
+                          <Stack direction={{ base: 'column', md: 'row' }} spacing={5}>
                             <Box
                               as="label"
                               borderWidth="2px"
@@ -663,30 +612,23 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                               py={3}
                               cursor="pointer"
                               borderColor={
-                                lifeExpectancyConfig.spouseExpectancyType ===
-                                "fixed"
-                                  ? "purple.400"
-                                  : "gray.200"
+                                lifeExpectancyConfig.spouseExpectancyType === 'fixed'
+                                  ? 'purple.400'
+                                  : 'gray.200'
                               }
                               bg={
-                                lifeExpectancyConfig.spouseExpectancyType ===
-                                "fixed"
-                                  ? "white"
-                                  : "gray.50"
+                                lifeExpectancyConfig.spouseExpectancyType === 'fixed'
+                                  ? 'white'
+                                  : 'gray.50'
                               }
                               transition="all 0.2s"
                               _hover={{
-                                borderColor: "purple.300",
+                                borderColor: 'purple.300',
                               }}
                               flex={1}
                             >
                               <Flex align="center">
-                                <Radio
-                                  value="fixed"
-                                  colorScheme="purple"
-                                  size="lg"
-                                  mr={3}
-                                />
+                                <Radio value="fixed" colorScheme="purple" size="lg" mr={3} />
                                 <Box>
                                   <Text fontWeight="medium">Fixed Age</Text>
                                   <Text fontSize="sm" color="gray.500">
@@ -704,34 +646,25 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                               py={3}
                               cursor="pointer"
                               borderColor={
-                                lifeExpectancyConfig.spouseExpectancyType ===
-                                "normal"
-                                  ? "purple.400"
-                                  : "gray.200"
+                                lifeExpectancyConfig.spouseExpectancyType === 'normal'
+                                  ? 'purple.400'
+                                  : 'gray.200'
                               }
                               bg={
-                                lifeExpectancyConfig.spouseExpectancyType ===
-                                "normal"
-                                  ? "white"
-                                  : "gray.50"
+                                lifeExpectancyConfig.spouseExpectancyType === 'normal'
+                                  ? 'white'
+                                  : 'gray.50'
                               }
                               transition="all 0.2s"
                               _hover={{
-                                borderColor: "purple.300",
+                                borderColor: 'purple.300',
                               }}
                               flex={1}
                             >
                               <Flex align="center">
-                                <Radio
-                                  value="normal"
-                                  colorScheme="purple"
-                                  size="lg"
-                                  mr={3}
-                                />
+                                <Radio value="normal" colorScheme="purple" size="lg" mr={3} />
                                 <Box>
-                                  <Text fontWeight="medium">
-                                    Normal Distribution
-                                  </Text>
+                                  <Text fontWeight="medium">Normal Distribution</Text>
                                   <Text fontSize="sm" color="gray.500">
                                     Statistical probability
                                   </Text>
@@ -743,7 +676,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                       </FormControl>
                     </Box>
 
-                    {lifeExpectancyConfig.spouseExpectancyType === "fixed" ? (
+                    {lifeExpectancyConfig.spouseExpectancyType === 'fixed' ? (
                       <FormControl isRequired>
                         <FormLabel fontWeight="medium" color="purple.700">
                           Expected Age
@@ -769,7 +702,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                               borderRadius="lg"
                               borderWidth="2px"
                               borderColor="purple.300"
-                              _hover={{ borderColor: "purple.400" }}
+                              _hover={{ borderColor: 'purple.400' }}
                               fontSize="md"
                             />
                             <NumberInputStepper>
@@ -806,7 +739,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                                 borderRadius="lg"
                                 borderWidth="2px"
                                 borderColor="purple.300"
-                                _hover={{ borderColor: "purple.400" }}
+                                _hover={{ borderColor: 'purple.400' }}
                                 fontSize="md"
                               />
                               <NumberInputStepper>
@@ -828,9 +761,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                             <NumberInput
                               min={1}
                               max={20}
-                              value={
-                                lifeExpectancyConfig.spouseStandardDeviation
-                              }
+                              value={lifeExpectancyConfig.spouseStandardDeviation}
                               onChange={(_, value) =>
                                 handleLifeExpectancyChange({
                                   ...lifeExpectancyConfig,
@@ -844,7 +775,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                                 borderRadius="lg"
                                 borderWidth="2px"
                                 borderColor="purple.300"
-                                _hover={{ borderColor: "purple.400" }}
+                                _hover={{ borderColor: 'purple.400' }}
                                 fontSize="md"
                               />
                               <NumberInputStepper>
@@ -863,7 +794,7 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
 
             <CardFooter
               p={6}
-              bg={useColorModeValue("gray.50", "gray.700")}
+              bg={useColorModeValue('gray.50', 'gray.700')}
               borderTopWidth="1px"
               borderColor={borderColor}
             >
@@ -900,15 +831,15 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                     px={8}
                     bgGradient="linear(to-r, blue.400, teal.500)"
                     _hover={{
-                      bgGradient: "linear(to-r, blue.500, teal.600)",
-                      transform: "translateY(-2px)",
-                      boxShadow: "lg",
+                      bgGradient: 'linear(to-r, blue.500, teal.600)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: 'lg',
                     }}
                     transition="all 0.2s"
                   >
                     Continue
                   </Button>
-                  {(import.meta.env.MODE==="development") && (
+                  {import.meta.env.MODE === 'development' && (
                     <Button
                       colorScheme="blue"
                       onClick={onContinue}
@@ -918,9 +849,9 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                       px={8}
                       bgGradient="linear(to-r, blue.400, teal.500)"
                       _hover={{
-                        bgGradient: "linear(to-r, blue.500, teal.600)",
-                        transform: "translateY(-2px)",
-                        boxShadow: "lg",
+                        bgGradient: 'linear(to-r, blue.500, teal.600)',
+                        transform: 'translateY(-2px)',
+                        boxShadow: 'lg',
                       }}
                       transition="all 0.2s"
                       ml={4}

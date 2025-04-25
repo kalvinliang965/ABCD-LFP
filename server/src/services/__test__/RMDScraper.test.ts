@@ -1,116 +1,39 @@
-import { getRMDFactorForAge } from '../RMDScraper';
-import mongoose from 'mongoose';
-import { connect_database, disconnect_database } from '../../db/connections';
+import { scrape_rmd_table } from '../RMDScraper';
+import { loadFixture } from './common';
 
-//how to run this test
-// cd server 
-// npm test -- src/services/__test__/RMDScraper.test.ts
-
-/**
- * Test Case 1: RMD Factor Retrieval for Valid Ages
-
-Scenario: Call getRMDFactorForAge() for ages 72, 75, 80, 85, 90, 95, and 100.
-Pass Criteria:
-Each factor is a number between 0 and 100
-RMD factors decrease as age increases (consistent with IRS rules)
-
-Test Case 2: Handle Edge Cases (Out-of-Range Ages)
-Scenario: Call getRMDFactorForAge() with ages 60, 120, and -5.
-Pass Criteria:
-Age 60 → Returns 0 (below RMD age)
-Age 120 → Returns a valid positive factor
-Negative age → Returns 0 or valid default
-
-Test Case 3: Handle Database Error Gracefully
-Scenario: Disconnect from MongoDB and call getRMDFactorForAge(75).
-Pass Criteria: System either throws an error or returns a safe default (0) Test confirms the system does not crash
- */
-
-describe('RMDScraper', () => {
-  // Connect to the database before all tests
-  beforeAll(async () => {
-    await connect_database();
-  });
-
-  // Disconnect from the database after all tests
-  afterAll(async () => {
-    await disconnect_database();
-  });
-
-  test('should retrieve correct RMD factors for various ages', async () => {
-    // Test a range of ages
-    const age72Factor = await getRMDFactorForAge(72);
-    const age75Factor = await getRMDFactorForAge(75);
-    const age80Factor = await getRMDFactorForAge(80);
-    const age85Factor = await getRMDFactorForAge(85);
-    const age90Factor = await getRMDFactorForAge(90);
-    const age95Factor = await getRMDFactorForAge(95);
-    const age100Factor = await getRMDFactorForAge(100);
-
-    // Verify the factors are numbers and within expected ranges
-    // RMD factors should be between 0 and 100
-    expect(age72Factor).toBeGreaterThan(0);
-    expect(age72Factor).toBeLessThan(100);
-    
-    expect(age75Factor).toBeGreaterThan(0);
-    expect(age75Factor).toBeLessThan(100);
-    
-    expect(age80Factor).toBeGreaterThan(0);
-    expect(age80Factor).toBeLessThan(100);
-    
-    expect(age85Factor).toBeGreaterThan(0);
-    expect(age85Factor).toBeLessThan(100);
-    
-    expect(age90Factor).toBeGreaterThan(0);
-    expect(age90Factor).toBeLessThan(100);
-    
-    expect(age95Factor).toBeGreaterThan(0);
-    expect(age95Factor).toBeLessThan(100);
-    
-    expect(age100Factor).toBeGreaterThan(0);
-    expect(age100Factor).toBeLessThan(100);
-
-    // Verify that factors decrease as age increases
-    // (RMD factors should be smaller for older ages)
-    expect(age75Factor).toBeLessThan(age72Factor);
-    expect(age80Factor).toBeLessThan(age75Factor);
-    expect(age85Factor).toBeLessThan(age80Factor);
-    expect(age90Factor).toBeLessThan(age85Factor);
-    expect(age95Factor).toBeLessThan(age90Factor);
-    expect(age100Factor).toBeLessThan(age95Factor);
-  });
-
-  test('should handle edge cases', async () => {
-    // Test age below minimum RMD age
-    const age60Factor = await getRMDFactorForAge(60);
-    expect(age60Factor).toBe(0); // Should return 0 or some default value for ages below RMD age
-    
-    // Test very high age
-    const age120Factor = await getRMDFactorForAge(120);
-    expect(age120Factor).toBeGreaterThan(0); // Should still return a valid factor
-    
-    // Test invalid age
-    const negativeAgeFactor = await getRMDFactorForAge(-5);
-    expect(negativeAgeFactor).toBe(0); // Should handle invalid ages gracefully
-  });
-
-  test('should handle database errors gracefully', async () => {
-    // Temporarily disconnect from the database to simulate an error
-    await mongoose.disconnect();
-    
-    try {
-      // This should handle the database error gracefully
-      const factor = await getRMDFactorForAge(75);
-      
-      // Depending on your implementation, it might return a default value or throw
-      // If it returns a default value:
-      expect(factor).toBe(0); // Or whatever default you use
-    } catch (error) {
-      // If it throws, the error should be handled here
-      expect(error).toBeDefined();
-    } finally {
-      // Reconnect to the database for subsequent tests
-      await connect_database();
-    }
-  });
-}); 
+describe('scrape_rmd_table', () => {
+      const uniform_lifetime_table = new Map([
+        [72, 27.4], [73, 26.5], [74, 25.6], [75, 24.7], [76, 23.8],
+        [77, 22.9], [78, 22.0], [79, 21.1], [80, 20.2], [81, 19.4],
+        [82, 18.5], [83, 17.7], [84, 16.8], [85, 16.0], [86, 15.2],
+        [87, 14.4], [88, 13.7], [89, 12.9], [90, 12.2], [91, 11.5],
+        [92, 10.8], [93, 10.1], [94, 9.5], [95, 8.9], [96, 8.4],
+        [97, 10.2], [98, 9.6], [99, 9.1], [100, 8.6], [101, 8.1],
+        [102, 7.6], [103, 7.1], [104, 6.7], [105, 6.3], [106, 5.9],
+        [107, 5.5], [108, 5.2], [109, 4.9], [110, 4.5], [111, 4.2],
+        [112, 3.9], [113, 3.7], [114, 3.4], [115, 3.1], [116, 2.9],
+        [117, 2.6], [118, 2.4], [119, 2.1], [120, 1.9]
+      ]);
+    it("should scrape normal rmd table", async() => {
+        const html = loadFixture("uniform_rmd_table_normal.html");
+        const rmd_factor = await scrape_rmd_table(html);
+        expect(rmd_factor).toEqual(uniform_lifetime_table);
+    });
+    it("should throw error if there are no rmd table", async() => {
+        const html = loadFixture("no_rmd_table.html");
+        await expect(scrape_rmd_table(html)).rejects.toThrow(/Table not found/);
+    });
+    it("should throw error if cell of rmd table is invalid", async() => {
+        const html = loadFixture("invalid_rmd_data.html");
+        await expect(scrape_rmd_table(html)).rejects.toThrow(/integer/);
+    });
+    it("should scrape the right rmd table from mutiple table", async() => {
+        const html = loadFixture("rmd_among_mutiple_tables.html");
+        const rmd_factor = await scrape_rmd_table(html);
+        expect(rmd_factor).toEqual(uniform_lifetime_table);
+    });
+    it("should throw error if the table doesnt cover full age range", async() => {
+        const html = loadFixture("rmd_not_enough_age.html");
+        await expect(scrape_rmd_table(html)).rejects.toThrow(/missing/);
+    });
+});
