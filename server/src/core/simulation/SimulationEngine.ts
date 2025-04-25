@@ -23,12 +23,13 @@ import { run_rebalance_investment } from './logic/RebalanceInvestments';
 import { delete_state_tax_brackets_by_state } from '../../db/repositories/StateTaxBracketRepository';
 import { get_rmd_factors_from_db, save_rmd_factors_to_db } from '../../db/repositories/RMDFactorRepository';
 import { fetch_and_parse_rmd } from '../../services/RMDScraper';
+import { tax_config } from '../../config/tax';
 
 export async function create_simulation_engine(scenario_yaml: string, state_yaml: string): Promise<SimulationEngine> {
 
     simulation_logger.info("Initializing the simulation engine...");
 
-    let scenario: Scenario, federal_tax_service: FederalTaxService, state_tax_service: StateTaxService;
+    let scenario: Scenario, federal_tax_service: FederalTaxService, state_tax_service: StateTaxService, rmd_factor: Map<number, number>;
     // Create tax services
     try {
         // initialize scenario object
@@ -61,10 +62,10 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
 
 
         // TODO: Maybe i could do something like this(bulk write) for federal tax scraping to optimize my code.
-        let rmd_factor = await get_rmd_factors_from_db();
+        rmd_factor = await get_rmd_factors_from_db();
         // if rmd factor is not already scrapped.
         if (rmd_factor.size == 0) {
-            rmd_factor = await fetch_and_parse_rmd();
+            rmd_factor = await fetch_and_parse_rmd(tax_config.RMD_URL);
             await save_rmd_factors_to_db(rmd_factor);
         } 
 
@@ -142,7 +143,7 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
             
             if (simulation_state.user.get_age() >= 74) {
                 simulation_logger.debug("Performing rmd...");
-                process_rmds(simulation_state);
+                process_rmds(simulation_state, rmd_factor);
             }
             simulation_logger.debug("Updating investments...");
             update_investment(simulation_state);

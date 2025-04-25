@@ -62,9 +62,9 @@ export function create_simulation_yearly_result(): SimulationYearlyResult {
             const year_snapshot: YearResult = {
                 // Here are the one haifeng ask for
                 year: simulation_state.get_current_year(),
-                total_after_tax: simulation_state.account_manager.get_total_after_tax(),
-                total_pre_tax: simulation_state.account_manager.get_total_pre_tax(),
-                total_non_retirement: simulation_state.account_manager.get_total_non_retirement(),
+                total_after_tax: simulation_state.account_manager.get_total_after_tax_value(),
+                total_pre_tax: simulation_state.account_manager.get_total_pre_tax_value(),
+                total_non_retirement: simulation_state.account_manager.get_total_non_retirement_value(),
                 is_goal_met: simulation_state.account_manager.get_net_worth() >= simulation_state.get_financial_goal(),
 
                 // here are the one kate added but haifeng didnt ask for
