@@ -31,4 +31,6 @@ export function transfer_investment_value(
         to_investment?.incr_value(transfer_amt);
         transferred += transfer_amt;
     }
+    
+    return transferred;
 }

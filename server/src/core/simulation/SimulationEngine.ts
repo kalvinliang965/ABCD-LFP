@@ -15,7 +15,7 @@ export interface SimulationEngine {
 }
 
 import { simulation_logger } from '../../utils/logger/logger';
-import { process_rmds } from './logic/ProcessRMD';
+import { process_rmd } from './logic/ProcessRMD';
 import { pay_mandatory_expenses } from './logic/PayMandatoryExpense';
 import { pay_discretionary_expenses } from './logic/PayDiscretionaryExpense';
 import { invest_excess_cash as run_invest_event } from './logic/InvestExcessCash';
@@ -143,7 +143,7 @@ export async function create_simulation_engine(scenario_yaml: string, state_yaml
             
             if (simulation_state.user.get_age() >= 74) {
                 simulation_logger.debug("Performing rmd...");
-                process_rmds(simulation_state, rmd_factor);
+                process_rmd(simulation_state, rmd_factor);
             }
             simulation_logger.debug("Updating investments...");
             update_investment(simulation_state);
