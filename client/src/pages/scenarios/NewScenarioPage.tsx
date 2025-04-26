@@ -96,10 +96,10 @@ function NewScenarioPage() {
       spouseFixedAge: 85,
     });
   const [investmentsConfig, setInvestmentsConfig] = useState<InvestmentsConfig>({
-    investments: [],
+      investments: [],
   });
   const [additionalSettings, setAdditionalSettings] = useState<AdditionalSettingsConfig>({
-    inflationConfig: {
+      inflationConfig: {
       type: DistributionType.FIXED,
       value: 2.5, //! 2.5 is the default value, which means the user doesn't input anything, then it's 2.5
     },
@@ -676,13 +676,13 @@ function NewScenarioPage() {
       localStorage.removeItem('current_editing_scenario_id');
 
       // Show success toast and navigate to scenarios page
-      toast({
+    toast({
         title: 'Scenario Created',
         description: 'Your scenario has been created successfully.',
         status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
+      duration: 3000,
+      isClosable: true,
+    });
       navigate('/scenarios');
     } catch (error) {
       console.error('Error saving scenario:', error);
@@ -910,12 +910,12 @@ function NewScenarioPage() {
   if (step === 'investments') {
     return (
       <Box position="relative" zIndex={10} width="100%" height="100%">
-        <InvestmentsForm
-          investmentsConfig={investmentsConfig}
-          onChangeInvestmentsConfig={setInvestmentsConfig}
+      <InvestmentsForm
+        investmentsConfig={investmentsConfig}
+        onChangeInvestmentsConfig={setInvestmentsConfig}
           onContinue={handle_continue_to_rmd_settings}
           onBack={handle_to_investment_types}
-        />
+      />
       </Box>
     );
   }
@@ -958,7 +958,7 @@ function NewScenarioPage() {
 
   // Withdrawal Strategy Form
   if (step === 'withdrawalStrategy') {
-    return (
+                  return (
       <WithdrawalStrategyForm
         withdrawalStrategy={withdrawalStrategy}
         onChangeWithdrawalStrategy={setWithdrawalStrategy}
