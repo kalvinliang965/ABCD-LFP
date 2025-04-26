@@ -10,14 +10,12 @@ interface ProbabilityOfSuccessChartProps {
   };
   title?: string;
   loading?: boolean;
-  dollarValueType?: 'today' | 'future';
 }
 
 const ProbabilityOfSuccessChart: React.FC<ProbabilityOfSuccessChartProps> = ({
   data,
   title = 'Probability of Success Over Time',
   loading = false,
-  dollarValueType = 'today',
 }) => {
   // Generate mock data if no data is provided
   //for chart 1, the parameters are:
@@ -44,7 +42,7 @@ const ProbabilityOfSuccessChart: React.FC<ProbabilityOfSuccessChartProps> = ({
       formatter: function (params: any) {
         const year = params[0].axisValue;
         const probability = params[0].data.toFixed(1);
-        return `Year: ${year}<br/>Probability of Success: ${probability}%<br/>Values in: ${dollarValueType === 'today' ? "Today's Dollars" : 'Future Dollars'}`;
+        return `Year: ${year}<br/>Probability of Success: ${probability}%`;
       },
     },
     xAxis: {
@@ -111,10 +109,6 @@ const ProbabilityOfSuccessChart: React.FC<ProbabilityOfSuccessChartProps> = ({
   return (
     <Box borderWidth="1px" borderRadius="lg" p={4} shadow="md" bg="white" mb={6}>
       <ReactECharts option={options} style={{ height: '400px' }} showLoading={loading} />
-      <Text fontSize="lg" mt={2} color="gray.600" textAlign="center">
-        {dollarValueType === 'future' && ' Values are shown in future dollars.'}
-        {dollarValueType === 'today' && " Values are shown in today's dollars."}
-      </Text>
 
       <Text fontSize="sm" mt={2} color="gray.600" textAlign="center">
         This chart shows the probability of meeting your financial goals over time based on

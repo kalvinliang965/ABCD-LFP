@@ -25,14 +25,12 @@ interface ShadedLineChartProps {
     discretionaryExpensesPct?: ProbabilityRangeData;
   };
   loading?: boolean;
-  dollarValueType?: 'today' | 'future';
   userCurrentAge?: number; // Current age of the user
 }
 
 const ShadedLineChart: React.FC<ShadedLineChartProps> = ({
   data = {},
   loading = false,
-  dollarValueType = 'today',
   //userCurrentAge = 60 // Default age for mock data
 }) => {
   // State for the selected quantity
@@ -177,7 +175,7 @@ const ShadedLineChart: React.FC<ShadedLineChartProps> = ({
     if (selectedQuantity === 'discretionaryExpensesPct') {
       return 'Percentage (%)';
     }
-    return dollarValueType === 'today' ? "Total Savings (Today's $)" : "Total Savings (Future's $)";
+    return 'Total Value ($)'; // Simplified label, remove references to today's/future dollars
   };
 
   // Helper function to format values to better display in the chart
@@ -267,11 +265,6 @@ const ShadedLineChart: React.FC<ShadedLineChartProps> = ({
             <span style="font-weight:bold;color:#FF0000">Financial Goal: ${formatValue(activeData.goal)}</span>
           </div>`;
         }
-
-        // Add dollar type information
-        tooltip += `<div style="margin-top:5px;font-style:italic;font-size:12px">
-          Values in ${dollarValueType === 'today' ? "today's" : 'future'} dollars
-        </div>`;
 
         return tooltip;
       },
@@ -558,15 +551,8 @@ const ShadedLineChart: React.FC<ShadedLineChartProps> = ({
         option={options}
         style={{ height: '500px' }}
         showLoading={loading}
-        key={`${selectedQuantity}-${dollarValueType}`}
+        key={`${selectedQuantity}`}
       />
-
-      <Text fontSize="lg" mt={2} color="gray.600" textAlign="center">
-        {selectedQuantity !== 'discretionaryExpensesPct' &&
-          (dollarValueType === 'future'
-            ? 'Values are shown in future dollars.'
-            : "Values are shown in today's dollars.")}
-      </Text>
 
       <Text fontSize="sm" mt={2} color="gray.600" textAlign="center">
         This chart shows the median value and probability ranges for {getTitle().toLowerCase()}. The

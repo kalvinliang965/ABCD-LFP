@@ -21,7 +21,6 @@ interface StackedBarChartProps {
   };
   title?: string;
   loading?: boolean;
-  dollarValueType?: 'today' | 'future';
   aggregationType?: 'median' | 'average';
   onAggregationTypeChange?: (type: 'median' | 'average') => void;
   aggregationThreshold?: number;
@@ -61,7 +60,6 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
   data = { investments: [], income: [], expenses: [] },
   title = 'Financial Values Over Time',
   loading = false,
-  dollarValueType = 'today',
   aggregationType = 'median',
   onAggregationTypeChange = () => {},
   aggregationThreshold = 1000,
@@ -187,8 +185,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         if (!Array.isArray(params)) {
           const year = params.axisValue || params.name;
           return `Year: ${year}<br/>
-                  ${params.seriesName}: ${formatCurrency(params.value)}<br/>
-                  <em>Values in ${dollarValueType === 'today' ? "today's" : 'future'} dollars</em>`;
+                  ${params.seriesName}: ${formatCurrency(params.value)}`;
         }
 
         let tooltip = `Year: ${params[0].axisValue}<br/>`;
@@ -201,8 +198,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         });
 
         // Add total
-        tooltip += `<strong>Total: ${formatCurrency(total)}</strong><br/>`;
-        tooltip += `<em>Values in ${dollarValueType === 'today' ? "today's" : 'future'} dollars</em>`;
+        tooltip += `<strong>Total: ${formatCurrency(total)}</strong>`;
 
         return tooltip;
       },
@@ -227,7 +223,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
     },
     yAxis: {
       type: 'value',
-      name: dollarValueType === 'today' ? "Today's Dollars" : 'Future Dollars',
+      name: 'Dollar Value',
       nameLocation: 'middle',
       nameGap: 50,
       axisLabel: {
@@ -368,11 +364,6 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         showLoading={loading}
         key={`${activeTab}-${aggregationType}-${aggregationThreshold}`}
       />
-
-      <Text fontSize="lg" mt={2} color="gray.600" textAlign="center">
-        {dollarValueType === 'future' && 'Values are shown in future dollars.'}
-        {dollarValueType === 'today' && "Values are shown in today's dollars."}
-      </Text>
 
       <Text fontSize="sm" mt={2} color="gray.600" textAlign="center">
         {activeTab === 'investments' ? (

@@ -54,7 +54,6 @@ const SimulationResults: React.FC = () => {
   // New state variables for chart selection
   const [showChartSelection, setShowChartSelection] = useState(true);
   const [selectedCharts, setSelectedCharts] = useState<string[]>(['probabilityOfSuccess']);
-  const [dollarValueType, setDollarValueType] = useState<'today' | 'future'>('today');
 
   // New state variables for the stacked bar chart
   const [aggregationType, setAggregationType] = useState<'median' | 'average'>('median');
@@ -399,27 +398,6 @@ const SimulationResults: React.FC = () => {
               </SimpleGrid>
             </CheckboxGroup>
           </Box>
-
-          <Divider />
-
-          <Box width="100%">
-            <Text fontWeight="bold" fontSize="lg" mb={2}>
-              Dollar Value Display
-            </Text>
-            <Text fontSize="lg" color="gray.500" mb={3}>
-              Choose how dollar values should be displayed in the charts.
-            </Text>
-            <RadioGroup
-              onChange={val => setDollarValueType(val as 'today' | 'future')}
-              value={dollarValueType}
-              colorScheme="blue"
-            >
-              <Stack direction="row" spacing={5}>
-                <Radio value="today">Today's Dollars</Radio>
-                <Radio value="future">Future Dollars</Radio>
-              </Stack>
-            </RadioGroup>
-          </Box>
         </VStack>
 
         <Flex justify="flex-end">
@@ -447,13 +425,10 @@ const SimulationResults: React.FC = () => {
             <Text mb={4} fontSize="lg">
               This analysis shows the likelihood of meeting your financial goals over time based on
               the simulation results. A higher probability indicates a greater chance of success.
-              {dollarValueType === 'future' && ' Values are shown in future dollars.'}
-              {dollarValueType === 'today' && " Values are shown in today's dollars."}
             </Text>
 
             <ProbabilityOfSuccessChart
               data={simulationData?.probabilityOfSuccess}
-              dollarValueType={dollarValueType}
               loading={loading}
             />
           </Box>
@@ -473,7 +448,6 @@ const SimulationResults: React.FC = () => {
               years={simulationData?.medianOrAverageValues?.years}
               data={simulationData?.medianOrAverageValues?.data}
               loading={loading}
-              dollarValueType={dollarValueType}
               aggregationType={aggregationType}
               onAggregationTypeChange={setAggregationType}
               aggregationThreshold={aggregationThreshold}
@@ -495,7 +469,6 @@ const SimulationResults: React.FC = () => {
             <ShadedLineChart
               data={simulationData?.probabilityRanges}
               loading={loading}
-              dollarValueType={dollarValueType}
             />
           </Box>
         )}
