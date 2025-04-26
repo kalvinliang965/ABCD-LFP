@@ -23,9 +23,6 @@ export async function create_simulation_environment(
 
     let scenario: Scenario, federal_tax_service: FederalTaxService, state_tax_service: StateTaxService, rmd_table: Map<number, number>;
     try {
-        // initialize scenario object
-   
-
         scenario = await get_scenario_from_db(scenario_id);
 
         // initialize federal tax service

@@ -45,7 +45,7 @@ async function initialize_application() {
   // run demo code below
   
   // await fetch_and_parse_rmd();
-  // await simulation_engine_demo();
+  await simulation_engine_demo();
 }
 
 function start_server() {
