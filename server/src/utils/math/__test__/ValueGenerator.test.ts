@@ -10,7 +10,6 @@ import { Distribution } from "../../../core/domain/raw/common";
 
 // the prompt i gave is passing my ValueGenerator file to AI and ask them to write the test case
 
-// 枚举到字符串的转换函数
 const statisticTypeToString = (type: StatisticType): string => {
     return StatisticType[type].toLowerCase();
   };

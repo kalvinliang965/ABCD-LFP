@@ -22,6 +22,37 @@ import { create_event_manager, EventManager } from "../EventManager";
 import { Distribution, parse_distribution } from "../raw/common";
 import { simulation_logger } from "../../../utils/logger/logger";
 
+
+const REQUIRED_FIELDS = [
+  'name',
+  'maritalStatus',
+  'birthYears',
+  'financialGoal',
+  'residenceState',
+  'lifeExpectancy',
+  'investments', // cash
+  'investmentTypes', // cash
+];
+
+  // Optional: Set defualt value for them...
+  // 'inflationAssumption', // think
+  // 'afterTaxContributionLimit', // think
+
+  // if roth conversion opt is true, we have to check for roth converstion start and end
+  // 'RothConversionOpt',
+  // 'RothConversionStart',
+  // 'RothConversionEnd',
+
+// 可选字段列表
+const OPTIONAL_FIELDS = [
+  'eventSeries',  
+  'spendingStrategy',
+  'expenseWithdrawalStrategy',
+  'RMDStrategy',
+  'RothConversionStrategy'
+];
+
+
 function parse_birth_years(birthYears: Array<number>): Array<number> {
   if (birthYears.length > 2 || birthYears.length == 0) {
     throw new Error(`Invalid number of birth year ${birthYears}`);
