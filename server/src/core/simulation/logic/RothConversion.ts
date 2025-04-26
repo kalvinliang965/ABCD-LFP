@@ -1,12 +1,10 @@
 // src/core/simulation/RothConversion.ts
 import { SimulationState } from "../SimulationState";
 import { IncomeType, TaxStatus } from "../../Enums";
-import { AccountMap } from "../../domain/AccountManager";
 import { simulation_logger } from "../../../utils/logger/logger";
 import { transfer_investment_value } from "./common";
 
 function process_roth_conversion(simulation_state: SimulationState) {
-
     try {
         if (!simulation_state.roth_conversion_opt) {
             simulation_logger.debug("roth conversion is not enabled");
@@ -30,16 +28,18 @@ function process_roth_conversion(simulation_state: SimulationState) {
         const transfer_amt = upper - (taxable_income - standard_deduction);
         // does not go into annual contribution for after tax
         if (transfer_amt > 0) {
-            transfer_investment_value(
+            const transferred = transfer_investment_value(
                 simulation_state.roth_conversion_strategy,
                 transfer_amt,
                 simulation_state.account_manager.pre_tax,
                 simulation_state.account_manager.after_tax
             );
-            simulation_state.user_tax_data.incr_cur_year_income(transfer_amt);
+            simulation_logger.info(`${transferred} is transferred from pre tax to after tax for roth conversion`);
+            simulation_state.user_tax_data.incr_cur_year_income(transferred);
         }
     } catch(error) {
-        throw error;
+        simulation_logger.error(`Failed to process roth conversion: ${error instanceof Error? error.stack: String(error)}`);
+        throw new Error(`Failed to process roth conversion: ${error instanceof Error? error.message: String(error)}`);
     }
 }
 

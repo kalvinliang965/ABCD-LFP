@@ -47,6 +47,7 @@ router.post("/", async (req: Request, res: Response) => {
   try {
     // Check if the user is authenticated
     const user = req.user as UserDocument;
+    console.log("req.user in yaml route: ", req.user);
     if (!user) {
       return res.status(401).json({
         success: false,
