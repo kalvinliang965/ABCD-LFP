@@ -27,13 +27,13 @@ describe("parse state tax", () => {
                 min: 0,
                 max: 50000,
                 rate: 0.1,
-                taxpayer_type: TaxFilingStatus.SINGLE,
+                taxpayer_type: TaxFilingStatus.INDIVIDUAL,
                 resident_state: StateType.NY,
             }, {
                 min: 50001,
                 max: Infinity,
                 rate: 0.2,
-                taxpayer_type: TaxFilingStatus.MARRIED,
+                taxpayer_type: TaxFilingStatus.COUPLE,
                 resident_state: StateType.NY,
             }
         ]);

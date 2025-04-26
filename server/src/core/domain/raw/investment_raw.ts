@@ -54,7 +54,7 @@ export const cash_investment_one: InvestmentRaw = create_investment_raw(
     "cash-one",
 );
 
-export const s_and_p_investment_one: InvestmentRaw = create_investment_raw(
+export const s_and_p_500_investment_non_retirement_one: InvestmentRaw = create_investment_raw(
     s_and_p_500_investment_type_one.name, 
     100000, 
     "non-retirement", 
@@ -68,14 +68,14 @@ export const tax_exempt_bonds_investment_one: InvestmentRaw = create_investment_
     "tax-exempt bonds"
 );
 
-export const s_and_p_investment_two: InvestmentRaw = create_investment_raw(
+export const s_and_p_500_investment_pre_tax_one: InvestmentRaw = create_investment_raw(
     s_and_p_500_investment_type_one.name,
     10000,
     "pre-tax",
     "S&P 500 pre-tax",
 );
 
-export const s_and_p_investment_three: InvestmentRaw = create_investment_raw(
+export const s_and_p_500_investment_after_tax_one: InvestmentRaw = create_investment_raw(
     s_and_p_500_investment_type_one.name,
     2000,
     "after-tax",

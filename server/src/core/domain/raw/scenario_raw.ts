@@ -5,9 +5,9 @@ import { InvestEventRaw } from "./event_raw/investment_event_raw";
 import { RebalanceEventRaw } from "./event_raw/rebalance_event_raw";
 import {
   cash_investment_one,
-  s_and_p_investment_one,
-  s_and_p_investment_three,
-  s_and_p_investment_two,
+  s_and_p_500_investment_non_retirement_one,
+  s_and_p_500_investment_after_tax_one,
+  s_and_p_500_investment_pre_tax_one,
   tax_exempt_bonds_investment_one,
 } from "./investment_raw";
 
@@ -75,10 +75,10 @@ export const scenario_one = create_scenario_raw(
   // investment id is a unique identifier.  without it, we would need to use a pair (investment type, tax status) to identify an investment.
   new Set<InvestmentRaw>([
     cash_investment_one,
-    s_and_p_investment_one,
+    s_and_p_500_investment_non_retirement_one,
     tax_exempt_bonds_investment_one,
-    s_and_p_investment_two,
-    s_and_p_investment_three,
+    s_and_p_500_investment_pre_tax_one,
+    s_and_p_500_investment_after_tax_one,
   ]),
 
   new Set<

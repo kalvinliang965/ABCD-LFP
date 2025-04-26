@@ -38,25 +38,25 @@ describe("Pay mandatory expense", () => {
                     max: 3000,
                     rate: 0.05,
                     income_type: IncomeType.TAXABLE_INCOME,
-                    taxpayer_type: TaxFilingStatus.SINGLE
+                    taxpayer_type: TaxFilingStatus.INDIVIDUAL
                 },{
                     min: 3001,
                     max: Infinity,
                     rate: 0.10,
                     income_type: IncomeType.TAXABLE_INCOME,
-                    taxpayer_type: TaxFilingStatus.SINGLE,
+                    taxpayer_type: TaxFilingStatus.INDIVIDUAL,
                 },{
                     min: 0,
                     max: 3000,
                     rate: 0.10,
                     income_type: IncomeType.TAXABLE_INCOME,
-                    taxpayer_type: TaxFilingStatus.MARRIED,
+                    taxpayer_type: TaxFilingStatus.COUPLE,
                 },{
                     min: 3001,
                     max: Infinity,
                     rate: 0.2,
                     income_type: IncomeType.TAXABLE_INCOME,
-                    taxpayer_type: TaxFilingStatus.MARRIED
+                    taxpayer_type: TaxFilingStatus.COUPLE
                 }
             ]);
         (get_capital_gains_brackets as jest.Mock)
@@ -66,25 +66,25 @@ describe("Pay mandatory expense", () => {
                     max: 3000,
                     rate: 0.05,
                     income_type: IncomeType.CAPITAL_GAINS,
-                    taxpayer_type: TaxFilingStatus.SINGLE
+                    taxpayer_type: TaxFilingStatus.INDIVIDUAL
                 },{
                     min: 3001,
                     max: Infinity,
                     rate: 0.10,
                     income_type: IncomeType.CAPITAL_GAINS,
-                    taxpayer_type: TaxFilingStatus.SINGLE,
+                    taxpayer_type: TaxFilingStatus.INDIVIDUAL,
                 },{
                     min: 0,
                     max: 3000,
                     rate: 0.10,
                     income_type: IncomeType.CAPITAL_GAINS,
-                    taxpayer_type: TaxFilingStatus.MARRIED,
+                    taxpayer_type: TaxFilingStatus.COUPLE,
                 },{
                     min: 3001,
                     max: Infinity,
                     rate: 0.20,
                     income_type: IncomeType.CAPITAL_GAINS,
-                    taxpayer_type: TaxFilingStatus.MARRIED
+                    taxpayer_type: TaxFilingStatus.COUPLE
                 }
             ]);
         (get_state_taxbrackets_by_state as jest.Mock)
@@ -93,25 +93,25 @@ describe("Pay mandatory expense", () => {
                     min: 0,
                     max: 8500,
                     rate: 0.04,
-                    taxpayer_type: TaxFilingStatus.SINGLE,
+                    taxpayer_type: TaxFilingStatus.INDIVIDUAL,
                     resident_state: StateType.NY,
                 },{
                     min: 8501,
                     max: 11700,
                     rate: 0.045,
-                    taxpayer_type: TaxFilingStatus.SINGLE,
+                    taxpayer_type: TaxFilingStatus.INDIVIDUAL,
                     resident_state: StateType.NY,
                 },{
                     min: 11700,
                     max: 13900,
                     rate: 0.0525,
-                    taxpayer_type: TaxFilingStatus.SINGLE,
+                    taxpayer_type: TaxFilingStatus.INDIVIDUAL,
                     resident_state: StateType.NY,
                 },{
                     min: 13901,
                     max: Infinity,
                     rate: 0.0585,
-                    taxpayer_type: TaxFilingStatus.SINGLE,
+                    taxpayer_type: TaxFilingStatus.INDIVIDUAL,
                     resident_state: StateType.NY,
                 }
             ]);
@@ -119,7 +119,7 @@ describe("Pay mandatory expense", () => {
             .mockResolvedValue(true);
 
         (get_standard_deduction as jest.Mock)
-        .mockResolvedValue([{ amount: 1000, taxpayer_type: TaxFilingStatus.SINGLE }, {amount: 2000, taxpayer_type: TaxFilingStatus.MARRIED}]);
+        .mockResolvedValue([{ amount: 1000, taxpayer_type: TaxFilingStatus.INDIVIDUAL }, {amount: 2000, taxpayer_type: TaxFilingStatus.COUPLE}]);
 
         // Create service instance
         const federal_service = await create_federal_tax_service();

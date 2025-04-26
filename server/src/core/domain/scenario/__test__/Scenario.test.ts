@@ -1,10 +1,10 @@
 import { create_scenario_raw, scenario_one } from "../../raw/scenario_raw";
 import {
   cash_investment_one,
-  s_and_p_investment_one,
+  s_and_p_500_investment_non_retirement_one,
   tax_exempt_bonds_investment_one,
-  s_and_p_investment_two,
-  s_and_p_investment_three,
+  s_and_p_500_investment_pre_tax_one,
+  s_and_p_500_investment_after_tax_one,
 } from "../../raw/investment_raw";
 import {
   streaming_services_expense_one,
@@ -14,8 +14,7 @@ import {
 import { my_investments_investment_one } from "../../raw/event_raw/investment_event_raw";
 import { rebalance_one } from "../../raw/event_raw/rebalance_event_raw";
 import { salary_income_event_one } from "../../raw/event_raw/income_event_raw";
-import { cash_investment_type_one, InvestmentTypeRaw } from "../../raw/investment_type_raw";
-import { InvestmentRaw } from "../../raw/investment_raw";
+import { cash_investment_type_one } from "../../raw/investment_type_raw";
 import { scenario_yaml_string, create_scenario_raw_yaml } from "../../../../services/ScenarioYamlParser";
 import { Distribution } from "../../raw/common";
 
@@ -113,10 +112,10 @@ describe("Scenario initialization test", () => {
       const investments = scenario_one.investments;
       expect(investments.size).toBe(5);
       expect(investments.has(cash_investment_one)).toBe(true);
-      expect(investments.has(s_and_p_investment_one)).toBe(true);
+      expect(investments.has(s_and_p_500_investment_non_retirement_one)).toBe(true);
       expect(investments.has(tax_exempt_bonds_investment_one)).toBe(true);
-      expect(investments.has(s_and_p_investment_two)).toBe(true);
-      expect(investments.has(s_and_p_investment_three)).toBe(true);
+      expect(investments.has(s_and_p_500_investment_pre_tax_one)).toBe(true);
+      expect(investments.has(s_and_p_500_investment_after_tax_one)).toBe(true);
     });
 
     test("should_verify_scenario_one_events", () => {

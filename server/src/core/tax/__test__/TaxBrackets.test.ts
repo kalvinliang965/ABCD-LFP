@@ -10,25 +10,25 @@ describe("TaxBrackets", () => {
     beforeEach(() => {
         base_bracket = create_tax_brackets();
         
-        base_bracket.add_bracket(0, 3000, 0.10, TaxFilingStatus.SINGLE);
-        base_bracket.add_bracket(0, 3000, 0.20, TaxFilingStatus.MARRIED);
+        base_bracket.add_bracket(0, 3000, 0.10, TaxFilingStatus.INDIVIDUAL);
+        base_bracket.add_bracket(0, 3000, 0.20, TaxFilingStatus.COUPLE);
         
-        base_bracket.add_bracket(3001, 7000, 0.13, TaxFilingStatus.SINGLE);
-        base_bracket.add_bracket(3001, 7000, 0.23, TaxFilingStatus.MARRIED);
+        base_bracket.add_bracket(3001, 7000, 0.13, TaxFilingStatus.INDIVIDUAL);
+        base_bracket.add_bracket(3001, 7000, 0.23, TaxFilingStatus.COUPLE);
 
-        base_bracket.add_bracket(7001, 10000, 0.23, TaxFilingStatus.SINGLE);
-        base_bracket.add_bracket(7001, 10000, 0.33, TaxFilingStatus.MARRIED);
+        base_bracket.add_bracket(7001, 10000, 0.23, TaxFilingStatus.INDIVIDUAL);
+        base_bracket.add_bracket(7001, 10000, 0.33, TaxFilingStatus.COUPLE);
 
-        base_bracket.add_bracket(10001, Infinity, 0.4, TaxFilingStatus.SINGLE);
-        base_bracket.add_bracket(10001, Infinity, 0.5, TaxFilingStatus.MARRIED);
+        base_bracket.add_bracket(10001, Infinity, 0.4, TaxFilingStatus.INDIVIDUAL);
+        base_bracket.add_bracket(10001, Infinity, 0.5, TaxFilingStatus.COUPLE);
     });
 
     describe("Basic functionalty", () => {
         it("should be able to get the highest rate in table", () => {
-            let bracket: TaxBracket | undefined = base_bracket.find_highest_bracket(TaxFilingStatus.SINGLE);
+            let bracket: TaxBracket | undefined = base_bracket.find_highest_bracket(TaxFilingStatus.INDIVIDUAL);
             expect(bracket).not.toBe(undefined);
             expect((bracket as TaxBracket).rate).toBe(0.4);
-            bracket = base_bracket.find_highest_bracket(TaxFilingStatus.MARRIED);
+            bracket = base_bracket.find_highest_bracket(TaxFilingStatus.COUPLE);
             expect(bracket).not.toBe(undefined);
             expect((bracket as TaxBracket).rate).toBe(0.5);
         })
@@ -36,43 +36,43 @@ describe("TaxBrackets", () => {
             const cloned_bracket = base_bracket.clone();
             cloned_bracket.adjust_for_inflation(0.05);
             let bracket;
-            bracket = cloned_bracket.find_bracket_with_rate(0.1, TaxFilingStatus.SINGLE);
+            bracket = cloned_bracket.find_bracket_with_rate(0.1, TaxFilingStatus.INDIVIDUAL);
             expect(bracket.min).toBeCloseTo(0);
             expect(bracket.max).toBeCloseTo(3150);
             expect(bracket.rate).toBeCloseTo(0.1);
 
-            bracket = cloned_bracket.find_bracket_with_rate(0.2, TaxFilingStatus.MARRIED);
+            bracket = cloned_bracket.find_bracket_with_rate(0.2, TaxFilingStatus.COUPLE);
             expect(bracket.min).toBeCloseTo(0);
             expect(bracket.max).toBeCloseTo(3150);
             expect(bracket.rate).toBeCloseTo(0.2);
 
 
-            bracket = cloned_bracket.find_bracket_with_rate(0.13, TaxFilingStatus.SINGLE);
+            bracket = cloned_bracket.find_bracket_with_rate(0.13, TaxFilingStatus.INDIVIDUAL);
             expect(bracket.min).toBeCloseTo(3151);
             expect(bracket.max).toBeCloseTo(7350);
             expect(bracket.rate).toBeCloseTo(0.13);
 
-            bracket = cloned_bracket.find_bracket_with_rate(0.23, TaxFilingStatus.MARRIED);
+            bracket = cloned_bracket.find_bracket_with_rate(0.23, TaxFilingStatus.COUPLE);
             expect(bracket.min).toBeCloseTo(3151);
             expect(bracket.max).toBeCloseTo(7350);
             expect(bracket.rate).toBeCloseTo(0.23);
 
-            bracket = cloned_bracket.find_bracket_with_rate(0.23, TaxFilingStatus.SINGLE);
+            bracket = cloned_bracket.find_bracket_with_rate(0.23, TaxFilingStatus.INDIVIDUAL);
             expect(bracket.min).toBeCloseTo(7351);
             expect(bracket.max).toBeCloseTo(10500);
             expect(bracket.rate).toBeCloseTo(0.23);
 
-            bracket = cloned_bracket.find_bracket_with_rate(0.33, TaxFilingStatus.MARRIED);
+            bracket = cloned_bracket.find_bracket_with_rate(0.33, TaxFilingStatus.COUPLE);
             expect(bracket.min).toBeCloseTo(7351);
             expect(bracket.max).toBeCloseTo(10500);
             expect(bracket.rate).toBeCloseTo(0.33);
             
-            bracket = cloned_bracket.find_bracket_with_rate(0.4, TaxFilingStatus.SINGLE);
+            bracket = cloned_bracket.find_bracket_with_rate(0.4, TaxFilingStatus.INDIVIDUAL);
             expect(bracket.min).toBeCloseTo(10501);
             expect(bracket.max).toBeCloseTo(Infinity);
             expect(bracket.rate).toBeCloseTo(0.4);
 
-            bracket = cloned_bracket.find_bracket_with_rate(0.5, TaxFilingStatus.MARRIED);
+            bracket = cloned_bracket.find_bracket_with_rate(0.5, TaxFilingStatus.COUPLE);
             expect(bracket.min).toBeCloseTo(10501);
             expect(bracket.max).toBeCloseTo(Infinity);
             expect(bracket.rate).toBeCloseTo(0.5);
@@ -80,74 +80,74 @@ describe("TaxBrackets", () => {
         it("should retrieve rate based on taxable income", () => {
             let rate;
             for (let i = 0; i < 3000; ++i) {
-                rate = base_bracket.find_rate(i, TaxFilingStatus.SINGLE);
+                rate = base_bracket.find_rate(i, TaxFilingStatus.INDIVIDUAL);
                 expect(rate).toBe(0.1);
-                rate = base_bracket.find_rate(i, TaxFilingStatus.MARRIED);
+                rate = base_bracket.find_rate(i, TaxFilingStatus.COUPLE);
                 expect(rate).toBe(0.2);
             }
             for (let i = 3001; i < 7000; ++i) {
-                rate = base_bracket.find_rate(i, TaxFilingStatus.SINGLE);
+                rate = base_bracket.find_rate(i, TaxFilingStatus.INDIVIDUAL);
                 expect(rate).toBe(0.13);
-                rate = base_bracket.find_rate(i, TaxFilingStatus.MARRIED);
+                rate = base_bracket.find_rate(i, TaxFilingStatus.COUPLE);
                 expect(rate).toBe(0.23);
             }
             for (let i = 7001; i < 10000; ++i) {
-                rate = base_bracket.find_rate(i, TaxFilingStatus.SINGLE);
+                rate = base_bracket.find_rate(i, TaxFilingStatus.INDIVIDUAL);
                 expect(rate).toBe(0.23);
-                rate = base_bracket.find_rate(i, TaxFilingStatus.MARRIED);
+                rate = base_bracket.find_rate(i, TaxFilingStatus.COUPLE);
                 expect(rate).toBe(0.33);
             }
             for (let i = 10001; i < 20000; ++i) {
-                rate = base_bracket.find_rate(i, TaxFilingStatus.SINGLE);
+                rate = base_bracket.find_rate(i, TaxFilingStatus.INDIVIDUAL);
                 expect(rate).toBe(0.4);
-                rate = base_bracket.find_rate(i, TaxFilingStatus.MARRIED);
+                rate = base_bracket.find_rate(i, TaxFilingStatus.COUPLE);
                 expect(rate).toBe(0.5);
             }
-            rate = base_bracket.find_rate(50000000, TaxFilingStatus.SINGLE);
+            rate = base_bracket.find_rate(50000000, TaxFilingStatus.INDIVIDUAL);
             expect(rate).toBe(0.4);
-            rate = base_bracket.find_rate(50000000, TaxFilingStatus.MARRIED);
+            rate = base_bracket.find_rate(50000000, TaxFilingStatus.COUPLE);
             expect(rate).toBe(0.5);
         });
 
         it("should retrieve bracket correctly based on rate", ()=>{
             let bracket;
-            bracket = base_bracket.find_bracket_with_rate(0.1, TaxFilingStatus.SINGLE);
+            bracket = base_bracket.find_bracket_with_rate(0.1, TaxFilingStatus.INDIVIDUAL);
             expect(bracket.min).toBe(0);
             expect(bracket.max).toBe(3000);
             expect(bracket.rate).toBe(0.1);
 
-            bracket = base_bracket.find_bracket_with_rate(0.2, TaxFilingStatus.MARRIED);
+            bracket = base_bracket.find_bracket_with_rate(0.2, TaxFilingStatus.COUPLE);
             expect(bracket.min).toBe(0);
             expect(bracket.max).toBe(3000);
             expect(bracket.rate).toBe(0.2);
 
 
-            bracket = base_bracket.find_bracket_with_rate(0.13, TaxFilingStatus.SINGLE);
+            bracket = base_bracket.find_bracket_with_rate(0.13, TaxFilingStatus.INDIVIDUAL);
             expect(bracket.min).toBe(3001);
             expect(bracket.max).toBe(7000);
             expect(bracket.rate).toBe(0.13);
 
-            bracket = base_bracket.find_bracket_with_rate(0.23, TaxFilingStatus.MARRIED);
+            bracket = base_bracket.find_bracket_with_rate(0.23, TaxFilingStatus.COUPLE);
             expect(bracket.min).toBe(3001);
             expect(bracket.max).toBe(7000);
             expect(bracket.rate).toBe(0.23);
 
-            bracket = base_bracket.find_bracket_with_rate(0.23, TaxFilingStatus.SINGLE);
+            bracket = base_bracket.find_bracket_with_rate(0.23, TaxFilingStatus.INDIVIDUAL);
             expect(bracket.min).toBe(7001);
             expect(bracket.max).toBe(10000);
             expect(bracket.rate).toBe(0.23);
 
-            bracket = base_bracket.find_bracket_with_rate(0.33, TaxFilingStatus.MARRIED);
+            bracket = base_bracket.find_bracket_with_rate(0.33, TaxFilingStatus.COUPLE);
             expect(bracket.min).toBe(7001);
             expect(bracket.max).toBe(10000);
             expect(bracket.rate).toBe(0.33);
             
-            bracket = base_bracket.find_bracket_with_rate(0.4, TaxFilingStatus.SINGLE);
+            bracket = base_bracket.find_bracket_with_rate(0.4, TaxFilingStatus.INDIVIDUAL);
             expect(bracket.min).toBe(10001);
             expect(bracket.max).toBe(Infinity);
             expect(bracket.rate).toBe(0.4);
 
-            bracket = base_bracket.find_bracket_with_rate(0.5, TaxFilingStatus.MARRIED);
+            bracket = base_bracket.find_bracket_with_rate(0.5, TaxFilingStatus.COUPLE);
             expect(bracket.min).toBe(10001);
             expect(bracket.max).toBe(Infinity);
             expect(bracket.rate).toBe(0.5);
@@ -158,8 +158,8 @@ describe("TaxBrackets", () => {
             });
             for (let i = 0; i < 100; ++i) {
                 const target = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
-                base_bracket.find_rate(target, TaxFilingStatus.SINGLE);
-                base_bracket.find_rate(target, TaxFilingStatus.MARRIED);
+                base_bracket.find_rate(target, TaxFilingStatus.INDIVIDUAL);
+                base_bracket.find_rate(target, TaxFilingStatus.COUPLE);
             }
             expect(exitSpy).not.toHaveBeenCalled();
 
@@ -169,8 +169,8 @@ describe("TaxBrackets", () => {
                 throw new Error(`process.exit(${code})`);
             });
             try {
-                base_bracket.find_bracket_with_rate(0.663, TaxFilingStatus.SINGLE);
-                base_bracket.find_bracket_with_rate(0.663, TaxFilingStatus.MARRIED);
+                base_bracket.find_bracket_with_rate(0.663, TaxFilingStatus.INDIVIDUAL);
+                base_bracket.find_bracket_with_rate(0.663, TaxFilingStatus.COUPLE);
             }catch(error){
                 expect(error).toBeInstanceOf(Error);
                 if (error instanceof Error) {
@@ -203,17 +203,17 @@ describe("TaxBrackets", () => {
                 expect(cloned_bracket.max).toBe(Math.round(bracket.max * 1.02));
                 expect(cloned_bracket.rate).toBe(bracket.rate);
             }
-            test(0.1, TaxFilingStatus.SINGLE);
-            test(0.2, TaxFilingStatus.MARRIED);
+            test(0.1, TaxFilingStatus.INDIVIDUAL);
+            test(0.2, TaxFilingStatus.COUPLE);
 
-            test(0.13, TaxFilingStatus.SINGLE);
-            test(0.23, TaxFilingStatus.MARRIED);
+            test(0.13, TaxFilingStatus.INDIVIDUAL);
+            test(0.23, TaxFilingStatus.COUPLE);
 
-            test(0.23, TaxFilingStatus.SINGLE);
-            test(0.33, TaxFilingStatus.MARRIED);
+            test(0.23, TaxFilingStatus.INDIVIDUAL);
+            test(0.33, TaxFilingStatus.COUPLE);
 
-            test(0.4, TaxFilingStatus.SINGLE);
-            test(0.5, TaxFilingStatus.MARRIED);
+            test(0.4, TaxFilingStatus.INDIVIDUAL);
+            test(0.5, TaxFilingStatus.COUPLE);
             
         });
     })
