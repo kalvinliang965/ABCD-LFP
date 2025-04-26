@@ -1,7 +1,7 @@
 import { SimulationState } from "./SimulationState"
 
 // edit: I dont think financial goal is needed here
-interface YearResult {
+export interface YearResult {
 
     // Here are the one haifeng ask for
     year: number;
