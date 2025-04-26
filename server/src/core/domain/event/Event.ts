@@ -70,9 +70,9 @@ function parse_expected_annual_change(
   function parse_change_amt__or_pct(): ChangeType {
     switch (changeAmtOrPct) {
       case "amount":
-        return ChangeType.FIXED;
+        return ChangeType.AMOUNT;
       case "percent":
-        return ChangeType.PERCENTAGE;
+        return ChangeType.PERCENT;
       default:
         throw new Error("Invalid changeAmtOrPct");
     }

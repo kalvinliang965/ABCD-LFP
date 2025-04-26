@@ -33,14 +33,14 @@ export function parse_income_type(type: string) {
 }
 
 export enum DistributionType {
-    NORMAL = "NORMAL",
-    UNIFORM = "UNIFORM",
-    FIXED = "FIXED",
+    NORMAL = "normal",
+    UNIFORM = "uniform",
+    FIXED = "fixed",
 }
 
 export enum ChangeType {
-    FIXED = "FIXED_AMOUNT",
-    PERCENTAGE = "PERCENTAGE",
+    AMOUNT = "amount",
+    PERCENT = "percent",
 }
 
 export enum StatisticType {
@@ -71,9 +71,9 @@ export function parse_state_type(state: string) {
 }
 
 export enum TaxStatus {
-    NON_RETIREMENT = "NON_RETIREMENT",
-    PRE_TAX = "PRE_TAX",
-    AFTER_TAX = "AFTER_TAX",
+    NON_RETIREMENT = "non-retirement",
+    PRE_TAX = "pre-tax",
+    AFTER_TAX = "after-tax",
 }
 
 

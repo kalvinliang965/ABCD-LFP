@@ -28,9 +28,9 @@ export default function update_investment(simulation_state: SimulationState) {
         }
         const return_change = investment_type.get_annual_return();
         simulation_logger.debug(`annual return change ${return_change}, change type: ${investment_type.return_change_type}`);
-        if (investment_type.return_change_type === ChangeType.PERCENTAGE) {
+        if (investment_type.return_change_type === ChangeType.PERCENT) {
             annual_gains = investment.get_value() *  return_change;
-        } else if (investment_type.return_change_type === ChangeType.FIXED) {
+        } else if (investment_type.return_change_type === ChangeType.AMOUNT) {
             annual_gains = return_change;
         } else {
             throw Error(`Failed to update investment due to invalid change type ${investment_type.return_change_type}`)
@@ -41,9 +41,9 @@ export default function update_investment(simulation_state: SimulationState) {
         let annual_income = 0
         const income_change = investment_type.get_annual_income();
         simulation_logger.debug(`annual income change ${income_change}, change type: ${investment_type.income_change_type}`);
-        if (investment_type.income_change_type === ChangeType.PERCENTAGE) {
+        if (investment_type.income_change_type === ChangeType.PERCENT) {
             annual_income =  investment.get_value() * income_change;
-        } else if (investment_type.income_change_type === ChangeType.FIXED) {
+        } else if (investment_type.income_change_type === ChangeType.AMOUNT) {
             annual_income = income_change;
         } else {
             throw Error(`Failed to update investment due to invalid change type ${investment_type.return_change_type}`)

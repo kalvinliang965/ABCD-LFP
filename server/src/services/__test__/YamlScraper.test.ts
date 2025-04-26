@@ -1,6 +1,6 @@
 import { IncomeType, StateType, TaxFilingStatus } from "../../core/Enums";
 import { create_scenario_raw_yaml, scenario_yaml_string } from "../ScenarioYamlParser";
-import { create_state_tax__raw_yaml } from "../StateYamlParser";
+import { create_state_tax_raw_yaml } from "../StateYamlParser";
 
 describe("parse state tax", () => {
 
@@ -20,7 +20,7 @@ describe("parse state tax", () => {
     `;
 
     it("should parse valid yaml info", () => {
-        const result = create_state_tax__raw_yaml(validYAML);
+        const result = create_state_tax_raw_yaml(validYAML);
         console.log(result); 
         expect(result).toEqual([
             {
@@ -42,7 +42,7 @@ describe("parse state tax", () => {
 
     describe("Should reject invalid data", () => {
         const test_error_case = (yaml: string) => {
-            expect(() => create_state_tax__raw_yaml(yaml)).toThrowError();
+            expect(() => create_state_tax_raw_yaml(yaml)).toThrowError();
         };
 
         it("should reject file with missing taxbrackets as entries point", () => {
