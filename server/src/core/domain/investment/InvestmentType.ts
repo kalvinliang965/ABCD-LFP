@@ -72,7 +72,7 @@ function create_investment_type(raw_data: InvestmentTypeRaw): InvestmentType {
       _expected_annual_return: expected_annual_return,
     }
   } catch(error) {
-    throw new Error(`Failed to initialize InvestmentType ${error instanceof Error? error.message: error}`);
+    throw new Error(`Failed to initialize InvestmentType: ${error instanceof Error? error.message: error}`);
   }
 }
 

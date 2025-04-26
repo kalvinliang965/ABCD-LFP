@@ -4,7 +4,7 @@ import { create_scenario, Scenario } from "../../core/domain/scenario/Scenario";
 import { create_scenario_raw } from "../../core/domain/raw/scenario_raw";
 import { IScenario } from "../models/Scenario";
 
-export function convert_db_to_scenario(scenario_from_db: IScenario) {
+export function convert_db_to_scenario_raw(scenario_from_db: IScenario) {
     const scenario_raw = create_scenario_raw(
         scenario_from_db.name,
         scenario_from_db.maritalStatus,
@@ -40,7 +40,7 @@ export async function get_scenario_from_db(scenario_id: string): Promise<Scenari
             });
             throw new Error("scenario not found");
         }
-        const scenario_raw = convert_db_to_scenario(scenario_from_db);
+        const scenario_raw = convert_db_to_scenario_raw(scenario_from_db);
         simulation_logger.info("Sucessfully converted to scenario raw");
         const scenario = create_scenario(scenario_raw);
         simulation_logger.info("Successfully converted to scenario");

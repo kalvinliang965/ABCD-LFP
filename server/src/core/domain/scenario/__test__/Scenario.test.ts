@@ -17,6 +17,7 @@ import { salary_income_event_one } from "../../raw/event_raw/income_event_raw";
 import { cash_investment_type_one, InvestmentTypeRaw } from "../../raw/investment_type_raw";
 import { InvestmentRaw } from "../../raw/investment_raw";
 import { scenario_yaml_string, create_scenario_raw_yaml } from "../../../../services/ScenarioYamlParser";
+import { Distribution } from "../../raw/common";
 
 describe("Scenario initialization test", () => {
   describe("create_scenario_raw function test", () => {
@@ -25,19 +26,17 @@ describe("Scenario initialization test", () => {
       const name = "Test Scenario";
       const martialStatus = "individual";
       const birthYears = [1990];
-      const lifeExpectancy = [
-        new Map<string, any>([
-          ["type", "fixed"],
-          ["value", 85],
-        ]),
-      ];
+      const lifeExpectancy: Array<Distribution> = [{
+          type: "fixed",
+          value: 85,
+      }];
       const investmentTypes = new Set([cash_investment_type_one])
       const investments = new Set([cash_investment_one]);
       const eventSeries = new Set([salary_income_event_one, food_expense_one]);
-      const inflationAssumption = new Map<string, any>([
-        ["type", "fixed"],
-        ["value", 0.02],
-      ]);
+      const inflationAssumption: Distribution = { 
+        type: "fixed",
+        value: 0.02,
+      };
       const afterTaxContributionLimit = 5000;
       const spendingStrategy = ["food"];
       const expenseWithdrawalStrategy = ["cash"];
@@ -138,20 +137,20 @@ describe("Scenario initialization test", () => {
       expect(lifeExpectancy.length).toBe(2);
 
       const firstDistribution = lifeExpectancy[0];
-      expect(firstDistribution.get("type")).toBe("fixed");
-      expect(firstDistribution.get("value")).toBe(80);
+      expect(firstDistribution.type).toBe("fixed");
+      expect(firstDistribution.value).toBe(80);
 
       const secondDistribution = lifeExpectancy[1];
-      expect(secondDistribution.get("type")).toBe("normal");
-      expect(secondDistribution.get("mean")).toBe(82);
-      expect(secondDistribution.get("stdev")).toBe(3);
+      expect(secondDistribution.type).toBe("normal");
+      expect(secondDistribution.mean).toBe(82);
+      expect(secondDistribution.stdev).toBe(3);
     });
 
     test("should_verify_scenario_one_inflation_assumption", () => {
       // Assert
       const inflation = scenario_one.inflationAssumption;
-      expect(inflation.get("type")).toBe("fixed");
-      expect(inflation.get("value")).toBe(0.03);
+      expect(inflation.type).toBe("fixed");
+      expect(inflation.value).toBe(0.03);
     });
 
     test("should_verify_scenario_one_strategies", () => {
@@ -185,11 +184,11 @@ describe("Scenario initialization test", () => {
 
       // 验证生命预期
       expect(scenarioRaw.lifeExpectancy.length).toBe(2);
-      expect(scenarioRaw.lifeExpectancy[0].get("type")).toBe("fixed");
-      expect(scenarioRaw.lifeExpectancy[0].get("value")).toBe(80);
-      expect(scenarioRaw.lifeExpectancy[1].get("type")).toBe("normal");
-      expect(scenarioRaw.lifeExpectancy[1].get("mean")).toBe(82);
-      expect(scenarioRaw.lifeExpectancy[1].get("stdev")).toBe(3);
+      expect(scenarioRaw.lifeExpectancy[0].type).toBe("fixed");
+      expect(scenarioRaw.lifeExpectancy[0].value).toBe(80);
+      expect(scenarioRaw.lifeExpectancy[1].type).toBe("normal");
+      expect(scenarioRaw.lifeExpectancy[1].mean).toBe(82);
+      expect(scenarioRaw.lifeExpectancy[1].stdev).toBe(3);
 
       // 验证投资集合
       expect(scenarioRaw.investments.size).toBe(5);
@@ -199,8 +198,8 @@ describe("Scenario initialization test", () => {
 
       // 验证通胀假设
       const inflation = scenarioRaw.inflationAssumption;
-      expect(inflation.get("type")).toBe("fixed");
-      expect(inflation.get("value")).toBe(0.03);
+      expect(inflation.type).toBe("fixed");
+      expect(inflation.value).toBe(0.03);
 
       // 验证其他参数
       expect(scenarioRaw.afterTaxContributionLimit).toBe(7000);

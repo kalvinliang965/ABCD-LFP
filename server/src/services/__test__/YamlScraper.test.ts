@@ -222,19 +222,19 @@ describe("parse scenario yaml", () => {
     expect(scenarioRaw.birthYears).toEqual([1985, 1987]);
     
     expect(scenarioRaw.lifeExpectancy.length).toBe(2);
-    expect(scenarioRaw.lifeExpectancy[0].get("type")).toBe("fixed");
-    expect(scenarioRaw.lifeExpectancy[0].get("value")).toBe(80);
-    expect(scenarioRaw.lifeExpectancy[1].get("type")).toBe("normal");
-    expect(scenarioRaw.lifeExpectancy[1].get("mean")).toBe(82);
-    expect(scenarioRaw.lifeExpectancy[1].get("stdev")).toBe(3);
+    expect(scenarioRaw.lifeExpectancy[0].type).toBe("fixed");
+    expect(scenarioRaw.lifeExpectancy[0].value).toBe(80);
+    expect(scenarioRaw.lifeExpectancy[1].type).toBe("normal");
+    expect(scenarioRaw.lifeExpectancy[1].mean).toBe(82);
+    expect(scenarioRaw.lifeExpectancy[1].stdev).toBe(3);
 
     expect(scenarioRaw.investments.size).toBe(5);
 
     expect(scenarioRaw.eventSeries.size).toBe(6);
 
     const inflation = scenarioRaw.inflationAssumption;
-    expect(inflation.get("type")).toBe("fixed");
-    expect(inflation.get("value")).toBe(0.03);
+    expect(inflation.type).toBe("fixed");
+    expect(inflation.value).toBe(0.03);
 
     expect(scenarioRaw.afterTaxContributionLimit).toBe(7000);
     expect(scenarioRaw.spendingStrategy).toEqual([

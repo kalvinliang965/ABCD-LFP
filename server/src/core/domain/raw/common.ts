@@ -5,23 +5,34 @@ import { simulation_logger } from "../../../utils/logger/logger";
 import { ValueGenerator } from "../../../utils/math/ValueGenerator";
 
 export type Distribution = {
-  type: 'fixed' | 'normal' | 'uniform';
-  value?: number;
-  mean?: number;
-  stdev?: number;
-  lower?: number;
-  upper?: number;
-};
+      type: 'fixed' | "normal" | "uniform";
+      value?: number;  // 改为必填
+      mean?: number;   // 改为必填
+      stdev?: number;  // 改为必填
+      lower?: number;  // 改为必填
+      upper?: number;  // 改为必填
+}
 
 export type StartCondition = {
-  type: 'fixed' | 'startWith' | 'startAfter' | 'uniform';
-  value?: number;
-  eventSeries?: string;
-  lower?: number;
-  upper?: number;
-};
+    type: 'startWith' | 'startAfter' | "fixed" | "normal" | "uniform";
+    eventSeries?: string;  // 改为必填
+    value?: number;  // 改为必填
+    mean?: number;   // 改为必填
+    stdev?: number;  // 改为必填
+    lower?: number;  // 改为必填
+    upper?: number;  // 改为必填
+}
 
 
+export function parse_start_condition(
+    start: StartCondition
+): ValueGenerator{
+    if (start.type === "startWith" || start.type === "startAfter") {
+        throw new Error(`Cannot resolve start condition of ${start.type}`);
+    }
+
+    return parse_distribution(start as Distribution);
+}
 
 export function parse_distribution(
   distribution: Distribution 
@@ -31,8 +42,8 @@ export function parse_distribution(
       case "fixed":
         const value = distribution.value;
         if (value === undefined || value === null) {
-          simulation_logger.error("Inflation assumption has type fixed without value")
-          throw new Error(`Inflation assumption has type fixed without value`);
+          simulation_logger.error("distribution has type fixed without value")
+          throw new Error(`distribution has type fixed without value`);
         }
         return create_value_generator(
           DistributionType.FIXED,
@@ -42,13 +53,13 @@ export function parse_distribution(
 
         const mean = distribution.mean;
         if (mean === undefined || mean === null) {
-          simulation_logger.error("Inflation assumption has type normal without mean")
-          throw new Error(`Inflation assumption has type fixed without mean`);
+          simulation_logger.error("distribution has type normal without mean")
+          throw new Error(`distribution has type fixed without mean`);
         }
         const stdev = distribution.stdev;
         if (stdev === undefined || stdev === null) {
-          simulation_logger.error("Inflation assumption has type normal without stdev")
-          throw new Error(`Inflation assumption has type fixed without stdev`);
+          simulation_logger.error("distribution has type normal without stdev")
+          throw new Error(`distribution has type fixed without stdev`);
         }
         return create_value_generator(
           DistributionType.NORMAL,
@@ -60,13 +71,13 @@ export function parse_distribution(
       case "uniform":
         const lower = distribution.lower;
         if (lower === undefined || lower === null) {
-          simulation_logger.error("Inflation assumption has type uniform without lower")
-          throw new Error(`Inflation assumption has type fixed without lower`);
+          simulation_logger.error("distribution has type uniform without lower")
+          throw new Error(`distribution has type fixed without lower`);
         }
         const upper = distribution.upper;
         if (upper === undefined || upper === null) {
-          simulation_logger.error("Inflation assumption has type normal without upper");
-          throw new Error(`Inflation assumption has type fixed without upper`);
+          simulation_logger.error("distribution has type normal without upper");
+          throw new Error(`distribution has type fixed without upper`);
         }
         return create_value_generator(
           DistributionType.UNIFORM,
@@ -77,12 +88,12 @@ export function parse_distribution(
         );
       default:
         throw new Error(
-          `inflation assumption type is invalid ${distribution}`
+          `distribution type is invalid ${distribution}`
         );
     }
   } catch (error) {
     throw new Error(
-      `Failed to parse inflation assumption ${distribution}`
+      `Failed to parse inflation assumption ${error instanceof Error? error.message: String(error)}`
     );
   }
 }
