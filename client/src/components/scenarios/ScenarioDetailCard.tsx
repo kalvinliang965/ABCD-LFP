@@ -22,7 +22,7 @@ import {
   IconButton,
   useToast,
 } from '@chakra-ui/react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   FaCalendarAlt,
   FaMapMarkerAlt,
@@ -106,19 +106,27 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
   const headerBg = useColorModeValue('blue.500', 'blue.600');
   const [stateTaxExists, set_state_tax_exists] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    const check_tax_data = async () => {
-      try {
-        const exists = await check_state_tax_exists(scenario.residenceState as StateType);
-        set_state_tax_exists(exists);
-      } catch (error) {
-        console.error('Error checking state tax data:', error);
-        set_state_tax_exists(false);
-      }
-    };
-
-    check_tax_data();
+  // AI-generated code
+  // Memoize the check_tax_data function to prevent unnecessary re-renders
+  const check_tax_data = useCallback(async () => {
+    try {
+      const exists = await check_state_tax_exists(scenario.residenceState as StateType);
+      set_state_tax_exists(exists);
+    } catch (error) {
+      console.error('Error checking state tax data:', error);
+      set_state_tax_exists(false);
+    }
   }, [scenario.residenceState]);
+
+  useEffect(() => {
+    check_tax_data();
+    
+    window.addEventListener('tax-data-updated', check_tax_data);
+    
+    return () => {
+      window.removeEventListener('tax-data-updated', check_tax_data);
+    };
+  }, [scenario.residenceState, check_tax_data]);
 
   const handle_download_yaml = () => {
     try {

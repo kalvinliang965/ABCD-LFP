@@ -19,11 +19,12 @@ import {
   Heading,
   Card,
   CardBody,
+  IconButton,
 } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 import React, { useState, useRef } from 'react';
-import { FaUpload } from 'react-icons/fa';
-import { FileUp, CheckCircle2 } from 'lucide-react';
+import { FaUpload, FaTrash } from 'react-icons/fa';
+import { FileUp, CheckCircle2, X } from 'lucide-react';
 import { StateType } from '../../types/Enum';
 import stateTaxYAMLService from '../../services/stateTaxYaml';
 import { create_state_tax_raw_yaml } from '../../utils/StateYamlParser';
@@ -132,7 +133,9 @@ const ImportStateTaxYaml: React.FC<ImportStateTaxYamlProps> = ({
       reader.onload = async e => {
         const content = e.target?.result as string;
         try {
-          const parsed_content = create_state_tax_raw_yaml(content);
+          // AI-generated code
+          // Pass the expected state to validate state in YAML matches scenario state
+          const parsed_content = create_state_tax_raw_yaml(content, state);
           console.log('parsed_content:', parsed_content);
           console.log('type of parsed_content:', typeof parsed_content);
           try {
@@ -145,6 +148,10 @@ const ImportStateTaxYaml: React.FC<ImportStateTaxYamlProps> = ({
               duration: 5000,
               isClosable: true,
             });
+
+            // AI-generated code
+            // Dispatch an event to notify other components about tax data update
+            window.dispatchEvent(new CustomEvent('tax-data-updated'));
 
             // Notify parent component of successful import
             onImportSuccess();
@@ -202,6 +209,15 @@ const ImportStateTaxYaml: React.FC<ImportStateTaxYamlProps> = ({
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+    }
+  };
+
+  // AI-generated code
+  // Handle removing/resetting the selected file
+  const handle_reset_file = () => {
+    set_tax_file(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -301,6 +317,14 @@ const ImportStateTaxYaml: React.FC<ImportStateTaxYamlProps> = ({
                   </Text>
                   <Text fontSize="sm">{tax_file.name}</Text>
                 </Box>
+                <IconButton
+                  aria-label="Remove file"
+                  icon={<Icon as={X} />}
+                  size="sm"
+                  colorScheme="red"
+                  variant="ghost"
+                  onClick={handle_reset_file}
+                />
               </Flex>
             </MotionBox>
           )}
@@ -426,6 +450,14 @@ const ImportStateTaxYaml: React.FC<ImportStateTaxYamlProps> = ({
                 </Text>
                 <Text fontSize="sm">{tax_file.name}</Text>
               </Box>
+              <IconButton
+                aria-label="Remove file"
+                icon={<Icon as={X} />}
+                size="sm"
+                colorScheme="red"
+                variant="ghost"
+                onClick={handle_reset_file}
+              />
             </Flex>
           </MotionBox>
         )}
