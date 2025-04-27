@@ -8,6 +8,7 @@ import scenarioRoutes from "./scenarioRoutes";
 import investmentTypeRoutes from "./InvestmentType.routes";
 import simulationRoutes from "./simulationRoutes";
 import taxRoutes from "./taxRoutes";
+import stateTaxYAMLRoutes from "./stateTaxYAMLRoutes";
 
 export function initialize_route(app: Application) {
   // Register routes
@@ -21,6 +22,7 @@ export function initialize_route(app: Application) {
   router.use("/api/tax", taxRoutes);
   router.use("/auth", authRoutes);
   router.use("/api/simulations", simulationRoutes);
+  router.use("/api/state_tax_yaml", stateTaxYAMLRoutes);
   // Basic health check route
   router.get("/", (req, res) => {
     res.json({ status: "ok", message: "Server is running" });

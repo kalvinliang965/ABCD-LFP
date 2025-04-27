@@ -49,7 +49,7 @@ import { ScenarioDetailCard } from '../scenarios';
 import { check_state_tax_exists } from '../../services/taxService';
 import { StateType } from '../../types/Enum';
 import stateTaxYAMLService from '../../services/stateTaxYaml';
-
+import { create_state_tax_raw_yaml } from '../../utils/StateYamlParser';
 interface RunSimulationModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -313,10 +313,10 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
       const reader = new FileReader();
       reader.onload = async e => {
         const content = e.target?.result as string;
-        console.log('content:', content);
-        console.log('Type of content:', typeof content);
+        const parsed_content = create_state_tax_raw_yaml(content);
+        console.log('parsed_content:', parsed_content);
         try {
-          const savedTaxData = await stateTaxYAMLService.create(content);
+          const savedTaxData = await stateTaxYAMLService.create(parsed_content);
 
           toast({
             title: 'Tax Data Imported',

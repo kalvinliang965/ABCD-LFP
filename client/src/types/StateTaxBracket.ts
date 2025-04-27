@@ -10,7 +10,7 @@ export interface StateTaxBracket {
   min: number;
   max: number;
   rate: number;
-  taxpayer_type: TaxFilingStatus.SINGLE | TaxFilingStatus.MARRIED;
+  taxpayer_type: TaxFilingStatus.INDIVIDUAL | TaxFilingStatus.COUPLE;
   resident_state: StateType.CT | StateType.NJ | StateType.NY;
 }
 

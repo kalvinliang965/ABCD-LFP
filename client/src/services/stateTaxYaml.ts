@@ -14,7 +14,7 @@ const axios_instance = axios.create({
   });
 
 export const stateTaxYAMLService = {
-    create: async (yaml: string): Promise<StateTaxBracket> => {
+    create: async (yaml: Array<StateTaxBracket>): Promise<StateTaxBracket> => {
       try {
         console.log('you are in STATE TAX YAML scenario api');
         // Using the authenticated axios instance to send the YAML content
