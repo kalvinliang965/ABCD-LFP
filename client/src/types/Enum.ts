@@ -1,8 +1,3 @@
-export enum TaxFilingStatus {
-  SINGLE = 'single',
-  MARRIED = 'married',
-}
-
 export enum DistributionType {
   NORMAL = 'normal',
   UNIFORM = 'uniform',
@@ -37,4 +32,9 @@ export enum TaxStatus {
   NON_RETIREMENT = 'non-retirement',
   PRE_TAX = 'pre-tax',
   AFTER_TAX = 'after-tax',
+}
+
+export enum TaxFilingStatus {
+  INDIVIDUAL = 'individual',
+  COUPLE = 'couple',
 }
