@@ -293,7 +293,10 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
           <Divider mb={2} />
           <Flex justify="space-between" align="center" p={3}>
             <HStack spacing={3}>
-              {scenario.investments.size > 0 && (
+              {((scenario.investments as any) && (
+                (scenario.investments instanceof Set && scenario.investments.size > 0) || 
+                (Array.isArray(scenario.investments) && (scenario.investments as any[]).length > 0)
+              )) && (
                 <Popover placement="top" trigger="hover">
                   <PopoverTrigger>
                     <IconButton
@@ -310,14 +313,21 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
                     <PopoverHeader fontWeight="bold">Investments</PopoverHeader>
                     <PopoverBody>
                       <Text fontSize="sm">
-                        {scenario.investments.size} investment types configured
+                        {scenario.investments instanceof Set 
+                          ? scenario.investments.size 
+                          : Array.isArray(scenario.investments) 
+                            ? (scenario.investments as any[]).length 
+                            : 0} investment types configured
                       </Text>
                     </PopoverBody>
                   </PopoverContent>
                 </Popover>
               )}
 
-              {scenario.eventSeries.size > 0 && (
+              {((scenario.eventSeries as any) && (
+                (scenario.eventSeries instanceof Set && scenario.eventSeries.size > 0) || 
+                (Array.isArray(scenario.eventSeries) && (scenario.eventSeries as any[]).length > 0)
+              )) && (
                 <Popover placement="top" trigger="hover">
                   <PopoverTrigger>
                     <IconButton
@@ -333,7 +343,13 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
                     <PopoverCloseButton />
                     <PopoverHeader fontWeight="bold">Events</PopoverHeader>
                     <PopoverBody>
-                      <Text fontSize="sm">{scenario.eventSeries.size} events configured</Text>
+                      <Text fontSize="sm">
+                        {scenario.eventSeries instanceof Set 
+                          ? scenario.eventSeries.size 
+                          : Array.isArray(scenario.eventSeries) 
+                            ? (scenario.eventSeries as any[]).length 
+                            : 0} events configured
+                      </Text>
                     </PopoverBody>
                   </PopoverContent>
                 </Popover>
