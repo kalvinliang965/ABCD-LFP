@@ -1,10 +1,12 @@
 
+import { ChangeType } from "../../../Enums";
+import { Distribution, StartCondition } from "../common";
 import { EventRaw } from "./event_raw";
 
 export type ExpenseEventRaw = EventRaw & {
   initialAmount: number;
-  changeAmtOrPct: string;
-  changeDistribution: Map<string, any>;
+  changeAmtOrPct: "amount" | "percent";
+  changeDistribution: Distribution;
   inflationAdjusted: boolean;
   userFraction: number;
   discretionary: boolean;
@@ -12,21 +14,21 @@ export type ExpenseEventRaw = EventRaw & {
 
 export const food_expense_one = create_expense_event_raw(
     "food",
-    new Map<string, any>([
-        ["type", "startWith"],
-        ["eventSeries", "salary"],
-    ]),
-    new Map<string, any>([
-        ["type", "fixed"],
-        ["value", 200],
-    ]),
+    {
+        type: "startWith",
+        eventSeries: "salary",
+    },
+    { 
+        type: "fixed",
+        value: 200,
+    },
     5000,
     "percent",
-    new Map<string, any>([
-        ["type", "normal"],
-        ["mean", 0.02],
-        ["stdev", 0.01],
-    ]),
+    {
+        type: "normal",
+        mean: 0.02,
+        stdev: 0.01,
+    },
     true,
     0.5,
     false,
@@ -34,20 +36,20 @@ export const food_expense_one = create_expense_event_raw(
 
 export const vacation_expense_one = create_expense_event_raw(
     "vacation",
-    new Map<string, any>([
-        ["type", "startWith"],
-        ["eventSeries", "salary"],
-    ]),
-    new Map<string, any>([
-        ["type", "fixed"],
-        ["value", 40],
-    ]),
+    {
+        type: "startWith",
+        eventSeries: "salary",
+    },
+    { 
+        type: "fixed",
+        value: 40,
+    },
     1200,
     "amount",
-    new Map<string, any>([
-        ["type", "fixed"],
-        ["value", 0],
-    ]),
+    {
+        type: "fixed",
+        value: 0,
+    },
     true,
     0.6,
     true,
@@ -57,20 +59,20 @@ export const vacation_expense_one = create_expense_event_raw(
 
 export const streaming_services_expense_one = create_expense_event_raw(
     "streaming services",
-    new Map<string, any>([
-        ["type", "startWith"],
-        ["eventSeries", "salary"],
-    ]),
-    new Map<string, any>([
-        ["type", "fixed"],
-        ["value", 40],
-    ]),
+    { 
+        type: "startWith",
+        eventSeries: "salary",
+    },
+    {
+        type: "fixed",
+        value: 40,
+    },
     500,
     "amount",
-    new Map<string, any>([
-        ["type", "fixed"],
-        ["value", 0],
-    ]),
+    {
+        type: "fixed",
+        value: 0,
+    },
     true,
     1.0,
     true,
@@ -78,11 +80,11 @@ export const streaming_services_expense_one = create_expense_event_raw(
 
 export function create_expense_event_raw(
     name: string,
-    start: Map<string, any>,
-    duration: Map<string, any>,
+    start: StartCondition,
+    duration: Distribution,
     initialAmount: number,
-    changeAmtOrPct: string,
-    changeDistribution: Map<string, any>,
+    changeAmtOrPct: "amount" | "percent",
+    changeDistribution: Distribution,
     inflationAdjusted: boolean,
     userFraction: number,
     discretionary: boolean,

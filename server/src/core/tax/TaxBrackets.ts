@@ -29,8 +29,8 @@ export function create_tax_brackets(): TaxBrackets {
     // single tax payer bracket
     // married filing jointly brakcet
     const brackets: Map<TaxFilingStatus, TaxBracketSet> = new Map ([
-        [TaxFilingStatus.SINGLE, []],
-        [TaxFilingStatus.MARRIED, []],
+        [TaxFilingStatus.INDIVIDUAL, []],
+        [TaxFilingStatus.COUPLE, []],
     ]);
     
     const add_rate = (
@@ -146,7 +146,7 @@ export function create_tax_brackets(): TaxBrackets {
 
     const to_string = (): string => {
         let res = "SINGLE\n";
-        const single_bracket_set = brackets.get(TaxFilingStatus.SINGLE);
+        const single_bracket_set = brackets.get(TaxFilingStatus.INDIVIDUAL);
         if (!single_bracket_set) {
             throw new Error("Missing single taxpayer bracket");
         }
@@ -154,7 +154,7 @@ export function create_tax_brackets(): TaxBrackets {
             res += `[${bracket.min}, ${bracket.max}]: ${bracket.rate}\n`
         }
         res += "\nMARRIED\n"
-        const married_bracket_set = brackets.get(TaxFilingStatus.MARRIED);
+        const married_bracket_set = brackets.get(TaxFilingStatus.COUPLE);
         if (!married_bracket_set) {
             throw new Error("Missing married filing jointly taxpayer bracket");
         }
@@ -209,7 +209,7 @@ export function create_tax_brackets(): TaxBrackets {
         clone: (): TaxBrackets => {
             const cloned = create_tax_brackets()
             
-            const valid_statuses = [TaxFilingStatus.SINGLE, TaxFilingStatus.MARRIED];
+            const valid_statuses = [TaxFilingStatus.INDIVIDUAL, TaxFilingStatus.COUPLE];
 
             valid_statuses.forEach(status => {
                 const bracketSet = brackets.get(status);

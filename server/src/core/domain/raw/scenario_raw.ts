@@ -5,9 +5,9 @@ import { InvestEventRaw } from "./event_raw/investment_event_raw";
 import { RebalanceEventRaw } from "./event_raw/rebalance_event_raw";
 import {
   cash_investment_one,
-  s_and_p_investment_one,
-  s_and_p_investment_three,
-  s_and_p_investment_two,
+  s_and_p_500_investment_non_retirement_one,
+  s_and_p_500_investment_after_tax_one,
+  s_and_p_500_investment_pre_tax_one,
   tax_exempt_bonds_investment_one,
 } from "./investment_raw";
 
@@ -21,6 +21,7 @@ import { my_investments_investment_one } from "./event_raw/investment_event_raw"
 import { rebalance_one } from "./event_raw/rebalance_event_raw";
 import { salary_income_event_one } from "./event_raw/income_event_raw";
 import { cash_investment_type_one, InvestmentTypeRaw, s_and_p_500_investment_type_one, tax_exempt_bonds_investment_type_one } from "./investment_type_raw";
+import { Distribution } from "./common";
 
 // a distribution is represented as a map with one of the following forms:
 // {type: fixed, value: <number>}
@@ -32,13 +33,13 @@ export interface ScenarioRaw {
   name: string;
   maritalStatus: 'couple' | 'individual';
   birthYears: Array<number>;
-  lifeExpectancy: Array<Map<string, any>>;
+  lifeExpectancy: Array<Distribution>;
   investmentTypes: Set<InvestmentTypeRaw>
   investments: Set<InvestmentRaw>;
   eventSeries: Set<
     IncomeEventRaw | ExpenseEventRaw | InvestEventRaw | RebalanceEventRaw
   >;
-  inflationAssumption: Map<string, number>;
+  inflationAssumption: Distribution;
   afterTaxContributionLimit: number;
   spendingStrategy: Array<string>;
   expenseWithdrawalStrategy: Array<string>;
@@ -56,15 +57,15 @@ export const scenario_one = create_scenario_raw(
   "couple", // couple or individual
   [1985, 1987], // a list with length 1 or 2, depending on maritalStatus. if len=2, the first entry is for the user; second entry, for the spouse.
   [
-    new Map<string, any>([
-      ["type", "fixed"],
-      ["value", 80],
-    ]),
-    new Map<string, any>([
-      ["type", "normal"],
-      ["mean", 82],
-      ["stdev", 3],
-    ]),
+    {
+      type: "fixed",
+      value: 80,
+    },
+    { 
+      type: "normal",
+      mean: 82,
+      stdev: 3,
+    },
   ], // a list with length 1 or 2, depending on maritalStatus.
   new Set<InvestmentTypeRaw>([
     cash_investment_type_one,
@@ -74,10 +75,10 @@ export const scenario_one = create_scenario_raw(
   // investment id is a unique identifier.  without it, we would need to use a pair (investment type, tax status) to identify an investment.
   new Set<InvestmentRaw>([
     cash_investment_one,
-    s_and_p_investment_one,
+    s_and_p_500_investment_non_retirement_one,
     tax_exempt_bonds_investment_one,
-    s_and_p_investment_two,
-    s_and_p_investment_three,
+    s_and_p_500_investment_pre_tax_one,
+    s_and_p_500_investment_after_tax_one,
   ]),
 
   new Set<
@@ -90,10 +91,10 @@ export const scenario_one = create_scenario_raw(
     my_investments_investment_one,
     rebalance_one,
   ]),
-  new Map<string, any>([
-    ["type", "fixed"],
-    ["value", 0.03],
-  ]),
+  {
+    type: "fixed",
+    value: 0.03,
+  },
   7000,
   ["vaction", "streaming services"],
   ["S&P 500 non-retirement", "tax-exempt bonds", "S&P 500 after-tax"], // list of investments, identified by id
@@ -110,13 +111,13 @@ export function create_scenario_raw(
   name: string,
   maritalStatus: 'couple' | 'individual',
   birthYears: Array<number>,
-  lifeExpectancy: Array<Map<string, any>>,
+  lifeExpectancy: Array<Distribution>,
   investmentTypes: Set<InvestmentTypeRaw>,
   investments: Set<InvestmentRaw>,
   eventSeries: Set<
     IncomeEventRaw | InvestEventRaw | ExpenseEventRaw | RebalanceEventRaw
   >,
-  inflationAssumption: Map<string, any>,
+  inflationAssumption: Distribution,
   afterTaxContributionLimit: number,
   spendingStrategy: Array<string>,
   expenseWithdrawalStrategy: Array<string>,

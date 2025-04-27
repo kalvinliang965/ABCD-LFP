@@ -6,7 +6,7 @@ export interface ITaxBracket extends Document {
     max: number;
     rate: number;
     income_type: IncomeType.CAPITAL_GAINS | IncomeType.TAXABLE_INCOME;
-    taxpayer_type: TaxFilingStatus.SINGLE | TaxFilingStatus.MARRIED;
+    taxpayer_type: TaxFilingStatus.INDIVIDUAL | TaxFilingStatus.COUPLE;
 }
 
 const TaxBracketSchema = new Schema<ITaxBracket>({
@@ -30,7 +30,7 @@ const TaxBracketSchema = new Schema<ITaxBracket>({
     taxpayer_type: {
         type: String,
         required: true,
-        enum: [TaxFilingStatus.SINGLE, TaxFilingStatus.MARRIED],
+        enum: [TaxFilingStatus.INDIVIDUAL, TaxFilingStatus.COUPLE],
     }
 });
 

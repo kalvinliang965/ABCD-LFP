@@ -29,7 +29,7 @@ export function create_standard_deductions(): StandardDeduction {
     }
     
     const to_string = (): string => {
-        let res = `SINGLE DEDUCTION: ${deductions.get(TaxFilingStatus.SINGLE)}\nMARRIED DEDUCTION: ${deductions.get(TaxFilingStatus.MARRIED)}\n`;
+        let res = `SINGLE DEDUCTION: ${deductions.get(TaxFilingStatus.INDIVIDUAL)}\nMARRIED DEDUCTION: ${deductions.get(TaxFilingStatus.COUPLE)}\n`;
         return res;
     }
 
@@ -54,7 +54,7 @@ export function create_standard_deductions(): StandardDeduction {
         find_deduction,
         clone: () => {
             const cloned = create_standard_deductions();
-            const all_statuses = [TaxFilingStatus.SINGLE, TaxFilingStatus.MARRIED];
+            const all_statuses = [TaxFilingStatus.INDIVIDUAL, TaxFilingStatus.COUPLE];
             all_statuses.forEach(status => {
                 const amount = deductions.get(status);
                 if (amount !== undefined) {

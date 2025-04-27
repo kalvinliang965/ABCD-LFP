@@ -17,41 +17,41 @@ describe('StateTaxService', () => {
         const mockBrackets = create_tax_brackets()
       
         beforeEach(() => {
-            mockBrackets.add_bracket(0, 50000, 0.1, TaxFilingStatus.SINGLE)
-            mockBrackets.add_bracket(50001, Infinity, 0.2, TaxFilingStatus.SINGLE)
+            mockBrackets.add_bracket(0, 50000, 0.1, TaxFilingStatus.INDIVIDUAL)
+            mockBrackets.add_bracket(50001, Infinity, 0.2, TaxFilingStatus.INDIVIDUAL)
             service = create_state_tax_service_wo(mockBrackets)
         })
   
         it('should find correct tax rate', () => {
-            expect(service.find_rate(30000, TaxFilingStatus.SINGLE)).toBe(0.1)
-            expect(service.find_rate(60000, TaxFilingStatus.SINGLE)).toBe(0.2)
+            expect(service.find_rate(30000, TaxFilingStatus.INDIVIDUAL)).toBe(0.1)
+            expect(service.find_rate(60000, TaxFilingStatus.INDIVIDUAL)).toBe(0.2)
         })
   
         it('should handle income at bracket boundaries', () => {
-            expect(service.find_rate(50000, TaxFilingStatus.SINGLE)).toBe(0.1)
-            expect(service.find_rate(50001, TaxFilingStatus.SINGLE)).toBe(0.2)
+            expect(service.find_rate(50000, TaxFilingStatus.INDIVIDUAL)).toBe(0.1)
+            expect(service.find_rate(50001, TaxFilingStatus.INDIVIDUAL)).toBe(0.2)
         })
         describe('Inflation Adjustment', () => {
             it('should adjust bracket ranges with inflation', () => {
                 service.adjust_for_inflation(0.1) // 10% inflation
-                expect(service.find_rate(55000, TaxFilingStatus.SINGLE)).toBe(0.1)
-                expect(service.find_rate(55500, TaxFilingStatus.SINGLE)).toBe(0.2)
+                expect(service.find_rate(55000, TaxFilingStatus.INDIVIDUAL)).toBe(0.1)
+                expect(service.find_rate(55500, TaxFilingStatus.INDIVIDUAL)).toBe(0.2)
             })
         })
     })
     describe('Service Cloning', () => {
       it('should create independent instances when cloned', () => {
         const tax_brackets = create_tax_brackets();
-        tax_brackets.add_bracket(0, 100, 0.1, TaxFilingStatus.SINGLE);
-        tax_brackets.add_bracket(101, Infinity, 0.2, TaxFilingStatus.SINGLE);
+        tax_brackets.add_bracket(0, 100, 0.1, TaxFilingStatus.INDIVIDUAL);
+        tax_brackets.add_bracket(101, Infinity, 0.2, TaxFilingStatus.INDIVIDUAL);
         const original = create_state_tax_service_wo(tax_brackets)
         const clone = original.clone();
-        expect(clone.find_bracket_with_rate(0.1, TaxFilingStatus.SINGLE)).toEqual(original.find_bracket_with_rate(0.1, TaxFilingStatus.SINGLE))
+        expect(clone.find_bracket_with_rate(0.1, TaxFilingStatus.INDIVIDUAL)).toEqual(original.find_bracket_with_rate(0.1, TaxFilingStatus.INDIVIDUAL))
         
         tax_brackets.adjust_for_inflation(0.1);
         
-        const original_bracket = original.find_bracket_with_rate(0.1, TaxFilingStatus.SINGLE);
-        const cloned_bracket = clone.find_bracket_with_rate(0.1, TaxFilingStatus.SINGLE);
+        const original_bracket = original.find_bracket_with_rate(0.1, TaxFilingStatus.INDIVIDUAL);
+        const cloned_bracket = clone.find_bracket_with_rate(0.1, TaxFilingStatus.INDIVIDUAL);
         
         // check orginal
         expect(original_bracket.min).toBe(0);
@@ -79,20 +79,20 @@ describe('StateTaxService', () => {
                     min: 0,
                     max: 5000,
                     rate: 0.1,
-                    taxpayer_type: TaxFilingStatus.SINGLE,
+                    taxpayer_type: TaxFilingStatus.INDIVIDUAL,
                     resident_state: StateType.CT,
                 }, {
                     min: 5001,
                     max: Infinity,
                     rate: 0.2,
-                    taxpayer_type: TaxFilingStatus.SINGLE,
+                    taxpayer_type: TaxFilingStatus.INDIVIDUAL,
                     resident_state: StateType.CT,
                 }
                 
             ]);
             const service = await create_state_tax_service_db(StateType.CT);
-            expect(service.find_rate(200, TaxFilingStatus.SINGLE)).toBe(0.1)
-            expect(service.find_rate(5000000, TaxFilingStatus.SINGLE)).toBe(0.2);
+            expect(service.find_rate(200, TaxFilingStatus.INDIVIDUAL)).toBe(0.1)
+            expect(service.find_rate(5000000, TaxFilingStatus.INDIVIDUAL)).toBe(0.2);
             expect(create_state_taxbracket_in_db).not.toHaveBeenCalled();
         });
         it("should throw error if database contain no data", async () => {
@@ -111,13 +111,13 @@ describe('StateTaxService', () => {
                     min: 0,
                     max: 5000,
                     rate: 0.1,
-                    taxpayer_type: TaxFilingStatus.SINGLE,
+                    taxpayer_type: TaxFilingStatus.INDIVIDUAL,
                     resident_state: StateType.NY,
                 }, {
                     min: 5001,
                     max: Infinity,
                     rate: 0.2,
-                    taxpayer_type: TaxFilingStatus.SINGLE,
+                    taxpayer_type: TaxFilingStatus.INDIVIDUAL,
                     resident_state: StateType.NY,
                 }
                 
@@ -149,7 +149,7 @@ describe('StateTaxService', () => {
       `
         it('should create service from valid YAML', async () => {
             const service = await create_state_tax_service_yaml(StateType.NY, validYAML)
-            expect(service.find_rate(30000, TaxFilingStatus.SINGLE)).toBe(0.1)
+            expect(service.find_rate(30000, TaxFilingStatus.INDIVIDUAL)).toBe(0.1)
             expect(create_state_taxbracket_in_db).toHaveBeenCalledTimes(2);
         })
   

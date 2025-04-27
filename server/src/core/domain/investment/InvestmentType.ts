@@ -7,6 +7,8 @@ import create_value_generator, {
   ValueGenerator,
 } from "../../../utils/math/ValueGenerator";
 import { InvestmentTypeRaw } from "../raw/investment_type_raw";
+import { Distribution, parse_distribution } from "../raw/common";
+import { simulation_logger } from "../../../utils/logger/logger";
 
 export interface InvestmentType {
   name: string;
@@ -27,37 +29,28 @@ export interface InvestmentType {
 export function parse_change_type(change_type: string) {
     switch(change_type) {
       case "amount":
-        return ChangeType.FIXED;
+        return ChangeType.AMOUNT;
       case "percent":
-        return ChangeType.PERCENTAGE;
+        return ChangeType.PERCENT;
       default: 
         throw new Error(`Invalid change type ${change_type}`);
     }
 }
 
-export function parse_distribution(distribution: Map<string, any>): ValueGenerator {
-    switch (distribution.get("type")) {
-        case "fixed":
-            return create_value_generator(DistributionType.FIXED,  new Map([
-                [StatisticType.VALUE, distribution.get("value")]
-            ]));
-        case "normal":
-            return create_value_generator(DistributionType.NORMAL, new Map([
-                [StatisticType.MEAN, distribution.get("mean")],
-                [StatisticType.STDEV, distribution.get("stdev")]
-            ]));
-        default:
-            throw new Error(`Invalid change distribution type ${distribution}`);            
+export function parse_investment_type_distribution(distribution: Distribution): ValueGenerator {
+    if (distribution.type != "fixed" && distribution.type != "normal") {
+      simulation_logger.error(`Invalid distribution type in investment type ${distribution.type}`)
+      throw new Error(`Invalid distribution type in investment type ${distribution.type}`)
     }
+    return parse_distribution(distribution);
 }
-
 
 function create_investment_type(raw_data: InvestmentTypeRaw): InvestmentType {
   try {
     const return_change_type = parse_change_type(raw_data.returnAmtOrPct);
-    const expected_annual_return = parse_distribution(raw_data.returnDistribution);
+    const expected_annual_return = parse_investment_type_distribution(raw_data.returnDistribution);
     const income_change_type = parse_change_type(raw_data.incomeAmtOrPct);
-    const expected_annual_income = parse_distribution(raw_data.incomeDistribution);
+    const expected_annual_income = parse_investment_type_distribution(raw_data.incomeDistribution);
     const taxability = raw_data.taxability;
     
     // annual income should always be positive...
@@ -79,7 +72,7 @@ function create_investment_type(raw_data: InvestmentTypeRaw): InvestmentType {
       _expected_annual_return: expected_annual_return,
     }
   } catch(error) {
-    throw new Error(`Failed to initialize InvestmentType ${error instanceof Error? error.message: error}`);
+    throw new Error(`Failed to initialize InvestmentType: ${error instanceof Error? error.message: error}`);
   }
 }
 

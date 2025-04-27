@@ -17,7 +17,7 @@ function create_rebalance_event(raw_data: RebalanceEventRaw): RebalanceEvent {
       start,
       duration,
       type: raw_data.type,
-      asset_allocation: raw_data.assetAllocation,
+      asset_allocation: new Map(Object.entries(raw_data.assetAllocation)),
       clone: () => create_rebalance_event(raw_data),
     };
   } catch (error) {

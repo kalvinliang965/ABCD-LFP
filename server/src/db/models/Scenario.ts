@@ -1,4 +1,8 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { Distribution } from '../../core/domain/raw/common';
+import { InvestmentTypeRaw } from '../../core/domain/raw/investment_type_raw';
+import { EventRaw, EventUnionRaw } from '../../core/domain/raw/event_raw/event_raw';
+import { InvestmentRaw } from '../../core/domain/raw/investment_raw';
 //the model mimics structure of the yaml file
 //every time the user presses continue while moving in between forms
 //the current local state will be updated.
@@ -6,69 +10,70 @@ import mongoose, { Schema, Document } from 'mongoose';
 //this way if user goes back and forth, the last continue button should overwrite 
 // and save the whole updated information
 
-//interfaces for nested objects
-interface Distribution {
-  type: 'fixed' | 'normal' | 'uniform';
-  value?: number;
-  mean?: number;
-  stdev?: number;
-  lower?: number;
-  upper?: number;
-}
+// //interfaces for nested objects
+// interface Distribution {
+//   type: 'fixed' | 'normal' | 'uniform';
+//   value?: number;
+//   mean?: number;
+//   stdev?: number;
+//   lower?: number;
+//   upper?: number;
+// }
 
-interface StartCondition {
-  type: 'fixed' | 'startWith' | 'startAfter';
-  value?: number;
-  eventSeries?: string;
-}
+// interface StartCondition {
+//   type: 'fixed' | 'startWith' | 'startAfter';
+//   value?: number;
+//   eventSeries?: string;
+// }
 
-interface InvestmentType {
-  name: string;
-  description: string;
-  returnAmtOrPct: 'amount' | 'percent';
-  returnDistribution: Distribution;
-  expenseRatio: number;
-  incomeAmtOrPct: 'amount' | 'percent';
-  incomeDistribution: Distribution;
-  taxability: boolean;
-}
+// interface InvestmentType {
+//   name: string;
+//   description: string;
+//   returnAmtOrPct: 'amount' | 'percent';
+//   returnDistribution: Distribution;
+//   expenseRatio: number;
+//   incomeAmtOrPct: 'amount' | 'percent';
+//   incomeDistribution: Distribution;
+//   taxability: boolean;
+// }
 
-interface Investment {
-  investmentType: string;
-  value: number;
-  taxStatus: 'non-retirement' | 'pre-tax' | 'after-tax';
-  id: string;
-}
+// interface Investment {
+//   investmentType: string;
+//   value: number;
+//   taxStatus: 'non-retirement' | 'pre-tax' | 'after-tax';
+//   id: string;
+// }
 
-interface EventSeries {
-  name: string;
-  start: StartCondition;
-  duration: Distribution;
-  type: 'income' | 'expense' | 'invest' | 'rebalance';
-  initialAmount: number;
-  changeAmtOrPct: 'amount' | 'percent';
-  changeDistribution: Distribution;
-  inflationAdjusted: boolean;
-  userFraction: number;
-  socialSecurity?: boolean;
-  discretionary?: boolean;
-  assetAllocation?: Record<string, number>;
-  glidePath?: boolean;
-  assetAllocation2?: Record<string, number>;
-  maxCash?: number;
-}
+// interface EventSeries {
+//   name: string;
+//   start: StartCondition;
+//   duration: Distribution;
+//   type: 'income' | 'expense' | 'invest' | 'rebalance';
+//   initialAmount: number;
+//   changeAmtOrPct: 'amount' | 'percent';
+//   changeDistribution: Distribution;
+//   inflationAdjusted: boolean;
+//   userFraction: number;
+//   socialSecurity?: boolean;
+//   discretionary?: boolean;
+//   assetAllocation?: Record<string, number>;
+//   glidePath?: boolean;
+//   assetAllocation2?: Record<string, number>;
+//   maxCash?: number;
+// }
+
 
 //scenario interface
-interface IScenario extends Document {
+export interface IScenario extends Document {
   userId: mongoose.Types.ObjectId; //user id
   isDraft: boolean; //the boolean to indicate whether the scenario is complete or in progress
   name: string;
   maritalStatus: 'couple' | 'individual';
   birthYears: number[];
   lifeExpectancy: Distribution[];
-  investmentTypes: InvestmentType[];
-  investments: Investment[];
-  eventSeries: EventSeries[];
+  investmentTypes: InvestmentTypeRaw[];
+  investments: InvestmentRaw[];
+  eventSeries: EventUnionRaw[];
   inflationAssumption: Distribution;
   afterTaxContributionLimit: number;
   spendingStrategy: string[];

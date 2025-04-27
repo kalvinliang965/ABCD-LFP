@@ -42,11 +42,11 @@ describe('parse_capital_gains', () => {
             { min: 492301, max: Infinity, rate: 0.20 },
         ];
 
-        brackets.get_rates(TaxFilingStatus.SINGLE).forEach((bracket, index) => {
+        brackets.get_rates(TaxFilingStatus.INDIVIDUAL).forEach((bracket, index) => {
             expect(bracket).toMatchObject((expected)[index]);
         });
 
-        expect(toComparableObject(brackets.get_rates(TaxFilingStatus.SINGLE)))
+        expect(toComparableObject(brackets.get_rates(TaxFilingStatus.INDIVIDUAL)))
         .toEqual(toComparableObject(expected));
     });
 

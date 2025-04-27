@@ -7,7 +7,7 @@ const TaxBracketSchema = z.object({
   min:z.number().nonnegative(),
   max:z.number().nullable().refine(v => v == null || v > 0),
   rate: z.number().min(0).max(1),
-  taxpayer_type: z.enum([TaxFilingStatus.SINGLE, TaxFilingStatus.MARRIED]),
+  taxpayer_type: z.enum([TaxFilingStatus.INDIVIDUAL, TaxFilingStatus.COUPLE]),
 });
 
 const StateSchema = z.enum([StateType.CT, StateType.NJ, StateType.NY]);
@@ -16,7 +16,7 @@ export type StateTaxYAML = {
   min: number;
   max: number;
   rate: number;
-  taxpayer_type: TaxFilingStatus.SINGLE | TaxFilingStatus.MARRIED;
+  taxpayer_type: TaxFilingStatus.INDIVIDUAL | TaxFilingStatus.COUPLE;
   resident_state: StateType,
 }
 
@@ -113,7 +113,7 @@ tax_brackets:
     rate: 0.109
     taxpayer_type: "couple"
 `
-export function create_state_tax__raw_yaml(yaml_string: string): Array<StateTaxYAML> {
+export function create_state_tax_raw_yaml(yaml_string: string): Array<StateTaxYAML> {
   try {
     const raw_data = parse(yaml_string);
     const resident_state = StateSchema.parse(raw_data.resident_state);
