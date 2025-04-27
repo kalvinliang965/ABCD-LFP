@@ -100,6 +100,12 @@ export function create_state_tax_service_wo(
     }
 }
 
+/**
+ * ! This function shouldn't be use anymore. our program assume yaml is parse in front end.
+ * @param resident_state 
+ * @param yaml_string 
+ * @returns 
+ */
 export async function create_state_tax_service_yaml(resident_state: StateType , yaml_string: string) {
     try {
         const taxable_income_bracket = create_tax_brackets()

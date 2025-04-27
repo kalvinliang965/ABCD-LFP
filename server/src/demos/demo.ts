@@ -17,7 +17,7 @@ async function scrapping_demo() {
 
 
 async function simulation_engine_demo() {
-  const simulation_environment = await create_simulation_environment("680d5df88650c1b31ef2604f", state_tax_yaml_string);
+  const simulation_environment = await create_simulation_environment("680d5df88650c1b31ef2604f");
   const simulation_engine = await create_simulation_engine(simulation_environment);
   simulation_engine.run(1);
 
