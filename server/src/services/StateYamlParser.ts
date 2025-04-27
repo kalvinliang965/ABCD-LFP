@@ -5,18 +5,88 @@ import { StateType } from "../core/Enums";
 
 const TaxBracketSchema = z.object({
   min:z.number().nonnegative(),
-  max:z.number().nullable().refine(v => v == null || v > 0),
+  max:z.number().nullable().refine(v => v == null || v > 0, {
+    message: "Max must be null or positive number"
+  }),
   rate: z.number().min(0).max(1),
   taxpayer_type: z.enum([TaxFilingStatus.INDIVIDUAL, TaxFilingStatus.COUPLE]),
 });
 
 const StateSchema = z.enum([StateType.CT, StateType.NJ, StateType.NY]);
 
+const StateTaxYAMLSchema = z.object({
+  resident_state: StateSchema,
+  tax_brackets: z.array(TaxBracketSchema).superRefine((brackets, ctx) => {
+    // Group brackets by taxpayer type
+    const by_taxpayer_type = {
+      [TaxFilingStatus.INDIVIDUAL]: brackets.filter(
+        b => b.taxpayer_type === TaxFilingStatus.INDIVIDUAL
+      ),
+      [TaxFilingStatus.COUPLE]:brackets.filter(
+        b => b.taxpayer_type === TaxFilingStatus.COUPLE
+      ),
+    };
+    
+    for (const taxpayer_type of [TaxFilingStatus.INDIVIDUAL, 
+      TaxFilingStatus.COUPLE]) {
+        if (by_taxpayer_type[taxpayer_type].length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Must provide tax brackets for ${taxpayer_type}`,
+            path: ["tax_brackets"]
+          });
+        }
+    }
+
+
+    for (const taxpayer_type of [TaxFilingStatus.INDIVIDUAL, 
+      TaxFilingStatus.COUPLE]) {
+        const type_brackets = by_taxpayer_type[taxpayer_type].sort((a,b) => a.min - b.min);
+
+        // check first brackets start with 0
+        if (type_brackets.length > 0 && type_brackets[0].min !== 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `${taxpayer_type} brackets must start at 0`,
+            path: ["tax_brackets"]
+          });
+        }
+
+        for (let i = 1; i < type_brackets.length; ++i) {
+          const prev_bracket = type_brackets[i - 1];
+          const current_bracket = type_brackets[i];
+
+          const expected_min = prev_bracket.max === null ? null: prev_bracket.max + 1;
+
+          if (expected_min !== null && current_bracket.min !== expected_min) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `${taxpayer_type} brackets must be continous. Expected min ${expected_min} but got ${current_bracket.min} after bracket ending at ${prev_bracket.max}`,
+              path: ["tax_brackets", i, "min"]
+            });
+          }
+        }
+
+        // check only last bracket has max=null
+
+        const nullMaxBrackets = type_brackets.filter(b => b.max === null);
+        if (nullMaxBrackets.length > 1 || 
+            (nullMaxBrackets.length === 1 && nullMaxBrackets[0] !== type_brackets[type_brackets.length - 1])) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `${taxpayer_type} can only have null max in the last bracket`,
+            path: ["tax_brackets"]
+          });
+        }
+    }
+  })
+})
+
 export type StateTaxYAML = {
   min: number;
   max: number;
   rate: number;
-  taxpayer_type: TaxFilingStatus.INDIVIDUAL | TaxFilingStatus.COUPLE;
+  taxpayer_type: TaxFilingStatus.INDIVIDUAL | TaxFilingStatus.COUPLE,
   resident_state: StateType,
 }
 
@@ -116,12 +186,12 @@ tax_brackets:
 export function create_state_tax_raw_yaml(yaml_string: string): Array<StateTaxYAML> {
   try {
     const raw_data = parse(yaml_string);
-    const resident_state = StateSchema.parse(raw_data.resident_state);
-    const validated_bracket = TaxBracketSchema.array().parse(raw_data.tax_brackets);
-    return validated_bracket.map(bracket => ({
+    const validated = StateTaxYAMLSchema.parse(raw_data);
+    
+    return validated.tax_brackets.map(bracket => ({
       ...bracket,
       max: bracket.max ?? Infinity,
-      resident_state: resident_state,
+      resident_state: validated.resident_state,
     }))
   } catch(error) {
     throw new Error(`Failed to parse state tax from yaml file ${error instanceof Error? error.message: error}`);
