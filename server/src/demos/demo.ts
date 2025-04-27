@@ -6,6 +6,7 @@ import { create_federal_tax_service } from "../core/tax/FederalTaxService";
 import { create_simulation_engine } from "../core/simulation/SimulationEngine";
 import { state_tax_yaml_string } from "../services/StateYamlParser";
 import { create_simulation_environment } from "../core/simulation/ LoadSimulationEnvironment";
+import { Profiler } from "../utils/Profiler";
 
 async function scrapping_demo() {
     console.log("Scrapping demo");
@@ -18,9 +19,12 @@ async function scrapping_demo() {
 
 async function simulation_engine_demo() {
   const simulation_environment = await create_simulation_environment("680d5df88650c1b31ef2604f");
-  const simulation_engine = await create_simulation_engine(simulation_environment);
-  simulation_engine.run(1);
-
+  const profiler = new Profiler();
+  const simulation_engine = await create_simulation_engine(simulation_environment, profiler);
+  profiler.start("run");
+  await simulation_engine.run(1000);
+  profiler.end("run");
+  profiler.export_to_CSV();
 }
 export {
     scrapping_demo,

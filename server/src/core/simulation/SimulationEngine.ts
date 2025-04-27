@@ -18,11 +18,9 @@ export interface SimulationEngine {
     run: (num_simulations: number) => Promise<SimulationYearlyResult[]>;
 }
 
-export async function create_simulation_engine(simulation_environment: SimulationEnvironment): Promise<SimulationEngine> {
+export async function create_simulation_engine(simulation_environment: SimulationEnvironment, profiler = new Profiler()): Promise<SimulationEngine> {
 
     simulation_logger.info("Initializing the simulation engine...");
-
-    const profiler = new Profiler();
 
     const {scenario, federal_tax_service, state_tax_service, rmd_table} = simulation_environment;
     
@@ -84,9 +82,6 @@ export async function create_simulation_engine(simulation_environment: Simulatio
             )
         }        
 
-        if (dev.is_dev) {
-            profiler.export_to_CSV();
-        }
         simulation_logger.info("Successfully running all simulation")
         return res;
     }
@@ -197,27 +192,3 @@ export async function create_simulation_engine(simulation_environment: Simulatio
     }
 
 }
-
-
-
-    // async function run(num_simulations: number): Promise<SimulationResult[]> {
-    //     const simulation_promises: Promise<SimulationResult>[] = Array.from(
-    //         {length: num_simulations}, // length of the array
-    //          (_, i) => {
-
-    //             return new Promise<SimulationResult>(async (resolve) => {
-    //                 const simulation_state = await create_simulation_state(scenario, federal_tax_service, state_tax_service); 
-    //                 const simulation_result = create_simulation_result();
-    //                 // Run the simulation synchronously.
-    //                 while (should_continue(simulation_state)) {
-    //                     simulate_year(simulation_state, simulation_result);
-    //                     simulation_state.advance_year();
-    //                 }
-    //                 resolve(simulation_result);
-    //             });
-    //     });
-
-    //     const res = await Promise.all(simulation_promises);
-    //     return res;
-
-    // }

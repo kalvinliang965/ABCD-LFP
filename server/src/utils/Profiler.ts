@@ -36,7 +36,7 @@ export class Profiler {
     timer.laps.push(duration); // duration on each lap
     timer.startTime = 0;
 
-    console.log(`[${label}] Lap: ${duration.toFixed(2)}ms | Total: ${timer.total.toFixed(2)}ms`);
+    // console.log(`[${label}] Lap: ${duration.toFixed(2)}ms | Total: ${timer.total.toFixed(2)}ms`);
     return duration;
   }
 
@@ -58,15 +58,15 @@ export class Profiler {
    * @param filePath (e.g "./profiler-report.csv"）
    */
   export_to_CSV(filePath: string = "./profiler-report.csv"): void {
-    const headers = ['Tasks', 'Call Count', 'Total(ms)', 'Avg(ms)', 'Individual Laps(ms)'];
+    const headers = ['Tasks', 'Call Count', 'Total(ms)', 'Avg(ms)'];
     const csvRows = [headers.join(',')];
 
     Object.entries(this.timers).forEach(([label, { total, laps }]) => {
       const avg = laps.length > 0 ? total / laps.length : 0;
-      const lapsStr = laps.map(t => t.toFixed(2)).join(';');
+      // const lapsStr = laps.map(t => t.toFixed(2)).join(';');
       
       csvRows.push(
-        `"${label}",${laps.length},${total.toFixed(2)},${avg.toFixed(2)},"${lapsStr}"`
+        `"${label}",${laps.length},${total.toFixed(2)},${avg.toFixed(2)}`
       );
     });
 
