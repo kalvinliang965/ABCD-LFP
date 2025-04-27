@@ -218,7 +218,8 @@ const InflationSettings: React.FC<InflationSettingsProps> = ({
       }
       update_func(processedValue);
 
-      let finalValue = convertToValidNumber(processedValue);
+      let finalValue_user_input = convertToValidNumber(processedValue);
+      let finalValue = finalValue_user_input / 100;
       switch (field) {
         case 'value':
         case 'mean':
