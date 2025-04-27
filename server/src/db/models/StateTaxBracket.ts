@@ -2,13 +2,15 @@
 import mongoose, { Schema, Document} from "mongoose";
 import { TaxFilingStatus, IncomeType, StateType } from "../../core/Enums";
 
-export interface IStateTaxBracket extends Document {
+export interface StateTaxBracketFields {
     min: number;
     max: number;
     rate: number;
     taxpayer_type: TaxFilingStatus.INDIVIDUAL | TaxFilingStatus.COUPLE;
     resident_state: StateType.CT | StateType.NJ | StateType.NY;
 }
+
+export interface IStateTaxBracket extends Document, StateTaxBracketFields{}
 
 const StateTaxBracketSchema = new Schema<IStateTaxBracket>({
     min: {
