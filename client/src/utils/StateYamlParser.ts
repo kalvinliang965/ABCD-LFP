@@ -184,10 +184,21 @@ tax_brackets:
     rate: 0.109
     taxpayer_type: "couple"
 `;
-export function create_state_tax_raw_yaml(yaml_string: string): Array<StateTaxYAML> {
+export function create_state_tax_raw_yaml(
+  yaml_string: string,
+  expected_state?: StateType
+): Array<StateTaxYAML> {
   try {
     const raw_data = parse(yaml_string);
     const validated = StateTaxYAMLSchema.parse(raw_data);
+
+    // AI-generated code
+    // Check if the state in the YAML matches the expected state
+    if (expected_state && validated.resident_state !== expected_state) {
+      throw new Error(
+        `State mismatch: YAML contains tax data for ${validated.resident_state}, but expected ${expected_state}. Please upload tax data for the correct state.`
+      );
+    }
 
     return validated.tax_brackets.map(bracket => ({
       ...bracket,
