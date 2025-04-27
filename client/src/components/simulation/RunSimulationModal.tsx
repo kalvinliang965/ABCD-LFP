@@ -28,19 +28,9 @@ import {
   Icon,
   useToast,
   useColorModeValue,
-  Alert,
-  AlertIcon,
-  AlertTitle,
-  AlertDescription,
-  Input,
-  InputGroup,
-  InputRightElement,
-  Flex,
 } from '@chakra-ui/react';
-import { motion } from 'framer-motion';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaExclamationTriangle, FaUpload } from 'react-icons/fa';
-import { FileUp, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { scenario_service } from '../../services/scenarioService';
@@ -48,15 +38,12 @@ import { simulation_service } from '../../services/simulationService';
 import { ScenarioDetailCard } from '../scenarios';
 import { check_state_tax_exists } from '../../services/taxService';
 import { StateType } from '../../types/Enum';
-import stateTaxYAMLService from '../../services/stateTaxYaml';
-import { create_state_tax_raw_yaml } from '../../utils/StateYamlParser';
+import ImportStateTaxYaml from './ImportStateTaxYaml';
+
 interface RunSimulationModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-// Motion components
-const MotionBox = motion(Box);
 
 const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose }) => {
   const [scenarios, set_scenarios] = useState<any[]>([]);
@@ -66,12 +53,9 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
   const [count_error, set_count_error] = useState<string>('');
   const [is_submitting, set_is_submitting] = useState<boolean>(false);
   const [state_tax_exists, set_state_tax_exists] = useState<boolean | null>(null);
-  const [is_importing_tax_data, set_is_importing_tax_data] = useState<boolean>(false);
-  const [tax_file, set_tax_file] = useState<File | null>(null);
-  const [drag_active, set_drag_active] = useState(false);
+  const [force_show_importer, set_force_show_importer] = useState<boolean>(false);
   const toast = useToast();
   const navigate = useNavigate();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -187,11 +171,15 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
     if (selected_scenario === scenarioId) {
       set_selected_scenario('');
       set_state_tax_exists(null);
+      // Reset force_show_importer when unselecting a scenario
+      set_force_show_importer(false);
     } else {
       set_selected_scenario(scenarioId);
       const selected = scenarios.find(s => s._id === scenarioId);
       if (selected) {
         check_tax_data(selected.residenceState);
+        // Also reset force_show_importer when selecting a new scenario
+        set_force_show_importer(false);
       }
     }
   };
@@ -230,136 +218,13 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
   // Find the selected scenario object
   const selected_scenario_object = scenarios.find(s => s._id === selected_scenario);
 
-  // Handle file selection for tax data import
-  const handle_file_select = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      const selected_file = event.target.files[0];
-
-      // Check if file is YAML
-      if (!selected_file.name.endsWith('.yaml') && !selected_file.name.endsWith('.yml')) {
-        toast({
-          title: 'Invalid file format',
-          description: 'Please upload a YAML file (.yaml or .yml)',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
-      set_tax_file(selected_file);
-    }
-  };
-
-  // Trigger file input click
-  const handle_browse_click = () => {
-    fileInputRef.current?.click();
-  };
-
-  // Handle drag events
-  const handle_drag_over = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    set_drag_active(true);
-  };
-
-  const handle_drag_leave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    set_drag_active(false);
-  };
-
-  const handle_drop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    set_drag_active(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const dropped_file = e.dataTransfer.files[0];
-
-      // Check if file is YAML
-      if (!dropped_file.name.endsWith('.yaml') && !dropped_file.name.endsWith('.yml')) {
-        toast({
-          title: 'Invalid file format',
-          description: 'Please upload a YAML file (.yaml or .yml)',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
-      set_tax_file(dropped_file);
-    }
-  };
-
-  // Handle import function
-  const handle_import_yaml = async () => {
-    if (!tax_file) {
-      toast({
-        title: 'No file selected',
-        description: 'Please select a YAML file to import',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    try {
-      set_is_importing_tax_data(true);
-
-      // Read the file content
-      const reader = new FileReader();
-      reader.onload = async e => {
-        const content = e.target?.result as string;
-        const parsed_content = create_state_tax_raw_yaml(content);
-        console.log('parsed_content:', parsed_content);
-        try {
-          const savedTaxData = await stateTaxYAMLService.create(parsed_content);
-
-          toast({
-            title: 'Tax Data Imported',
-            description: `Successfully imported tax data for ${selected_scenario_object?.residenceState}.`,
-            status: 'success',
-            duration: 5000,
-            isClosable: true,
-          });
-
-          // Refresh tax data status
-          if (selected_scenario_object) {
-            check_tax_data(selected_scenario_object.residenceState);
-          }
-          // Reset the file state
-          set_tax_file(null);
-        } catch (importError) {
-          console.error('Error importing tax data:', importError);
-          toast({
-            title: 'Import Failed',
-            description: 'There was an error importing the tax data. Please check the file format.',
-            status: 'error',
-            duration: 5000,
-            isClosable: true,
-          });
-        }
-      };
-
-      reader.readAsText(tax_file);
-    } catch (error) {
-      console.error('Error reading file:', error);
-      toast({
-        title: 'File Read Error',
-        description: 'Could not read the selected file.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      set_is_importing_tax_data(false);
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+  // Handle successful YAML import
+  const handle_import_success = () => {
+    // Refresh tax data status
+    if (selected_scenario_object) {
+      check_tax_data(selected_scenario_object.residenceState);
+      // Hide the importer after successful import
+      set_force_show_importer(false);
     }
   };
 
@@ -438,140 +303,15 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
                 </SimpleGrid>
               </FormControl>
 
-              {/* Tax Data Import Section - show only when a scenario is selected and it has no tax data */}
-              {selected_scenario && state_tax_exists === false && (
-                <Alert
-                  status="warning"
-                  variant="subtle"
-                  flexDirection="column"
-                  alignItems="center"
-                  justifyContent="center"
-                  textAlign="center"
-                  borderRadius="md"
-                  p={4}
-                >
-                  <AlertIcon boxSize="24px" mr={0} mb={2} />
-                  <AlertTitle mb={2}>State Tax Data Missing</AlertTitle>
-                  <AlertDescription width="100%">
-                    <Text mb={4}>
-                      This scenario cannot be used for simulation because tax data for{' '}
-                      <strong>{selected_scenario_object?.residenceState}</strong> is missing.
-                    </Text>
-
-                    {/* Drag & Drop UI */}
-                    <MotionBox
-                      p={4}
-                      borderRadius="lg"
-                      borderWidth="2px"
-                      borderStyle="dashed"
-                      borderColor={
-                        drag_active ? 'purple.400' : useColorModeValue('gray.200', 'gray.700')
-                      }
-                      bg={
-                        drag_active ? useColorModeValue('purple.50', 'purple.900') : 'transparent'
-                      }
-                      transition={{ duration: 0.2 }}
-                      onDragOver={handle_drag_over}
-                      onDragLeave={handle_drag_leave}
-                      onDrop={handle_drop}
-                      whileHover={{ borderColor: 'purple.400' }}
-                      mb={4}
-                    >
-                      <VStack spacing={3}>
-                        <MotionBox
-                          animate={{
-                            y: [0, -5, 0],
-                          }}
-                          transition={{
-                            duration: 2,
-                            ease: 'easeInOut',
-                            repeat: Infinity,
-                            repeatType: 'loop',
-                          }}
-                        >
-                          <Icon
-                            as={FileUp}
-                            boxSize={8}
-                            color={useColorModeValue('purple.500', 'purple.300')}
-                          />
-                        </MotionBox>
-
-                        <VStack spacing={1}>
-                          <Heading size="sm" textAlign="center">
-                            Drag & Drop Tax YAML File
-                          </Heading>
-                          <Text color="gray.500" fontSize="sm" textAlign="center">
-                            or use the button below
-                          </Text>
-                        </VStack>
-
-                        <FormControl display="flex" justifyContent="center">
-                          <Input
-                            type="file"
-                            accept=".yaml,.yml"
-                            ref={fileInputRef}
-                            onChange={handle_file_select}
-                            display="none"
-                          />
-                          <Button
-                            onClick={handle_browse_click}
-                            colorScheme="purple"
-                            leftIcon={<Icon as={FileUp} />}
-                            size="sm"
-                          >
-                            Browse Files
-                          </Button>
-                        </FormControl>
-
-                        <Text fontSize="xs" color="gray.500">
-                          Supported file types: .yaml, .yml
-                        </Text>
-                      </VStack>
-                    </MotionBox>
-
-                    {/* Selected File Display */}
-                    {tax_file && (
-                      <MotionBox
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                        mb={4}
-                      >
-                        <Flex
-                          bg={useColorModeValue('green.50', 'green.900')}
-                          p={3}
-                          borderRadius="md"
-                          borderWidth="1px"
-                          borderColor={useColorModeValue('green.200', 'green.700')}
-                          align="center"
-                        >
-                          <Icon as={CheckCircle2} color="green.500" boxSize={5} mr={2} />
-                          <Box flex="1">
-                            <Text fontWeight="medium" fontSize="sm">
-                              Selected file:
-                            </Text>
-                            <Text fontSize="sm">{tax_file.name}</Text>
-                          </Box>
-                        </Flex>
-                      </MotionBox>
-                    )}
-
-                    {/* Import Button */}
-                    <Button
-                      colorScheme="purple"
-                      leftIcon={<Icon as={FaUpload} />}
-                      isLoading={is_importing_tax_data}
-                      loadingText="Importing..."
-                      onClick={handle_import_yaml}
-                      isDisabled={!tax_file}
-                      size="md"
-                      width="full"
-                      mt={2}
-                    >
-                      Import Tax Data
-                    </Button>
-                  </AlertDescription>
-                </Alert>
+              {/* Tax Data Import Section - show when forced or when state tax data is missing */}
+              {selected_scenario && selected_scenario_object && (
+                (state_tax_exists === false || force_show_importer) ? (
+                  <ImportStateTaxYaml 
+                    state={selected_scenario_object.residenceState} 
+                    onImportSuccess={handle_import_success}
+                    isReupload={force_show_importer && state_tax_exists === true}
+                  />
+                ) : null
               )}
 
               <FormControl isRequired isInvalid={!!count_error}>
@@ -602,6 +342,19 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
         </ModalBody>
 
         <ModalFooter>
+          {/* Re-upload button - show only when tax data exists */}
+          {selected_scenario && selected_scenario_object && state_tax_exists === true && !force_show_importer && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              colorScheme="purple"
+              leftIcon={<Icon as={FaUpload} />}
+              onClick={() => set_force_show_importer(true)}
+              mr="auto"
+            >
+              Re-upload State Tax Data
+            </Button>
+          )}
           <Button variant="outline" mr={3} onClick={onClose}>
             Cancel
           </Button>
