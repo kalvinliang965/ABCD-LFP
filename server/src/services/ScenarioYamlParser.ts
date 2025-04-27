@@ -240,16 +240,16 @@ const ScenarioRawSchema = z.object({
         RebalanceEventRawSchema,
         InvestEventRawSchema,
       ])
-    ).transform(arr => new Set(arr)),
-    inflationAssumption: DistributionSchema,
-    afterTaxContributionLimit: z.number().nonnegative(),
-    spendingStrategy: z.array(z.string()),
-    expenseWithdrawalStrategy: z.array(z.string()),
-    RMDStrategy: z.array(z.string()),
-    RothConversionOpt: z.boolean(),
-    RothConversionStart: z.number().int(),
-    RothConversionEnd: z.number().int(),
-    RothConversionStrategy: z.array(z.string()),
+    ).default([]).transform(arr => new Set(arr)),
+    inflationAssumption: DistributionSchema.default({ type: "fixed", value: 0}),
+    afterTaxContributionLimit: z.number().nonnegative().default(0),
+    spendingStrategy: z.array(z.string()).default([]),
+    expenseWithdrawalStrategy: z.array(z.string()).default([]),
+    RMDStrategy: z.array(z.string()).default([]),
+    RothConversionOpt: z.boolean().default(false),
+    RothConversionStart: z.number().int().default(-1),
+    RothConversionEnd: z.number().int().default(-1),
+    RothConversionStrategy: z.array(z.string()).default([]),
     financialGoal: z.number().nonnegative(),
     residenceState: z.string().length(2)
   }).superRefine((val, ctx) => {
@@ -267,6 +267,22 @@ const ScenarioRawSchema = z.object({
         code: z.ZodIssueCode.custom,
         message: "Individual must have exactly 1 birth year"
       });
+    }
+
+    // Validate Roth conversion parameters if opted in
+    if (val.RothConversionOpt) {
+      if (val.RothConversionStart === -1 || val.RothConversionEnd === -1) {
+          ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: "Opt-in for Roth conversion but start/end year isn't provided"
+          });
+      }
+      if (val.RothConversionStart > val.RothConversionEnd) {
+          ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: "Roth conversion start after end year"
+          });
+      }
     }
 });
 

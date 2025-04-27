@@ -20,7 +20,7 @@ export function parse_expected_annual_change(
   changeAmtOrPct: string,
   distribution: Distribution 
 ): [ChangeType, ValueGenerator] {
-  function parse_change_amt__or_pct(): ChangeType {
+  function parse_change_amt_or_pct(): ChangeType {
     switch (changeAmtOrPct) {
       case "amount":
         return ChangeType.AMOUNT;
@@ -32,7 +32,7 @@ export function parse_expected_annual_change(
   }
 
   try {
-    const change_type: ChangeType = parse_change_amt__or_pct();
+    const change_type: ChangeType = parse_change_amt_or_pct();
     const change_distribution: ValueGenerator = parse_distribution(distribution);
     return [change_type, change_distribution];
   } catch (error) {
