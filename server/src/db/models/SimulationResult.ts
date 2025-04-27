@@ -4,7 +4,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 // Interface for simulation results stored in the database
 export interface ISimulationResult extends Document {
   scenarioId: string;
-  userId: mongoose.Types.ObjectId;
+  //userId: mongoose.Types.ObjectId;
   successProbability: number;
   years: number[];
   startYear: number;
@@ -95,7 +95,7 @@ const ExpenseSchema = new Schema({
 // Main schema for simulation results
 const SimulationResultSchema: Schema = new Schema({
   scenarioId: { type: Schema.Types.ObjectId, ref: 'Scenario', required: true },
-  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  //userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   successProbability: { type: Number, required: true },
   years: { type: [Number], required: true },
   startYear: { type: Number, required: true },

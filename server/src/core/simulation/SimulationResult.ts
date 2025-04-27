@@ -259,31 +259,61 @@ export function calculateDistributionRanges(
       })
       .filter(val => !isNaN(val)); // Filter out NaN values
     
-    // Sort values for percentile calculations
+    if (valuesForYear.length === 0) {
+      medianValues.push(0);
+      ranges.range10_90[0].push(0);
+      ranges.range10_90[1].push(0);
+      ranges.range20_80[0].push(0);
+      ranges.range20_80[1].push(0);
+      ranges.range30_70[0].push(0);
+      ranges.range30_70[1].push(0);
+      ranges.range40_60[0].push(0);
+      ranges.range40_60[1].push(0);
+      continue;
+    }
+    
+    // Sort values for calculations
     valuesForYear.sort((a, b) => a - b);
     
-    // Calculate median
-    const median = valuesForYear.length > 0 
-      ? quantile(valuesForYear, 0.5) || 0 
-      : 0;
+    // Calculate median directly from sorted array
+    const median = calculateMedian(valuesForYear);
     medianValues.push(median);
     
-    // Calculate percentile ranges
-    ranges.range10_90[0].push(valuesForYear.length > 0 ? quantile(valuesForYear, 0.1) || 0 : 0);
-    ranges.range10_90[1].push(valuesForYear.length > 0 ? quantile(valuesForYear, 0.9) || 0 : 0);
+    // Calculate percentile ranges without using quantile function
+    const len = valuesForYear.length;
     
-    ranges.range20_80[0].push(valuesForYear.length > 0 ? quantile(valuesForYear, 0.2) || 0 : 0);
-    ranges.range20_80[1].push(valuesForYear.length > 0 ? quantile(valuesForYear, 0.8) || 0 : 0);
+    // Calculate ranges by direct index into the sorted array
+    ranges.range10_90[0].push(valuesForYear[Math.floor(len * 0.1)] || 0);
+    ranges.range10_90[1].push(valuesForYear[Math.floor(len * 0.9)] || 0);
     
-    ranges.range30_70[0].push(valuesForYear.length > 0 ? quantile(valuesForYear, 0.3) || 0 : 0);
-    ranges.range30_70[1].push(valuesForYear.length > 0 ? quantile(valuesForYear, 0.7) || 0 : 0);
+    ranges.range20_80[0].push(valuesForYear[Math.floor(len * 0.2)] || 0);
+    ranges.range20_80[1].push(valuesForYear[Math.floor(len * 0.8)] || 0);
     
-    ranges.range40_60[0].push(valuesForYear.length > 0 ? quantile(valuesForYear, 0.4) || 0 : 0);
-    ranges.range40_60[1].push(valuesForYear.length > 0 ? quantile(valuesForYear, 0.6) || 0 : 0);
+    ranges.range30_70[0].push(valuesForYear[Math.floor(len * 0.3)] || 0);
+    ranges.range30_70[1].push(valuesForYear[Math.floor(len * 0.7)] || 0);
+    
+    ranges.range40_60[0].push(valuesForYear[Math.floor(len * 0.4)] || 0);
+    ranges.range40_60[1].push(valuesForYear[Math.floor(len * 0.6)] || 0);
   }
   
   return {
     median: medianValues,
     ranges
   };
+}
+
+// Helper function to calculate median without d3-array
+function calculateMedian(sortedValues: number[]): number {
+  const len = sortedValues.length;
+  if (len === 0) return 0;
+  
+  const mid = Math.floor(len / 2);
+  
+  if (len % 2 === 0) {
+    // Even number of elements, average the middle two
+    return (sortedValues[mid - 1] + sortedValues[mid]) / 2;
+  } else {
+    // Odd number of elements, return the middle one
+    return sortedValues[mid];
+  }
 }

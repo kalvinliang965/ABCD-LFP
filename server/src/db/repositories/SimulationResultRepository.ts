@@ -3,15 +3,10 @@ import SimulationResultModel, { ISimulationResult } from '../models/SimulationRe
 import { ConsolidatedResult } from '../../core/simulation/SimulationResult';
 import { simulation_logger } from '../../utils/logger/logger';
 
-/**
- * Saves a simulation result to the database
- * @param result The consolidated simulation result
- * @param userId The ID of the user who ran the simulation
- * @returns The saved simulation result document
- */
+
 export async function save_simulation_result(
   result: ConsolidatedResult,
-  userId: mongoose.Types.ObjectId | string
+  //userId: mongoose.Types.ObjectId | string
 ): Promise<ISimulationResult> {
   try {
     simulation_logger.info(`Saving simulation result for scenario: ${result.scenarioId}`);
@@ -19,7 +14,7 @@ export async function save_simulation_result(
     // Create a new document using the model
     const simulationResult = new SimulationResultModel({
       ...result,
-      userId
+      //...(userId && { userId })
     });
     
     // Save to database

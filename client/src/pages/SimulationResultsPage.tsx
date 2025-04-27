@@ -12,14 +12,11 @@ import {
   Checkbox,
   CheckboxGroup,
   VStack,
-  Radio,
-  RadioGroup,
-  Stack,
-  Divider,
+  Code,
   useColorModeValue,
 } from '@chakra-ui/react';
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { simulation_service } from '../services/simulationService';
 
 import ProbabilityOfSuccessChart from '../components/charts/ProbabilityOfSuccessChart';
@@ -45,11 +42,18 @@ interface DataItem {
 }
 
 const SimulationResults: React.FC = () => {
-  const { simulationId } = useParams<{ simulationId: string }>();
+  // Get parameters from URL - could be either simulationId or scenarioId
+  const { simulationId} = useParams<{ simulationId?: string}>();
+
+ 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [simulationData, setSimulationData] = useState<any>(null);
+  const [rawResponse, setRawResponse] = useState<any>(null);
+  const [showDebug, setShowDebug] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const scenarioId = '680d7e3057f1cf67b95a5fa8';
 
   // New state variables for chart selection
   const [showChartSelection, setShowChartSelection] = useState(true);
@@ -59,41 +63,94 @@ const SimulationResults: React.FC = () => {
   const [aggregationType, setAggregationType] = useState<'median' | 'average'>('median');
   const [aggregationThreshold, setAggregationThreshold] = useState<number>(10000);
 
-  // Fetch real simulation results from the database
+  // Debugging helper
+  const toggleDebug = () => {
+    setShowDebug(!showDebug);
+  };
+
+  // Fetch simulation results from the database
   useEffect(() => {
     const fetchSimulationResults = async () => {
-      if (!simulationId) {
-        setError('No simulation ID provided');
+      console.log('Current URL:', window.location.href);
+      console.log('Route params:', { simulationId, scenarioId });
+      // Determine which ID to use (prefer scenarioId if available)
+      const idToUse = scenarioId || simulationId;
+      const idType = scenarioId ? 'scenarioId' : 'simulationId';
+      
+      if (!idToUse) {
+        // Try to get ID from location state
+        const stateId = location.state?.scenarioId || location.state?.simulationId;
+        if (stateId) {
+          console.log(`Using ${idType} from state:`, stateId);
+          const path = scenarioId ? `/scenarios/${stateId}/results` : `/simulations/${stateId}`;
+          navigate(path, { replace: true });
+          return;
+        }
+        
+        setError('No scenario or simulation ID provided');
         return;
       }
 
       setLoading(true);
       try {
-        // Get simulation results from database using the service
-        const response = await simulation_service.get_simulation_results(simulationId);
+        console.log(`Fetching simulation results for ${idType}:`, idToUse);
+        
+        let response;
+        // Call the appropriate service method based on ID type
+        if (scenarioId) {
+          // Get results by scenario ID
+          response = await simulation_service.get_simulations_by_scenario(idToUse);
+        } else {
+          // Get results by simulation ID
+          response = await simulation_service.get_simulation_results(idToUse);
+        }
+        
+        console.log('API response:', response);
+        setRawResponse(response);
         
         if (!response.success) {
           throw new Error(response.message || 'Failed to load simulation results');
         }
         
-        const result = response.data;
+        // Handle both single result and array of results
+        let result;
+        if (scenarioId && Array.isArray(response.data) && response.data.length > 0) {
+          // If retrieving by scenarioId, use the most recent result if multiple exist
+          result = response.data.sort((a, b) => 
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )[0];
+          console.log('Using most recent of multiple results:', result);
+        } else {
+          // Direct result or single result from array
+          result = Array.isArray(response.data) ? response.data[0] : response.data;
+        }
         
-        // Transform the data for our charts
+        if (!result) {
+          throw new Error('No simulation results found');
+        }
+        
+        // Validate required fields
+        if (!result.years || !Array.isArray(result.years) || result.years.length === 0) {
+          console.error('Missing or invalid years array in response:', result);
+          throw new Error('Invalid data format: missing years array');
+        }
+        
+        // Transform the data for charts
         const formattedData = {
           // Probability of success data
           probabilityOfSuccess: {
             years: result.years,
             // If no probability array exists, create one based on successProbability
-            probabilities: Array(result.years.length).fill(result.successProbability * 100)
+            probabilities: Array(result.years.length).fill((result.successProbability || 0) * 100)
           },
           
           // Chart data for investments, income, and expenses
           medianOrAverageValues: {
             years: result.years,
             data: {
-              investments: result.investments,
-              income: result.income,
-              expenses: result.expenses
+              investments: result.investments || [],
+              income: result.income || [],
+              expenses: result.expenses || []
             }
           },
           
@@ -101,35 +158,51 @@ const SimulationResults: React.FC = () => {
           probabilityRanges: {
             totalInvestments: result.totalInvestments ? {
               years: result.years,
-              median: result.totalInvestments.median,
-              ranges: result.totalInvestments.ranges
+              median: result.totalInvestments.median || [],
+              ranges: result.totalInvestments.ranges || {
+                range10_90: [[], []],
+                range20_80: [[], []],
+                range30_70: [[], []],
+                range40_60: [[], []]
+              }
             } : undefined,
             
             totalIncome: result.totalIncome ? {
               years: result.years,
-              median: result.totalIncome.median,
-              ranges: result.totalIncome.ranges
+              median: result.totalIncome.median || [],
+              ranges: result.totalIncome.ranges || {
+                range10_90: [[], []],
+                range20_80: [[], []],
+                range30_70: [[], []],
+                range40_60: [[], []]
+              }
             } : undefined,
             
             totalExpenses: result.totalExpenses ? {
               years: result.years,
-              median: result.totalExpenses.median,
-              ranges: result.totalExpenses.ranges
+              median: result.totalExpenses.median || [],
+              ranges: result.totalExpenses.ranges || {
+                range10_90: [[], []],
+                range20_80: [[], []],
+                range30_70: [[], []],
+                range40_60: [[], []]
+              }
             } : undefined
           }
         };
         
+        console.log('Formatted data for charts:', formattedData);
         setSimulationData(formattedData);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching simulation results:', err);
-        setError('Failed to load simulation results. Please try again later.');
+        setError(`Failed to load simulation results: ${err instanceof Error ? err.message : 'Unknown error'}`);
         setLoading(false);
       }
     };
 
     fetchSimulationResults();
-  }, [simulationId]);
+  }, [simulationId, scenarioId, navigate, location]);
 
   // Handle showing charts
   const handleShowCharts = () => {
@@ -261,11 +334,37 @@ const SimulationResults: React.FC = () => {
     );
   };
 
+  // Get ID info for display
+  const idInfo = scenarioId 
+    ? `Scenario ID: ${scenarioId}` 
+    : (simulationId ? `Simulation ID: ${simulationId}` : '');
+
   return (
     <Container maxW="container.xl" py={8}>
-      <Heading as="h1" mb={6}>
+      <Heading as="h1" mb={2}>
         Simulation Results
       </Heading>
+      
+      {idInfo && (
+        <Text mb={4} color="gray.600" fontSize="sm">
+          {idInfo}
+        </Text>
+      )}
+
+      <Flex justifyContent="flex-end" mb={4}>
+        <Button size="sm" colorScheme="gray" onClick={toggleDebug}>
+          {showDebug ? "Hide Debug" : "Show Debug"}
+        </Button>
+      </Flex>
+
+      {showDebug && rawResponse && (
+        <Box mb={6} p={4} bg="gray.50" borderRadius="md" overflow="auto" maxHeight="300px">
+          <Heading size="sm" mb={2}>Debug: API Response</Heading>
+          <Code display="block" whiteSpace="pre" p={2}>
+            {JSON.stringify(rawResponse, null, 2)}
+          </Code>
+        </Box>
+      )}
 
       {error && (
         <Alert status="error" mb={6}>

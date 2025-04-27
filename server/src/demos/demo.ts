@@ -6,7 +6,8 @@ import { create_federal_tax_service } from "../core/tax/FederalTaxService";
 import { create_simulation_engine } from "../core/simulation/SimulationEngine";
 import { state_tax_yaml_string } from "../services/StateYamlParser";
 import { create_simulation_environment } from "../core/simulation/ LoadSimulationEnvironment";
-
+import { create_simulation_result } from "../core/simulation/SimulationResult";
+import { save_simulation_result } from "../db/repositories/SimulationResultRepository";
 async function scrapping_demo() {
     console.log("Scrapping demo");
     const federal_tax_data = await create_federal_tax_service();
@@ -17,9 +18,22 @@ async function scrapping_demo() {
 
 
 async function simulation_engine_demo() {
-  const simulation_environment = await create_simulation_environment("680d5df88650c1b31ef2604f", state_tax_yaml_string);
+  const simulation_environment = await create_simulation_environment("680d7e3057f1cf67b95a5fa8", state_tax_yaml_string);
   const simulation_engine = await create_simulation_engine(simulation_environment);
-  simulation_engine.run(1);
+  //simulation_engine.run(1);
+   // Get simulation results
+   const simulationResults = await simulation_engine.run(20);
+  
+   // Create formatted result object
+   const primaryResult = simulationResults[0];
+   const simulationResult = create_simulation_result(primaryResult, "680d7e3057f1cf67b95a5fa8", simulationResults);
+   
+   // Format results for database
+   const formattedResults = simulationResult.formatResults();
+   
+   // Save to database (do notneed a valid user ID)
+   
+   await save_simulation_result(formattedResults);
 
 }
 export {
