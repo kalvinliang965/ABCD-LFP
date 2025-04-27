@@ -20,6 +20,7 @@ import {
 } from '@chakra-ui/react';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { simulation_service } from '../services/simulationService';
 
 import ProbabilityOfSuccessChart from '../components/charts/ProbabilityOfSuccessChart';
 import ShadedLineChart from '../components/charts/ShadedLineChart';
@@ -43,9 +44,8 @@ interface DataItem {
   values: number[];
 }
 
-// Need to ask kalvin which parameters are needed for each chart type
 const SimulationResults: React.FC = () => {
-  const { scenarioId } = useParams<{ scenarioId: string }>();
+  const { simulationId } = useParams<{ simulationId: string }>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [simulationData, setSimulationData] = useState<any>(null);
@@ -59,293 +59,68 @@ const SimulationResults: React.FC = () => {
   const [aggregationType, setAggregationType] = useState<'median' | 'average'>('median');
   const [aggregationThreshold, setAggregationThreshold] = useState<number>(10000);
 
-  // Helper function to convert investment map to chart data
-  function convertMapToDataItems(
-    dataMap: Map<number, Map<string, number>>,
-    category: 'investment' | 'income' | 'expense',
-    taxStatusMap?: Map<string, 'non-retirement' | 'pre-tax' | 'after-tax'>
-  ): DataItem[] {
-    const years = Array.from(dataMap.keys()).sort();
-    const itemNames = new Set<string>();
-
-    // Step 1: Gather all item names
-    years.forEach(year => {
-      const yearMap = dataMap.get(year)!;
-      for (const key of yearMap.keys()) {
-        itemNames.add(key);
-      }
-    });
-
-    // Step 2: Build per-item data
-    return Array.from(itemNames).map(name => {
-      // Determine tax status for investments
-      let taxStatus: 'non-retirement' | 'pre-tax' | 'after-tax' | undefined;
-
-      if (category === 'investment' && taxStatusMap) {
-        taxStatus = taxStatusMap.get(name) || 'non-retirement';
-      }
-
-      return {
-        name,
-        category,
-        taxStatus,
-        values: years.map(year => dataMap.get(year)?.get(name) || 0),
-      };
-    });
-  }
-
-  // TODO: Replace with actual API call when ready
-  // Right now use mock data
+  // Fetch real simulation results from the database
   useEffect(() => {
     const fetchSimulationResults = async () => {
+      if (!simulationId) {
+        setError('No simulation ID provided');
+        return;
+      }
+
       setLoading(true);
       try {
-        // Mock API call - replace with actual API call when ready
-        setTimeout(() => {
-          // Define years array once to be used across all data
-          const years = Array.from({ length: 30 }, (_, i) => 2023 + i);
-
-          // ===== CONSOLIDATED MOCK DATA GENERATION =====
-
-          // 1. Generate probability of success data
-          const probabilityArrayData = {
-            years: years,
-            probabilities: years.map((year, i) => {
-              const baseProb = 100 - i * 2.5;
-              const randomAdjustment = Math.random() * 5 - 2.5;
-              return Math.max(0, Math.min(100, baseProb + randomAdjustment));
-            }),
-          };
-
-          // 2. Generate investment, income, and expense data
-          const mockInvestmentMap = new Map<number, Map<string, number>>();
-          const mockIncomeMap = new Map<number, Map<string, number>>();
-          const mockExpenseMap = new Map<number, Map<string, number>>();
-
-          // Tax status mapping for investments
-          const investmentTaxStatusMap = new Map<
-            string,
-            'non-retirement' | 'pre-tax' | 'after-tax'
-          >([
-            ['S&P 500 non-retirement', 'non-retirement'],
-            ['Bonds non-retirement', 'non-retirement'],
-            ['Cash non-retirement', 'non-retirement'],
-            ['S&P 500 pre-tax', 'pre-tax'],
-            ['Bonds pre-tax', 'pre-tax'],
-            ['Cash pre-tax', 'pre-tax'],
-            ['S&P 500 after-tax', 'after-tax'],
-            ['Bonds after-tax', 'after-tax'],
-            ['Cash after-tax', 'after-tax'],
-          ]);
-
-          // Initialize maps
-          years.forEach(year => {
-            mockInvestmentMap.set(year, new Map<string, number>());
-            mockIncomeMap.set(year, new Map<string, number>());
-            mockExpenseMap.set(year, new Map<string, number>());
-          });
-
-          // Fill maps with data
-          years.forEach((year, i) => {
-            const yearIndex = i;
-            const growthFactor = 1 + yearIndex * 0.05; // 5% growth per year
-            const retirementYear = 2023 + 15; // Retirement after 15 years
-            const inflationFactor = 1 + yearIndex * 0.025; // 2.5% inflation per year
-
-            // Investment data
-            const investmentMap = mockInvestmentMap.get(year)!;
-
-            // Non-retirement accounts
-            investmentMap.set(
-              'S&P 500 non-retirement',
-              50000 * growthFactor + Math.random() * 5000
-            );
-            investmentMap.set('Bonds non-retirement', 30000 * growthFactor + Math.random() * 3000);
-            investmentMap.set('Cash non-retirement', 20000 * growthFactor + Math.random() * 1000);
-
-            // Pre-tax retirement accounts
-            investmentMap.set('S&P 500 pre-tax', 100000 * growthFactor + Math.random() * 10000);
-            investmentMap.set('Bonds pre-tax', 50000 * growthFactor + Math.random() * 5000);
-            investmentMap.set('Cash pre-tax', 10000 * growthFactor + Math.random() * 1000);
-
-            // After-tax retirement accounts
-            investmentMap.set('S&P 500 after-tax', 70000 * growthFactor + Math.random() * 7000);
-            investmentMap.set('Bonds after-tax', 40000 * growthFactor + Math.random() * 4000);
-            investmentMap.set('Cash after-tax', 5000 * growthFactor + Math.random() * 500);
-
-            // Income data
-            const incomeMap = mockIncomeMap.get(year)!;
-
-            // Salary (stops at retirement)
-            if (year < retirementYear) {
-              const salaryGrowth = 1 + yearIndex * 0.03; // 3% salary growth per year
-              incomeMap.set('Salary', 120000 * salaryGrowth + Math.random() * 5000);
-            } else {
-              incomeMap.set('Salary', 0);
+        // Get simulation results from database using the service
+        const response = await simulation_service.get_simulation_results(simulationId);
+        
+        if (!response.success) {
+          throw new Error(response.message || 'Failed to load simulation results');
+        }
+        
+        const result = response.data;
+        
+        // Transform the data for our charts
+        const formattedData = {
+          // Probability of success data
+          probabilityOfSuccess: {
+            years: result.years,
+            // If no probability array exists, create one based on successProbability
+            probabilities: Array(result.years.length).fill(result.successProbability * 100)
+          },
+          
+          // Chart data for investments, income, and expenses
+          medianOrAverageValues: {
+            years: result.years,
+            data: {
+              investments: result.investments,
+              income: result.income,
+              expenses: result.expenses
             }
-
-            // Social Security (starts at retirement)
-            if (year >= retirementYear) {
-              const ssGrowth = 1 + (yearIndex - 15) * 0.02; // 2% SS growth after retirement
-              incomeMap.set('Social Security', 30000 * ssGrowth + Math.random() * 1000);
-            } else {
-              incomeMap.set('Social Security', 0);
-            }
-
-            // Investment Income
-            const investmentIncomeGrowth = 1 + yearIndex * 0.07;
-            incomeMap.set(
-              'Investment Income',
-              5000 * investmentIncomeGrowth + Math.random() * 1000
-            );
-
-            // Pension (starts at retirement)
-            if (year >= retirementYear) {
-              incomeMap.set('Pension', 40000 + Math.random() * 2000);
-            } else {
-              incomeMap.set('Pension', 0);
-            }
-
-            // Expense data
-            const expenseMap = mockExpenseMap.get(year)!;
-
-            // Housing
-            expenseMap.set('Housing', 36000 * inflationFactor + Math.random() * 2000);
-
-            // Healthcare (increases more in later years)
-            const healthcareGrowth = 1 + yearIndex * 0.04;
-            expenseMap.set('Healthcare', 12000 * healthcareGrowth + Math.random() * 1000);
-
-            // Food
-            expenseMap.set('Food', 10000 * inflationFactor + Math.random() * 800);
-
-            // Transportation
-            expenseMap.set('Transportation', 8000 * inflationFactor + Math.random() * 600);
-
-            // Entertainment (discretionary)
-            expenseMap.set('Entertainment', 6000 * inflationFactor + Math.random() * 500);
-
-            // Travel (discretionary)
-            expenseMap.set('Travel', 8000 * inflationFactor + Math.random() * 1000);
-
-            // Taxes
-            const taxRate = year < retirementYear ? 0.25 : 0.15;
-            const totalIncome = Array.from(incomeMap.values()).reduce((sum, val) => sum + val, 0);
-            expenseMap.set('Taxes', totalIncome * taxRate + Math.random() * 2000);
-          });
-
-          // 3. Generate probability range data for the shaded line chart
-          // Helper function to generate mock percentile data
-          function generateMockPercentileData(
-            baseValue: number,
-            growthRate: number,
-            volatility: number,
-            hasGoal: boolean = false,
-            pattern: 'growth' | 'decline' | 'peak' | 'valley' = 'growth'
-          ) {
-            const median: number[] = [];
-            const range10_90: [number[], number[]] = [[], []];
-            const range20_80: [number[], number[]] = [[], []];
-            const range30_70: [number[], number[]] = [[], []];
-            const range40_60: [number[], number[]] = [[], []];
-
-            for (let i = 0; i < years.length; i++) {
-              let yearValue: number;
-
-              // Apply different patterns to create more realistic scenarios
-              switch (pattern) {
-                case 'growth':
-                  yearValue = baseValue * Math.pow(1 + growthRate, i);
-                  break;
-                case 'decline':
-                  yearValue = baseValue * (1 - i * 0.02);
-                  yearValue = Math.max(yearValue, baseValue * 0.3);
-                  break;
-                case 'peak':
-                  if (i < years.length / 3) {
-                    yearValue = baseValue * Math.pow(1 + growthRate, i);
-                  } else {
-                    yearValue =
-                      baseValue *
-                      Math.pow(1 + growthRate, years.length / 3) *
-                      Math.pow(1 - growthRate / 2, i - years.length / 3);
-                  }
-                  break;
-                case 'valley':
-                  if (i < years.length / 4) {
-                    yearValue = baseValue * Math.pow(1 - growthRate, i);
-                  } else {
-                    yearValue =
-                      baseValue *
-                      Math.pow(1 - growthRate, years.length / 4) *
-                      Math.pow(1 + growthRate, i - years.length / 4);
-                  }
-                  break;
-                default:
-                  yearValue = baseValue * Math.pow(1 + growthRate, i);
-              }
-
-              // Volatility increases with time - square root relationship
-              const yearVolatility = volatility * Math.sqrt(i + 1);
-
-              median.push(yearValue);
-
-              // Calculate ranges based on volatility
-              range10_90[0].push(Math.max(0, yearValue * (1 - 1.65 * yearVolatility)));
-              range10_90[1].push(yearValue * (1 + 1.65 * yearVolatility));
-
-              range20_80[0].push(Math.max(0, yearValue * (1 - 1.28 * yearVolatility)));
-              range20_80[1].push(yearValue * (1 + 1.28 * yearVolatility));
-
-              range30_70[0].push(Math.max(0, yearValue * (1 - 0.84 * yearVolatility)));
-              range30_70[1].push(yearValue * (1 + 0.84 * yearVolatility));
-
-              range40_60[0].push(Math.max(0, yearValue * (1 - 0.52 * yearVolatility)));
-              range40_60[1].push(yearValue * (1 + 0.52 * yearVolatility));
-            }
-
-            return {
-              years,
-              median,
-              ranges: {
-                range10_90: [range10_90[0], range10_90[1]],
-                range20_80: [range20_80[0], range20_80[1]],
-                range30_70: [range30_70[0], range30_70[1]],
-                range40_60: [range40_60[0], range40_60[1]],
-              },
-              goal: hasGoal ? baseValue * 1.5 : undefined,
-            };
+          },
+          
+          // Probability ranges data for shaded line chart
+          probabilityRanges: {
+            totalInvestments: result.totalInvestments ? {
+              years: result.years,
+              median: result.totalInvestments.median,
+              ranges: result.totalInvestments.ranges
+            } : undefined,
+            
+            totalIncome: result.totalIncome ? {
+              years: result.years,
+              median: result.totalIncome.median,
+              ranges: result.totalIncome.ranges
+            } : undefined,
+            
+            totalExpenses: result.totalExpenses ? {
+              years: result.years,
+              median: result.totalExpenses.median,
+              ranges: result.totalExpenses.ranges
+            } : undefined
           }
-
-          // Generate probability range data for each metric
-          const mockProbabilityRanges = {
-            totalInvestments: generateMockPercentileData(1000000, 0.06, 0.15, true, 'peak'),
-            totalIncome: generateMockPercentileData(120000, 0.03, 0.08, false, 'decline'),
-            totalExpenses: generateMockPercentileData(80000, 0.025, 0.05, false, 'growth'),
-            earlyWithdrawalTax: generateMockPercentileData(5000, 0.02, 0.2, false, 'valley'),
-            discretionaryExpensesPct: generateMockPercentileData(50, 0.01, 0.1, false, 'growth'),
-          };
-
-          // 4. Set all simulation data at once
-          setSimulationData({
-            probabilityOfSuccess: probabilityArrayData,
-            medianOrAverageValues: {
-              years: years,
-              data: {
-                investments: convertMapToDataItems(
-                  mockInvestmentMap,
-                  'investment',
-                  investmentTaxStatusMap
-                ),
-                income: convertMapToDataItems(mockIncomeMap, 'income'),
-                expenses: convertMapToDataItems(mockExpenseMap, 'expense'),
-              },
-            },
-            probabilityRanges: mockProbabilityRanges,
-          });
-
-          setLoading(false);
-        }, 1500); // Simulate loading delay
+        };
+        
+        setSimulationData(formattedData);
+        setLoading(false);
       } catch (err) {
         console.error('Error fetching simulation results:', err);
         setError('Failed to load simulation results. Please try again later.');
@@ -354,7 +129,7 @@ const SimulationResults: React.FC = () => {
     };
 
     fetchSimulationResults();
-  }, [scenarioId]);
+  }, [simulationId]);
 
   // Handle showing charts
   const handleShowCharts = () => {
@@ -489,7 +264,7 @@ const SimulationResults: React.FC = () => {
   return (
     <Container maxW="container.xl" py={8}>
       <Heading as="h1" mb={6}>
-        Simulation Results {scenarioId ? `for ${scenarioId}` : ''}
+        Simulation Results
       </Heading>
 
       {error && (

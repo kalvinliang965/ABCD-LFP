@@ -3,7 +3,7 @@ import { Route } from 'react-router-dom';
 
 import { ProtectedRoute } from '../common';
 import { Layout } from '../layouts';
-import SimulationResults from '../pages/SimulationResultsPage';
+import SimulationResultsPage from '../pages/SimulationResultsPage';
 
 // Placeholder components
 const RunSimulation = () => <div>Run Simulation Placeholder</div>;
@@ -27,13 +27,28 @@ const SimulationRoutes = [
       </ProtectedRoute>
     }
   />,
+  
+  // Route to view a specific simulation result by ID
+  <Route
+    key="simulation-results-by-id"
+    path="/simulations/:simulationId"
+    element={
+      <ProtectedRoute>
+        <Layout title="Simulation Results">
+          <SimulationResultsPage />
+        </Layout>
+      </ProtectedRoute>
+    }
+  />,
+  
+  // General simulation results route (can be used for listing all results)
   <Route
     key="simulation-results"
     path="/simulation/results"
     element={
       <ProtectedRoute>
         <Layout title="Simulation Results">
-          <SimulationResults />
+          <SimulationResultsPage />
         </Layout>
       </ProtectedRoute>
     }

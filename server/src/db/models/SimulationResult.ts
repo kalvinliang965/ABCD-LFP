@@ -1,32 +1,113 @@
 // server/src/db/models/SimulationResult.js
-import mongoose from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 
-interface YearResult {
-    year: number;
-    total_after_tax: number;
-    total_pre_tax: number;
-    total_non_retirement: number;
-    is_goal_met: boolean;
-}  
+// Interface for simulation results stored in the database
+export interface ISimulationResult extends Document {
+  scenarioId: string;
+  userId: mongoose.Types.ObjectId;
+  successProbability: number;
+  years: number[];
+  startYear: number;
+  endYear: number;
+  investments: Array<{
+    name: string;
+    category: 'investment';
+    taxStatus?: 'non-retirement' | 'pre-tax' | 'after-tax';
+    values: number[];
+  }>;
+  income: Array<{
+    name: string;
+    category: 'income';
+    values: number[];
+  }>;
+  expenses: Array<{
+    name: string;
+    category: 'expense';
+    values: number[];
+  }>;
+  totalInvestments?: {
+    median: number[];
+    ranges: {
+      range10_90: number[][];
+      range20_80: number[][];
+      range30_70: number[][];
+      range40_60: number[][];
+    };
+  };
+  totalExpenses?: {
+    median: number[];
+    ranges: {
+      range10_90: number[][];
+      range20_80: number[][];
+      range30_70: number[][];
+      range40_60: number[][];
+    };
+  };
+  totalIncome?: {
+    median: number[];
+    ranges: {
+      range10_90: number[][];
+      range20_80: number[][];
+      range30_70: number[][];
+      range40_60: number[][];
+    };
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-const simulationResultSchema = new mongoose.Schema({
-    scenarioId: { type: mongoose.Schema.Types.ObjectId, ref: 'Scenario', required: true },
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    createdAt: { type: Date, default: Date.now },
-    yearlyResults: [{
-      year: Number,
-      total_after_tax: Number,
-      total_pre_tax: Number,
-      total_non_retirement: Number,
-      is_goal_met: Boolean,
-      cash_value: Number,
-      investments: Object, // Record<string, number>
-      income_breakdown: Object, // Record<string, number>
-      expense_breakdown: Object,
-    }],
-    successProbability: Number,
-  });
+// Schema for ranges
+const RangesSchema = new Schema({
+  range10_90: { type: [[Number]], required: true },
+  range20_80: { type: [[Number]], required: true },
+  range30_70: { type: [[Number]], required: true },
+  range40_60: { type: [[Number]], required: true }
+}, { _id: false });
 
-  const SimulationResult = mongoose.model('SimulationResult', simulationResultSchema);
+// Schema for total values with ranges
+const TotalValuesSchema = new Schema({
+  median: { type: [Number], required: true },
+  ranges: { type: RangesSchema, required: true }
+}, { _id: false });
 
-  export default SimulationResult;
+// Schema for investments
+const InvestmentSchema = new Schema({
+  name: { type: String, required: true },
+  category: { type: String, enum: ['investment'], required: true },
+  taxStatus: { type: String, enum: ['non-retirement', 'pre-tax', 'after-tax'] },
+  values: { type: [Number], required: true }
+}, { _id: false });
+
+// Schema for income
+const IncomeSchema = new Schema({
+  name: { type: String, required: true },
+  category: { type: String, enum: ['income'], required: true },
+  values: { type: [Number], required: true }
+}, { _id: false });
+
+// Schema for expenses
+const ExpenseSchema = new Schema({
+  name: { type: String, required: true },
+  category: { type: String, enum: ['expense'], required: true },
+  values: { type: [Number], required: true }
+}, { _id: false });
+
+// Main schema for simulation results
+const SimulationResultSchema: Schema = new Schema({
+  scenarioId: { type: Schema.Types.ObjectId, ref: 'Scenario', required: true },
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  successProbability: { type: Number, required: true },
+  years: { type: [Number], required: true },
+  startYear: { type: Number, required: true },
+  endYear: { type: Number, required: true },
+  investments: { type: [InvestmentSchema], required: true },
+  income: { type: [IncomeSchema], required: true },
+  expenses: { type: [ExpenseSchema], required: true },
+  totalInvestments: { type: TotalValuesSchema },
+  totalIncome: { type: TotalValuesSchema },
+  totalExpenses: { type: TotalValuesSchema }
+}, {
+  timestamps: true
+});
+
+export default mongoose.model<ISimulationResult>('SimulationResult', SimulationResultSchema);
