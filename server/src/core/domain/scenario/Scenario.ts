@@ -19,6 +19,39 @@ import { AccountMap } from "../AccountManager";
 import { create_investment_type_manager, InvestmentTypeManager } from "../InvestmentTypeManager";
 import { dev } from "../../../config/environment";
 import { create_event_manager, EventManager } from "../EventManager";
+import { Distribution, parse_distribution } from "../raw/common";
+import { simulation_logger } from "../../../utils/logger/logger";
+
+
+const REQUIRED_FIELDS = [
+  'name',
+  'maritalStatus',
+  'birthYears',
+  'financialGoal',
+  'residenceState',
+  'lifeExpectancy',
+  'investments', // cash
+  'investmentTypes', // cash
+];
+
+  // Optional: Set defualt value for them...
+  // 'inflationAssumption', // think
+  // 'afterTaxContributionLimit', // think
+
+  // if roth conversion opt is true, we have to check for roth converstion start and end
+  // 'RothConversionOpt',
+  // 'RothConversionStart',
+  // 'RothConversionEnd',
+
+// 可选字段列表
+const OPTIONAL_FIELDS = [
+  'eventSeries',  
+  'spendingStrategy',
+  'expenseWithdrawalStrategy',
+  'RMDStrategy',
+  'RothConversionStrategy'
+];
+
 
 function parse_birth_years(birthYears: Array<number>): Array<number> {
   if (birthYears.length > 2 || birthYears.length == 0) {
@@ -30,56 +63,18 @@ function parse_birth_years(birthYears: Array<number>): Array<number> {
   return [user_birth_year, spouse_birth_year];
 }
 
-//! this function expect a array of Map<string, any>, if used for other type, it will throw error
 function parse_life_expectancy(
-  lifeExpectancy: Array<Map<string, any>>
+  lifeExpectancy: Array<Distribution>
 ): Array<number> {
   if (lifeExpectancy.length > 2 || lifeExpectancy.length == 0) {
     throw new Error(`Invalid number of lifeExpectancy ${lifeExpectancy}`);
   }
-
-  const parse = (params: Map<string, any>): number => {
-    if (!params.has("type")) {
-      throw new Error(`Life expectancy dont have type field ${params}`);
+  const parse = (distribution: Distribution): number => {
+    if (distribution.type != "fixed" && distribution.type != "normal") {
+      simulation_logger.error(`Invalid life expectancy distribution ${distribution.type}`);
+      throw new Error(`Invalid life expectancy distribution ${distribution.type}`);
     }
-
-    switch (params.get("type")) {
-      case "fixed":
-        const value = params.get("value");
-        if (!value) {
-          throw new Error(
-            `life expectancy value field does not exist for fixed type: ${params}`
-          );
-        }
-        return create_value_generator(
-          DistributionType.FIXED,
-          new Map([[StatisticType.VALUE, value]])
-        ).sample();
-      case "normal":
-        const mean = params.get("mean");
-        if (!mean) {
-          throw new Error(
-            `life expectancy mean field does not exist for normal type: ${params}`
-          );
-        }
-        const stdev = params.get("stdev");
-        if (!stdev) {
-          throw new Error(
-            `life expectancy stdev field does not exist for normal type: ${params}`
-          );
-        }
-        return create_value_generator(
-          DistributionType.NORMAL,
-          new Map([
-            [StatisticType.MEAN, mean],
-            [StatisticType.STDEV, stdev],
-          ])
-        ).sample();
-      default:
-        throw new Error(
-          `Invalid type for calculating life expectancy ${params}`
-        );
-    }
+    return parse_distribution(distribution).sample();
   };
   try {
     const user_life_expectancy = parse(lifeExpectancy[0]);
@@ -91,43 +86,6 @@ function parse_life_expectancy(
   }
 }
 
-function parse_inflation_assumption(
-  inflationAssumption: Map<string, any>
-): ValueGenerator {
-  try {
-    switch (inflationAssumption.get("type")) {
-      case "fixed":
-        return create_value_generator(
-          DistributionType.FIXED,
-          new Map([[StatisticType.VALUE, inflationAssumption.get("value")]])
-        );
-      case "normal":
-        return create_value_generator(
-          DistributionType.NORMAL,
-          new Map([
-            [StatisticType.MEAN, inflationAssumption.get("mean")],
-            [StatisticType.STDEV, inflationAssumption.get("stdev")],
-          ])
-        );
-      case "uniform":
-        return create_value_generator(
-          DistributionType.UNIFORM,
-          new Map([
-            [StatisticType.LOWER, inflationAssumption.get("lower")],
-            [StatisticType.UPPER, inflationAssumption.get("upper")],
-          ])
-        );
-      default:
-        throw new Error(
-          `inflation assumption type is invalid ${inflationAssumption}`
-        );
-    }
-  } catch (error) {
-    throw new Error(
-      `Failed to parse inflation assumption ${inflationAssumption}`
-    );
-  }
-}
 
 export interface Scenario {
   name: string;
@@ -162,7 +120,7 @@ export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenar
     );
     const [user_life_expectancy, spouse_life_expectancy] = parse_life_expectancy(scenario_raw.lifeExpectancy);
 
-    const inflation_assumption: ValueGenerator = parse_inflation_assumption(
+    const inflation_assumption: ValueGenerator = parse_distribution(
       scenario_raw.inflationAssumption
     );
     const after_tax_contribution_limit: number =

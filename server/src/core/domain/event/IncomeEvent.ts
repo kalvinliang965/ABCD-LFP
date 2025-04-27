@@ -2,11 +2,12 @@ import { Cloneable } from "../../../utils/helper";
 import { ValueGenerator } from "../../../utils/math/ValueGenerator";
 import { ChangeType } from "../../Enums";
 import { IncomeEventRaw } from "../raw/event_raw/income_event_raw";
+import { parse_distribution, parse_start_condition } from "../raw/common";
 
 import {
-  Event,
-  parse_duration,
   parse_start_year,
+  parse_duration,
+  Event,
   parse_expected_annual_change,
 } from "./Event";
 

@@ -1,9 +1,10 @@
+import { Distribution, StartCondition } from "../common";
 import { EventRaw } from "./event_raw";
 
 export type IncomeEventRaw = EventRaw & {
   initialAmount: number;
-  changeAmtOrPct: string;
-  changeDistribution: Map<string, any>;
+  changeAmtOrPct: "amount" | "percent";
+  changeDistribution: Distribution;
   inflationAdjusted: boolean;
   userFraction: number;
   socialSecurity: boolean;
@@ -11,21 +12,21 @@ export type IncomeEventRaw = EventRaw & {
 
 export const salary_income_event_one: IncomeEventRaw = create_income_event_raw(
     "salary",
-    new Map<string, any>([
-        ["type", "fixed"],
-        ["value", 2025],
-    ]),
-    new Map<string, any>([
-        ["type", "fixed"],
-        ["value", 40],
-    ]),
+    { 
+        type:"fixed",
+        value: 2025,
+    },
+    {
+        type: "fixed",
+        value: 40,
+    },
     75000,
     "amount",
-    new Map<string, any>([
-        ["type", "uniform"],
-        ["lower", 500],
-        ["upper", 2000],
-    ]),
+    {
+        type: "uniform",
+        lower: 500,
+        upper: 2000,
+    },
     false,
     1.0,
     false,
@@ -34,21 +35,21 @@ export const salary_income_event_one: IncomeEventRaw = create_income_event_raw(
 
 export const ss_income_event_one: IncomeEventRaw = create_income_event_raw(
     "social security",
-    new Map<string, any>([
-        ["type", "fixed"],
-        ["value", 2025],
-    ]),
-    new Map<string, any>([
-        ["type", "fixed"],
-        ["value", 40],
-    ]),
+    {
+        type: "fixed",
+        value: 2025,
+    },
+    {
+        type: "fixed",
+        value: 40,
+    },
     8000,
     "amount",
-    new Map<string, any>([
-        ["type", "uniform"],
-        ["lower", 500],
-        ["upper", 2000],
-    ]),
+    {
+        type: "uniform",
+        lower: 500,
+        upper: 2000,
+    },
     false,
     1.0,
     true,
@@ -56,11 +57,11 @@ export const ss_income_event_one: IncomeEventRaw = create_income_event_raw(
 
 export function create_income_event_raw(
     name: string,
-    start: Map<string, any>,
-    duration: Map<string, any>,
+    start: StartCondition,
+    duration: Distribution,
     initialAmount: number,
-    changeAmtOrPct: string,
-    changeDistribution: Map<string, any>,
+    changeAmtOrPct: "amount" | "percent",
+    changeDistribution: Distribution,
     inflationAdjusted: boolean,
     userFraction: number,
     socialSecurity: boolean,

@@ -23,8 +23,8 @@ function create_invest_event(
       duration,
       type: raw_data.type,
       max_cash: raw_data.maxCash,
-      asset_allocation: raw_data.assetAllocation,
-      asset_allocation2: raw_data.assetAllocation2,
+      asset_allocation: new Map(Object.entries(raw_data.assetAllocation)),
+      asset_allocation2: new Map(Object.entries(raw_data.assetAllocation2)),
       glide_path: raw_data.glidePath,
       clone: () => create_invest_event(raw_data),
     };

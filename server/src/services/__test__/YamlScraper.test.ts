@@ -1,6 +1,6 @@
 import { IncomeType, StateType, TaxFilingStatus } from "../../core/Enums";
 import { create_scenario_raw_yaml, scenario_yaml_string } from "../ScenarioYamlParser";
-import { create_state_tax__raw_yaml } from "../StateYamlParser";
+import { create_state_tax_raw_yaml } from "../StateYamlParser";
 
 describe("parse state tax", () => {
 
@@ -20,20 +20,20 @@ describe("parse state tax", () => {
     `;
 
     it("should parse valid yaml info", () => {
-        const result = create_state_tax__raw_yaml(validYAML);
+        const result = create_state_tax_raw_yaml(validYAML);
         console.log(result); 
         expect(result).toEqual([
             {
                 min: 0,
                 max: 50000,
                 rate: 0.1,
-                taxpayer_type: TaxFilingStatus.SINGLE,
+                taxpayer_type: TaxFilingStatus.INDIVIDUAL,
                 resident_state: StateType.NY,
             }, {
                 min: 50001,
                 max: Infinity,
                 rate: 0.2,
-                taxpayer_type: TaxFilingStatus.MARRIED,
+                taxpayer_type: TaxFilingStatus.COUPLE,
                 resident_state: StateType.NY,
             }
         ]);
@@ -42,7 +42,7 @@ describe("parse state tax", () => {
 
     describe("Should reject invalid data", () => {
         const test_error_case = (yaml: string) => {
-            expect(() => create_state_tax__raw_yaml(yaml)).toThrowError();
+            expect(() => create_state_tax_raw_yaml(yaml)).toThrowError();
         };
 
         it("should reject file with missing taxbrackets as entries point", () => {
@@ -222,19 +222,19 @@ describe("parse scenario yaml", () => {
     expect(scenarioRaw.birthYears).toEqual([1985, 1987]);
     
     expect(scenarioRaw.lifeExpectancy.length).toBe(2);
-    expect(scenarioRaw.lifeExpectancy[0].get("type")).toBe("fixed");
-    expect(scenarioRaw.lifeExpectancy[0].get("value")).toBe(80);
-    expect(scenarioRaw.lifeExpectancy[1].get("type")).toBe("normal");
-    expect(scenarioRaw.lifeExpectancy[1].get("mean")).toBe(82);
-    expect(scenarioRaw.lifeExpectancy[1].get("stdev")).toBe(3);
+    expect(scenarioRaw.lifeExpectancy[0].type).toBe("fixed");
+    expect(scenarioRaw.lifeExpectancy[0].value).toBe(80);
+    expect(scenarioRaw.lifeExpectancy[1].type).toBe("normal");
+    expect(scenarioRaw.lifeExpectancy[1].mean).toBe(82);
+    expect(scenarioRaw.lifeExpectancy[1].stdev).toBe(3);
 
     expect(scenarioRaw.investments.size).toBe(5);
 
     expect(scenarioRaw.eventSeries.size).toBe(6);
 
     const inflation = scenarioRaw.inflationAssumption;
-    expect(inflation.get("type")).toBe("fixed");
-    expect(inflation.get("value")).toBe(0.03);
+    expect(inflation.type).toBe("fixed");
+    expect(inflation.value).toBe(0.03);
 
     expect(scenarioRaw.afterTaxContributionLimit).toBe(7000);
     expect(scenarioRaw.spendingStrategy).toEqual([

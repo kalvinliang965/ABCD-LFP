@@ -14,20 +14,20 @@ const create_cycle_event = (
     if (dependency_type === "none") {
         return create_expense_event_raw(
             name,
-            new Map<string, any>([
-                ["type", "fixed"],
-                ["value", 2025],
-            ]),
-            new Map<string, any>([
-                ["type", "fixed"],
-                ["value", 40],
-            ]),
+            { 
+                type: "fixed",
+                value: 2025,
+            },
+            {
+                type: "fixed",
+                value: 40,
+            },
             500,
             "amount",
-            new Map<string, any>([
-                ["type", "fixed"],
-                ["value", 0],
-            ]),
+            {
+                type: "fixed",
+                value: 0,
+            },
             true,
             1.0,
             true,
@@ -35,20 +35,20 @@ const create_cycle_event = (
     } else {
         return create_expense_event_raw(
             name,
-            new Map<string, any>([
-                ["type", dependency_type],
-                ["eventSeries", target_event],
-            ]),
-            new Map<string, any>([
-                ["type", "fixed"],
-                ["value", 40],
-            ]),
+            {
+                type: dependency_type,
+                eventSeries: target_event,
+            },
+            {
+                type: "fixed",
+                value: 40,
+            },
             500,
             "amount",
-            new Map<string, any>([
-                ["type", "fixed"],
-                ["value", 0],
-            ]),
+            {
+                type: "fixed",
+                value: 0,
+            },
             true,
             1.0,
             true,

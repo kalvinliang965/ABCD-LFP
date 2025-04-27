@@ -130,9 +130,9 @@ export function create_event_manager_clone(
             const change_type = event.change_type;
             simulation_logger.debug(`change type: ${change_type}`);
             let change;
-            if (change_type === ChangeType.FIXED) {
+            if (change_type === ChangeType.AMOUNT) {
             change = annual_change;
-            } else if (change_type === ChangeType.PERCENTAGE) {
+            } else if (change_type === ChangeType.PERCENT) {
             change = annual_change * initial_amount
             } else {
             simulation_logger.error(`event ${event.name} contain invalid change_type ${event.change_type}`)
@@ -186,9 +186,9 @@ export function resolve_event_chain(
         }
         
         event_map.set(event.name, event);
-        const startType = event.start.get("type");
+        const startType = event.start.type;
         if (startType === "startWith" || startType === "startAfter") {
-          const dependencyName = event.start.get("eventSeries");
+          const dependencyName = event.start.eventSeries;
           if (!dependencyName) {
             simulation_logger.error(`Event ${event.name} missing eventSeries`);
             throw new Error(`Event ${event.name} missing eventSeries`);
@@ -224,18 +224,18 @@ export function resolve_event_chain(
             in_degree.set(dependent_event_name, updated_degree);
             if (updated_degree === 0) {
                 const dependent_event = event_map.get(dependent_event_name)!;
-                if (dependent_event.start.get("type")! === "startWith") {
-                    dependent_event.start = new Map<string, any>([
-                        ["type", "fixed"],
-                        ["value", resolved_event.start],
-                    ])
+                if (dependent_event.start.type === "startWith") {
+                    dependent_event.start = {
+                        type: "fixed",
+                        value: resolved_event.start,
+                    };
                 } 
                 // endWith
                 else {
-                    dependent_event.start = new Map<string, any>([
-                        ["type", "fixed"],
-                        ["value", resolved_event.start + resolved_event.duration],
-                    ])
+                    dependent_event.start = {
+                        type: "fixed",
+                        value: resolved_event.start + resolved_event.duration,
+                    };
                 }
                 processing_queue.push(dependent_event_name);
             }

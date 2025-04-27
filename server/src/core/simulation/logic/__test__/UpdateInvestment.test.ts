@@ -32,7 +32,7 @@ const createBaseState = (): SimulationState => ({
     ]),
   },
   investment_type_manager: create_investment_type_manager(new Set([incr_300_investment_type_two, incr_300_investment_type_one])),
-  get_tax_filing_status: () => TaxFilingStatus.SINGLE,
+  get_tax_filing_status: () => TaxFilingStatus.INDIVIDUAL,
   federal_tax_service: {
     find_bracket: jest.fn().mockReturnValue({ min: 0, max: 100000, rate: 0.24 }),
     find_deduction: jest.fn().mockReturnValue(12500),

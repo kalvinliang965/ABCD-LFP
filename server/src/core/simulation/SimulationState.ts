@@ -78,7 +78,7 @@ export async function create_simulation_state(
   try {
     const start_year: number = new Date().getFullYear();
     let current_year: number = start_year;
-    const is_married = scenario.tax_filing_status === TaxFilingStatus.MARRIED;
+    const is_married = scenario.tax_filing_status === TaxFilingStatus.COUPLE;
     let tax_filing_status = scenario.tax_filing_status;
     const user_tax_data = create_user_tax_data();
     // Create person details
@@ -153,7 +153,7 @@ export async function create_simulation_state(
 
         current_year++;
         if (!spouse?.is_alive) {
-          tax_filing_status = TaxFilingStatus.SINGLE;
+          tax_filing_status = TaxFilingStatus.INDIVIDUAL;
         }
       }, 
       event_manager,

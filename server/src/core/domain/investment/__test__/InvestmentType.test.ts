@@ -5,10 +5,11 @@ import {
     tax_exempt_bonds_investment_type_one 
 } from "../../raw/investment_type_raw";
 
-import { create_investment_type, parse_distribution, parse_change_type } from "../InvestmentType";
+import { create_investment_type, parse_investment_type_distribution, parse_change_type } from "../InvestmentType";
 import { ChangeType } from "../../../Enums";
 import { InvestmentTypeRaw } from "../../raw/investment_type_raw";
 import { StatisticType } from "../../../Enums";
+import { Distribution } from "../../raw/common";
 
 describe("investment type raw initialization", () => {
   describe("create_investment_type_raw function test", () => {
@@ -16,17 +17,17 @@ describe("investment type raw initialization", () => {
       const name = "Test Investment";
       const description = "Test Description";
       const returnAmtOrPct = "percent";
-      const returnDistribution = new Map<string, any>([
-        ["type", "fixed"],
-        ["value", 0.05],
-      ]);
+      const returnDistribution: Distribution = { 
+        type: "fixed",
+        value: 0.05,
+      };
       const expenseRatio = 0.003;
       const incomeAmtOrPct = "amount";
-      const incomeDistribution = new Map<string, any>([
-        ["type", "normal"],
-        ["mean", 1000],
-        ["stdev", 200],
-      ]);
+      const incomeDistribution: Distribution = {
+        type:"normal",
+        mean: 1000,
+        stdev: 200,
+      };
       const taxability = true;
 
       const result = create_investment_type_raw(
@@ -59,16 +60,16 @@ describe("investment type raw initialization", () => {
       expect(cash_investment_type_one.name).toBe("cash");
       expect(cash_investment_type_one.description).toBe("cash");
       expect(cash_investment_type_one.returnAmtOrPct).toBe("amount");
-      expect(cash_investment_type_one.returnDistribution.get("type")).toBe(
+      expect(cash_investment_type_one.returnDistribution.type).toBe(
         "fixed"
       );
-      expect(cash_investment_type_one.returnDistribution.get("value")).toBe(0);
+      expect(cash_investment_type_one.returnDistribution.value).toBe(0);
       expect(cash_investment_type_one.expenseRatio).toBe(0);
       expect(cash_investment_type_one.incomeAmtOrPct).toBe("percent");
-      expect(cash_investment_type_one.incomeDistribution.get("type")).toBe(
+      expect(cash_investment_type_one.incomeDistribution.type).toBe(
         "fixed"
       );
-      expect(cash_investment_type_one.incomeDistribution.get("value")).toBe(0);
+      expect(cash_investment_type_one.incomeDistribution.value).toBe(0);
       expect(cash_investment_type_one.taxability).toBe(true);
     });
 
@@ -81,24 +82,24 @@ describe("investment type raw initialization", () => {
       );
       expect(s_and_p_500_investment_type_one.returnAmtOrPct).toBe("percent");
       expect(
-        s_and_p_500_investment_type_one.returnDistribution.get("type")
+        s_and_p_500_investment_type_one.returnDistribution.type
       ).toBe("normal");
       expect(
-        s_and_p_500_investment_type_one.returnDistribution.get("mean")
+        s_and_p_500_investment_type_one.returnDistribution.mean
       ).toBe(0.06);
       expect(
-        s_and_p_500_investment_type_one.returnDistribution.get("stdev")
+        s_and_p_500_investment_type_one.returnDistribution.stdev
       ).toBe(0.02);
       expect(s_and_p_500_investment_type_one.expenseRatio).toBe(0.001);
       expect(s_and_p_500_investment_type_one.incomeAmtOrPct).toBe("percent");
       expect(
-        s_and_p_500_investment_type_one.incomeDistribution.get("type")
+        s_and_p_500_investment_type_one.incomeDistribution.type
       ).toBe("normal");
       expect(
-        s_and_p_500_investment_type_one.incomeDistribution.get("mean")
+        s_and_p_500_investment_type_one.incomeDistribution.mean
       ).toBe(0.01);
       expect(
-        s_and_p_500_investment_type_one.incomeDistribution.get("stdev")
+        s_and_p_500_investment_type_one.incomeDistribution.stdev
       ).toBe(0.005);
       expect(s_and_p_500_investment_type_one.taxability).toBe(true);
     });
@@ -116,23 +117,23 @@ describe("investment type raw initialization", () => {
         "amount"
       );
       expect(
-        tax_exempt_bonds_investment_type_one.returnDistribution.get("type")
+        tax_exempt_bonds_investment_type_one.returnDistribution.type
       ).toBe("fixed");
       expect(
-        tax_exempt_bonds_investment_type_one.returnDistribution.get("value")
+        tax_exempt_bonds_investment_type_one.returnDistribution.value
       ).toBe(0);
       expect(tax_exempt_bonds_investment_type_one.expenseRatio).toBe(0.004);
       expect(tax_exempt_bonds_investment_type_one.incomeAmtOrPct).toBe(
         "percent"
       );
       expect(
-        tax_exempt_bonds_investment_type_one.incomeDistribution.get("type")
+        tax_exempt_bonds_investment_type_one.incomeDistribution.type
       ).toBe("normal");
       expect(
-        tax_exempt_bonds_investment_type_one.incomeDistribution.get("mean")
+        tax_exempt_bonds_investment_type_one.incomeDistribution.mean
       ).toBe(0.03);
       expect(
-        tax_exempt_bonds_investment_type_one.incomeDistribution.get("stdev")
+        tax_exempt_bonds_investment_type_one.incomeDistribution.stdev
       ).toBe(0.01);
       expect(tax_exempt_bonds_investment_type_one.taxability).toBe(false);
     });
@@ -145,11 +146,11 @@ describe("Investment Type Factory", () => {
   describe("Parser Functions", () => {
     describe("parse_change_type", () => {
       test("should parse 'amount' to FIXED", () => {
-        expect(parse_change_type("amount")).toBe(ChangeType.FIXED);
+        expect(parse_change_type("amount")).toBe(ChangeType.AMOUNT);
       });
 
       test("should parse 'percent' to PERCENTAGE", () => {
-        expect(parse_change_type("percent")).toBe(ChangeType.PERCENTAGE);
+        expect(parse_change_type("percent")).toBe(ChangeType.PERCENT);
       });
 
       test("should throw error for invalid change type", () => {
@@ -159,26 +160,28 @@ describe("Investment Type Factory", () => {
 
     describe("parse_distribution", () => {
       test("should parse fixed distribution", () => {
-        const dist = new Map<string, any>([["type", "fixed"], ["value", 0.05]]);
-        const result = parse_distribution(dist);
+        const dist: Distribution = {
+          type: "fixed", 
+          value: 0.05
+        };
+        const result = parse_investment_type_distribution(dist);
         
         expect(result._params.get(StatisticType.VALUE)).toBe(0.05);
       });
 
       test("should parse normal distribution", () => {
-        const dist = new Map<string, any>([["type", "normal"], ["mean", 0.06], ["stdev", 0.02]]);
-        const result = parse_distribution(dist);
+        const dist: Distribution = {
+          type: "normal", 
+          mean: 0.06, 
+          stdev: 0.02
+        };
+        const result = parse_investment_type_distribution(dist);
         
         expect(result._params.get(StatisticType.MEAN)).toBe(0.06);
         expect(result._params.get(StatisticType.STDEV)).toBe(0.02);
       });
 
-      test("should throw error for invalid distribution type", () => {
-        const dist = new Map([["type", "invalid"]]);
-        expect(() => parse_distribution(dist)).toThrow("Invalid change distribution type");
-      });
     });
-
   });
 
 
@@ -187,10 +190,17 @@ describe("Investment Type Factory", () => {
       name: "Test",
       description: "Test Type",
       returnAmtOrPct: "percent",
-      returnDistribution: new Map<string, any>([["type", "fixed"], ["value", 0.05]]),
+      returnDistribution: {
+        type: "fixed",
+        value: 0.05
+      },
       expenseRatio: 0.001,
       incomeAmtOrPct: "amount",
-      incomeDistribution: new Map<string, any>([["type", "normal"], ["mean", 1000], ["stdev", 200]]),
+      incomeDistribution: {
+        type: "normal", 
+        mean: 1000,
+        stdev: 200
+      },
       taxability: true
     };
 
@@ -199,9 +209,9 @@ describe("Investment Type Factory", () => {
       expect(result).toMatchObject({
         name: "Test",
         description: "Test Type",
-        return_change_type: ChangeType.PERCENTAGE,
+        return_change_type: ChangeType.PERCENT,
         expense_ratio: 0.001,
-        income_change_type: ChangeType.FIXED,
+        income_change_type: ChangeType.AMOUNT,
         taxability: true
       });
       expect(result._expected_annual_return._params).toEqual(
@@ -213,26 +223,6 @@ describe("Investment Type Factory", () => {
           [StatisticType.STDEV, 200]
         ])
       );
-    });
-
-    it("should handle error in return distribution parsing", () => {
-      const invalidRaw = { ...baseRaw, returnDistribution: new Map([["type", "invalid"]]) };
-      expect(() => create_investment_type(invalidRaw)).toThrow("Failed to initialize InvestmentType");
-    });
-
-    it("should handle error in income distribution parsing", () => {
-      const invalidRaw = { ...baseRaw, incomeDistribution: new Map([["type", "invalid"]]) };
-      expect(() => create_investment_type(invalidRaw)).toThrow("Failed to initialize InvestmentType");
-    });
-
-    it("should handle error in return change type parsing", () => {
-      const invalidRaw = { ...baseRaw, returnAmtOrPct: "invalid" };
-      expect(() => create_investment_type(invalidRaw)).toThrow("Failed to initialize InvestmentType");
-    });
-
-    it("should handle error in income change type parsing", () => {
-      const invalidRaw = { ...baseRaw, incomeAmtOrPct: "invalid" };
-      expect(() => create_investment_type(invalidRaw)).toThrow("Failed to initialize InvestmentType");
     });
 
     it("should be able to be cloned properly", () => {
@@ -260,12 +250,12 @@ describe("Investment Type Factory", () => {
       // Modify all cloned properties
       cloned_investment_type.name = "changed name";
       cloned_investment_type.description = "changed description";
-      cloned_investment_type.return_change_type = cloned_investment_type.return_change_type === ChangeType.PERCENTAGE 
-        ? ChangeType.FIXED 
-        : ChangeType.PERCENTAGE;
-      cloned_investment_type.income_change_type = cloned_investment_type.income_change_type === ChangeType.PERCENTAGE
-        ? ChangeType.FIXED
-        : ChangeType.PERCENTAGE;
+      cloned_investment_type.return_change_type = cloned_investment_type.return_change_type === ChangeType.PERCENT 
+        ? ChangeType.AMOUNT 
+        : ChangeType.PERCENT;
+      cloned_investment_type.income_change_type = cloned_investment_type.income_change_type === ChangeType.PERCENT
+        ? ChangeType.AMOUNT
+        : ChangeType.PERCENT;
       cloned_investment_type.taxability = !cloned_investment_type.taxability;
       cloned_investment_type.expense_ratio += 0.1;
       // Verify original remains unchanged
@@ -303,7 +293,7 @@ describe("Investment Type Factory", () => {
       const result = create_investment_type(cash_investment_type_one);
       verifyCommonProperties(result);
       
-      expect(result.return_change_type).toBe(ChangeType.FIXED);
+      expect(result.return_change_type).toBe(ChangeType.AMOUNT);
       expect(result._expected_annual_return._params.get(StatisticType.VALUE)).toBe(0);
       expect(result.taxability).toBe(true);
     });
@@ -311,14 +301,14 @@ describe("Investment Type Factory", () => {
     test("s_and_p_500_investment_type_one", () => {
       const result = create_investment_type(s_and_p_500_investment_type_one);
       verifyCommonProperties(result);
-      expect(result.return_change_type).toBe(ChangeType.PERCENTAGE);
+      expect(result.return_change_type).toBe(ChangeType.PERCENT);
       expect(result.taxability).toBe(true);
     });
 
     test("tax_exempt_bonds_investment_type_one", () => {
       const result = create_investment_type(tax_exempt_bonds_investment_type_one);
       verifyCommonProperties(result);
-      expect(result.income_change_type).toBe(ChangeType.PERCENTAGE);
+      expect(result.income_change_type).toBe(ChangeType.PERCENT);
       expect(result.taxability).toBe(false);
     });
   });

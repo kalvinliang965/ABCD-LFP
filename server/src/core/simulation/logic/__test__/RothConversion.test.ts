@@ -34,7 +34,7 @@ const createBaseState = (): SimulationState => ({
     after_tax: new Map<string, Investment>(),
     non_retirement: new Map()
   },
-  get_tax_filing_status: () => TaxFilingStatus.SINGLE,
+  get_tax_filing_status: () => TaxFilingStatus.INDIVIDUAL,
   federal_tax_service: {
     find_bracket_with_income: jest.fn().mockReturnValue({ min: 0, max: 100000, rate: 0.24 }),
     find_deduction: jest.fn().mockReturnValue(0),

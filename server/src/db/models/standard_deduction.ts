@@ -3,7 +3,7 @@ import { TaxFilingStatus } from "../../core/Enums";
 
 export interface IStandardDeduction extends Document {
     amount: number;
-    taxpayer_type: TaxFilingStatus.SINGLE | TaxFilingStatus.MARRIED;
+    taxpayer_type: TaxFilingStatus.INDIVIDUAL | TaxFilingStatus.COUPLE;
 }
 
 const StandardDeductionSchema = new Schema<IStandardDeduction>({
@@ -14,7 +14,7 @@ const StandardDeductionSchema = new Schema<IStandardDeduction>({
     taxpayer_type: {
         type: String,
         required: true,
-        enum: [TaxFilingStatus.SINGLE, TaxFilingStatus.MARRIED],
+        enum: [TaxFilingStatus.INDIVIDUAL, TaxFilingStatus.COUPLE],
     }
 });
 

@@ -147,25 +147,27 @@ const DistributionSchema = z.union([
         upper: z.number()
     })
 ]);
+const StartSchema = z.union([
+  DistributionSchema,
+  z.object({
+    type: z.literal("startWith"), 
+    eventSeries: z.string()
+  }),
+  z.object({
+    type: z.literal("startAfter"), 
+    eventSeries: z.string()
+  })
+]);
 
-const StartSchema = DistributionSchema.or(
-    (z.object({type: z.literal("startWith"), eventSeries: z.string()})).
-    or
-    (z.object({type: z.literal("startAfter"), eventSeries: z.string()}))
-);
-
-const MapSchema = z.record(z.any()).transform(
-    obj => new Map(Object.entries(obj))
-);
 
 const InvestmentTypeRawSchema = z.object({
     name: z.string(),
     description: z.string(),
     returnAmtOrPct: z.enum(["amount", "percent"]),
-    returnDistribution: DistributionSchema.pipe(MapSchema),
+    returnDistribution: DistributionSchema,
     expenseRatio: z.number().nonnegative(),
     incomeAmtOrPct: z.enum(["amount", "percent"]),
-    incomeDistribution: DistributionSchema.pipe(MapSchema),
+    incomeDistribution: DistributionSchema,
     taxability: z.boolean()
 });
 
@@ -178,8 +180,8 @@ const InvestmentRawSchema = z.object({
      
 const BaseEventSchema = z.object({
     name: z.string(),
-    start: StartSchema.pipe(MapSchema),
-    duration: DistributionSchema.pipe(MapSchema),
+    start: StartSchema,
+    duration: DistributionSchema,
     type: z.string()
 });
 
@@ -188,7 +190,7 @@ const IncomeEventRawSchema = BaseEventSchema.extend({
     type: z.literal("income"),
     initialAmount: z.number().nonnegative(),
     changeAmtOrPct: z.enum(["amount", "percent"]),
-    changeDistribution: DistributionSchema.pipe(MapSchema),
+    changeDistribution: DistributionSchema,
     inflationAdjusted: z.boolean(),
     userFraction: z.number().min(0).max(1),
     socialSecurity: z.boolean()
@@ -198,7 +200,7 @@ const ExpenseEventRawSchema = BaseEventSchema.extend({
     type: z.literal("expense"),
     initialAmount: z.number().nonnegative(),
     changeAmtOrPct: z.enum(["amount", "percent"]),
-    changeDistribution: DistributionSchema.pipe(MapSchema),
+    changeDistribution: DistributionSchema,
     inflationAdjusted: z.boolean(),
     userFraction: z.number().min(0).max(1),
     discretionary: z.boolean()
@@ -206,15 +208,15 @@ const ExpenseEventRawSchema = BaseEventSchema.extend({
 
 const InvestEventRawSchema = BaseEventSchema.extend({
     type: z.literal("invest"),
-    assetAllocation: z.record(z.number()).pipe(MapSchema),
+    assetAllocation: z.record(z.number()),
     glidePath: z.boolean(),
-    assetAllocation2: z.record(z.number()).pipe(MapSchema),
+    assetAllocation2: z.record(z.number()),
     maxCash: z.number().nonnegative(),
 });
 
 const RebalanceEventRawSchema = BaseEventSchema.extend({
     type: z.literal("rebalance"),
-    assetAllocation: z.record(z.number()).pipe(MapSchema)
+    assetAllocation: z.record(z.number())
 });
 
 const ScenarioRawSchema = z.object({
@@ -228,7 +230,7 @@ const ScenarioRawSchema = z.object({
         });
       }
     }),
-    lifeExpectancy: z.array(DistributionSchema.pipe(MapSchema)),
+    lifeExpectancy: z.array(DistributionSchema),
     investmentTypes: z.array(InvestmentTypeRawSchema).transform(arr => new Set(arr)),
     investments: z.array(InvestmentRawSchema).transform(arr => new Set(arr)),
     eventSeries: z.array(
@@ -239,7 +241,7 @@ const ScenarioRawSchema = z.object({
         InvestEventRawSchema,
       ])
     ).transform(arr => new Set(arr)),
-    inflationAssumption: DistributionSchema.pipe(MapSchema),
+    inflationAssumption: DistributionSchema,
     afterTaxContributionLimit: z.number().nonnegative(),
     spendingStrategy: z.array(z.string()),
     expenseWithdrawalStrategy: z.array(z.string()),
