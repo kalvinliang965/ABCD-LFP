@@ -1,39 +1,39 @@
-
 import { SimulationState, create_simulation_state } from './SimulationState';
 import { SimulationYearlyResult, create_simulation_yearly_result } from './SimulationYearlyResult';
-import { create_scenario, Scenario } from '../domain/scenario/Scenario';
 import run_roth_conversion_optimizer from './logic/RothConversion';
 import update_investment from './logic/UpdateInvestment';
-import { create_federal_tax_service, FederalTaxService } from "../tax/FederalTaxService";
-import { create_state_tax_service_yaml, create_state_tax_service_db, StateTaxService } from "../tax/StateTaxService";
-import { create_scenario_raw_yaml } from '../../services/ScenarioYamlParser';
-import { ScenarioRaw } from '../domain/raw/scenario_raw';
 import run_income_event from './logic/RunIncomeEvent';
  
-export interface SimulationEngine {
-    run: (num_simulations: number) => Promise<SimulationYearlyResult[]>;
-}
-
 import { simulation_logger } from '../../utils/logger/logger';
 import { process_rmd } from './logic/ProcessRMD';
 import { pay_mandatory_expenses } from './logic/PayMandatoryExpense';
 import { pay_discretionary_expenses } from './logic/PayDiscretionaryExpense';
 import { invest_excess_cash as run_invest_event } from './logic/InvestExcessCash';
 import { run_rebalance_investment } from './logic/RebalanceInvestments';
-import { delete_state_tax_brackets_by_state } from '../../db/repositories/StateTaxBracketRepository';
-import { get_rmd_factors_from_db, save_rmd_factors_to_db } from '../../db/repositories/RMDFactorRepository';
-import { fetch_and_parse_rmd } from '../../services/RMDScraper';
-import { tax_config } from '../../config/tax';
 import { SimulationEnvironment } from './ LoadSimulationEnvironment';
+import { dev } from '../../config/environment';
+import { Profiler } from '../../utils/Profiler';
+
+export interface SimulationEngine {
+    run: (num_simulations: number) => Promise<SimulationYearlyResult[]>;
+}
 
 export async function create_simulation_engine(simulation_environment: SimulationEnvironment): Promise<SimulationEngine> {
 
     simulation_logger.info("Initializing the simulation engine...");
 
+    const profiler = new Profiler();
+
     const {scenario, federal_tax_service, state_tax_service, rmd_table} = simulation_environment;
     
-    // we will be using this one for now
+    async function run_parallel() {
+        // TODO
+    }
+
+    // not optimize
     async function run(num_simulations: number): Promise<SimulationYearlyResult[]> {
+        
+        
         const res: SimulationYearlyResult[] = [];
         simulation_logger.info("Simulation started with config: ", {
             scenario: scenario,
@@ -51,10 +51,16 @@ export async function create_simulation_engine(simulation_environment: Simulatio
                     // adjust for tax, inflation, etc...
                     simulation_state.setup();
                     // simulate year
+                    if(dev.is_dev) {
+                        profiler.start("simulate_year");
+                    }
                     if (!simulate_year(simulation_state, simulation_result)) {
                         simulation_logger.info(`
                             User cannot pay all mandatory expense for ${simulation_state.get_current_year()}
                         `);
+                    }
+                    if(dev.is_dev) {
+                        profiler.end("simulate_year");
                     }
                     // increase uesr age and tax status
                     simulation_state.advance_year();
@@ -76,6 +82,10 @@ export async function create_simulation_engine(simulation_environment: Simulatio
                     error: error instanceof Error? error.stack: error
                 }
             )
+        }        
+
+        if (dev.is_dev) {
+            profiler.export_to_CSV();
         }
         simulation_logger.info("Successfully running all simulation")
         return res;
@@ -91,39 +101,90 @@ export async function create_simulation_engine(simulation_environment: Simulatio
                     simulation_state: simulation_state,
                 }
             ); 
-            simulation_logger.debug("Running income events")
+
+            simulation_logger.debug("Running income events");
+            if (dev.is_dev) {
+                profiler.start("run_income_event");
+            }
             run_income_event(simulation_state);
+            if (dev.is_dev) {
+                profiler.end("run_income_event");
+            }
             
             if (simulation_state.user.get_age() >= 74) {
                 simulation_logger.debug("Performing rmd...");
+                if (dev.is_dev) {
+                    profiler.start("process_rmd");
+                }
                 process_rmd(simulation_state, rmd_table);
+                if (dev.is_dev) {
+                    profiler.end("process_rmd");
+                }
             }
+
             simulation_logger.debug("Updating investments...");
+            if (dev.is_dev) {
+                profiler.start("update_investment");
+            }
             update_investment(simulation_state);
+            if (dev.is_dev) {
+                profiler.end("update_investment");
+            }
             if (simulation_state.roth_conversion_opt) {
                 simulation_logger.debug("Running roth conversion optimizer...");
+                if (dev.is_dev) {
+                    profiler.start("run_roth_conversion_optimizer");
+                }
                 run_roth_conversion_optimizer(simulation_state);
+                if (dev.is_dev) {
+                    profiler.end("run_roth_conversion_optimizer");
+                }
             }
             
             simulation_logger.debug(`Paying non discretionary expenses...`);
+            if (dev.is_dev) {
+                profiler.start("pay_mandatory_expenses");
+            }
             if (!pay_mandatory_expenses(simulation_state)) {
                 simulation_logger.info(`User cannnot pay all non discretionary expenses`);
                 return false;
             }
+            if (dev.is_dev) {
+                profiler.end("pay_mandatory_expenses");
+            }
             
             simulation_logger.debug(`Paying discretionary expenses`);
+            if (dev.is_dev) {
+                profiler.start("pay_discretionary_expenses");
+            }
             pay_discretionary_expenses(simulation_state);
+            if (dev.is_dev) {
+                profiler.end("pay_discretionary_expenses");
+            }
 
             simulation_logger.debug(`Running invest event scheduled for current year...`);
+            if (dev.is_dev) {
+                profiler.start("run_invest_event");
+            }
             run_invest_event(simulation_state);
+            if (dev.is_dev) {
+                profiler.end("run_invest_event");
+            }
 
             simulation_logger.debug(`Running rebalance events scheduled for the current year...`);
+            if (dev.is_dev) {
+                profiler.start("run_rebalance_investment");
+            }
             run_rebalance_investment(simulation_state);
+            if (dev.is_dev) {
+                profiler.end("run_rebalance_investment");
+            }
 
             simulation_result.update(simulation_state);
             return true;
         } catch (error) {
-            throw error
+            simulation_logger.error(`simulate_year failed: ${error instanceof Error? error.message: String(error)}`)
+            throw new Error(`simulate_year failed: ${error instanceof Error? error.message: String(error)}`)
         }
     }
 
