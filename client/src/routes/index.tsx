@@ -4,11 +4,13 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import UserProfile from '../components/user/UserProfile';
 import Login from '../pages/Login';
 import SimulationResultsPage from '../pages/SimulationResultsPage';
+import ScenarioResultPage from '../pages/scenarios/ScenarioResultPage';
 
 import AccountRoutes from './accountRoutes';
 import DashboardRoutes from './dashboardRoutes';
 import ScenarioRoutes from './scenarioRoutes';
 import SimulationRoutes from './simulationRoutes';
+import { ProtectedRoute } from '../common';
 //import "./config/passport";
 
 // Pages
@@ -36,7 +38,14 @@ const AppRoutes = () => {
       <Route path="/profile" element={<UserProfile />} />
 
       {/* Simulation results route - for viewing simulation results */}
-      <Route path="/scenarios/:scenarioId/results" element={<SimulationResultsPage />} />
+      <Route
+        path="/scenarios/:scenarioId/results"
+        element={
+          <ProtectedRoute>
+            <ScenarioResultPage />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 };

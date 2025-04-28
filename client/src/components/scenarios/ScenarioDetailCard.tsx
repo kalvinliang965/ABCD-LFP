@@ -35,7 +35,7 @@ import {
   FaDownload,
   FaTrash,
 } from 'react-icons/fa';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 import { ScenarioRaw } from '../../types/Scenarios';
 import { download_scenario_as_yaml } from '../../utils/yamlExport';
@@ -105,6 +105,7 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
   const cardBorder = useColorModeValue('gray.200', 'gray.700');
   const headerBg = useColorModeValue('blue.500', 'blue.600');
   const [stateTaxExists, set_state_tax_exists] = useState<boolean | null>(null);
+  const navigate = useNavigate();
 
   // AI-generated code
   // Memoize the check_tax_data function to prevent unnecessary re-renders
@@ -120,9 +121,9 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
 
   useEffect(() => {
     check_tax_data();
-    
+
     window.addEventListener('tax-data-updated', check_tax_data);
-    
+
     return () => {
       window.removeEventListener('tax-data-updated', check_tax_data);
     };
@@ -149,6 +150,16 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
         isClosable: true,
       });
     }
+  };
+
+  const handle_view_simulation_result = () => {
+    // Check if scenario has _id, otherwise fall back to name
+    console.log('ScenarioDetailCard: Full scenario object:', scenario);
+    // Check for both _id formats: direct property or nested in data
+    const id = (scenario as any)._id || (scenario as any).data?._id;
+    const scenarioIdentifier = id || encodeURIComponent(scenario.name);
+    console.log('ScenarioDetailCard: Using identifier for navigation:', scenarioIdentifier);
+    navigate(`/scenarios/${scenarioIdentifier}/results`);
   };
 
   return (
@@ -293,67 +304,69 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
           <Divider mb={2} />
           <Flex justify="space-between" align="center" p={3}>
             <HStack spacing={3}>
-              {((scenario.investments as any) && (
-                (scenario.investments instanceof Set && scenario.investments.size > 0) || 
-                (Array.isArray(scenario.investments) && (scenario.investments as any[]).length > 0)
-              )) && (
-                <Popover placement="top" trigger="hover">
-                  <PopoverTrigger>
-                    <IconButton
-                      aria-label="Investment details"
-                      icon={<Icon as={FaMoneyBillWave} />}
-                      size="sm"
-                      colorScheme="blue"
-                      variant="ghost"
-                    />
-                  </PopoverTrigger>
-                  <PopoverContent>
-                    <PopoverArrow />
-                    <PopoverCloseButton />
-                    <PopoverHeader fontWeight="bold">Investments</PopoverHeader>
-                    <PopoverBody>
-                      <Text fontSize="sm">
-                        {scenario.investments instanceof Set 
-                          ? scenario.investments.size 
-                          : Array.isArray(scenario.investments) 
-                            ? (scenario.investments as any[]).length 
-                            : 0} investment types configured
-                      </Text>
-                    </PopoverBody>
-                  </PopoverContent>
-                </Popover>
-              )}
+              {(scenario.investments as any) &&
+                ((scenario.investments instanceof Set && scenario.investments.size > 0) ||
+                  (Array.isArray(scenario.investments) &&
+                    (scenario.investments as any[]).length > 0)) && (
+                  <Popover placement="top" trigger="hover">
+                    <PopoverTrigger>
+                      <IconButton
+                        aria-label="Investment details"
+                        icon={<Icon as={FaMoneyBillWave} />}
+                        size="sm"
+                        colorScheme="blue"
+                        variant="ghost"
+                      />
+                    </PopoverTrigger>
+                    <PopoverContent>
+                      <PopoverArrow />
+                      <PopoverCloseButton />
+                      <PopoverHeader fontWeight="bold">Investments</PopoverHeader>
+                      <PopoverBody>
+                        <Text fontSize="sm">
+                          {scenario.investments instanceof Set
+                            ? scenario.investments.size
+                            : Array.isArray(scenario.investments)
+                            ? (scenario.investments as any[]).length
+                            : 0}{' '}
+                          investment types configured
+                        </Text>
+                      </PopoverBody>
+                    </PopoverContent>
+                  </Popover>
+                )}
 
-              {((scenario.eventSeries as any) && (
-                (scenario.eventSeries instanceof Set && scenario.eventSeries.size > 0) || 
-                (Array.isArray(scenario.eventSeries) && (scenario.eventSeries as any[]).length > 0)
-              )) && (
-                <Popover placement="top" trigger="hover">
-                  <PopoverTrigger>
-                    <IconButton
-                      aria-label="Event details"
-                      icon={<Icon as={FaChartLine} />}
-                      size="sm"
-                      colorScheme="blue"
-                      variant="ghost"
-                    />
-                  </PopoverTrigger>
-                  <PopoverContent>
-                    <PopoverArrow />
-                    <PopoverCloseButton />
-                    <PopoverHeader fontWeight="bold">Events</PopoverHeader>
-                    <PopoverBody>
-                      <Text fontSize="sm">
-                        {scenario.eventSeries instanceof Set 
-                          ? scenario.eventSeries.size 
-                          : Array.isArray(scenario.eventSeries) 
-                            ? (scenario.eventSeries as any[]).length 
-                            : 0} events configured
-                      </Text>
-                    </PopoverBody>
-                  </PopoverContent>
-                </Popover>
-              )}
+              {(scenario.eventSeries as any) &&
+                ((scenario.eventSeries instanceof Set && scenario.eventSeries.size > 0) ||
+                  (Array.isArray(scenario.eventSeries) &&
+                    (scenario.eventSeries as any[]).length > 0)) && (
+                  <Popover placement="top" trigger="hover">
+                    <PopoverTrigger>
+                      <IconButton
+                        aria-label="Event details"
+                        icon={<Icon as={FaChartLine} />}
+                        size="sm"
+                        colorScheme="blue"
+                        variant="ghost"
+                      />
+                    </PopoverTrigger>
+                    <PopoverContent>
+                      <PopoverArrow />
+                      <PopoverCloseButton />
+                      <PopoverHeader fontWeight="bold">Events</PopoverHeader>
+                      <PopoverBody>
+                        <Text fontSize="sm">
+                          {scenario.eventSeries instanceof Set
+                            ? scenario.eventSeries.size
+                            : Array.isArray(scenario.eventSeries)
+                            ? (scenario.eventSeries as any[]).length
+                            : 0}{' '}
+                          events configured
+                        </Text>
+                      </PopoverBody>
+                    </PopoverContent>
+                  </Popover>
+                )}
 
               {scenario.inflationAssumption && (
                 <Popover placement="top" trigger="hover">
@@ -390,6 +403,19 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
                 />
               </Tooltip>
             </HStack>
+
+            {/* AI-generated code: Move simulation result button to the right side */}
+            <Tooltip label="View Simulation Result" placement="top">
+              <IconButton
+                aria-label="View Simulation Result"
+                icon={<FaChartLine />}
+                size="sm"
+                colorScheme="purple"
+                variant="ghost"
+                onClick={handle_view_simulation_result}
+              />
+            </Tooltip>
+
             {/* <Link
               as={RouterLink}
               to={`/scenarios/${encodeURIComponent(scenario.name)}`}
