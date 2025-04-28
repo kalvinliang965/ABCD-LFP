@@ -3,7 +3,7 @@ import { quantile } from 'd3-array';
 
 // Define the shape of the consolidated simulation result that will be returned to frontend/database
 //add the simulation count to the consolidated result
-
+// the medianAndAverageValues is the median and average values of the simulation results, and it show be shown inside the yearlyData, median and 
 export interface ConsolidatedResult {
   scenarioId: string;
   successProbability: number;
