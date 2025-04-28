@@ -45,7 +45,7 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
   const [amountError, setAmountError] = useState<string>('');
   const [annualChange, setAnnualChange] = useState<AmountChangeType>({
     type: 'fixed',
-    value: undefined,
+    value: 0,
   });
   const [annualChangeError, setAnnualChangeError] = useState<string>('');
   const [changeAmtOrPct, setChangeAmtOrPct] = useState<'amount' | 'percent'>('amount');
@@ -75,17 +75,17 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
     let hasErrors = false;
 
     //validate that amount is greater than 0
-    if (amount <= 0) {
-      setAmountError('Amount must be greater than 0');
+    if (amount < 0) {
+      setAmountError('Amount cannot be less than 0');
       hasErrors = true;
     }
 
     //validate that annual change values are specified if needed
     if (
       annualChange.type === 'fixed' &&
-      (annualChange.value === undefined || annualChange.value <= 0)
+      (annualChange.value === undefined || annualChange.value < 0)
     ) {
-      setAnnualChangeError('Annual change amount must be greater than 0');
+      setAnnualChangeError('Annual change cannot be less than 0');
       hasErrors = true;
     }
 
@@ -151,7 +151,7 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
     setSpousePercentage(0);
     setStartYear({ type: 'fixed', value: new Date().getFullYear() });
     setDuration({ type: 'fixed', value: 1 });
-    setAnnualChange({ type: 'fixed', value: undefined });
+    setAnnualChange({ type: 'fixed', value: 0 });
     setAnnualChangeError('');
     setChangeAmtOrPct('amount');
   };
@@ -232,11 +232,11 @@ export const IncomeEventSeriesForm: React.FC<IncomeEventSeriesFormProps> = ({
             <FormControl isRequired isInvalid={!!annualChangeError}>
               <FormLabel>Annual Change {changeAmtOrPct === 'amount' ? '($)' : '(%)'}</FormLabel>
               <NumberInput
-                value={annualChange.value ?? 0}
+                value={annualChange.value}
                 onChange={valueString => {
                   const value = Number(valueString) || 0;
                   setAnnualChange({ type: 'fixed', value });
-                  if (value > 0) setAnnualChangeError('');
+                  if (value >= 0) setAnnualChangeError('');
                 }}
                 min={0}
               >
