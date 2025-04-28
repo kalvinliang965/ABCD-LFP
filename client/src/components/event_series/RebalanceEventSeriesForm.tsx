@@ -180,6 +180,15 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
   return (
     <form onSubmit={handleSubmit}>
       <VStack spacing={6} align="stretch">
+        <Alert status="info" mb={4}>
+          <AlertIcon />
+          <Box>
+            <AlertTitle>Important Note</AlertTitle>
+            <AlertDescription>
+              Rebalance events should not overlap with other rebalance events of the same tax status.
+            </AlertDescription>
+          </Box>
+        </Alert>
         <CommonFields
           name={name}
           setName={setName}

@@ -226,6 +226,15 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
   return (
     <form onSubmit={handleSubmit}>
       <VStack spacing={6} align="stretch">
+        <Alert status="info" mb={4}>
+          <AlertIcon />
+          <Box>
+            <AlertTitle>Important Note</AlertTitle>
+            <AlertDescription>
+              There should be only one invest event per year, and invest events should not overlap with each other.
+            </AlertDescription>
+          </Box>
+        </Alert>
         <CommonFields
           name={name}
           setName={setName}
