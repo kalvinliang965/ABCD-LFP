@@ -22,7 +22,7 @@ import {
   IconButton,
   useToast,
 } from '@chakra-ui/react';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   FaCalendarAlt,
   FaMapMarkerAlt,
@@ -39,6 +39,8 @@ import { Link as RouterLink } from 'react-router-dom';
 
 import { ScenarioRaw } from '../../types/Scenarios';
 import { download_scenario_as_yaml } from '../../utils/yamlExport';
+import { check_state_tax_exists } from '../../services/taxService';
+import { StateType } from '../../types/Enum';
 
 /**
  * AI prompt : help me design a card to show the scenario details by using the card component and the scenario type
@@ -102,6 +104,29 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
   const cardBg = useColorModeValue('white', 'gray.800');
   const cardBorder = useColorModeValue('gray.200', 'gray.700');
   const headerBg = useColorModeValue('blue.500', 'blue.600');
+  const [stateTaxExists, set_state_tax_exists] = useState<boolean | null>(null);
+
+  // AI-generated code
+  // Memoize the check_tax_data function to prevent unnecessary re-renders
+  const check_tax_data = useCallback(async () => {
+    try {
+      const exists = await check_state_tax_exists(scenario.residenceState as StateType);
+      set_state_tax_exists(exists);
+    } catch (error) {
+      console.error('Error checking state tax data:', error);
+      set_state_tax_exists(false);
+    }
+  }, [scenario.residenceState]);
+
+  useEffect(() => {
+    check_tax_data();
+    
+    window.addEventListener('tax-data-updated', check_tax_data);
+    
+    return () => {
+      window.removeEventListener('tax-data-updated', check_tax_data);
+    };
+  }, [scenario.residenceState, check_tax_data]);
 
   const handle_download_yaml = () => {
     try {
@@ -158,6 +183,24 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
             >
               {scenario.maritalStatus}
             </Badge>
+            {stateTaxExists !== null && (
+              <Tooltip
+                label={stateTaxExists ? 'State tax data is available' : 'State tax data is missing'}
+              >
+                <Badge
+                  colorScheme={stateTaxExists ? 'green' : 'red'}
+                  fontSize="0.8em"
+                  py={1}
+                  px={2}
+                  borderRadius="full"
+                >
+                  <Flex align="center" gap={1}>
+                    <Icon as={FaPercentage} boxSize={3} />
+                    {stateTaxExists ? 'Tax Data' : 'No Tax Data'}
+                  </Flex>
+                </Badge>
+              </Tooltip>
+            )}
           </Flex>
         </Flex>
       </Box>
@@ -250,7 +293,10 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
           <Divider mb={2} />
           <Flex justify="space-between" align="center" p={3}>
             <HStack spacing={3}>
-              {scenario.investments.size > 0 && (
+              {((scenario.investments as any) && (
+                (scenario.investments instanceof Set && scenario.investments.size > 0) || 
+                (Array.isArray(scenario.investments) && (scenario.investments as any[]).length > 0)
+              )) && (
                 <Popover placement="top" trigger="hover">
                   <PopoverTrigger>
                     <IconButton
@@ -267,14 +313,21 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
                     <PopoverHeader fontWeight="bold">Investments</PopoverHeader>
                     <PopoverBody>
                       <Text fontSize="sm">
-                        {scenario.investments.size} investment types configured
+                        {scenario.investments instanceof Set 
+                          ? scenario.investments.size 
+                          : Array.isArray(scenario.investments) 
+                            ? (scenario.investments as any[]).length 
+                            : 0} investment types configured
                       </Text>
                     </PopoverBody>
                   </PopoverContent>
                 </Popover>
               )}
 
-              {scenario.eventSeries.size > 0 && (
+              {((scenario.eventSeries as any) && (
+                (scenario.eventSeries instanceof Set && scenario.eventSeries.size > 0) || 
+                (Array.isArray(scenario.eventSeries) && (scenario.eventSeries as any[]).length > 0)
+              )) && (
                 <Popover placement="top" trigger="hover">
                   <PopoverTrigger>
                     <IconButton
@@ -290,7 +343,13 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
                     <PopoverCloseButton />
                     <PopoverHeader fontWeight="bold">Events</PopoverHeader>
                     <PopoverBody>
-                      <Text fontSize="sm">{scenario.eventSeries.size} events configured</Text>
+                      <Text fontSize="sm">
+                        {scenario.eventSeries instanceof Set 
+                          ? scenario.eventSeries.size 
+                          : Array.isArray(scenario.eventSeries) 
+                            ? (scenario.eventSeries as any[]).length 
+                            : 0} events configured
+                      </Text>
                     </PopoverBody>
                   </PopoverContent>
                 </Popover>

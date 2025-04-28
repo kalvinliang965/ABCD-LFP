@@ -9,28 +9,25 @@ import { Server } from "http";
 import { initialize_route as initialize_routes } from "./routes";
 import { fetch_and_parse_rmd } from "./services/RMDScraper";
 
-
 // Graceful shutdown
-async function initialize_graceful_shutdown(
-  server: Server,
-) {
-    const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
+async function initialize_graceful_shutdown(server: Server) {
+  const signals: NodeJS.Signals[] = ["SIGINT", "SIGTERM"];
 
-    signals.forEach(signal => {
-      process.on(signal, async() => {
-        console.log(`Recieved ${signal} shutting down...`);
-        try {
-          await disconnect_database();
-          await new Promise(resolve => server.close(resolve));
+  signals.forEach((signal) => {
+    process.on(signal, async () => {
+      console.log(`Recieved ${signal} shutting down...`);
+      try {
+        await disconnect_database();
+        await new Promise((resolve) => server.close(resolve));
 
-          console.log("Graceful shutdown complete");
-          process.exit(0);
-        } catch (error) {
-          console.log("Error during termiantion: ", error);
-          process.exit(1); // exit with error
-        }
-      })
-    })
+        console.log("Graceful shutdown complete");
+        process.exit(0);
+      } catch (error) {
+        console.log("Error during termiantion: ", error);
+        process.exit(1); // exit with error
+      }
+    });
+  });
 }
 
 const port = api_config.PORT;
@@ -38,14 +35,14 @@ const app = express();
 
 async function initialize_application() {
   // Register middleware
-  initialize_middlewares(app)
-  initialize_routes(app)
+  initialize_middlewares(app);
+  initialize_routes(app);
   await connect_database();
 
   // run demo code below
-  
+
   // await fetch_and_parse_rmd();
-  await simulation_engine_demo();
+  // await simulation_engine_demo();
 }
 
 function start_server() {
@@ -58,12 +55,10 @@ function start_server() {
 
 initialize_application()
   .then(start_server)
-  .catch(error => {
+  .catch((error) => {
     console.error("Failed to initialize application:", error);
     process.exit(1);
-  })
-
-
+  });
 
 // // Add a specific route for YAML files
 // app.post('/api/yaml', async (req, res) => {
@@ -131,9 +126,6 @@ initialize_application()
 //   }
 // });
 
-
-
-
 // // Add this near the end of your file, before scrapping_demo()
 // function testRMDScraper() {
 //   console.log("\n--- Testing RMD Scraper ---");
@@ -143,4 +135,3 @@ initialize_application()
 //   console.log(`RMD Factor for age 85: ${getRMDFactors(85)}`);
 //   console.log("--- End RMD Scraper Test ---\n");
 // }
-

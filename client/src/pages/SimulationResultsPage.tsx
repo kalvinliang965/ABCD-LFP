@@ -44,16 +44,15 @@ const CHART_TYPES = [
 const SimulationResults: React.FC = () => {
   // Get parameters from URL - could be either simulationId or scenarioId
   const { simulationId} = useParams<{ simulationId?: string}>();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const scenarioId = location.state?.scenarioId || null;
 
- 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [simulationData, setSimulationData] = useState<any>(null);
   const [rawResponse, setRawResponse] = useState<any>(null);
   const [showDebug, setShowDebug] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const scenarioId = '680d7e3057f1cf67b95a5fa8';
 
   // New state variables for chart selection
   const [showChartSelection, setShowChartSelection] = useState(true);

@@ -22,6 +22,8 @@ import { rebalance_one } from "./event_raw/rebalance_event_raw";
 import { salary_income_event_one } from "./event_raw/income_event_raw";
 import { cash_investment_type_one, InvestmentTypeRaw, s_and_p_500_investment_type_one, tax_exempt_bonds_investment_type_one } from "./investment_type_raw";
 import { Distribution } from "./common";
+import { simulation_engine_demo } from "../../../demos/demo";
+import { simulation_logger } from "../../../utils/logger/logger";
 
 // a distribution is represented as a map with one of the following forms:
 // {type: fixed, value: <number>}
@@ -116,20 +118,31 @@ export function create_scenario_raw(
   investments: Set<InvestmentRaw>,
   eventSeries: Set<
     IncomeEventRaw | InvestEventRaw | ExpenseEventRaw | RebalanceEventRaw
-  >,
-  inflationAssumption: Distribution,
-  afterTaxContributionLimit: number,
-  spendingStrategy: Array<string>,
-  expenseWithdrawalStrategy: Array<string>,
-  RMDStrategy: Array<string>,
-  RothConversionOpt: boolean,
-  RothConversionStart: number,
-  RothConversionEnd: number,
-  RothConversionStrategy: Array<string>,
+  > = new Set(),
+  inflationAssumption: Distribution = { type: "fixed", value: 0},
+  afterTaxContributionLimit: number = 0,
+  spendingStrategy: Array<string> = new Array(),
+  expenseWithdrawalStrategy: Array<string> = new Array(),
+  RMDStrategy: Array<string> = Array(),
+  RothConversionOpt: boolean = false,
+  RothConversionStart: number = -1,
+  RothConversionEnd: number = -1,
+  RothConversionStrategy: Array<string> = new Array(),
   financialGoal: number,
   residenceState: string
 ): ScenarioRaw {
   
+  // Validate Roth conversion parameters if opted in
+  if (RothConversionOpt) {
+    if (RothConversionStart == null || RothConversionEnd == null) {
+      simulation_logger.error("Opt-in for Roth conversion but start/end year isn't provided");
+      throw new Error("Opt-in for Roth conversion but start/end year isn't provided");
+    }
+    if (RothConversionStart > RothConversionEnd) {
+      simulation_logger.error("Roth conversion start after end year");
+      throw new Error("Roth conversion start after end year");
+    }
+  }
   
   return {
     name,

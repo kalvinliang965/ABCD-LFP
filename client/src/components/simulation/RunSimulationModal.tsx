@@ -30,12 +30,15 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react';
 import React, { useState, useEffect } from 'react';
-import { FaExclamationTriangle } from 'react-icons/fa';
+import { FaExclamationTriangle, FaUpload } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 import { scenario_service } from '../../services/scenarioService';
 import { simulation_service } from '../../services/simulationService';
 import { ScenarioDetailCard } from '../scenarios';
+import { check_state_tax_exists } from '../../services/taxService';
+import { StateType } from '../../types/Enum';
+import ImportStateTaxYaml from './ImportStateTaxYaml';
 
 interface RunSimulationModalProps {
   isOpen: boolean;
@@ -49,6 +52,8 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
   const [simulation_count, set_simulation_count] = useState<number>(100);
   const [count_error, set_count_error] = useState<string>('');
   const [is_submitting, set_is_submitting] = useState<boolean>(false);
+  const [state_tax_exists, set_state_tax_exists] = useState<boolean | null>(null);
+  const [force_show_importer, set_force_show_importer] = useState<boolean>(false);
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -140,7 +145,9 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
 
       // After successful submission, navigate to results page if there's a simulation ID
       if (result && result.simulationId) {
-        navigate(`/simulations/${result.simulationId}`);
+        navigate(`/simulations/${result.simulationId}`, {
+          state: { scenarioId: selected_scenario }
+        });
       }
 
       onClose();
@@ -165,13 +172,63 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
     // Toggle selection - if it's already selected, unselect it
     if (selected_scenario === scenarioId) {
       set_selected_scenario('');
+      set_state_tax_exists(null);
+      // Reset force_show_importer when unselecting a scenario
+      set_force_show_importer(false);
     } else {
       set_selected_scenario(scenarioId);
+      const selected = scenarios.find(s => s._id === scenarioId);
+      if (selected) {
+        check_tax_data(selected.residenceState);
+        // Also reset force_show_importer when selecting a new scenario
+        set_force_show_importer(false);
+      }
+    }
+  };
+
+  // Add function to check tax data
+  const check_tax_data = async (state: StateType) => {
+    try {
+      const exists = await check_state_tax_exists(state);
+      set_state_tax_exists(exists);
+
+      // Add toast notification when tax data doesn't exist
+      if (!exists) {
+        toast({
+          title: 'Simulation Disabled',
+          description: `This scenario cannot be used for simulation because tax data for ${state} is missing.`,
+          status: 'warning',
+          duration: 1500,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      console.error('Error checking state tax data:', error);
+      set_state_tax_exists(false);
+
+      // Show error toast
+      toast({
+        title: 'Tax Data Check Failed',
+        description: 'Unable to verify state tax data availability. Simulation is disabled.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
   // Find the selected scenario object
   const selected_scenario_object = scenarios.find(s => s._id === selected_scenario);
+
+  // Handle successful YAML import
+  const handle_import_success = () => {
+    // Refresh tax data status
+    if (selected_scenario_object) {
+      check_tax_data(selected_scenario_object.residenceState);
+      // Hide the importer after successful import
+      set_force_show_importer(false);
+    }
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered>
@@ -248,6 +305,17 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
                 </SimpleGrid>
               </FormControl>
 
+              {/* Tax Data Import Section - show when forced or when state tax data is missing */}
+              {selected_scenario && selected_scenario_object && (
+                (state_tax_exists === false || force_show_importer) ? (
+                  <ImportStateTaxYaml 
+                    state={selected_scenario_object.residenceState} 
+                    onImportSuccess={handle_import_success}
+                    isReupload={force_show_importer && state_tax_exists === true}
+                  />
+                ) : null
+              )}
+
               <FormControl isRequired isInvalid={!!count_error}>
                 <FormLabel fontWeight="bold">Number of Simulations</FormLabel>
                 <NumberInput
@@ -276,6 +344,19 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
         </ModalBody>
 
         <ModalFooter>
+          {/* Re-upload button - show only when tax data exists */}
+          {selected_scenario && selected_scenario_object && state_tax_exists === true && !force_show_importer && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              colorScheme="purple"
+              leftIcon={<Icon as={FaUpload} />}
+              onClick={() => set_force_show_importer(true)}
+              mr="auto"
+            >
+              Re-upload State Tax Data
+            </Button>
+          )}
           <Button variant="outline" mr={3} onClick={onClose}>
             Cancel
           </Button>
@@ -288,7 +369,9 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
               scenarios.filter(s => !s.isDraft).length === 0 ||
               !selected_scenario ||
               !!count_error ||
-              is_submitting
+              is_submitting ||
+              state_tax_exists === null ||
+              state_tax_exists === false
             }
           >
             Run Simulation

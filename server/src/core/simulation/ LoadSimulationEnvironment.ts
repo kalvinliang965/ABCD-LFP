@@ -18,7 +18,6 @@ export interface SimulationEnvironment {
 
 export async function create_simulation_environment(
     scenario_id: string,
-    state_yaml: string,
 ): Promise<SimulationEnvironment> {
 
     let scenario: Scenario, federal_tax_service: FederalTaxService, state_tax_service: StateTaxService, rmd_table: Map<number, number>;
@@ -31,19 +30,9 @@ export async function create_simulation_environment(
         simulation_logger.info("Successfully initialize federal tax service");
         
         // initialize state tax service 
-        if (state_yaml) {
-            simulation_logger.debug("initializing state tax service from yaml....");
-
-            simulation_logger.debug("Removing existing state data");
-            await delete_state_tax_brackets_by_state(scenario.residence_state);
-            state_tax_service = await create_state_tax_service_yaml(scenario.residence_state, state_yaml);
-            simulation_logger.debug("Successfully initialized state tax service from yaml");
-        } else {
-            simulation_logger.debug("initializing state tax service from db....");
-            state_tax_service = await create_state_tax_service_db(scenario.residence_state); 
-            simulation_logger.info("Successfully initialize state tax service from db");
-        }
-
+        simulation_logger.debug("initializing state tax service from db....");
+        state_tax_service = await create_state_tax_service_db(scenario.residence_state); 
+        simulation_logger.info("Successfully initialize state tax service from db");
 
         // TODO: Maybe i could do something like this(bulk write) for federal tax scraping to optimize my code.
         rmd_table = await get_rmd_factors_from_db();
