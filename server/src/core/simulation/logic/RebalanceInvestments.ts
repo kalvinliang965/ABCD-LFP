@@ -1,9 +1,67 @@
 // src/core/simulation/RebalanceInvestments.ts
 import { SimulationState } from '../SimulationState';
-import { Scenario } from '../../domain/scenario/Scenario';
 import { Investment } from '../../domain/investment/Investment';
 import { TaxStatus } from '../../Enums';
 import { simulation_logger } from '../../../utils/logger/logger';
+import { RebalanceEventMap } from '../../domain/EventManager';
+import { RebalanceEvent } from '../../domain/event/RebalanceEvent';
+
+//function to prune overlapping rebalance events
+export function prune_overlapping_rebalance_events(src: RebalanceEventMap): RebalanceEventMap {
+	//this will hold only the non-overlapping events
+	const kept = new Map<string, RebalanceEvent>();
+	//sort by start ascending
+	//if two events have the same start, sort them alphabetically
+	const ordered = Array.from(src.values())
+		.sort((a, b) =>
+			a.start !== b.start ? a.start - b.start : a.name.localeCompare(b.name)
+		);
+
+	//track the furthest "end year" for each tax status
+	const last_end_by_status: Record<TaxStatus, number> = {
+		[TaxStatus.NON_RETIREMENT]: -Infinity,
+		[TaxStatus.PRE_TAX]: -Infinity,
+		[TaxStatus.AFTER_TAX]: -Infinity
+	};
+
+	//keep event if it does not start before or at lastEnd for its tax status, skip otherwise
+	for (const ev of ordered) {
+		//get the first investment's tax status
+		const first_investment_id = Array.from(ev.asset_allocation.keys())[0];
+		if (!first_investment_id) {
+			simulation_logger.warn(`Skipping rebalance event ${ev.name} with no investments`);
+			continue;
+		}
+
+		//get the tax status from the first investment
+		let tax_status: TaxStatus;
+		if (first_investment_id.includes('non-retirement')) {
+			tax_status = TaxStatus.NON_RETIREMENT;
+		}
+		else if (first_investment_id.includes('pre-tax') || first_investment_id.includes('retirement')) {
+			tax_status = TaxStatus.PRE_TAX;
+		}
+		else if (first_investment_id.includes('after-tax') || first_investment_id.includes('tax-exempt')) {
+			tax_status = TaxStatus.AFTER_TAX;
+		}
+		else {
+			simulation_logger.warn(`Skipping rebalance event ${ev.name} with unknown tax status key '${first_investment_id}'`);
+			continue;
+		}
+
+		const end = ev.start + ev.duration;
+		if (ev.start <= last_end_by_status[tax_status]) {
+			//if overlap, then skip
+			simulation_logger.warn(
+				`skipping overlapping rebalance event ${ev.name} (${ev.start}-${end}) for ${tax_status} account type`
+			);
+			continue;
+		}
+		kept.set(ev.name, ev);
+		last_end_by_status[tax_status] = end;
+	}
+	return kept;
+}
 
 /*rebalance investments according to event's asset allocation
  *process sales first to calculate capital gains, then purchases
