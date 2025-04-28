@@ -147,6 +147,7 @@ export const simulation_service = {
     try {
       console.log(`Fetching simulations for scenario ${scenario_id}`);
       const response = await axios_instance.get(`${SIMULATION_ENDPOINT}/scenario/${scenario_id}`);
+      console.log('API response:', response);
       return response.data;
     } catch (error) {
       console.error(`Error fetching simulations for scenario ${scenario_id}:`, error);
