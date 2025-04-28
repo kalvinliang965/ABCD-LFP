@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import Scenario from "../db/models/Scenario";
 import { authenticateJWT } from "../middleware/auth.middleware";
 import { create_simulation_engine } from "../core/simulation/SimulationEngine";
-import { create_simulation_result } from "../core/simulation/SimulationResult";
+import { create_simulation_result, createConsolidatedSimulationResult } from "../core/simulation/SimulationResult";
 import { save_simulation_result, get_simulation_result_by_id, get_simulation_results_by_scenario_id, get_simulation_results_by_user_id } from "../db/repositories/SimulationResultRepository";
 import { simulation_logger } from "../utils/logger/logger";
 import { create_simulation_environment } from "../core/simulation/ LoadSimulationEnvironment";
@@ -47,7 +47,7 @@ router.post("/", async (req: Request, res: Response) => {
     simulation_logger.info(`Running ${count} simulations`);
 
     // Create simulation environment
-    const simulationEnvironment = await create_simulation_environment(scenarioId, "");
+    const simulationEnvironment = await create_simulation_environment(scenarioId);
     
     // Create simulation engine with the environment
     const engine = await create_simulation_engine(simulationEnvironment);
@@ -55,38 +55,23 @@ router.post("/", async (req: Request, res: Response) => {
     // Run multiple simulations
     const simulationResults = await engine.run(count);
     
-    // Store all simulation results individually
-    const savedResults = [];
-    let firstSavedResult = null;
+    // Create a consolidated result from all simulations
+    simulation_logger.info(`Creating consolidated result from ${simulationResults.length} simulations`);
+    const consolidatedResult = createConsolidatedSimulationResult(simulationResults, scenarioId);
     
-    for (let i = 0; i < simulationResults.length; i++) {
-      // Create a SimulationResult object for each simulation
-      const simulationResult = create_simulation_result(
-        simulationResults[i], 
-        scenarioId,
-        simulationResults // Pass all simulations for statistical ranges
-      );
-      
-      // Format results for frontend and database
-      const formattedResults = simulationResult.formatResults();
-      
-      // Save to database
-      const savedResult = await save_simulation_result(formattedResults);
-      savedResults.push(savedResult);
-      
-      // Keep track of the first result for the response
-      if (i === 0) {
-        firstSavedResult = savedResult;
-      }
-    }
+    // Save only the consolidated result to database
+    simulation_logger.info(`Saving consolidated result to database`);
+    const savedResult = await save_simulation_result(consolidatedResult);
     
-    // Return results with the saved IDs
+    // Return the saved consolidated result
     res.status(200).json({
       success: true,
-      simulationId: firstSavedResult?._id, // Return the first ID for backward compatibility
-      simulationIds: savedResults.map(result => result._id), // Return all IDs
-      data: firstSavedResult, // Return the first formatted result for backward compatibility
-      count: savedResults.length
+      simulationId: savedResult._id,
+      scenarioId: scenarioId,
+      successProbability: consolidatedResult.successProbability,
+      startYear: consolidatedResult.startYear,
+      endYear: consolidatedResult.endYear,
+      message: `Successfully ran ${simulationResults.length} simulations and saved consolidated result`
     });
   } catch (error) {
     simulation_logger.error(`Error running simulation: ${error instanceof Error ? error.stack : String(error)}`);

@@ -2,6 +2,8 @@ import { SimulationYearlyResult, YearResult } from "./SimulationYearlyResult"
 import { quantile } from 'd3-array'; 
 
 // Define the shape of the consolidated simulation result that will be returned to frontend/database
+//add the simulation count to the consolidated result
+
 export interface ConsolidatedResult {
   scenarioId: string;
   successProbability: number;
