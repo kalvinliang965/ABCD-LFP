@@ -49,6 +49,36 @@ function differentiate_events(
     return [income_event_map, expense_event_map, invest_event_map, rebalance_event_map];
 }
 
+//function to prune overlapping invest events
+function prune_overlapping_invest_events(src: InvestEventMap): InvestEventMap {
+  //this will hold only the non-overlapping events
+  const kept = new Map<string, InvestEvent>();
+  //sort by start ascending
+  //if two events have the same start, sort the alphabetically
+  const ordered = Array.from(src.values())
+    .sort((a, b) =>
+      a.start !== b.start ? a.start - b.start : a.name.localeCompare(b.name)
+    );
+
+  //track the furthest "end year" accepted so far
+  let last_end = -Infinity; //initialize to -infinity, so the first event always passes
+
+  //keep event if it does not start before or at lastEnd, skip otherwise
+  for (const ev of ordered) {
+    const end = ev.start + ev.duration;
+    if (ev.start <= last_end) {
+      // overlap → skip
+      simulation_logger.warn(
+        `skipping overlapping invest event ${ev.name} (${ev.start}-${end})`
+      );
+      continue;
+    }
+    kept.set(ev.name, ev);
+    last_end = end;
+  }
+  return kept; //return a map to feed to create_event_manager_clone
+}
+
 export interface EventManager {
     clone: () => EventManager;
     get_active_income_event: (year: number) => Array<IncomeEvent>;
@@ -262,8 +292,11 @@ export function resolve_event_chain(
 
 export function create_event_manager(event_series: Set<EventUnionRaw>): EventManager {
     try {
-        const resolve_event = resolve_event_chain(event_series);
-        const [income_event, expense_event, invest_event, rebalance_event] = differentiate_events(resolve_event);
+        const resolved = resolve_event_chain(event_series);
+        const [income_event, expense_event, invest_map, rebalance_event] = differentiate_events(resolved);
+        //prune overlaps on the InvestEventMap
+        const invest_event = prune_overlapping_invest_events(invest_map);
+        
         simulation_logger.info("Successfully created event manager");
         return create_event_manager_clone(income_event, expense_event, invest_event, rebalance_event);
     } catch(error) {

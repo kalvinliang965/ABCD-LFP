@@ -1,8 +1,13 @@
+jest.mock('@stdlib/random-base-normal', () => {
+  return jest.fn((mean: number, sd: number) => mean);
+});
+
 import { create_expense_event_raw, streaming_services_expense_one } from "../raw/event_raw/expense_event_raw";
 import { create_event_manager, resolve_event_chain } from "../EventManager";
 import { EventUnionRaw, salary_income_event_one } from "../raw/event_raw/event_raw";
 import { resolve } from "path";
 import { EventUnion } from "../event/Event";
+import { create_invest_event_raw } from "../raw/event_raw/investment_event_raw";
 
 
 const create_cycle_event = (
@@ -144,4 +149,111 @@ describe("EventManager", () => {
         });
       });
 
+    describe("InvestEvent overlap pruning", () => {
+        //helper function to create a raw invest event with fixed start and duration
+        function make_invest_raw(
+            name: string,
+            start: number,
+            duration: number
+        ) {
+            return create_invest_event_raw(
+                name,
+                { type: 'fixed', value: start },
+                { type: 'fixed', value: duration },
+                { 'S&P 500 non-retirement': 1.0 },  //filling out, does not matter really
+                false,
+                { 'S&P 500 non-retirement': 1.0 },  
+                10000 // max cash
+            );
+        }
+
+        it('keeps only the earliest-start event when two overlap', () => {
+            const raw1 = make_invest_raw('E1', 2025, 10); //covers 2025–2035
+            const raw2 = make_invest_raw('E2', 2027, 1);  //covers 2027–2028, overlaps E1
+        
+            //resolve and build the manager
+            const manager = create_event_manager(new Set([raw1, raw2]));
+        
+            //E1 should be the only active event in 2027:
+            const active_2027 = manager.get_active_invest_event(2027);
+            expect(active_2027).toHaveLength(1);
+            expect(active_2027[0].name).toBe('E1');
+        
+            //outside overlap, each shows up
+            const active_2026 = manager.get_active_invest_event(2026);
+            expect(active_2026.map(e => e.name)).toEqual(['E1']);
+            const active_2032 = manager.get_active_invest_event(2032);
+            //E1 still covers, E2 does not
+            expect(active_2032.map(e => e.name)).toEqual(['E1']);
+        });
+        
+        it('keeps both when they do not overlap', () => {
+            const raw1 = make_invest_raw('E1', 2025, 2); //2025–2027
+            const raw2 = make_invest_raw('E2', 2028, 2); //2028–2030
+        
+            const manager = create_event_manager(new Set([raw1, raw2]));
+        
+            expect(manager.get_active_invest_event(2026).map(e => e.name)).toEqual(['E1']);
+            expect(manager.get_active_invest_event(2028).map(e => e.name)).toEqual(['E2']);
+        });
+
+        //tests with distributions 
+        describe('with "random" distributions', () => {
+            function make_raw_with_dist(
+                name: string,
+                start_dist: any,
+                dur_dist: any
+            ) {
+                return create_invest_event_raw(
+                    name,
+                    start_dist,
+                    dur_dist,
+                    { 'S&P 500 non-retirement': 1.0 },
+                    false,
+                    { 'S&P 500 non-retirement': 1.0 },
+                    10000
+                );
+            }
+            
+            it('prunes two uniform-distribution events that deterministically overlap', () => {
+                //E1: starts 2025 for 10 years which covers 2025–2035
+                const raw1 = make_raw_with_dist('E1',
+                    { type: 'uniform', lower: 2025, upper: 2025 },
+                    { type: 'uniform', lower: 10, upper: 10 }
+                );
+            
+                //E2: starts 2027 for 1 year which covers 2027–2028
+                const raw2 = make_raw_with_dist('E2',
+                    { type: 'uniform', lower: 2027, upper: 2027 },
+                    { type: 'uniform', lower: 1, upper: 1 }
+                );
+            
+                const mgr = create_event_manager(new Set([raw1, raw2]));
+            
+                //2027 is in both windows, but we should only see E1:
+                const act = mgr.get_active_invest_event(2027);
+                expect(act.map(e => e.name)).toEqual(['E1']);
+            });
+            //using mocked normal distribution, 
+            //because it is impossible to get normal distribution to return deterministic values
+            it('prunes overlapping normal-dist invest events with mocked normal distribution', () => {
+                //E1: start normal(2030,0) for normal(5,0) which covers 2030–2035
+                const raw1 = make_raw_with_dist('E1',
+                    { type: 'normal', mean: 2030, stdev: 0 },
+                    { type: 'normal', mean: 5, stdev: 0 }
+                );
+            
+                //E2: start normal(2032,0) for normal(1,0) which covers 2032–2033
+                const raw2 = make_raw_with_dist('E2',
+                    { type: 'normal', mean: 2032, stdev: 0 },
+                    { type: 'normal', mean: 1, stdev: 0 }
+                );
+            
+                const mgr = create_event_manager(new Set([raw1, raw2]));
+            
+                //2032 is in both, but only E1 is kept
+                expect(mgr.get_active_invest_event(2032)[0].name).toBe('E1');
+            });
+        });
+    });
 });
