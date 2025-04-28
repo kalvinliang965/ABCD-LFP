@@ -3,7 +3,7 @@
 import {
   create_value_generator,
   ValueGenerator,
-} from "../../../utils/math/ValueGenerator";
+} from "../../../utils/ValueGenerator";
 import {
   DistributionType,
   StateType,

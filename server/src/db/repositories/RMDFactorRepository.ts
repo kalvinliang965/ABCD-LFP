@@ -1,3 +1,5 @@
+import { tax_config } from '../../config/tax';
+import { simulation_logger } from '../../utils/logger/logger';
 import RMDFactorModel from '../models/RMDFactorModel';
 
 /**
@@ -26,8 +28,8 @@ export async function save_rmd_factors_to_db(factors: Map<number, number>): Prom
     
     console.log(`Saved ${documents.length} RMD factors to database`);
   } catch (error) {
-    console.error('Error saving RMD factors to database:', error);
-    throw error;
+    simulation_logger.error(`Error saving RMD factors to database: ${error}`);
+    throw new Error(`Error saving RMD factors to database: ${error}`);
   }
 }
 
@@ -45,9 +47,27 @@ export async function get_rmd_factors_from_db(): Promise<Map<number, number>> {
       factorMap.set(factor.age, factor.distributionPeriod);
     });
     
+    if (factorMap && factorMap.size > 0) {
+      for (let i = tax_config.RMD_START_AGE; i <= tax_config.MAX_RMD_AGE; ++i) {
+        if (!factorMap.has(i)) {
+          simulation_logger.error(`Database contian incomplete RMD table. Missing age ${i}`);
+          throw new Error(`Database contian incomplete RMD table. Missing age ${i}`);
+        }
+      }
+    }
+    
     return factorMap;
   } catch (error) {
-    console.error('Error getting RMD factors from database:', error);
-    throw error;
+    simulation_logger.error(`Error getting RMD factors from database: ${error}`);
+    throw new Error(`Error getting RMD factors from database: ${error}`);
   }
 } 
+
+export async function delete_all_rmd_factors_from_db() {
+  try {
+    await RMDFactorModel.deleteMany({});
+  } catch (error) {
+    simulation_logger.error(`Error deleting RMD factors from database: ${error}`);
+    throw new Error(`Error deleting RMD factors from database: ${error}`);
+  }
+}

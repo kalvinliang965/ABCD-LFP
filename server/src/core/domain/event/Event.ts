@@ -1,5 +1,5 @@
-import { Cloneable } from "../../../utils/helper";
-import  {create_value_generator,  ValueGenerator } from "../../../utils/math/ValueGenerator";
+import { Cloneable } from "../../../utils/CloneUtil";
+import  {create_value_generator,  ValueGenerator } from "../../../utils/ValueGenerator";
 import { ChangeType, DistributionType, StatisticType } from "../../Enums";
 import { Distribution, parse_distribution, parse_start_condition, StartCondition } from "../raw/common";
 import { EventRaw } from "../raw/event_raw/event_raw";

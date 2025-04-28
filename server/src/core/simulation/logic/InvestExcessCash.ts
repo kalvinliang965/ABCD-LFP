@@ -6,7 +6,7 @@ import { simulation_logger } from '../../../utils/logger/logger';
 /* investing excess cash according to event's asset allocation
  * after-tax contributions do not exceed the inflation-adjusted limit
  */
-export function invest_excess_cash(
+export function run_invest_event(
 	state: SimulationState,
 ): void {
 	//get current invest events for this year

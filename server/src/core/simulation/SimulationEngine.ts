@@ -1,68 +1,47 @@
-import { SimulationState, create_simulation_state } from './SimulationState';
-import { SimulationYearlyResult, create_simulation_yearly_result } from './SimulationYearlyResult';
-import run_roth_conversion_optimizer from './logic/RothConversion';
-import update_investment from './logic/UpdateInvestment';
-import run_income_event from './logic/RunIncomeEvent';
- 
+import { SimulationYearlyResult } from './SimulationYearlyResult';
 import { simulation_logger } from '../../utils/logger/logger';
-import { process_rmd } from './logic/ProcessRMD';
-import { pay_mandatory_expenses } from './logic/PayMandatoryExpense';
-import { pay_discretionary_expenses } from './logic/PayDiscretionaryExpense';
-import { invest_excess_cash as run_invest_event } from './logic/InvestExcessCash';
-import { run_rebalance_investment } from './logic/RebalanceInvestments';
 import { SimulationEnvironment } from './ LoadSimulationEnvironment';
-import { dev } from '../../config/environment';
 import { Profiler } from '../../utils/Profiler';
+import { SimulationWorkerPool } from './SimulationWorkerPool';
+import { execute_single_simulation } from './SimulationRunner';
 
 export interface SimulationEngine {
     run: (num_simulations: number) => Promise<SimulationYearlyResult[]>;
+    run_parallel: (num_simulation: number) => Promise<SimulationYearlyResult[]>;
 }
 
 export async function create_simulation_engine(simulation_environment: SimulationEnvironment, profiler = new Profiler()): Promise<SimulationEngine> {
 
     simulation_logger.info("Initializing the simulation engine...");
 
-    const {scenario, federal_tax_service, state_tax_service, rmd_table} = simulation_environment;
-    
-    async function run_parallel() {
-        // TODO
+    async function run_parallel(num_simulation: number): Promise<SimulationYearlyResult[]> {
+        const pool = new SimulationWorkerPool();
+        simulation_logger.info("Successfully initialize worker pool");
+        try {
+            const promise = Array(num_simulation).fill(null).map(() => 
+                pool.run_simulation(simulation_environment)
+            );
+            const worker_result = await Promise.all(promise);
+            simulation_logger.info("All worker completed assigned tasks");
+            return worker_result.filter(result => result !== null);
+        } catch(error) {
+            simulation_logger.error(`Error occure running simulation in parallel: ${error instanceof Error? error.message: String(error)}`);
+            throw new Error(`Error occure running simulation in parallel: ${error instanceof Error? error.message: String(error)}`);
+        } finally {
+            await pool.shutdown();
+        }
     }
 
     // not optimize
     async function run(num_simulations: number): Promise<SimulationYearlyResult[]> {
-        
-        
         const res: SimulationYearlyResult[] = [];
         simulation_logger.info("Simulation started with config: ", {
-            scenario: scenario,
+            scenario: simulation_environment.scenario,
         });
-        
         let i = 0
-        let simulation_state;
-        let simulation_result;
         try {
             for (; i < num_simulations; i++) {
-                simulation_state = await create_simulation_state(scenario, federal_tax_service, state_tax_service); 
-                simulation_result = create_simulation_yearly_result();
-                // Run the simulation synchronously.
-                while (should_continue(simulation_state)) {
-                    // adjust for tax, inflation, etc...
-                    simulation_state.setup();
-                    // simulate year
-                    if(dev.is_dev) {
-                        profiler.start("simulate_year");
-                    }
-                    if (!simulate_year(simulation_state, simulation_result)) {
-                        simulation_logger.info(`
-                            User cannot pay all mandatory expense for ${simulation_state.get_current_year()}
-                        `);
-                    }
-                    if(dev.is_dev) {
-                        profiler.end("simulate_year");
-                    }
-                    // increase uesr age and tax status
-                    simulation_state.advance_year();
-                }
+                const simulation_result = await execute_single_simulation(simulation_environment);
                 simulation_logger.info(
                     `${i + 1} simulation completed`,
                     {
@@ -72,123 +51,14 @@ export async function create_simulation_engine(simulation_environment: Simulatio
                 res.push(simulation_result);
             }
         } catch (error) {
-            simulation_logger.error(
-                `Error occurred running ${i}th simulation`,
-                {
-                    simulation_state: simulation_state,
-                    simulation_result: simulation_result,
-                    error: error instanceof Error? error.stack: error
-                }
-            )
+            simulation_logger.error(`Error occurred running ${i}th simulation: ${error instanceof Error? error.message: String(error)}`)
         }        
-
         simulation_logger.info("Successfully running all simulation")
         return res;
     }
 
-
-
-    function simulate_year(simulation_state: SimulationState, simulation_result: SimulationYearlyResult ): boolean {
-        try {
-            simulation_logger.debug(
-                "Simulating new year", 
-                {
-                    simulation_state: simulation_state,
-                }
-            ); 
-
-            simulation_logger.debug("Running income events");
-            if (dev.is_dev) {
-                profiler.start("run_income_event");
-            }
-            run_income_event(simulation_state);
-            if (dev.is_dev) {
-                profiler.end("run_income_event");
-            }
-            
-            if (simulation_state.user.get_age() >= 74) {
-                simulation_logger.debug("Performing rmd...");
-                if (dev.is_dev) {
-                    profiler.start("process_rmd");
-                }
-                process_rmd(simulation_state, rmd_table);
-                if (dev.is_dev) {
-                    profiler.end("process_rmd");
-                }
-            }
-
-            simulation_logger.debug("Updating investments...");
-            if (dev.is_dev) {
-                profiler.start("update_investment");
-            }
-            update_investment(simulation_state);
-            if (dev.is_dev) {
-                profiler.end("update_investment");
-            }
-            if (simulation_state.roth_conversion_opt) {
-                simulation_logger.debug("Running roth conversion optimizer...");
-                if (dev.is_dev) {
-                    profiler.start("run_roth_conversion_optimizer");
-                }
-                run_roth_conversion_optimizer(simulation_state);
-                if (dev.is_dev) {
-                    profiler.end("run_roth_conversion_optimizer");
-                }
-            }
-            
-            simulation_logger.debug(`Paying non discretionary expenses...`);
-            if (dev.is_dev) {
-                profiler.start("pay_mandatory_expenses");
-            }
-            if (!pay_mandatory_expenses(simulation_state)) {
-                simulation_logger.info(`User cannnot pay all non discretionary expenses`);
-                return false;
-            }
-            if (dev.is_dev) {
-                profiler.end("pay_mandatory_expenses");
-            }
-            
-            simulation_logger.debug(`Paying discretionary expenses`);
-            if (dev.is_dev) {
-                profiler.start("pay_discretionary_expenses");
-            }
-            pay_discretionary_expenses(simulation_state);
-            if (dev.is_dev) {
-                profiler.end("pay_discretionary_expenses");
-            }
-
-            simulation_logger.debug(`Running invest event scheduled for current year...`);
-            if (dev.is_dev) {
-                profiler.start("run_invest_event");
-            }
-            run_invest_event(simulation_state);
-            if (dev.is_dev) {
-                profiler.end("run_invest_event");
-            }
-
-            simulation_logger.debug(`Running rebalance events scheduled for the current year...`);
-            if (dev.is_dev) {
-                profiler.start("run_rebalance_investment");
-            }
-            run_rebalance_investment(simulation_state);
-            if (dev.is_dev) {
-                profiler.end("run_rebalance_investment");
-            }
-
-            simulation_result.update(simulation_state);
-            return true;
-        } catch (error) {
-            simulation_logger.error(`simulate_year failed: ${error instanceof Error? error.message: String(error)}`)
-            throw new Error(`simulate_year failed: ${error instanceof Error? error.message: String(error)}`)
-        }
-    }
-
-    function should_continue(simulation_state: SimulationState):boolean {
-        return simulation_state.user.is_alive();
-    }
-
     return {
         run,
+        run_parallel,
     }
-
 }

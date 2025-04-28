@@ -1,4 +1,4 @@
-import { Cloneable } from "../../../utils/helper";
+import { Cloneable } from "../../../utils/CloneUtil";
 import { RebalanceEventRaw } from "../raw/event_raw/rebalance_event_raw";
 import { Event, parse_duration, parse_start_year } from "./Event";
 

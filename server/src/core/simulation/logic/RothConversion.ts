@@ -4,7 +4,7 @@ import { IncomeType, TaxStatus } from "../../Enums";
 import { simulation_logger } from "../../../utils/logger/logger";
 import { transfer_investment_value } from "./common";
 
-function process_roth_conversion(simulation_state: SimulationState) {
+export function process_roth_conversion(simulation_state: SimulationState) {
     try {
         if (!simulation_state.roth_conversion_opt) {
             simulation_logger.debug("roth conversion is not enabled");
@@ -42,5 +42,3 @@ function process_roth_conversion(simulation_state: SimulationState) {
         throw new Error(`Failed to process roth conversion: ${error instanceof Error? error.message: String(error)}`);
     }
 }
-
-export default process_roth_conversion;

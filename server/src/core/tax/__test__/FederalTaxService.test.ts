@@ -1,6 +1,6 @@
 // FederalTaxService.test.ts
 import { create_standard_deductions, StandardDeduction } from '../StandardDeduction';
-import { get_standard_deduction } from '../../../db/repositories/StandardDeductionRepository';
+import { get_standard_deduction_from_db } from '../../../db/repositories/StandardDeductionRepository';
 import { create_tax_brackets, TaxBrackets } from '../TaxBrackets';
 import { TaxFilingStatus, IncomeType } from '../../Enums';
 import { FederalTaxService, create_federal_tax_service } from '../FederalTaxService';
@@ -140,7 +140,7 @@ describe("FederalTaxService", () => {
                         taxpayer_type: TaxFilingStatus.COUPLE
                     }
                 ]);
-            (get_standard_deduction as jest.Mock)
+            (get_standard_deduction_from_db as jest.Mock)
             .mockResolvedValue([{ amount: 1000, taxpayer_type: TaxFilingStatus.INDIVIDUAL }, {amount: 2000, taxpayer_type: TaxFilingStatus.COUPLE}]);
 
             // Create service instance
@@ -149,7 +149,7 @@ describe("FederalTaxService", () => {
         it("should initialize with database data", async () => {
             expect(get_taxable_income_brackets).toHaveBeenCalled();
             expect(get_capital_gains_brackets).toHaveBeenCalled();
-            expect(get_standard_deduction).toHaveBeenCalled();
+            expect(get_standard_deduction_from_db).toHaveBeenCalled();
         });
         describe("find_deduction", () => {
             it("should return correct deduction amount", () => {
@@ -173,7 +173,7 @@ describe("FederalTaxService", () => {
             (get_capital_gains_brackets as jest.Mock)
                 .mockResolvedValue([]);
         
-            (get_standard_deduction as jest.Mock)
+            (get_standard_deduction_from_db as jest.Mock)
                 .mockResolvedValue([]);
             const exitSpy = jest.spyOn(process, 'exit').mockImplementation((code?: number) => {
                 throw new Error(`process.exit(${code})`);

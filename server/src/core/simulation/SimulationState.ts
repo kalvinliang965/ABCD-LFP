@@ -262,7 +262,7 @@ export async function create_simulation_state(
 
         const total_tax = fed_tax + state_tax + withdrawal_tax + capital_gain_tax;
         simulation_logger.info(`Successfully process tax for ${state.get_current_year() - 1}: ${total_tax}`)
-        return total_tax
+        return Math.max(total_tax, 0);
       },
     };
 

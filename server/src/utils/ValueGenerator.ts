@@ -1,4 +1,4 @@
-import { DistributionType, StatisticType } from "../../core/Enums";
+import { DistributionType, StatisticType } from "../core/Enums";
 import normal from "@stdlib/random-base-normal";
 
 export interface ValueGenerator {

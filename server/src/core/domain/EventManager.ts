@@ -5,7 +5,7 @@ import create_invest_event from "./event/InvestEvent";
 import create_rebalance_event, { RebalanceEvent } from "./event/RebalanceEvent";
 import { InvestEvent } from "./event/InvestEvent";
 import { simulation_logger } from "../../utils/logger/logger";
-import { clone_map } from "../../utils/helper";
+import { clone_map } from "../../utils/CloneUtil";
 import Deque from "double-ended-queue";
 import { EventUnion } from "./event/Event";
 import { ChangeType } from "../Enums";
@@ -260,7 +260,7 @@ export function resolve_event_chain(
                         value: resolved_event.start,
                     };
                 } 
-                // endWith
+                // startAfter 
                 else {
                     dependent_event.start = {
                         type: "fixed",

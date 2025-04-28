@@ -1,26 +1,26 @@
-import create_value_generator from "../../../utils/math/ValueGenerator";
+import create_value_generator from "../../../utils/ValueGenerator";
 import { DistributionType } from "../../Enums";
 import { StatisticType } from "../../Enums";
 import { simulation_logger } from "../../../utils/logger/logger";
-import { ValueGenerator } from "../../../utils/math/ValueGenerator";
+import { ValueGenerator } from "../../../utils/ValueGenerator";
 
 export type Distribution = {
       type: 'fixed' | "normal" | "uniform";
-      value?: number;  // 改为必填
-      mean?: number;   // 改为必填
-      stdev?: number;  // 改为必填
-      lower?: number;  // 改为必填
-      upper?: number;  // 改为必填
+      value?: number; 
+      mean?: number; 
+      stdev?: number;
+      lower?: number;
+      upper?: number;
 }
 
 export type StartCondition = {
     type: 'startWith' | 'startAfter' | "fixed" | "normal" | "uniform";
-    eventSeries?: string;  // 改为必填
-    value?: number;  // 改为必填
-    mean?: number;   // 改为必填
-    stdev?: number;  // 改为必填
-    lower?: number;  // 改为必填
-    upper?: number;  // 改为必填
+    eventSeries?: string;
+    value?: number;
+    mean?: number;
+    stdev?: number;
+    lower?: number;
+    upper?: number;
 }
 
 

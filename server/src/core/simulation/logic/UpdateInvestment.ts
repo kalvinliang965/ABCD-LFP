@@ -4,7 +4,7 @@ import { simulation_logger } from "../../../utils/logger/logger";
 import { ChangeType, TaxStatus } from "../../Enums";
 import { SimulationState } from "../SimulationState";
 
-export default function update_investment(simulation_state: SimulationState) {
+export function update_investment(simulation_state: SimulationState) {
     
     // we could just iterate the non-retirment account list
     // but here i just wanna double check for invalid account type

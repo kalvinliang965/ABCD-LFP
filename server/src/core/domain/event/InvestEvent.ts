@@ -1,6 +1,6 @@
 import { InvestEventRaw } from "../raw/event_raw/investment_event_raw";
 import { Event, parse_duration, parse_start_year } from "./Event";
-import { Cloneable } from "../../../utils/helper";
+import { Cloneable } from "../../../utils/CloneUtil";
 
 export interface InvestEvent extends Event, Cloneable<InvestEvent> {
   max_cash: number;

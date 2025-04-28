@@ -14,16 +14,27 @@ export const create_standard_deduction_in_db = async (
             taxpayer_type
         });
     } catch (error) {
-        throw new Error(`Internel Service error ${(error as Error).message}`);
+        simulation_logger.error(`Internel Service error: ${(error as Error).message}`);
+        throw new Error(`Internel Service error: ${(error as Error).message}`);
     }
 }
 
-export const get_standard_deduction = async (): Promise<IStandardDeduction[]> => {
+export const get_standard_deduction_from_db = async (): Promise<IStandardDeduction[]> => {
     try {
         const standard_deduction_list = await StandardDeductionModel.find();
         simulation_logger.info(`Successfully loaded ${standard_deduction_list.length} standard deduction data`);
         return standard_deduction_list;
     } catch (error) {
+        simulation_logger.error(`Internel Service Error: ${error}`)
+        throw new Error(`Internel Service Error: ${error}`)
+    }
+}
+
+export const delete_all_standard_deduction_from_db = async () => {
+    try {
+        await StandardDeductionModel.deleteMany({});
+    } catch(error) {
+        simulation_logger.error(`Internel Service Error: ${error}`)
         throw new Error(`Internel Service Error: ${error}`)
     }
 }

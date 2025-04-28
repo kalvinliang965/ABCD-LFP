@@ -7,7 +7,7 @@ import {
     fetch_and_parse_taxable_income 
 } from "../../services/FederalTaxScraper";
 import { get_taxable_income_brackets, get_capital_gains_brackets } from "../../db/repositories/TaxBracketRepository";
-import { get_standard_deduction } from "../../db/repositories/StandardDeductionRepository";
+import { get_standard_deduction_from_db } from "../../db/repositories/StandardDeductionRepository";
 import { IncomeType, TaxFilingStatus } from "../Enums";
 import { tax_config } from "../../config/tax";
  
@@ -86,7 +86,7 @@ async function initialize_capital_gains_bracket(): Promise<TaxBrackets> {
 async function initialize_standard_deductions_info(): Promise<StandardDeduction> {
     try {
         simulation_logger.debug("geting standard deduction info");
-        const standard_deduction_list = await get_standard_deduction();
+        const standard_deduction_list = await get_standard_deduction_from_db();
         if (standard_deduction_list.length > 0) {
             simulation_logger.debug("Successfully geted standard deduction info from database");
             const deductions = create_standard_deductions();
