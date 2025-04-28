@@ -1,5 +1,5 @@
-import { Cloneable } from "../../../utils/helper";
-import { ValueGenerator } from "../../../utils/math/ValueGenerator";
+import { Cloneable } from "../../../utils/CloneUtil";
+import { ValueGenerator } from "../../../utils/ValueGenerator";
 import { ChangeType } from "../../Enums";
 import { parse_distribution } from "../raw/common";
 import { ExpenseEventRaw } from "../raw/event_raw/expense_event_raw";

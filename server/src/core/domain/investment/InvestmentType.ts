@@ -5,7 +5,7 @@ import {
 } from "../../Enums";
 import create_value_generator, {
   ValueGenerator,
-} from "../../../utils/math/ValueGenerator";
+} from "../../../utils/ValueGenerator";
 import { InvestmentTypeRaw } from "../raw/investment_type_raw";
 import { Distribution, parse_distribution } from "../raw/common";
 import { simulation_logger } from "../../../utils/logger/logger";

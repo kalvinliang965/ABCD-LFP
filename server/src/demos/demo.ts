@@ -26,7 +26,7 @@ async function clear_tax_data_before_scraping() {
   await delete_all_standard_deduction_from_db();
 }
 
-async function simulation_engine_demo() {
+async function simulation_engine_demo(N: number) {
   await clear_tax_data_before_scraping();
   const profiler = new Profiler();
   
@@ -38,13 +38,13 @@ async function simulation_engine_demo() {
   // set up the simulation engine
   const simulation_engine = await create_simulation_engine(simulation_environment, profiler);
   profiler.start("run");
-  await simulation_engine.run(100);
+  await simulation_engine.run_parallel(N);
   profiler.end("run");
   
   profiler.export_to_CSV();
 }
 
-async function optimize_scenario_environment_initialization_demo(N: number) {
+async function optimize_scenario_environment_initialization_demo(N: number) { 
 
   const profiler = new Profiler();
   for (let i = 0; i < N; ++i) {
@@ -62,6 +62,6 @@ async function optimize_scenario_environment_initialization_demo(N: number) {
   profiler.printSummary();
 }
 export async function run_demo() {
-  // await simulation_engine_demo();
-  await optimize_scenario_environment_initialization_demo(1);
+  // await simulation_engine_demo(100);
+  // await optimize_scenario_environment_initialization_demo(1);
 }

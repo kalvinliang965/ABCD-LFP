@@ -1,0 +1,11 @@
+Tasks,Call Count,Total(ms),Avg(ms)
+"create_simulation_environment",1,1033.12,1033.12
+"run",1,308.45,308.45
+"run_income_event",4100,19.13,0.00
+"update_investment",4100,48.77,0.01
+"process_roth_conversion",4100,3.65,0.00
+"pay_mandatory_expenses",4100,66.48,0.02
+"pay_discretionary_expenses",4100,31.85,0.01
+"run_invest_event",4100,11.10,0.00
+"run_rebalance_investment",4100,7.89,0.00
+"process_rmd",700,1.75,0.00

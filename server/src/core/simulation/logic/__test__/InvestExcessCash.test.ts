@@ -1,4 +1,4 @@
-import { invest_excess_cash } from '../InvestExcessCash';
+import { run_invest_event } from '../InvestExcessCash';
 import { SimulationState } from '../../SimulationState';
 import { simulation_logger } from '../../../../utils/logger/logger';
 
@@ -89,7 +89,7 @@ describe('invest_excess_cash', () => {
   });
 
   it('invests excess cash according to fixed allocation', () => {
-    invest_excess_cash(mockState);
+    run_invest_event(mockState);
 
     const investedA = mockState.account_manager.non_retirement.get('Stock A')!.get_value();
     const investedB = mockState.account_manager.after_tax.get('Stock B')!.get_value();
@@ -109,7 +109,7 @@ describe('invest_excess_cash', () => {
       ['Stock B', 0.7]
     ]);
 
-    invest_excess_cash(mockState);
+    run_invest_event(mockState);
 
     //since we're at the start of the glide path aka 0% progress, it should use the initial allocation
     const expectedExcess = 10000 - 1000;
@@ -135,7 +135,7 @@ describe('invest_excess_cash', () => {
     //now in 2025, which is 2 years into a 4 year duration aka 50% progress 
     mockState.get_current_year = jest.fn().mockReturnValue(2025);
 
-    invest_excess_cash(mockState);
+    run_invest_event(mockState);
 
     const expectedExcess = 10000 - 1000;
     //should be halfway between initial and final values
@@ -153,7 +153,7 @@ describe('invest_excess_cash', () => {
       ['Stock B', 0.3] //sum is 1.1, should warn and skip
     ]);
 
-    invest_excess_cash(mockState);
+    run_invest_event(mockState);
 
     //values should remain unchanged
     expect(mockState.account_manager.non_retirement.get('Stock A')!.get_value()).toBe(1000);
@@ -177,7 +177,7 @@ describe('invest_excess_cash', () => {
       ['Stock B', 1.0]
     ]);
 
-    invest_excess_cash(mockState);
+    run_invest_event(mockState);
 
     //should only contribute up to the limit to after-tax
     expect(mockState.account_manager.after_tax.get('Stock B')!.get_value()).toBeCloseTo(1000 + 2000);
@@ -199,7 +199,7 @@ describe('invest_excess_cash', () => {
       ['Stock B', 0.6]
     ]);
 
-    invest_excess_cash(mockState);
+    run_invest_event(mockState);
 
     const expectedExcess = 10000 - 1000; //= 9000
     //after-tax is limited to 2000

@@ -3,7 +3,7 @@ import { TaxStatus } from "../Enums";
 import { InvestmentRaw } from "./raw/investment_raw";
 import { create_investment } from "./investment/Investment";
 import { simulation_logger } from "../../utils/logger/logger";
-import { clone_map } from "../../utils/helper";
+import { clone_map } from "../../utils/CloneUtil";
 
 export type AccountMap = Map<string, Investment>;
 

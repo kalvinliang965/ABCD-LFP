@@ -7,7 +7,7 @@ import { simulation_logger } from "../../../utils/logger/logger";
 
 // run income events, adding the income to cash investment
 // note: tax is calculate in another step
-export default async function run_income_event(
+export async function run_income_event(
   state: SimulationState
 ) {
   const current_year = state.get_current_year();

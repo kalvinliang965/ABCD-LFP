@@ -4,6 +4,7 @@ import { get_scenario_from_db } from "../../db/repositories/ScenarioRepository";
 import { delete_state_tax_brackets_by_state } from "../../db/repositories/StateTaxBracketRepository";
 import { fetch_and_parse_rmd } from "../../services/RMDScraper";
 import { simulation_logger } from "../../utils/logger/logger";
+import { Profiler } from "../../utils/Profiler";
 import { ScenarioRaw } from "../domain/raw/scenario_raw";
 import { Scenario } from "../domain/scenario/Scenario";
 import { create_federal_tax_service, FederalTaxService } from "../tax/FederalTaxService";
@@ -14,6 +15,7 @@ export interface SimulationEnvironment {
     state_tax_service: StateTaxService;
     rmd_table: Map<number, number>;
     scenario: Scenario; 
+    profiler?: Profiler;
 }
 
 const get_rmd_factors = async() => {

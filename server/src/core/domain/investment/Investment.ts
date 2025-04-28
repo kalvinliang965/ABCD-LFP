@@ -1,7 +1,7 @@
 import { create_investment_type, InvestmentType } from "./InvestmentType";
 import { ChangeType, TaxStatus } from "../../Enums";
 import { InvestmentRaw } from "../raw/investment_raw";
-import { Cloneable } from "../../../utils/helper";
+import { Cloneable } from "../../../utils/CloneUtil";
 /**
  * Public information about an investment
  */
