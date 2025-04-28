@@ -40,52 +40,70 @@ export interface SimulationResultData {
   scenarioId: string;
   userId: string;
   successProbability: number;
-  years: number[];
   startYear: number;
   endYear: number;
-  investments: Array<{
-    name: string;
-    category: 'investment';
-    taxStatus?: 'non-retirement' | 'pre-tax' | 'after-tax';
-    values: number[];
-  }>;
-  income: Array<{
-    name: string;
-    category: 'income';
-    values: number[];
-  }>;
-  expenses: Array<{
-    name: string;
-    category: 'expense';
-    values: number[];
-  }>;
-  totalInvestments?: {
-    median: number[];
-    ranges: {
-      range10_90: number[][];
-      range20_80: number[][];
-      range30_70: number[][];
-      range40_60: number[][];
+  
+  // New year-based data structure
+  yearlyData: Array<{
+    year: number;
+    
+    // Investment data
+    total_after_tax: number;
+    total_pre_tax: number;
+    total_non_retirement: number;
+    is_goal_met: boolean;
+    cash_value: number;
+    investments: Record<string, number>;
+    
+    // Income data
+    cur_year_income: number;
+    cur_year_social_security: number;
+    cur_year_capital_gains: number;
+    cur_year_after_tax_contributions: number;
+    cur_year_early_withdrawals: number;
+    income_breakdown: Record<string, number>;
+    
+    // Expense data
+    mandatory_expenses: number;
+    discretionary_expenses: number;
+    total_expenses: number;
+    expense_breakdown: {
+      expenses: Record<string, number>;
+      taxes: number;
     };
-  };
-  totalExpenses?: {
-    median: number[];
-    ranges: {
-      range10_90: number[][];
-      range20_80: number[][];
-      range30_70: number[][];
-      range40_60: number[][];
-    };
-  };
-  totalIncome?: {
-    median: number[];
-    ranges: {
-      range10_90: number[][];
-      range20_80: number[][];
-      range30_70: number[][];
-      range40_60: number[][];
-    };
-  };
+    
+    // Statistical data (optional)
+    stats?: {
+      totalInvestments?: {
+        median: number;
+        ranges: {
+          range10_90: [number, number];
+          range20_80: [number, number];
+          range30_70: [number, number];
+          range40_60: [number, number];
+        }
+      };
+      totalIncome?: {
+        median: number;
+        ranges: {
+          range10_90: [number, number];
+          range20_80: [number, number];
+          range30_70: [number, number];
+          range40_60: [number, number];
+        }
+      };
+      totalExpenses?: {
+        median: number;
+        ranges: {
+          range10_90: [number, number];
+          range20_80: [number, number];
+          range30_70: [number, number];
+          range40_60: [number, number];
+        }
+      };
+    }
+  }>;
+  
   createdAt: string;
   updatedAt: string;
 }

@@ -130,64 +130,51 @@ const SimulationResults: React.FC = () => {
         }
         
         // Validate required fields
-        if (!result.years || !Array.isArray(result.years) || result.years.length === 0) {
-          console.error('Missing or invalid years array in response:', result);
-          throw new Error('Invalid data format: missing years array');
+        if (!result.yearlyData || !Array.isArray(result.yearlyData) || result.yearlyData.length === 0) {
+          console.error('Missing or invalid yearlyData array in response:', result);
+          throw new Error('Invalid data format: missing yearlyData array');
         }
         
         // Transform the data for charts
         const formattedData = {
           // Probability of success data
           probabilityOfSuccess: {
-            years: result.years,
-            // If no probability array exists, create one based on successProbability
-            probabilities: Array(result.years.length).fill((result.successProbability || 0) * 100)
+            years: result.yearlyData.map(yr => yr.year),
+            // Calculate probability based on is_goal_met
+            probabilities: result.yearlyData.map(yr => yr.is_goal_met ? 100 : 0)
           },
           
           // Chart data for investments, income, and expenses
           medianOrAverageValues: {
-            years: result.years,
+            years: result.yearlyData.map(yr => yr.year),
             data: {
-              investments: result.investments || [],
-              income: result.income || [],
-              expenses: result.expenses || []
+              investments: transformYearlyDataToChartFormat(result.yearlyData, 'investments'),
+              income: transformYearlyDataToChartFormat(result.yearlyData, 'income_breakdown'),
+              expenses: transformYearlyDataToChartFormat(result.yearlyData, 'expense_breakdown', 'expenses')
             }
           },
           
           // Probability ranges data for shaded line chart
           probabilityRanges: {
-            totalInvestments: result.totalInvestments ? {
-              years: result.years,
-              median: result.totalInvestments.median || [],
-              ranges: result.totalInvestments.ranges || {
-                range10_90: [[], []],
-                range20_80: [[], []],
-                range30_70: [[], []],
-                range40_60: [[], []]
-              }
-            } : undefined,
+            totalInvestments: {
+              years: result.yearlyData.map(yr => yr.year),
+              median: result.yearlyData.map(yr => 
+                yr.total_after_tax + yr.total_pre_tax + yr.total_non_retirement
+              ),
+              ranges: extractRangesFromYearlyData(result.yearlyData, 'totalInvestments')
+            },
             
-            totalIncome: result.totalIncome ? {
-              years: result.years,
-              median: result.totalIncome.median || [],
-              ranges: result.totalIncome.ranges || {
-                range10_90: [[], []],
-                range20_80: [[], []],
-                range30_70: [[], []],
-                range40_60: [[], []]
-              }
-            } : undefined,
+            totalIncome: {
+              years: result.yearlyData.map(yr => yr.year),
+              median: result.yearlyData.map(yr => yr.cur_year_income),
+              ranges: extractRangesFromYearlyData(result.yearlyData, 'totalIncome')
+            },
             
-            totalExpenses: result.totalExpenses ? {
-              years: result.years,
-              median: result.totalExpenses.median || [],
-              ranges: result.totalExpenses.ranges || {
-                range10_90: [[], []],
-                range20_80: [[], []],
-                range30_70: [[], []],
-                range40_60: [[], []]
-              }
-            } : undefined
+            totalExpenses: {
+              years: result.yearlyData.map(yr => yr.year),
+              median: result.yearlyData.map(yr => yr.total_expenses),
+              ranges: extractRangesFromYearlyData(result.yearlyData, 'totalExpenses')
+            }
           }
         };
         
@@ -386,3 +373,111 @@ const SimulationResults: React.FC = () => {
 };
 
 export default SimulationResults;
+
+/**
+ * Helper function to transform yearly data to the chart format
+ */
+function transformYearlyDataToChartFormat(
+  yearlyData: Array<any>, 
+  property: string,
+  nestedProperty?: string
+): Array<{
+  name: string;
+  category: 'investment' | 'income' | 'expense';
+  taxStatus?: 'non-retirement' | 'pre-tax' | 'after-tax';
+  values: number[];
+}> {
+  // Get all unique keys across all years
+  const allKeys = new Set<string>();
+  yearlyData.forEach((yr: any) => {
+    const record = nestedProperty ? yr[property][nestedProperty] : yr[property];
+    Object.keys(record || {}).forEach(key => allKeys.add(key));
+  });
+  
+  // Determine category based on property
+  let category: 'investment' | 'income' | 'expense';
+  if (property === 'investments') category = 'investment';
+  else if (property === 'income_breakdown') category = 'income';
+  else category = 'expense';
+  
+  // Convert to array format for charts
+  return Array.from(allKeys).map(key => {
+    // For investments, determine tax status based on key name
+    let taxStatus: 'non-retirement' | 'pre-tax' | 'after-tax' | undefined;
+    if (category === 'investment') {
+      if (key.includes('pre-tax')) taxStatus = 'pre-tax';
+      else if (key.includes('after-tax')) taxStatus = 'after-tax';
+      else taxStatus = 'non-retirement';
+    }
+    
+    return {
+      name: key,
+      category,
+      taxStatus,
+      values: yearlyData.map((yr: any) => {
+        const record = nestedProperty ? yr[property][nestedProperty] : yr[property];
+        return record ? record[key] || 0 : 0;
+      })
+    };
+  });
+}
+
+/**
+ * Helper function to extract ranges from yearly data
+ */
+function extractRangesFromYearlyData(
+  yearlyData: Array<any>,
+  statType: 'totalInvestments' | 'totalIncome' | 'totalExpenses'
+): {
+  range10_90: number[][];
+  range20_80: number[][];
+  range30_70: number[][];
+  range40_60: number[][];
+} {
+  // Initialize empty range arrays
+  const ranges = {
+    range10_90: [[] as number[], [] as number[]],
+    range20_80: [[] as number[], [] as number[]],
+    range30_70: [[] as number[], [] as number[]],
+    range40_60: [[] as number[], [] as number[]]
+  };
+  
+  // Check if stats exist in yearly data
+  const hasStats = yearlyData.some((yr: any) => yr.stats && yr.stats[statType]);
+  
+  if (hasStats) {
+    // Extract ranges from each year's stats
+    yearlyData.forEach((yr: any) => {
+      if (yr.stats && yr.stats[statType]) {
+        const statRanges = yr.stats[statType].ranges;
+        
+        // Extract low and high values for each range
+        for (const rangeKey of Object.keys(ranges) as Array<keyof typeof ranges>) {
+          if (statRanges[rangeKey]) {
+            ranges[rangeKey][0].push(statRanges[rangeKey][0]);
+            ranges[rangeKey][1].push(statRanges[rangeKey][1]);
+          } else {
+            // Default to 0 if range is missing
+            ranges[rangeKey][0].push(0);
+            ranges[rangeKey][1].push(0);
+          }
+        }
+      } else {
+        // No stats for this year, use 0 values
+        for (const rangeKey of Object.keys(ranges) as Array<keyof typeof ranges>) {
+          ranges[rangeKey][0].push(0);
+          ranges[rangeKey][1].push(0);
+        }
+      }
+    });
+  } else {
+    // No stats at all, create default ranges
+    const length = yearlyData.length;
+    for (const rangeKey of Object.keys(ranges) as Array<keyof typeof ranges>) {
+      ranges[rangeKey][0] = Array(length).fill(0);
+      ranges[rangeKey][1] = Array(length).fill(0);
+    }
+  }
+  
+  return ranges;
+}

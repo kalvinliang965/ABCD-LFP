@@ -55,21 +55,38 @@ router.post("/", async (req: Request, res: Response) => {
     // Run multiple simulations
     const simulationResults = await engine.run(count);
     
-    // Use the primary simulation result (first one) but pass all results for range calculations
-    const primaryResult = simulationResults[0];
-    const simulationResult = create_simulation_result(primaryResult, scenarioId, simulationResults);
+    // Store all simulation results individually
+    const savedResults = [];
+    let firstSavedResult = null;
     
-    // Format results for frontend and database
-    const formattedResults = simulationResult.formatResults();
+    for (let i = 0; i < simulationResults.length; i++) {
+      // Create a SimulationResult object for each simulation
+      const simulationResult = create_simulation_result(
+        simulationResults[i], 
+        scenarioId,
+        simulationResults // Pass all simulations for statistical ranges
+      );
+      
+      // Format results for frontend and database
+      const formattedResults = simulationResult.formatResults();
+      
+      // Save to database
+      const savedResult = await save_simulation_result(formattedResults);
+      savedResults.push(savedResult);
+      
+      // Keep track of the first result for the response
+      if (i === 0) {
+        firstSavedResult = savedResult;
+      }
+    }
     
-    // Save to database
-    const savedResult = await save_simulation_result(formattedResults);
-    
-    // Return results with the saved ID
+    // Return results with the saved IDs
     res.status(200).json({
       success: true,
-      simulationId: savedResult._id,
-      data: formattedResults,
+      simulationId: firstSavedResult?._id, // Return the first ID for backward compatibility
+      simulationIds: savedResults.map(result => result._id), // Return all IDs
+      data: firstSavedResult, // Return the first formatted result for backward compatibility
+      count: savedResults.length
     });
   } catch (error) {
     simulation_logger.error(`Error running simulation: ${error instanceof Error ? error.stack : String(error)}`);
@@ -150,6 +167,7 @@ router.get("/", async (req: Request, res: Response) => {
 router.get("/scenario/:scenarioId", async (req: Request, res: Response) => {
   try {
     const { scenarioId } = req.params;
+    const { limit } = req.query; // Add a limit parameter to control how many results to return
     const userId = req.user?._id;
 
     if (!userId) {
@@ -173,10 +191,19 @@ router.get("/scenario/:scenarioId", async (req: Request, res: Response) => {
 
     const simulationResults = await get_simulation_results_by_scenario_id(scenarioId);
     
+    // If limit is specified, return only that many results
+    let resultsToReturn = simulationResults;
+    const limitNum = limit ? parseInt(limit as string, 10) : 0;
+    
+    if (limitNum > 0 && limitNum < simulationResults.length) {
+      resultsToReturn = simulationResults.slice(0, limitNum);
+    }
+    
     res.status(200).json({
       success: true,
       count: simulationResults.length,
-      data: simulationResults,
+      returnedCount: resultsToReturn.length,
+      data: resultsToReturn,
     });
   } catch (error) {
     simulation_logger.error(`Error fetching scenario simulation results: ${error instanceof Error ? error.stack : String(error)}`);
