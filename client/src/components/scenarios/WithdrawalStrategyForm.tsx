@@ -40,6 +40,11 @@ const getAccountNameById = (accounts: Array<{ id: string; name: string }>, id: s
   return account ? account.name : id; // Fallback to ID if name not found
 };
 
+// Helper to check if an account is a cash account
+const isCashAccount = (account: { id: string; name: string }): boolean => {
+  return account.id.toLowerCase().includes('cash') || account.name.toLowerCase().includes('cash');
+};
+
 interface WithdrawalStrategyFormProps {
   withdrawalStrategy: WithdrawalStrategy;
   onChangeWithdrawalStrategy: (strategy: WithdrawalStrategy) => void;
@@ -71,6 +76,13 @@ export const WithdrawalStrategyForm: React.FC<WithdrawalStrategyFormProps> = ({
 
   // Add an account to the priority list
   const addAccount = (accountId: string) => {
+    // Get the account to check if it's a cash account
+    const account = withdrawalStrategy.availableAccounts.find(acc => acc.id === accountId);
+    if (account && isCashAccount(account)) {
+      // Don't add cash accounts
+      return;
+    }
+    
     if (!withdrawalStrategy.accountPriority.includes(accountId)) {
       handleAccountPriorityChange([...withdrawalStrategy.accountPriority, accountId]);
     }
@@ -108,7 +120,7 @@ export const WithdrawalStrategyForm: React.FC<WithdrawalStrategyFormProps> = ({
   // Get available accounts that aren't already in the priority list
   const getAvailableAccounts = () => {
     return withdrawalStrategy.availableAccounts.filter(
-      account => !withdrawalStrategy.accountPriority.includes(account.id)
+      account => !withdrawalStrategy.accountPriority.includes(account.id) && !isCashAccount(account)
     );
   };
 
