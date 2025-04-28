@@ -34,12 +34,12 @@ const CHART_TYPES = [
 ];
 
 // Define the data structure for investments, income, and expenses
-interface DataItem {
-  name: string;
-  category: 'investment' | 'income' | 'expense';
-  taxStatus?: 'non-retirement' | 'pre-tax' | 'after-tax';
-  values: number[];
-}
+// interface DataItem {
+//   name: string;
+//   category: 'investment' | 'income' | 'expense';
+//   taxStatus?: 'non-retirement' | 'pre-tax' | 'after-tax';
+//   values: number[];
+// }
 
 const SimulationResults: React.FC = () => {
   // Get parameters from URL - could be either simulationId or scenarioId
@@ -100,12 +100,14 @@ const SimulationResults: React.FC = () => {
         if (scenarioId) {
           // Get results by scenario ID
           response = await simulation_service.get_simulations_by_scenario(idToUse);
+          console.log('API response: for scenarioId', response);
         } else {
           // Get results by simulation ID
           response = await simulation_service.get_simulation_results(idToUse);
+          console.log('API response: for simulationId', response);
         }
         
-        console.log('API response:', response);
+        console.log('API response: for all', response);
         setRawResponse(response);
         
         if (!response.success) {

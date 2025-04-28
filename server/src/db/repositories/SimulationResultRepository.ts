@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import SimulationResultModel, { ISimulationResult } from '../models/SimulationResult';
+import SimulationResultModel, { ISimulationResult } from '../models/SimulationResultModel';
 import { ConsolidatedResult } from '../../core/simulation/SimulationResult';
 import { simulation_logger } from '../../utils/logger/logger';
 
