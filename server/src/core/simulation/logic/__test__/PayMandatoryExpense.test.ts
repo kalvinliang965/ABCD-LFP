@@ -1,4 +1,4 @@
-import { get_standard_deduction } from "../../../../db/repositories/StandardDeductionRepository";
+import { get_standard_deduction_from_db } from "../../../../db/repositories/StandardDeductionRepository";
 import { get_state_taxbrackets_by_state, state_taxbrackets_exist_in_db } from "../../../../db/repositories/StateTaxBracketRepository";
 import { get_capital_gains_brackets, get_taxable_income_brackets } from "../../../../db/repositories/TaxBracketRepository";
 import { create_scenario_raw_yaml, scenario_yaml_string } from "../../../../services/ScenarioYamlParser";
@@ -118,7 +118,7 @@ describe("Pay mandatory expense", () => {
         (state_taxbrackets_exist_in_db as jest.Mock)
             .mockResolvedValue(true);
 
-        (get_standard_deduction as jest.Mock)
+        (get_standard_deduction_from_db as jest.Mock)
         .mockResolvedValue([{ amount: 1000, taxpayer_type: TaxFilingStatus.INDIVIDUAL }, {amount: 2000, taxpayer_type: TaxFilingStatus.COUPLE}]);
 
         // Create service instance

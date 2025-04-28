@@ -230,7 +230,7 @@ export function resolve_event_chain(
                         value: resolved_event.start,
                     };
                 } 
-                // endWith
+                // startAfter 
                 else {
                     dependent_event.start = {
                         type: "fixed",

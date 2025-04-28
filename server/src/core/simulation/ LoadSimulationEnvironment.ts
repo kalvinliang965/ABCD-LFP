@@ -16,6 +16,39 @@ export interface SimulationEnvironment {
     scenario: Scenario; 
 }
 
+const get_rmd_factors = async() => {
+    let res = await get_rmd_factors_from_db();
+    // if rmd factor is not already scrapped.
+    if (res.size == 0) {
+        res = await fetch_and_parse_rmd(tax_config.RMD_URL);
+        await save_rmd_factors_to_db(res);
+    } 
+    return res;
+}
+
+export async function create_simulation_environment_parallel(
+    scenario_id: string,
+): Promise<SimulationEnvironment> {
+    try {
+        const [scenario, federal_tax_service, rmd_table] =  await Promise.all([
+            get_scenario_from_db(scenario_id), 
+            create_federal_tax_service(), 
+            get_rmd_factors()
+        ])
+        // need to know scenario first.
+        const state_tax_service = await create_state_tax_service_db(scenario.residence_state);
+        return {
+            federal_tax_service,
+            state_tax_service,
+            rmd_table,
+            scenario,
+        }
+    } catch (error) {
+        simulation_logger.error(`Failed to create simulation environment ${error instanceof Error? error.stack: String(error)}`);
+        throw new Error(`Failed to create simulation environment ${error instanceof Error? error.message: String(error)}`);
+    }
+}
+
 export async function create_simulation_environment(
     scenario_id: string,
 ): Promise<SimulationEnvironment> {

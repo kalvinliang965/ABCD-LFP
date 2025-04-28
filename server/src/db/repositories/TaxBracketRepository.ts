@@ -40,6 +40,7 @@ export const get_capital_gains_brackets = async(): Promise<Array<ITaxBracket>> =
     simulation_logger.info(`${capital_gains_bracket_list.length} taxable brackets sucessfully loaded`);
     return capital_gains_bracket_list;
   } catch (error) {
+    simulation_logger.error(`Internel Service Error: ${error}`);
     throw new Error(`Internel Service Error: ${error}`);
   }
 }
@@ -51,8 +52,17 @@ export const get_taxable_income_brackets = async (): Promise<Array<ITaxBracket>>
     simulation_logger.info(`${taxable_income_bracket_list.length} taxable brackets sucessfully loaded`);
     return taxable_income_bracket_list;
   } catch (error) {
+    simulation_logger.error(`Internel Service Error: ${error}`);
     throw new Error(`Internel Service Error: ${error}`);
   }
 };
 
+export const delete_all_federal_brackets_from_db = async () => {
+  try {
+    await TaxBracketModel.deleteMany({});
+  } catch (error) {
+    simulation_logger.error(`Internel Service Error: ${error}`);
+    throw new Error(`Internel Service Error: ${error}`);
+  }
+}
 

@@ -22,7 +22,6 @@ import { rebalance_one } from "./event_raw/rebalance_event_raw";
 import { salary_income_event_one } from "./event_raw/income_event_raw";
 import { cash_investment_type_one, InvestmentTypeRaw, s_and_p_500_investment_type_one, tax_exempt_bonds_investment_type_one } from "./investment_type_raw";
 import { Distribution } from "./common";
-import { simulation_engine_demo } from "../../../demos/demo";
 import { simulation_logger } from "../../../utils/logger/logger";
 
 // a distribution is represented as a map with one of the following forms:

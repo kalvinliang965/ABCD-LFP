@@ -4,7 +4,7 @@ import "./config/environment"; // load environment variables
 import { initialize_middlewares, sessionStore } from "./middleware";
 import { connect_database, disconnect_database } from "./db/connections";
 import { api_config } from "./config/api";
-import { simulation_engine_demo } from "./demos/demo";
+import { run_demo } from "./demos/demo";
 import { Server } from "http";
 import { initialize_route as initialize_routes } from "./routes";
 import { fetch_and_parse_rmd } from "./services/RMDScraper";
@@ -42,7 +42,7 @@ async function initialize_application() {
   // run demo code below
 
   // await fetch_and_parse_rmd();
-  // await simulation_engine_demo();
+  await run_demo()
 }
 
 function start_server() {
