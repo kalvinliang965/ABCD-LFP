@@ -63,7 +63,7 @@ router.post("/", async (req: Request, res: Response) => {
     const formattedResults = simulationResult.formatResults();
     
     // Save to database
-    const savedResult = await save_simulation_result(formattedResults, userId);
+    const savedResult = await save_simulation_result(formattedResults);
     
     // Return results with the saved ID
     res.status(200).json({
@@ -100,14 +100,6 @@ router.get("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({
         success: false,
         message: "Simulation result not found",
-      });
-    }
-    
-    // Check if the user owns this simulation result
-    if (simulationResult.userId.toString() !== userId.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: "Forbidden: You don't have access to this simulation result",
       });
     }
     
@@ -167,7 +159,7 @@ router.get("/scenario/:scenarioId", async (req: Request, res: Response) => {
       });
     }
 
-    // Check if the scenario exists and belongs to the user
+    // Check if the scenario exists
     const scenario = await Scenario.findById(scenarioId);
     if (!scenario) {
       return res.status(404).json({
@@ -176,12 +168,8 @@ router.get("/scenario/:scenarioId", async (req: Request, res: Response) => {
       });
     }
     
-    if (scenario.userId.toString() !== userId.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: "Forbidden: You don't have access to this scenario",
-      });
-    }
+    // Removed user ownership check to allow access to any scenario's simulation results
+    // as long as the user is authenticated
 
     const simulationResults = await get_simulation_results_by_scenario_id(scenarioId);
     
