@@ -30,8 +30,9 @@ import {
 } from '@chakra-ui/react';
 
 import { RothOptimizerParameter } from './index';
+import InitialAmountParameter from './InitialAmountParameter';
 import { scenario_service } from '../../../services/scenarioService';
-import { ScenarioRaw } from '../../../types/Scenarios';
+import { ScenarioRaw, IncomeEventRaw, ExpenseEventRaw } from '../../../types/Scenarios';
 
 type ParameterType =
   | 'rothOptimizer'
@@ -104,6 +105,8 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
   // Track if parameter value has changed from original
   const [parameterChanged, set_parameter_changed] = useState<boolean>(false);
 
+  const [selectedEventName, set_selected_event_name] = useState<string>('');
+
   const parameter_option = PARAMETER_OPTIONS.find(option => option.value === selectedParameter);
   const is_numeric_parameter = parameter_option?.isNumeric ?? false;
 
@@ -112,7 +115,9 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
     const fetch_scenario_data = async () => {
       if (!scenarioId) return;
 
-      // fetch the scenario data
+      set_loading(true);
+      set_error(null);
+
       try {
         const response = await scenario_service.get_scenario_by_id(scenarioId);
 
@@ -139,12 +144,13 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
     };
 
     fetch_scenario_data();
-  }, []);
+  }, [scenarioId, selectedParameter]);
 
   const handle_parameter_change = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value as ParameterType | '';
     set_selected_parameter(value);
     set_parameter_changed(false); // Reset change tracking
+    set_selected_event_name(''); // Reset selected event
 
     // Reset values to appropriate defaults based on parameter type
     if (value === 'startYear') {
@@ -155,16 +161,11 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
       set_lower_bound(1);
       set_upper_bound(10);
       set_step_size(1);
-    } else if (value === 'initialAmount') {
-      set_lower_bound(1000);
-      set_upper_bound(10000);
-      set_step_size(1000);
     } else if (value === 'investmentPercentage') {
       set_lower_bound(0);
       set_upper_bound(100);
       set_step_size(10);
     }
-    // Roth optimizer values are handled by the useEffect
   };
 
   // Handler for Roth Optimizer value change
@@ -178,16 +179,30 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
     }
   };
 
+  const handle_initial_amount_change = (newValue: number) => {
+    if (!scenario_data) return;
+    
+    const selectedEvent = Array.from(scenario_data.eventSeries).find(
+      event => event.name === selectedEventName && 'initialAmount' in event
+    ) as IncomeEventRaw | ExpenseEventRaw | undefined;
+
+    if (selectedEvent) {
+      set_parameter_changed(newValue !== selectedEvent.initialAmount);
+    }
+  };
+
   const run_exploration = () => {
     // This would be implemented to call the backend API to run the simulations
     console.log('Running exploration with:', {
       scenarioId,
       parameterType: selectedParameter,
       isNumeric: is_numeric_parameter,
-      lowerBound: is_numeric_parameter ? lowerBound : undefined,
-      upperBound: is_numeric_parameter ? upperBound : undefined,
-      stepSize: is_numeric_parameter ? stepSize : undefined,
+      lowerBound: selectedParameter === 'initialAmount' ? undefined : lowerBound,
+      upperBound: selectedParameter === 'initialAmount' ? undefined : upperBound,
+      stepSize: selectedParameter === 'initialAmount' ? undefined : stepSize,
       rothFlag: selectedParameter === 'rothOptimizer' ? roth_flag : undefined,
+      initialAmount: selectedParameter === 'initialAmount' ? lowerBound : undefined,
+      eventName: selectedParameter === 'initialAmount' ? selectedEventName : undefined,
     });
 
     // Close the modal after submission
@@ -202,6 +217,11 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
     // For Roth optimizer, the value must be different than original
     if (selectedParameter === 'rothOptimizer') {
       return parameterChanged;
+    }
+
+    // For initial amount, we need a selected event and changed value
+    if (selectedParameter === 'initialAmount') {
+      return selectedEventName && parameterChanged;
     }
 
     if (is_numeric_parameter) {
@@ -275,7 +295,17 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
                 </Alert>
               ))}
 
-            {is_numeric_parameter && (
+            {selectedParameter === 'initialAmount' && scenario_data && (
+              <InitialAmountParameter
+                scenario_data={scenario_data}
+                onValueChange={handle_initial_amount_change}
+                originalValue={lowerBound}
+                selectedEventName={selectedEventName}
+                onEventNameChange={set_selected_event_name}
+              />
+            )}
+
+            {selectedParameter && selectedParameter !== 'rothOptimizer' && selectedParameter !== 'initialAmount' && (
               <>
                 <FormControl id="lower-bound" isRequired>
                   <FormLabel>Lower Bound</FormLabel>
