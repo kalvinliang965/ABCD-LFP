@@ -9,7 +9,7 @@ import { clone_map } from "../../utils/helper";
 import Deque from "double-ended-queue";
 import { EventUnion } from "./event/Event";
 import { ChangeType } from "../Enums";
-
+import { prune_overlapping_rebalance_events } from "../simulation/logic/RebalanceInvestments";
 export type InvestEventMap = Map<string, InvestEvent>;
 export type IncomeEventMap = Map<string, IncomeEvent>;
 export type RebalanceEventMap = Map<string, RebalanceEvent>;
@@ -293,9 +293,11 @@ export function resolve_event_chain(
 export function create_event_manager(event_series: Set<EventUnionRaw>): EventManager {
     try {
         const resolved = resolve_event_chain(event_series);
-        const [income_event, expense_event, invest_map, rebalance_event] = differentiate_events(resolved);
+        const [income_event, expense_event, invest_map, rebalance_map] = differentiate_events(resolved);
         //prune overlaps on the InvestEventMap
         const invest_event = prune_overlapping_invest_events(invest_map);
+        //prune overlaps on the RebalanceEventMap
+        const rebalance_event = prune_overlapping_rebalance_events(rebalance_map);
         
         simulation_logger.info("Successfully created event manager");
         return create_event_manager_clone(income_event, expense_event, invest_event, rebalance_event);
