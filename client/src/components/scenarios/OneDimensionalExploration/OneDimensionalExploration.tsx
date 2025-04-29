@@ -31,8 +31,9 @@ import {
 
 import { RothOptimizerParameter } from './index';
 import InitialAmountParameter from './InitialAmountParameter';
+import InvestmentPercentageParameter from './InvestmentPercentageParameter';
 import { scenario_service } from '../../../services/scenarioService';
-import { ScenarioRaw, IncomeEventRaw, ExpenseEventRaw } from '../../../types/Scenarios';
+import { ScenarioRaw, IncomeEventRaw, ExpenseEventRaw, InvestmentEventRaw } from '../../../types/Scenarios';
 
 type ParameterType =
   | 'rothOptimizer'
@@ -191,6 +192,30 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
     }
   };
 
+  const handle_investment_percentage_change = (newValue: number) => {
+    if (!scenario_data) return;
+    
+    //find the raw invest event
+    const selectedEvent = Array.from(scenario_data.eventSeries).find(
+      (event): event is InvestmentEventRaw => 
+        event.type === 'invest' && event.name === selectedEventName
+    );
+
+    if (selectedEvent) {
+      //normalize whatever shape assetAllocation has into a simple key->value map
+      const allocRaw = (selectedEvent as any).assetAllocation;
+      const allocMap: Record<string, number> = Array.isArray(allocRaw)
+        ? allocRaw.reduce((m, { type, value }) => ({ ...m, [type]: value }), {})
+        : { ...allocRaw };
+
+      //pick out the first non-zero entry
+      const firstNonZero = Object.values(allocMap).find(v => v > 0) ?? 0;
+
+      //compare newValue (0-100) to that *100
+      set_parameter_changed(newValue !== firstNonZero * 100);
+    }
+  };
+
   const run_exploration = () => {
     // This would be implemented to call the backend API to run the simulations
     console.log('Running exploration with:', {
@@ -203,6 +228,7 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
       rothFlag: selectedParameter === 'rothOptimizer' ? roth_flag : undefined,
       initialAmount: selectedParameter === 'initialAmount' ? lowerBound : undefined,
       eventName: selectedParameter === 'initialAmount' ? selectedEventName : undefined,
+      investmentPercentage: selectedParameter === 'investmentPercentage' ? lowerBound : undefined,
     });
 
     // Close the modal after submission
@@ -222,6 +248,12 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
     // For initial amount, we need a selected event and changed value
     if (selectedParameter === 'initialAmount') {
       return selectedEventName && parameterChanged;
+    }
+
+    //for investment percentage, we need a selected event and changed value
+    if (selectedParameter === 'investmentPercentage') {
+      //require that they've actually picked an event AND the value changed
+      return Boolean(selectedEventName) && parameterChanged;
     }
 
     if (is_numeric_parameter) {
@@ -305,7 +337,17 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
               />
             )}
 
-            {selectedParameter && selectedParameter !== 'rothOptimizer' && selectedParameter !== 'initialAmount' && (
+            {selectedParameter === 'investmentPercentage' && scenario_data && (
+              <InvestmentPercentageParameter
+                scenario_data={scenario_data}
+                onValueChange={handle_investment_percentage_change}
+                originalValue={lowerBound}
+                selectedEventName={selectedEventName}
+                onEventNameChange={set_selected_event_name}
+              />
+            )}
+
+            {selectedParameter && selectedParameter !== 'rothOptimizer' && selectedParameter !== 'initialAmount' && selectedParameter !== 'investmentPercentage' && (
               <>
                 <FormControl id="lower-bound" isRequired>
                   <FormLabel>Lower Bound</FormLabel>
