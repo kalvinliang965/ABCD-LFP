@@ -1,12 +1,7 @@
 import path from 'path';
 import winston from 'winston';
 import fs from "fs";
-import { fileURLToPath } from 'url';
 import { dev } from '../../config/environment';
-
-// manually create __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // create logs folder
 const project_root = path.join(__dirname, `../../../`);
@@ -29,7 +24,8 @@ const base_format = winston.format.combine(
   winston.format.errors({ stack: true })
 );
 
-let level = dev.is_dev?'debug': "info";
+// let level = dev.is_dev?'debug': "info";
+let level = "error";
 export const simulation_logger = winston.createLogger({
   level,
   format: winston.format.combine(

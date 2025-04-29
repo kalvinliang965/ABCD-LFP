@@ -65,6 +65,7 @@ export async function create_simulation_environment_parallel(
 
 export async function create_simulation_environment(
     scenario_id: string,
+    profiler?: Profiler,
 ): Promise<SimulationEnvironment> {
 
     try {
@@ -98,7 +99,7 @@ export async function create_simulation_environment(
             state_tax_service_taxable_income_bracket_raw: state_tax_service.__taxable_income_brackets.__brackets,
             rmd_table: rmd_table,
             scenario_raw,
-            profiler: new Profiler(),
+            profiler: profiler,
         }
 
     } catch (error) {

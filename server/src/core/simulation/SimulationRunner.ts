@@ -125,7 +125,7 @@ function simulate_year(
     rmd_table: Map<number, number>,
     simulation_state: SimulationState, 
     simulation_result: SimulationYearlyResult, 
-    profiler: Profiler | undefined
+    profiler?: Profiler
 ): boolean {
     try {
         simulation_logger.debug(
@@ -145,7 +145,7 @@ function simulate_year(
             profiler?.start("process_rmd");
             process_rmd(simulation_state, rmd_table);
             if (profiler) {
-                profiler.end("process_rmd");
+                profiler?.end("process_rmd");
             }
         }
 

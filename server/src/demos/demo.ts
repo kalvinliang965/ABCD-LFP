@@ -32,7 +32,7 @@ async function simulation_engine_demo(N: number) {
   
   // set up the environment
   profiler.start("create_simulation_environment");
-  const simulation_environment = await create_simulation_environment("680d5df88650c1b31ef2604f");
+  const simulation_environment = await create_simulation_environment_parallel("680d5df88650c1b31ef2604f");
   profiler.end("create_simulation_environment");
 
   // set up the simulation engine
@@ -62,6 +62,6 @@ async function optimize_scenario_environment_initialization_demo(N: number) {
   profiler.printSummary();
 }
 export async function run_demo() {
-  await simulation_engine_demo(1);
+  await simulation_engine_demo(100);
   // await optimize_scenario_environment_initialization_demo(1);
 }
