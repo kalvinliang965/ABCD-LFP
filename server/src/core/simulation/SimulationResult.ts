@@ -1,5 +1,5 @@
 import { SimulationYearlyResult, YearResult } from "./SimulationYearlyResult"
-import { quantile } from 'd3-array'; 
+//import { quantile } from 'd3-array'; 
 
 // this is Haifeng's code
 // Define the shape of the consolidated simulation result that will be returned to frontend/database
@@ -23,7 +23,7 @@ export interface ConsolidatedResult {
     cash_value: number;
     investments: Record<string, number>;
     
-    // Income data
+    // Income data 
     cur_year_income: number;
     cur_year_social_security: number;
     cur_year_capital_gains: number;
@@ -71,20 +71,59 @@ export interface ConsolidatedResult {
           range40_60: [number, number];
         }
       };
-    }
+    };
+
+    // Median and average values for this specific year
+    medianValues?: {
+      investments: Record<string, number>;
+      income: Record<string, number>;
+      expenses: Record<string, number>;
+    };
+    averageValues?: {
+      investments: Record<string, number>;
+      income: Record<string, number>;
+      expenses: Record<string, number>;
+    };
   }>;
   
-  // Additional fields for frontend requirements
-  medianAndAverageValues?: {
-    median: {
-      investments: { [year: number]: { [investment: string]: number } },
-      income: { [year: number]: { [source: string]: number } },
-      expenses: { [year: number]: { [type: string]: number } }
+  // New structure specifically for charts
+  chartData?: {
+    years: number[];
+    medianValues: {
+      investments: Array<{
+        name: string;
+        category: 'investment';
+        taxStatus?: 'pre-tax' | 'after-tax' | 'non-retirement';
+        values: number[];
+      }>,
+      income: Array<{
+        name: string;
+        category: 'income';
+        values: number[];
+      }>,
+      expenses: Array<{
+        name: string;
+        category: 'expense';
+        values: number[];
+      }>
     },
-    average: {
-      investments: { [year: number]: { [investment: string]: number } },
-      income: { [year: number]: { [source: string]: number } },
-      expenses: { [year: number]: { [type: string]: number } }
+    averageValues: {
+      investments: Array<{
+        name: string;
+        category: 'investment';
+        taxStatus?: 'pre-tax' | 'after-tax' | 'non-retirement';
+        values: number[];
+      }>,
+      income: Array<{
+        name: string;
+        category: 'income';
+        values: number[];
+      }>,
+      expenses: Array<{
+        name: string;
+        category: 'expense';
+        values: number[];
+      }>
     }
   };
   
@@ -408,20 +447,6 @@ export function createConsolidatedSimulationResult(
   const probabilityOfSuccess: { [year: number]: number } = {};
   const investmentTaxStatusMap: { [investmentName: string]: 'pre-tax' | 'after-tax' | 'non-retirement' } = {};
   
-  // Create structures for median and average values
-  const medianAndAverageValues = {
-    median: {
-      investments: {} as { [year: number]: { [investment: string]: number } },
-      income: {} as { [year: number]: { [source: string]: number } },
-      expenses: {} as { [year: number]: { [type: string]: number } }
-    },
-    average: {
-      investments: {} as { [year: number]: { [investment: string]: number } },
-      income: {} as { [year: number]: { [source: string]: number } },
-      expenses: {} as { [year: number]: { [type: string]: number } }
-    }
-  };
-  
   // Process each year
   for (let yearIndex = 0; yearIndex < years.length; yearIndex++) {
     const year = years[yearIndex];
@@ -438,67 +463,13 @@ export function createConsolidatedSimulationResult(
     const yearSuccessProbability = successCount / yearResults.length;
     probabilityOfSuccess[year] = yearSuccessProbability * 100; // Convert to percentage
     
-    // Calculate statistics for this year
-    const yearData = {
-      year,
-      
-      // Investment data - using MEDIAN values
-      total_after_tax: calculateMedian(yearResults.map(yr => yr.total_after_tax)),
-      total_pre_tax: calculateMedian(yearResults.map(yr => yr.total_pre_tax)),
-      total_non_retirement: calculateMedian(yearResults.map(yr => yr.total_non_retirement)),
-      is_goal_met: yearSuccessProbability > 0.5, // true if more than 50% of simulations met the goal
-      cash_value: calculateMedian(yearResults.map(yr => yr.cash_value)),
-      
-      // Create merged investment map with median values
-      investments: createMergedRecordWithMedian(yearResults, 'investments'),
-      
-      // Income data - using MEDIAN values
-      cur_year_income: calculateMedian(yearResults.map(yr => yr.cur_year_income)),
-      cur_year_social_security: calculateMedian(yearResults.map(yr => yr.cur_year_social_security)),
-      cur_year_capital_gains: calculateMedian(yearResults.map(yr => yr.cur_year_capital_gains)),
-      cur_year_after_tax_contributions: calculateMedian(yearResults.map(yr => yr.cur_year_after_tax_contributions)),
-      cur_year_early_withdrawals: calculateMedian(yearResults.map(yr => yr.cur_year_early_withdrawals)),
-      income_breakdown: createMergedRecordWithMedian(yearResults, 'income_breakdown'),
-      
-      // Expense data - using MEDIAN values
-      mandatory_expenses: calculateMedian(yearResults.map(yr => yr.mandatory_expenses)),
-      discretionary_expenses: calculateMedian(yearResults.map(yr => yr.discretionary_expenses)),
-      total_expenses: calculateMedian(yearResults.map(yr => yr.total_expenses)),
-      expense_breakdown: {
-        expenses: createMergedRecordWithMedian(yearResults, 'expense_breakdown.expenses'),
-        taxes: calculateMedian(yearResults.map(yr => yr.expense_breakdown.taxes))
-      },
-      
-      // Add statistical data
-      stats: {
-        totalInvestments: getYearStatistics(
-          allSimulations, 
-          yearIndex, 
-          y => y.total_after_tax + y.total_pre_tax + y.total_non_retirement
-        ),
-        totalIncome: getYearStatistics(
-          allSimulations,
-          yearIndex,
-          y => y.cur_year_income
-        ),
-        totalExpenses: getYearStatistics(
-          allSimulations,
-          yearIndex,
-          y => y.total_expenses
-        )
-      }
-    };
-    
-    // Add to yearlyData
-    yearlyData.push(yearData);
-    
-    // Populate median and average values for this year
-    const medianInvestments: { [investment: string]: number } = {};
-    const averageInvestments: { [investment: string]: number } = {};
-    const medianIncome: { [source: string]: number } = {};
-    const averageIncome: { [source: string]: number } = {};
-    const medianExpenses: { [type: string]: number } = {};
-    const averageExpenses: { [type: string]: number } = {};
+    // Prepare median and average values for this year
+    const medianInvestments: Record<string, number> = {};
+    const averageInvestments: Record<string, number> = {};
+    const medianIncome: Record<string, number> = {};
+    const averageIncome: Record<string, number> = {};
+    const medianExpenses: Record<string, number> = {};
+    const averageExpenses: Record<string, number> = {};
     
     // Process investments
     const allInvestmentKeys = new Set<string>();
@@ -571,26 +542,100 @@ export function createConsolidatedSimulationResult(
       averageExpenses[key] = calculateAverage(values);
     });
     
-    // Add to median and average values
-    medianAndAverageValues.median.investments[year] = medianInvestments;
-    medianAndAverageValues.average.investments[year] = averageInvestments;
-    medianAndAverageValues.median.income[year] = medianIncome;
-    medianAndAverageValues.average.income[year] = averageIncome;
-    medianAndAverageValues.median.expenses[year] = medianExpenses;
-    medianAndAverageValues.average.expenses[year] = averageExpenses;
+    // Calculate statistics for this year
+    const yearData = {
+      year,
+      
+      // Investment data - using MEDIAN values
+      total_after_tax: calculateMedian(yearResults.map(yr => yr.total_after_tax)),
+      total_pre_tax: calculateMedian(yearResults.map(yr => yr.total_pre_tax)),
+      total_non_retirement: calculateMedian(yearResults.map(yr => yr.total_non_retirement)),
+      is_goal_met: yearSuccessProbability > 0.5, // true if more than 50% of simulations met the goal
+      cash_value: calculateMedian(yearResults.map(yr => yr.cash_value)),
+      
+      // Create merged investment map with median values
+      investments: createMergedRecordWithMedian(yearResults, 'investments'),
+      
+      // Income data - using MEDIAN values
+      cur_year_income: calculateMedian(yearResults.map(yr => yr.cur_year_income)),
+      cur_year_social_security: calculateMedian(yearResults.map(yr => yr.cur_year_social_security)),
+      cur_year_capital_gains: calculateMedian(yearResults.map(yr => yr.cur_year_capital_gains)),
+      cur_year_after_tax_contributions: calculateMedian(yearResults.map(yr => yr.cur_year_after_tax_contributions)),
+      cur_year_early_withdrawals: calculateMedian(yearResults.map(yr => yr.cur_year_early_withdrawals)),
+      income_breakdown: createMergedRecordWithMedian(yearResults, 'income_breakdown'),
+      
+      // Expense data - using MEDIAN values
+      mandatory_expenses: calculateMedian(yearResults.map(yr => yr.mandatory_expenses)),
+      discretionary_expenses: calculateMedian(yearResults.map(yr => yr.discretionary_expenses)),
+      total_expenses: calculateMedian(yearResults.map(yr => yr.total_expenses)),
+      expense_breakdown: {
+        expenses: createMergedRecordWithMedian(yearResults, 'expense_breakdown.expenses'),
+        taxes: calculateMedian(yearResults.map(yr => yr.expense_breakdown.taxes))
+      },
+      
+      // Add statistical data
+      stats: {
+        totalInvestments: getYearStatistics(
+          allSimulations, 
+          yearIndex, 
+          y => y.total_after_tax + y.total_pre_tax + y.total_non_retirement
+        ),
+        totalIncome: getYearStatistics(
+          allSimulations,
+          yearIndex,
+          y => y.cur_year_income
+        ),
+        totalExpenses: getYearStatistics(
+          allSimulations,
+          yearIndex,
+          y => y.total_expenses
+        )
+      },
+      
+      // Add median and average values for this specific year
+      medianValues: {
+        investments: medianInvestments,
+        income: medianIncome,
+        expenses: medianExpenses
+      },
+      averageValues: {
+        investments: averageInvestments,
+        income: averageIncome,
+        expenses: averageExpenses
+      }
+    };
+    
+    // Add to yearlyData
+    yearlyData.push(yearData);
   }
   
-  // Return the consolidated result
-  return {
+  // Create the consolidated result
+  const consolidatedResult: ConsolidatedResult = {
     scenarioId,
     successProbability,
     startYear,
     endYear,
     yearlyData,
-    medianAndAverageValues,
     probabilityOfSuccess,
     investmentTaxStatusMap
   };
+  
+  // Generate chart-friendly data structure
+  consolidatedResult.chartData = {
+    years,
+    medianValues: {
+      investments: generateInvestmentChartData(years, yearlyData, 'medianValues', investmentTaxStatusMap),
+      income: generateIncomeChartData(years, yearlyData, 'medianValues'),
+      expenses: generateExpenseChartData(years, yearlyData, 'medianValues')
+    },
+    averageValues: {
+      investments: generateInvestmentChartData(years, yearlyData, 'averageValues', investmentTaxStatusMap),
+      income: generateIncomeChartData(years, yearlyData, 'averageValues'),
+      expenses: generateExpenseChartData(years, yearlyData, 'averageValues')
+    }
+  };
+  
+  return consolidatedResult;
 }
 
 /**
@@ -679,4 +724,128 @@ function createMergedRecordWithMedian(yearResults: YearResult[], propertyPath: s
   });
   
   return mergedRecord;
+}
+
+// Helper function for investment chart data - now works with yearly data array
+function generateInvestmentChartData(
+  years: number[],
+  yearlyData: Array<any>,
+  valueType: 'medianValues' | 'averageValues',
+  taxStatusMap?: { [name: string]: 'pre-tax' | 'after-tax' | 'non-retirement' }
+): Array<{
+  name: string;
+  category: 'investment';
+  taxStatus?: 'pre-tax' | 'after-tax' | 'non-retirement';
+  values: number[];
+}> {
+  // Get all unique investment names across all years
+  const allNames = new Set<string>();
+  yearlyData.forEach(yearData => {
+    if (yearData[valueType] && yearData[valueType].investments) {
+      Object.keys(yearData[valueType].investments).forEach(name => {
+        allNames.add(name);
+      });
+    }
+  });
+  
+  // Generate the array of chart items
+  return Array.from(allNames).map(name => {
+    const chartItem: {
+      name: string;
+      category: 'investment';
+      taxStatus?: 'pre-tax' | 'after-tax' | 'non-retirement';
+      values: number[];
+    } = {
+      name,
+      category: 'investment',
+      values: years.map(year => {
+        // Find the yearData for this year
+        const yearData = yearlyData.find(yd => yd.year === year);
+        // Get value for this investment, or 0 if not present
+        return yearData && 
+               yearData[valueType] && 
+               yearData[valueType].investments && 
+               yearData[valueType].investments[name] || 0;
+      })
+    };
+    
+    // Add tax status for investments if available
+    if (taxStatusMap && taxStatusMap[name]) {
+      chartItem.taxStatus = taxStatusMap[name];
+    }
+    
+    return chartItem;
+  });
+}
+
+// Helper function for income chart data - now works with yearly data array
+function generateIncomeChartData(
+  years: number[],
+  yearlyData: Array<any>,
+  valueType: 'medianValues' | 'averageValues'
+): Array<{
+  name: string;
+  category: 'income';
+  values: number[];
+}> {
+  // Get all unique income source names across all years
+  const allNames = new Set<string>();
+  yearlyData.forEach(yearData => {
+    if (yearData[valueType] && yearData[valueType].income) {
+      Object.keys(yearData[valueType].income).forEach(name => {
+        allNames.add(name);
+      });
+    }
+  });
+  
+  // Generate the array of chart items
+  return Array.from(allNames).map(name => ({
+    name,
+    category: 'income',
+    values: years.map(year => {
+      // Find the yearData for this year
+      const yearData = yearlyData.find(yd => yd.year === year);
+      // Get value for this income source, or 0 if not present
+      return yearData && 
+             yearData[valueType] && 
+             yearData[valueType].income && 
+             yearData[valueType].income[name] || 0;
+    })
+  }));
+}
+
+// Helper function for expense chart data - now works with yearly data array
+function generateExpenseChartData(
+  years: number[],
+  yearlyData: Array<any>,
+  valueType: 'medianValues' | 'averageValues'
+): Array<{
+  name: string;
+  category: 'expense';
+  values: number[];
+}> {
+  // Get all unique expense type names across all years
+  const allNames = new Set<string>();
+  yearlyData.forEach(yearData => {
+    if (yearData[valueType] && yearData[valueType].expenses) {
+      Object.keys(yearData[valueType].expenses).forEach(name => {
+        allNames.add(name);
+      });
+    }
+  });
+  
+  // Generate the array of chart items
+  return Array.from(allNames).map(name => ({
+    name,
+    category: 'expense',
+    values: years.map(year => {
+      // Find the yearData for this year
+      const yearData = yearlyData.find(yd => yd.year === year);
+      // Get value for this expense type, or 0 if not present
+      return yearData && 
+             yearData[valueType] && 
+             yearData[valueType].expenses && 
+             yearData[valueType].expenses[name] || 0;
+    })
+  }));
 }

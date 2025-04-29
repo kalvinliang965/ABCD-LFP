@@ -63,9 +63,9 @@ const SimulationResults: React.FC = () => {
   const [aggregationThreshold, setAggregationThreshold] = useState<number>(10000);
 
   // Debugging helper
-  const toggleDebug = () => {
-    setShowDebug(!showDebug);
-  };
+  // const toggleDebug = () => {
+  //   setShowDebug(!showDebug);
+  // };
 
   // Fetch simulation results from the database
   useEffect(() => {
@@ -117,6 +117,7 @@ const SimulationResults: React.FC = () => {
         let result;
         if (scenarioId && Array.isArray(response.data) && response.data.length > 0) {
           // If retrieving by scenarioId, use the most recent result if multiple exist
+          // because same scenarioId can have multiple simulation results
           result = response.data.sort((a, b) => 
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           )[0];
@@ -135,7 +136,7 @@ const SimulationResults: React.FC = () => {
           console.error('Missing or invalid yearlyData array in response:', result);
           throw new Error('Invalid data format: missing yearlyData array');
         }
-        
+        console.log('yearly data', result.yearlyData);
         // Transform the data for charts
         const formattedData = {
           // Probability of success data
@@ -249,6 +250,7 @@ const SimulationResults: React.FC = () => {
     );
   };
 
+  
   // Render the selected charts
   const renderCharts = () => {
     return (
@@ -270,6 +272,7 @@ const SimulationResults: React.FC = () => {
           </Box>
         )}
 
+            
         {selectedCharts.includes('medianOrAverageValues') && (
           <Box mb={8}>
             <Heading as="h2" size="lg" mb={4}>
@@ -279,7 +282,7 @@ const SimulationResults: React.FC = () => {
               This chart shows the {aggregationType} values of investments, income, and expenses
               over time. Use the tabs to switch between different financial categories.
             </Text>
-
+        
             <StackedBarChart
               years={simulationData?.medianOrAverageValues?.years}
               data={simulationData?.medianOrAverageValues?.data}
@@ -291,7 +294,7 @@ const SimulationResults: React.FC = () => {
             />
           </Box>
         )}
-
+        
         {selectedCharts.includes('probabilityRanges') && (
           <Box mb={8}>
             <Heading as="h2" size="lg" mb={4}>
@@ -339,11 +342,11 @@ const SimulationResults: React.FC = () => {
         </Text>
       )}
 
-      <Flex justifyContent="flex-end" mb={4}>
+      {/* <Flex justifyContent="flex-end" mb={4}>
         <Button size="sm" colorScheme="gray" onClick={toggleDebug}>
           {showDebug ? "Hide Debug" : "Show Debug"}
         </Button>
-      </Flex>
+      </Flex> */}
 
       {showDebug && rawResponse && (
         <Box mb={6} p={4} bg="gray.50" borderRadius="md" overflow="auto" maxHeight="300px">
