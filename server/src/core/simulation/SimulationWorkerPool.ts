@@ -2,6 +2,23 @@ import { Worker, isMainThread } from "worker_threads";
 import { cpus } from "os";
 import { SimulationYearlyResult } from "./SimulationYearlyResult";
 import { SimulationEnvironment } from "./ LoadSimulationEnvironment";
+import { TaxBracket, TaxBracketSet } from "../tax/TaxBrackets";
+import { ScenarioRaw } from "../domain/raw/scenario_raw";
+import { fileURLToPath } from "url";
+import path from "path";
+import { stringify } from "superjson";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export interface SimulationTaskData {
+    federal_tax_service_taxable_income_bracket_raw_serialize: Array<[string, TaxBracket[]]>;
+    federal_tax_service_capital_gains_bracket_raw_serialize: Array<[string, TaxBracket[]]>;
+    federal_tax_service_standard_deductions_raw_serialize: Array<[string, number]>;
+    state_tax_service_taxable_income_bracket_raw_serialize: Array<[string, TaxBracket[]]>;
+    rmd_table_serialize: Array<[number, number]>;
+    scenario_raw_serialize: ScenarioRaw;
+}
 
 export class SimulationWorkerPool {
     private workers: Worker[] = [];
@@ -12,10 +29,18 @@ export class SimulationWorkerPool {
         if (!isMainThread) {
             throw new Error("attempt to spawn worker to run sumlation on none main thread");
         }
+        const worker_path = path.join(__dirname, "worker.ts");
+
         // spawning "pool_size" amt of workers
         // spwan worker and keep them waiting
         for (let i = 0; i < pool_size; ++i) {
-            const worker = new Worker("./worker.ts");
+            const worker = new Worker(worker_path, {
+                execArgv: [
+                    "--import", "tsx/esm",
+                    "--no-warnings",
+                ],
+
+            });
             worker.on('error', (err) => {
                 this.handle_worker_error(worker, err);
             });
@@ -23,9 +48,47 @@ export class SimulationWorkerPool {
         }
     }
 
-    public async run_simulation(simulation_environment: SimulationEnvironment): Promise<SimulationYearlyResult> {
+    public async run_simulation(
+        simulation_environment: SimulationEnvironment
+    ): Promise<SimulationYearlyResult> {
+        // const task: SimulationTaskData = {
+        //     federal_tax_service_taxable_income_bracket_raw_serialize: Array.from(
+        //         simulation_environment.federal_tax_service_taxable_income_bracket_raw.entries()
+        //     ).map(([status, brackets]) => [
+        //         status.valueOf(),
+        //         brackets,
+        //     ]),
+        //     federal_tax_service_capital_gains_bracket_raw_serialize: Array.from(
+        //         simulation_environment.federal_tax_service_capital_gains_bracket_raw.entries()
+        //     ).map(([status, brackets]) => [
+        //         status.valueOf(),
+        //         brackets,
+        //     ]),
+        //     federal_tax_service_standard_deductions_raw_serialize: Array.from(
+        //         simulation_environment.federal_tax_service_standard_deductions_raw.entries()
+        //     ).map(([status, number]) => [
+        //         status.valueOf(),
+        //         number,
+        //     ]),
+        //     state_tax_service_taxable_income_bracket_raw_serialize: Array.from(
+        //         simulation_environment.state_tax_service_taxable_income_bracket_raw.entries()
+        //     ).map(([status, brackets]) => [
+        //         status.valueOf(),
+        //         brackets,
+        //     ]),
+        //     rmd_table_serialize: Array.from(
+        //         simulation_environment.rmd_table.entries()
+        //     ),
+        //     scenario_raw_serialize: deep_serialize(simulation_environment.scenario_raw),
+        // }
+
+
         return new Promise((resolve, reject) => {
-            this.task_queue.push({task: simulation_environment, resolve, reject});
+            this.task_queue.push({
+                task: stringify(simulation_environment), 
+                resolve, 
+                reject
+            });
             this.process_queue();
         });
     }

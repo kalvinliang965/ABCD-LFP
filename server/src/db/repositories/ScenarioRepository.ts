@@ -1,7 +1,7 @@
 import { simulation_logger } from "../../utils/logger/logger";
 import ScenarioModel from "../models/Scenario";
 import { create_scenario, Scenario } from "../../core/domain/scenario/Scenario";
-import { create_scenario_raw } from "../../core/domain/raw/scenario_raw";
+import { create_scenario_raw, ScenarioRaw } from "../../core/domain/raw/scenario_raw";
 import { IScenario } from "../models/Scenario";
 
 export function convert_db_to_scenario_raw(scenario_from_db: IScenario) {
@@ -28,7 +28,7 @@ export function convert_db_to_scenario_raw(scenario_from_db: IScenario) {
     return scenario_raw;
 }
 
-export async function get_scenario_from_db(scenario_id: string): Promise<Scenario> {
+export async function get_scenario_from_db(scenario_id: string): Promise<ScenarioRaw> {
     try {
         const scenario_from_db = await ScenarioModel.findOne({
             _id: scenario_id,
@@ -42,9 +42,7 @@ export async function get_scenario_from_db(scenario_id: string): Promise<Scenari
         }
         const scenario_raw = convert_db_to_scenario_raw(scenario_from_db);
         simulation_logger.info("Sucessfully converted to scenario raw");
-        const scenario = create_scenario(scenario_raw);
-        simulation_logger.info("Successfully converted to scenario");
-        return scenario;
+        return scenario_raw;
     } catch(error) {
         simulation_logger.error("Error in finding the scenario");
         throw new Error("Internel Service Error");

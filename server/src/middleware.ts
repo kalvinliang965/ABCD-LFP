@@ -12,9 +12,8 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from "./db/models/User";
 
-let sessionStore: MongoStore;
 
-function initialize_middlewares(app: Express) {
+export function initialize_middlewares(app: Express) {
     console.log("Registering global middleware");
 
     const minute = 60 * 1000;
@@ -133,4 +132,3 @@ function initialize_middlewares(app: Express) {
       
     console.log("Finish registering global middleware");
 }
-export { sessionStore, initialize_middlewares }

@@ -62,6 +62,6 @@ async function optimize_scenario_environment_initialization_demo(N: number) {
   profiler.printSummary();
 }
 export async function run_demo() {
-  // await simulation_engine_demo(100);
+  await simulation_engine_demo(1);
   // await optimize_scenario_environment_initialization_demo(1);
 }

@@ -13,16 +13,91 @@ import { pay_mandatory_expenses } from "./logic/PayMandatoryExpense";
 import { pay_discretionary_expenses } from "./logic/PayDiscretionaryExpense";
 import { run_invest_event } from "./logic/InvestExcessCash";
 import { run_rebalance_investment } from "./logic/RebalanceInvestments";
+import { create_scenario } from "../domain/scenario/Scenario";
+import { create_tax_brackets, TaxBracketSet } from "../tax/TaxBrackets";
+import { TaxFilingStatus } from "../Enums";
+import { create_standard_deductions } from "../tax/StandardDeduction";
+import { create_federal_service_wo, FederalTaxService } from "../tax/FederalTaxService";
+import { create_state_tax_service_wo, StateTaxService } from "../tax/StateTaxService";
+
+function create_federal_service_from_scratch(
+    federal_tax_service_taxable_income_bracket_raw: Map<TaxFilingStatus, TaxBracketSet>,
+    federal_tax_service_capital_gains_bracket_raw: Map<TaxFilingStatus, TaxBracketSet>,
+    federal_tax_service_standard_deductions_raw: Map<TaxFilingStatus, number>,
+): FederalTaxService {
+
+    const taxable_income_bracket = create_tax_brackets();
+    for (const status of federal_tax_service_taxable_income_bracket_raw.keys()) {
+        if (!federal_tax_service_taxable_income_bracket_raw.has(status)) {
+            simulation_logger.error(`Failed to prepare federal service. taxable_income_bracket_raw does not contain status ${status}`);
+            throw new Error(`Failed to prepare federal service. taxable_income_bracket_raw does not contain status ${status}`);
+        }
+        for (const bracket of federal_tax_service_taxable_income_bracket_raw.get(status)!) {
+            taxable_income_bracket.add_bracket(bracket.min, bracket.max, bracket.rate, status);
+        }
+    }
+
+    const capital_gains_bracket = create_tax_brackets();
+    for (const status of federal_tax_service_capital_gains_bracket_raw.keys()) {
+        if (!federal_tax_service_capital_gains_bracket_raw.has(status)) {
+            simulation_logger.error(`Failed to prepare federal service. capital gains bracket raw does not contain status ${status}`);
+            throw new Error(`Failed to prepare federal service. capital gains bracket raw does not contain status ${status}`);
+        }
+        for (const bracket of federal_tax_service_capital_gains_bracket_raw.get(status)!) {
+            capital_gains_bracket.add_bracket(bracket.min, bracket.max, bracket.rate, status);
+        }
+    }
+
+    const standard_deductions = create_standard_deductions();
+    for (const status of federal_tax_service_standard_deductions_raw.keys()) {
+        if (!federal_tax_service_standard_deductions_raw.has(status)) {
+            simulation_logger.error(`Failed to prepare federal service. standard deduction raw does not contain status ${status}`);
+            throw new Error(`Failed to prepare federal service. standard deduction raw does not contain status ${status}`);
+        }
+        
+        standard_deductions.add_deduction(federal_tax_service_standard_deductions_raw.get(status)!, status);
+    }
+
+    return create_federal_service_wo(taxable_income_bracket, capital_gains_bracket, standard_deductions);
+}
+
+function create_state_tax_from_scratch(
+    state_tax_service_taxable_income_bracket_raw: Map<TaxFilingStatus, TaxBracketSet>
+): StateTaxService {
+    const taxable_income_bracket = create_tax_brackets();
+    for (const status of state_tax_service_taxable_income_bracket_raw.keys()) {
+        if (!state_tax_service_taxable_income_bracket_raw.has(status)) {
+            simulation_logger.error(`Failed to prepare federal service. taxable_income_bracket_raw does not contain status ${status}`);
+            throw new Error(`Failed to prepare federal service. taxable_income_bracket_raw does not contain status ${status}`);
+        }
+        for (const bracket of state_tax_service_taxable_income_bracket_raw.get(status)!) {
+            taxable_income_bracket.add_bracket(bracket.min, bracket.max, bracket.rate, status);
+        }
+    }
+    return create_state_tax_service_wo(taxable_income_bracket);
+}
 
 
 export async function execute_single_simulation(
     simulation_environment: SimulationEnvironment, 
 ): Promise<SimulationYearlyResult> {
 
+    const scenario = create_scenario(simulation_environment.scenario_raw);
+    simulation_logger.debug("Successfully created scenario from sratch");
+    const federal_tax_service = create_federal_service_from_scratch(
+        simulation_environment.federal_tax_service_taxable_income_bracket_raw,
+        simulation_environment.federal_tax_service_capital_gains_bracket_raw,
+        simulation_environment.federal_tax_service_standard_deductions_raw,
+    );
+    simulation_logger.debug("Successfully created federal tax service from sratch");
+    const state_tax_service = create_state_tax_from_scratch(
+        simulation_environment.state_tax_service_taxable_income_bracket_raw
+    );
+    simulation_logger.debug("Successfully created state tax service from sratch");
     const simulation_state = await create_simulation_state(
-        simulation_environment.scenario, 
-        simulation_environment.federal_tax_service, 
-        simulation_environment.state_tax_service
+        scenario, 
+        federal_tax_service, 
+        state_tax_service,
     ); 
     const simulation_result = create_simulation_yearly_result();
     

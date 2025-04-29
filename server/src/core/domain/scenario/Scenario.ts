@@ -1,13 +1,10 @@
 // src/core/domain/Scenario.ts
 // we will use this function to read data read from front end and call other function to parse the data
 import {
-  create_value_generator,
   ValueGenerator,
 } from "../../../utils/ValueGenerator";
 import {
-  DistributionType,
   StateType,
-  StatisticType,
   TaxFilingStatus,
 } from "../../Enums";
 import { create_investment, Investment } from "../investment/Investment";
@@ -110,7 +107,7 @@ export interface Scenario {
   account_manager: AccountManager
 }
 
-export async function create_scenario(scenario_raw: ScenarioRaw): Promise<Scenario> {
+export function create_scenario(scenario_raw: ScenarioRaw): Scenario {
   try {
     const taxfilingStatus: TaxFilingStatus = parse_taxpayer_type(
       scenario_raw.maritalStatus

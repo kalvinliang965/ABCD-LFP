@@ -1,11 +1,51 @@
 import { parentPort, isMainThread } from "worker_threads";
 import { execute_single_simulation } from "./SimulationRunner";
+import { SimulationTaskData } from "./SimulationWorkerPool";
+import { SimulationEnvironment } from "./ LoadSimulationEnvironment";
+import { TaxFilingStatus } from "../Enums";
+import { TaxBracket } from "../tax/TaxBrackets";
+import { parse } from "superjson";
 
 if (!isMainThread) {
     parentPort?.on("message", async(message) => {
         try {
             if (message.type === "run") {
-                const result = await execute_single_simulation(message.data);
+                // const taskData: SimulationTaskData = JSON.parse(message.data);
+
+                // const federal_tax_service_taxable_income_bracket_raw = new Map<TaxFilingStatus, TaxBracket[]>(
+                //     taskData.federal_tax_service_taxable_income_bracket_raw_serialize.map(
+                //         ([key, value]) => [key as TaxFilingStatus, value]
+                //     )
+                // );
+                // const federal_tax_service_capital_gains_bracket_raw = new Map<TaxFilingStatus, TaxBracket[]>(
+                //     taskData.federal_tax_service_capital_gains_bracket_raw_serialize.map(
+                //         ([key, value]) => [key as TaxFilingStatus, value]
+                //     )
+                // );
+
+                // const federal_tax_service_standard_deductions_bracket_raw = new Map<TaxFilingStatus, number>(
+                //     taskData.federal_tax_service_standard_deductions_raw_serialize.map(
+                //         ([key, value]) => [key as TaxFilingStatus, value]
+                //     )
+                // );
+
+                // const state_tax_service_taxable_income_bracket_raw = new Map<TaxFilingStatus, TaxBracket[]>(
+                //     taskData.state_tax_service_taxable_income_bracket_raw_serialize.map(
+                //         ([key, value]) => [key as TaxFilingStatus, value]
+                //     )
+                // );
+
+                // const simulation_environment: SimulationEnvironment = {
+                //     federal_tax_service_taxable_income_bracket_raw: federal_tax_service_taxable_income_bracket_raw,
+                //     federal_tax_service_capital_gains_bracket_raw: federal_tax_service_capital_gains_bracket_raw,
+                //     federal_tax_service_standard_deductions_raw: federal_tax_service_standard_deductions_bracket_raw,
+                //     state_tax_service_taxable_income_bracket_raw: state_tax_service_taxable_income_bracket_raw,
+                //     rmd_table: new Map(taskData.rmd_table_serialize),
+                //     scenario_raw: taskData.scenario_raw_serialize,
+                // };
+                // console.log(simulation_environment);
+                // const result = await execute_single_simulation(simulation_environment);
+                const result = await execute_single_simulation(parse(message.data));
                 // send result back to parent thread
                 parentPort?.postMessage({status: "success", data: result});
             } else {

@@ -1,8 +1,12 @@
 import path from 'path';
 import winston from 'winston';
 import fs from "fs";
-import { debug } from 'console';
+import { fileURLToPath } from 'url';
 import { dev } from '../../config/environment';
+
+// manually create __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // create logs folder
 const project_root = path.join(__dirname, `../../../`);
