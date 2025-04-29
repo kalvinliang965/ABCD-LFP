@@ -49,7 +49,7 @@ const InitialAmountParameter: React.FC<InitialAmountParameterProps> = ({
     if (event) {
       set_selected_event(event);
       //only set the initial value if we haven't selected an event before
-      if (!selected_event) {
+      if (!selected_event || selected_event.name !== event.name) {
         set_current_value(event.initialAmount);
         onValueChange(event.initialAmount);
       }
@@ -57,7 +57,7 @@ const InitialAmountParameter: React.FC<InitialAmountParameterProps> = ({
       set_selected_event(null);
       set_current_value(originalValue);
     }
-  }, [selectedEventName, filtered_events, originalValue, onValueChange, selected_event]);
+  }, [selectedEventName, filtered_events, originalValue, onValueChange]);
 
   const handle_event_type_change = (value: string) => {
     set_event_type(value as 'income' | 'expense');
@@ -72,8 +72,18 @@ const InitialAmountParameter: React.FC<InitialAmountParameterProps> = ({
   };
 
   const handle_amount_change = (value: number) => {
-    set_current_value(value);
-    onValueChange(value);
+    //ensure value is not NaN
+    if (isNaN(value)) {
+      //default to 0 if input is empty or NaN
+      set_current_value(0);
+      onValueChange(0);
+      return;
+    }
+    
+    //ensure value is positive
+    const valid_value = Math.max(0, value);
+    set_current_value(valid_value);
+    onValueChange(valid_value);
   };
 
   const has_value_changed = selected_event ? current_value !== selected_event.initialAmount : false;
@@ -113,6 +123,7 @@ const InitialAmountParameter: React.FC<InitialAmountParameterProps> = ({
           placeholder="Select an event"
           value={selectedEventName}
           onChange={handle_event_change}
+          isDisabled={false} //never disable the dropdown
         >
           {filtered_events.map(event => (
             <option key={event.name} value={event.name}>
@@ -120,6 +131,11 @@ const InitialAmountParameter: React.FC<InitialAmountParameterProps> = ({
             </option>
           ))}
         </Select>
+        {has_value_changed && (
+          <Text fontSize="sm" color="orange.500" mt={1}>
+            Note: Changing the event will discard your current changes.
+          </Text>
+        )}
       </FormControl>
 
       {selected_event && (
@@ -129,6 +145,9 @@ const InitialAmountParameter: React.FC<InitialAmountParameterProps> = ({
             value={current_value}
             onChange={(_, value) => handle_amount_change(value)}
             min={0}
+            keepWithinRange={true}
+            clampValueOnBlur={true}
+            isInvalid={isNaN(current_value) || current_value < 0}
           >
             <NumberInputField />
             <NumberInputStepper>
@@ -136,6 +155,11 @@ const InitialAmountParameter: React.FC<InitialAmountParameterProps> = ({
               <NumberDecrementStepper />
             </NumberInputStepper>
           </NumberInput>
+          {(isNaN(current_value) || current_value < 0) && (
+            <Text color="red.500" fontSize="sm" mt={1}>
+              Value must be a positive number
+            </Text>
+          )}
         </FormControl>
       )}
 
