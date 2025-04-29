@@ -1,11 +1,12 @@
 import { create_state_tax_raw_yaml, StateTaxYAML } from "../../services/StateYamlParser";
 import { StateType, TaxFilingStatus } from "../Enums";
-import { create_tax_brackets, TaxBracketSet } from "./TaxBrackets";
+import { create_tax_brackets } from "./TaxBrackets";
 import { TaxBrackets, TaxBracket } from "./TaxBrackets";
 import { get_state_taxbrackets_by_state, create_state_taxbracket_in_db, state_taxbrackets_exist_in_db } from "../../db/repositories/StateTaxBracketRepository";
 import { simulation_logger } from "../../utils/logger/logger";
 
 export interface StateTaxService {
+    __taxable_income_brackets: TaxBrackets;
     adjust_for_inflation(rate: number): void;
     find_prev_rate(income: number, status: TaxFilingStatus): number;
     find_prev_bracket_with_rate(rate: number, status: TaxFilingStatus): TaxBracket;
@@ -89,6 +90,7 @@ export function create_state_tax_service_wo(
         }
     }
     return {
+        __taxable_income_brackets: taxable_income_bracket,
         adjust_for_inflation,
         find_prev_rate,
         find_prev_bracket_with_rate,

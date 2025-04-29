@@ -1,6 +1,7 @@
 import { TaxFilingStatus } from "../Enums"
 
 export interface StandardDeduction {
+    __deductions: Map<TaxFilingStatus, number>;
     add_deduction(amt: number, status: TaxFilingStatus): void,
     adjust_for_inflation(rate: number): void,
     to_string(): string,
@@ -47,6 +48,7 @@ export function create_standard_deductions(): StandardDeduction {
     }
 
     return {
+        __deductions: deductions,
         add_deduction,
         adjust_for_inflation,
         to_string,

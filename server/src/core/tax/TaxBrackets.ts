@@ -9,6 +9,7 @@ export type TaxBracket = {
 export type TaxBracketSet = TaxBracket[];
 
 export interface TaxBrackets {
+    __brackets: Map<TaxFilingStatus, TaxBracketSet>;
     add_bracket: (min: number, max: number, rate: number, status: TaxFilingStatus) => void;
     find_rate: (income: number, status: TaxFilingStatus) => number;
     find_highest_brackets: () => Array<{taxpayer_type: TaxFilingStatus, taxbracket: TaxBracket}>;
@@ -197,6 +198,7 @@ export function create_tax_brackets(): TaxBrackets {
         })) as ReadonlyTaxBracketSet;
     }
     return {
+        __brackets: brackets,
         add_bracket: add_rate,
         find_rate,
         adjust_for_inflation,

@@ -109,6 +109,9 @@ async function initialize_standard_deductions_info(): Promise<StandardDeduction>
 }
 
 export interface FederalTaxService {
+    __taxable_income_bracket: TaxBrackets,
+    __capital_gains_bracket: TaxBrackets,
+    __standard_deductions: StandardDeduction
     print_taxable_income_bracket(): void;
     print_capital_gains_bracket(): void;
     print_standard_deductions_info(): void;
@@ -289,6 +292,10 @@ export function create_federal_service_wo(
         }
     }
     return {
+
+        __taxable_income_bracket: taxable_income_bracket,
+        __capital_gains_bracket: capital_gains_bracket,
+        __standard_deductions: standard_deductions,
         print_taxable_income_bracket,
         print_capital_gains_bracket,
         print_standard_deductions_info,
