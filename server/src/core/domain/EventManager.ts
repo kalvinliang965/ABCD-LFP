@@ -274,11 +274,10 @@ export function resolve_event_chain(
   
       // Sanity check
       if (processed_count !== event_series.size) {
-        // const unresolved = [...event_series].filter(
-        //   e => resolved_events.map((el) => el.name).includes(e)
-        // );
-        // throw new Error(`Unresolvable event chain. Processed: ${processed_count}, Unresolved events: ${unresolved.map(e => e.name).join(", ")}`);
-        throw new Error(`Unresolvable event chain.`);
+        const unresolved = [...event_series].filter(
+          e => resolved_events.map((el) => el.name).includes(e.name)
+        );
+        throw new Error(`Unresolvable event chain. Processed: ${processed_count}, Unresolved events: ${unresolved.map(e => e.name).join(", ")}`);
       }
   
       return resolved_events;

@@ -1,7 +1,6 @@
 import path from 'path';
 import winston from 'winston';
 import fs from "fs";
-import { debug } from 'console';
 import { dev } from '../../config/environment';
 
 // create logs folder
@@ -25,7 +24,8 @@ const base_format = winston.format.combine(
   winston.format.errors({ stack: true })
 );
 
-let level = dev.is_dev?'debug': "info";
+// let level = dev.is_dev?'debug': "info";
+let level = "error";
 export const simulation_logger = winston.createLogger({
   level,
   format: winston.format.combine(
