@@ -40,8 +40,11 @@ const RothOptimizerParameter: React.FC<RothOptimizerParameterProps> = ({
   // Handle toggle change
   const handle_toggle_change = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.checked;
-    set_current_value(newValue);
-    onValueChange(newValue);
+    //only allow changing to false if original was true, or keep current value
+    if (originalValue || !newValue) {
+      set_current_value(newValue);
+      onValueChange(newValue);
+    }
   };
 
   // Check if the value has changed from the original
@@ -98,6 +101,7 @@ const RothOptimizerParameter: React.FC<RothOptimizerParameterProps> = ({
             size="lg"
             isChecked={currentValue}
             onChange={handle_toggle_change}
+            isDisabled={!originalValue && currentValue}
           />
           <Badge
             colorScheme={currentValue ? 'green' : 'gray'}
@@ -111,11 +115,18 @@ const RothOptimizerParameter: React.FC<RothOptimizerParameterProps> = ({
         </HStack>
       </FormControl>
 
+
+
       {has_value_changed ? (
         <Alert status="info" borderRadius="md">
           <AlertIcon />
           Comparing scenario results with Roth Optimizer {currentValue ? 'enabled' : 'disabled'}
           versus the original setting of {originalValue ? 'enabled' : 'disabled'}.
+        </Alert>
+      ) : !originalValue ? (
+        <Alert status="error" borderRadius="md">
+          <AlertIcon />
+          Cannot enable Roth optimizer if it was disabled in the original scenario.
         </Alert>
       ) : (
         <Alert status="warning" borderRadius="md">
