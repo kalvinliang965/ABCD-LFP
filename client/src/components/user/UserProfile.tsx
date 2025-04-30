@@ -39,6 +39,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../../contexts/AuthContext';
 import { API_URL } from '../../services/api';
+import { scenario_service } from '../../services/scenarioService';
 import { userService } from '../../services/userService';
 
 // Interface for user data
@@ -59,6 +60,8 @@ interface Scenario {
   sharedWith: Array<any>;
   data?: any;
   permissions?: string;
+  maritalStatus?: string;
+  residenceState?: string;
 }
 
 // API base URL
@@ -70,6 +73,8 @@ const UserProfile: React.FC = () => {
   const { user, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [scenariosLoading, setScenariosLoading] = useState(false);
+  const [userScenarios, setUserScenarios] = useState<Scenario[]>([]);
 
   const [userData, setUserData] = useState({
     name: '',
@@ -109,6 +114,26 @@ const UserProfile: React.FC = () => {
   const cardBg = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.600', 'gray.400');
+
+  // Fetch user scenarios separately
+  const fetchUserScenarios = async () => {
+    try {
+      setScenariosLoading(true);
+      const scenarios = await scenario_service.get_all_scenarios();
+      setUserScenarios(scenarios.data);
+    } catch (error) {
+      console.error('Error fetching user scenarios:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch scenarios',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setScenariosLoading(false);
+    }
+  };
 
   // Define fetchUserProfile outside useEffect so it can be called elsewhere
   const fetchUserProfile = async () => {
@@ -165,6 +190,7 @@ const UserProfile: React.FC = () => {
   useEffect(() => {
     // Always try to fetch the profile, even if user is null
     fetchUserProfile();
+    fetchUserScenarios();
   }, [toast]); // Remove user dependency to always fetch
 
   // Handle return to dashboard
@@ -237,8 +263,8 @@ const UserProfile: React.FC = () => {
           { withCredentials: true }
         );
 
-        // Fetch updated user data to get the latest scenario sharing info
-        fetchUserProfile();
+        // Fetch updated scenarios to get the latest sharing info
+        fetchUserScenarios();
 
         setShareEmail('');
         setSharePermission('read');
@@ -273,7 +299,7 @@ const UserProfile: React.FC = () => {
   // Add this function to handle edit button clicks
   const handleEditScenario = (id: string) => {
     // Find the scenario to edit
-    const scenarioToEdit = user?.scenarios.find(s => s._id === id);
+    const scenarioToEdit = userScenarios.find(s => s._id === id);
     if (scenarioToEdit) {
       setSelectedScenarioId(id);
       setEditScenarioName(scenarioToEdit.name);
@@ -302,7 +328,7 @@ const UserProfile: React.FC = () => {
       </Box>
     );
   }
-
+  //console.log('userScenarios is ', userScenarios);
   // Render user profile information
   return (
     <Box p={5}>
@@ -376,11 +402,16 @@ const UserProfile: React.FC = () => {
             <Heading size="lg" mb={5}>
               My Financial Scenarios
             </Heading>
-            {!userData.scenarios || userData.scenarios.length === 0 ? (
+            {scenariosLoading ? (
+              <Text>Loading scenarios...</Text>
+            ) : !userScenarios || userScenarios.length === 0 ? (
               <Text>You haven't created any scenarios yet.</Text>
             ) : (
               <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={5}>
-                {userData.scenarios.map(scenario => (
+                {userScenarios.map(scenario => {
+                  // console.log('Scenario object:', scenario);
+                  // console.log('Scenario data:', scenario.data);
+                   return (
                   <Card
                     key={scenario._id}
                     bg={cardBg}
@@ -400,20 +431,28 @@ const UserProfile: React.FC = () => {
                             variant="ghost"
                             onClick={() => openShareModal(scenario as Scenario)}
                           />
-                          <IconButton
+                          {/* <IconButton
                             aria-label="Edit scenario"
                             icon={<FaEdit />}
                             size="sm"
                             colorScheme="green"
                             variant="ghost"
                             onClick={() => handleEditScenario(scenario._id)}
-                          />
+                          /> */}
                         </HStack>
                       </Flex>
                     </CardHeader>
                     <CardBody pt={0}>
                       <Text fontSize="md" color={textColor} mb={3}>
-                        {scenario.description || 'No description available'}
+                        Marital Status: {scenario.maritalStatus || scenario.data?.maritalStatus || scenario.data?.personal?.maritalStatus || 'Not specified'}
+                  
+                      </Text>
+                      <Text fontSize="md" color={textColor} mb={3}>
+                        State: {scenario.residenceState || scenario.data?.residenceState || scenario.data?.personal?.residenceState || 'Not specified'}
+                      </Text>
+
+                      <Text fontSize="sm" color={textColor} mb={2}>
+                        Created: {new Date(scenario.createdAt).toLocaleDateString()}
                       </Text>
 
                       {scenario.sharedWith && scenario.sharedWith.length > 0 && (
@@ -430,7 +469,8 @@ const UserProfile: React.FC = () => {
                       )}
                     </CardBody>
                   </Card>
-                ))}
+                  );
+                })}
               </SimpleGrid>
             )}
           </TabPanel>
@@ -526,7 +566,7 @@ const UserProfile: React.FC = () => {
       </Modal>
 
       {/* Edit Scenario Modal */}
-      <Modal isOpen={isEditModalOpen} onClose={onEditModalClose}>
+      {/* <Modal isOpen={isEditModalOpen} onClose={onEditModalClose}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Edit Scenario</ModalHeader>
@@ -553,7 +593,7 @@ const UserProfile: React.FC = () => {
             </Button>
           </ModalFooter>
         </ModalContent>
-      </Modal>
+      </Modal> */}
     </Box>
   );
 };
