@@ -96,8 +96,10 @@ export interface EventManager {
     get_expense_breakdown: () => Record<string, number>;
     update_expense_breakdown: (eventName: string, amount: number) => void;
     reset_expense_breakdown: () => void;
-    get_total_expenses: () => { mandatory: number; discretionary: number };
-    update_total_expenses: (mandatory: number, discretionary: number) => void;
+    get_mandatory_expenses: () => number,
+    get_discretionary_expenses: () => number,
+    update_mandatory_expense: (amt: number) => void,
+    update_discretionary_expense: (amt: number) => void,
     get_last_year_tax_totals: () => { total: number } | undefined;
     update_last_year_tax_totals: (total: number) => void;
     update_initial_amount: (event: ExpenseEvent | IncomeEvent) => number;
@@ -111,7 +113,8 @@ export function create_event_manager_clone(
 ): EventManager {
     const income_breakdown: Record<string, number> = {};
     const expense_breakdown: Record<string, number> = {};
-    let total_expenses = { mandatory: 0, discretionary: 0 };
+    let mandatory_expenses = 0;
+    let discretionary_expenses = 0;
     let last_year_tax_totals: { total: number } | undefined;
 
     return {
@@ -143,10 +146,10 @@ export function create_event_manager_clone(
         reset_expense_breakdown: () => {
             Object.keys(expense_breakdown).forEach(key => delete expense_breakdown[key]);
         },
-        get_total_expenses: () => total_expenses,
-        update_total_expenses: (mandatory: number, discretionary: number) => {
-            total_expenses = { mandatory, discretionary };
-        },
+        get_mandatory_expenses: () => mandatory_expenses,
+        get_discretionary_expenses: () => discretionary_expenses,
+        update_mandatory_expense: (amt: number) => mandatory_expenses = amt,
+        update_discretionary_expense: (amt: number) => discretionary_expenses = amt,
         get_last_year_tax_totals: () => last_year_tax_totals,
         update_last_year_tax_totals: (total: number) => {
             last_year_tax_totals = { total };

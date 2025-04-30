@@ -48,7 +48,8 @@ export function create_simulation_yearly_result(): SimulationYearlyResult {
         update: async (simulation_state: SimulationState) => {
             //get expenses
             // next 3 lines under question since it depends on the expense logic update
-            const total_expenses = simulation_state.event_manager.get_total_expenses();
+            const total_expenses = simulation_state.event_manager.get_discretionary_expenses() + 
+                            simulation_state.event_manager.get_mandatory_expenses();
             const expense_breakdown = simulation_state.event_manager.get_expense_breakdown();
 
             //previous years tax to have a breakdown of expense
@@ -76,9 +77,9 @@ export function create_simulation_yearly_result(): SimulationYearlyResult {
                 cur_year_after_tax_contributions: simulation_state.user_tax_data.get_cur_after_tax_contribution(),
                 cur_year_early_withdrawals: simulation_state.user_tax_data.get_cur_year_early_withdrawal(),
                 income_breakdown: simulation_state.event_manager.get_income_breakdown(),
-                mandatory_expenses: total_expenses.mandatory,
-                discretionary_expenses: total_expenses.discretionary,
-                total_expenses: total_expenses.mandatory + total_expenses.discretionary,
+                mandatory_expenses: simulation_state.event_manager.get_mandatory_expenses(),
+                discretionary_expenses: simulation_state.event_manager.get_discretionary_expenses(),
+                total_expenses,
                 expense_breakdown: {
                     expenses: expense_breakdown,
                     taxes: prev_year_tax_base

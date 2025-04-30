@@ -62,6 +62,7 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   state.account_manager.cash.incr_value(-Math.min(total_amount, state.account_manager.cash.get_value()));
 
   simulation_logger.debug(`withdrawal amount needed: ${withdrawal_amount}`);
+  state.event_manager.update_mandatory_expense(withdrawal_amount);
 
   // step f:
   // withdrawal from investments to fill withdrawal_amount
