@@ -36,10 +36,21 @@ async function simulation_engine_demo(N: number) {
   profiler.end("create_simulation_environment");
 
   // set up the simulation engine
-  const simulation_engine = await create_simulation_engine(simulation_environment, profiler);
-  profiler.start("run");
-  await simulation_engine.run_parallel(N);
-  profiler.end("run");
+  // const simulation_engine = await create_simulation_engine(simulation_environment);
+  // profiler.start("run");
+  // await simulation_engine.run(N);
+  // profiler.end("run");
+  
+  // // optimize
+  // profiler.start("create_simulation_environment_parallel");
+  // const simulation_environment_parallel = await create_simulation_environment_parallel("680d5df88650c1b31ef2604f");
+  // profiler.end("create_simulation_environment_parallel");
+
+  // // set up the simulation engine
+  const simulation_engine_parallel = await create_simulation_engine(simulation_environment);
+  profiler.start("run_parallel");
+  await simulation_engine_parallel.run_parallel(N);
+  profiler.end("run_parallel");
   
   profiler.export_to_CSV();
 }
@@ -62,6 +73,6 @@ async function optimize_scenario_environment_initialization_demo(N: number) {
   profiler.printSummary();
 }
 export async function run_demo() {
-  await simulation_engine_demo(100);
+  await simulation_engine_demo(10000);
   // await optimize_scenario_environment_initialization_demo(1);
 }
