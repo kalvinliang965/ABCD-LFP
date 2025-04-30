@@ -152,7 +152,25 @@ const YearlyDataSchema = new Schema({
   expense_breakdown: { type: ExpenseBreakdownSchema, required: true },
   
   // Statistical data (optional)
-  stats: { type: YearlyStatsSchema }
+  stats: { type: YearlyStatsSchema },
+  
+  // Add the new fields for median and average values
+  medianValues: {
+    type: {
+      investments: { type: Map, of: Number },
+      income: { type: Map, of: Number },
+      expenses: { type: Map, of: Number }
+    },
+    required: false
+  },
+  averageValues: {
+    type: {
+      investments: { type: Map, of: Number },
+      income: { type: Map, of: Number },
+      expenses: { type: Map, of: Number }
+    },
+    required: false
+  }
 }, { _id: false });
 
 // Main schema for simulation results
@@ -189,6 +207,24 @@ const SimulationResultSchema: Schema = new Schema({
   investmentTaxStatusMap: { 
     type: Map, 
     of: String,
+    required: false
+  },
+  
+  // Add the chartData field
+  chartData: {
+    type: {
+      years: [Number],
+      medianValues: {
+        investments: [Object],
+        income: [Object],
+        expenses: [Object]
+      },
+      averageValues: {
+        investments: [Object],
+        income: [Object],
+        expenses: [Object]
+      }
+    },
     required: false
   }
 }, {

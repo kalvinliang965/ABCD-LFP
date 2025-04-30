@@ -1,6 +1,7 @@
 import { SimulationState } from "./SimulationState"
 
 // edit: I dont think financial goal is needed here
+// this is kalvin's code
 export interface YearResult {
 
     // Here are the one haifeng ask for
