@@ -62,10 +62,11 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   state.account_manager.cash.incr_value(-Math.min(total_amount, state.account_manager.cash.get_value()));
 
   simulation_logger.debug(`withdrawal amount needed: ${withdrawal_amount}`);
-  state.event_manager.update_mandatory_expense(withdrawal_amount);
 
   // step f:
   // withdrawal from investments to fill withdrawal_amount
-  const res = state.process_investment_withdrawal(withdrawal_amount);
-  return withdrawal_amount === res;
+  const withrawaled = state.process_investment_withdrawal(withdrawal_amount);
+  simulation_logger.debug(`Spend "${withrawaled}" on mandatory expense`);
+  state.event_manager.incr_mandatory_expense(withrawaled);
+  return withdrawal_amount === withrawaled;
 }

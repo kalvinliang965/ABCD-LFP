@@ -58,14 +58,16 @@ export function pay_discretionary_expenses(state: SimulationState): void {
     simulation_logger.debug(`Have to pay ${payment}`);
     const withdrawal_amount = Math.min(payment - state.account_manager.cash.get_value(), 0);
     
-    state.event_manager.update_discretionary_expense(withdrawal_amount);
 
     const cash_paid = Math.min(payment, state.account_manager.cash.get_value());
     simulation_logger.debug(`Cash paid ${cash_paid}`);
     state.account_manager.cash.incr_value(-cash_paid);
     
-    // if we dont have enough mome
-    if (withdrawal_amount > 0 && withdrawal_amount !== state.process_investment_withdrawal(withdrawal_amount)) {
+    const withdrawaled = state.process_investment_withdrawal(withdrawal_amount);
+    simulation_logger.debug(`spend "${withdrawaled}" on discretionary!`);
+    state.event_manager.incr_discretionary_expense(withdrawal_amount);
+    // if we dont have enough money
+    if (withdrawal_amount > 0 && withdrawal_amount !== withdrawaled) {
       break;
     }
   };
