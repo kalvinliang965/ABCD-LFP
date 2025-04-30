@@ -57,7 +57,9 @@ export function pay_discretionary_expenses(state: SimulationState): void {
 
     simulation_logger.debug(`Have to pay ${payment}`);
     const withdrawal_amount = Math.min(payment - state.account_manager.cash.get_value(), 0);
-  
+    
+    state.event_manager.update_discretionary_expense(withdrawal_amount);
+
     const cash_paid = Math.min(payment, state.account_manager.cash.get_value());
     simulation_logger.debug(`Cash paid ${cash_paid}`);
     state.account_manager.cash.incr_value(-cash_paid);

@@ -100,14 +100,9 @@ export async function create_simulation_state(
     // clone to prevent refetching from database
     
     // manager
-    const event_manager = scenario.event_manager.clone();
-    const account_manager = scenario.account_manager.clone();
-    const investment_type_manager = scenario.investment_type_manager.clone();
-
-    // service
-    const cloned_federal_tax_service = federal_tax_service.clone();
-    const cloned_state_tax_service = state_tax_service.clone();
-    // Account and event organization
+    const event_manager = scenario.event_manager;
+    const account_manager = scenario.account_manager;
+    const investment_type_manager = scenario.investment_type_manager;
     
     // total investment value for given year
     const total_after_tax_value:Map<number, number> = new Map();
@@ -142,8 +137,8 @@ export async function create_simulation_state(
       setup: () => {
         const annual_inflation_rate = scenario.inflation_assumption.sample();
         user_tax_data.advance_year();
-        cloned_federal_tax_service.adjust_for_inflation(annual_inflation_rate);
-        cloned_state_tax_service.adjust_for_inflation(annual_inflation_rate);
+        federal_tax_service.adjust_for_inflation(annual_inflation_rate);
+        state_tax_service.adjust_for_inflation(annual_inflation_rate);
         investment_type_manager.resample_all();
       },
       advance_year: () => {
@@ -161,8 +156,8 @@ export async function create_simulation_state(
       investment_type_manager,
       account_manager,
       
-      federal_tax_service: cloned_federal_tax_service,
-      state_tax_service: cloned_state_tax_service,
+      federal_tax_service,
+      state_tax_service,
       get_after_tax_contribution_limit: () => scenario.after_tax_contribution_limit,
       process_investment_withdrawal: (withdrawal_amount: number) => {
         let withdrawaled=0;
