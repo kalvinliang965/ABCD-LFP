@@ -1,5 +1,5 @@
 import { SimulationYearlyResult, YearResult } from "./SimulationYearlyResult"
-
+import { simulation_logger } from '../../utils/logger/logger';
 //! TODO: this the shitty code that need to be work on
 // this is Haifeng's code
 // Define the shape of the consolidated simulation result that will be returned to frontend/database
@@ -181,7 +181,26 @@ export function create_simulation_result(
     
     // Create yearlyData array
     const yearlyData = yearlyResults.map(yr => {
-      // Create the base year data directly from YearResult
+      // console.log(`Year ${yr.year} data:`, JSON.stringify(yr, null, 2));
+      
+      // // Also log specific sections you're concerned about
+      // console.log(`Year ${yr.year} investments:`, JSON.stringify(yr.investments, null, 2));
+      // console.log(`Year ${yr.year} expense_breakdown:`, JSON.stringify(yr.expense_breakdown, null, 2));
+      // // Create the base year data directly from YearResult
+      // simulation_logger.info(`Processing year ${yr.year} data`);
+      
+      // // Log specific properties you're concerned about
+      // simulation_logger.debug(`Year ${yr.year} investments: ${Object.keys(yr.investments || {}).length > 0 ? 
+      //   'Has investments' : 'NO INVESTMENTS'}`);
+      
+      // simulation_logger.debug(`Year ${yr.year} expense breakdown: ${yr.expense_breakdown && 
+      //   Object.keys(yr.expense_breakdown.expenses || {}).length > 0 ? 
+      //   'Has expenses' : 'NO EXPENSE BREAKDOWN'}`);
+      
+      // // For detailed debugging, log the entire object (but be careful with large objects)
+      // if (yr.year === years[0]) {  // Only log the first year to avoid excessive logging
+      //   simulation_logger.debug(`First year full data sample: ${JSON.stringify(yr)}`);
+      // }
       const yearData = {
         year: yr.year,
         

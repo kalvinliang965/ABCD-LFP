@@ -25,7 +25,7 @@ const base_format = winston.format.combine(
 );
 
 // let level = dev.is_dev?'debug': "info";
-let level = "error";
+let level = "emerg";
 export const simulation_logger = winston.createLogger({
   level,
   format: winston.format.combine(
