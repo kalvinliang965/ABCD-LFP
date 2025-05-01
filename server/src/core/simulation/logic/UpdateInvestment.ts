@@ -69,9 +69,9 @@ export function update_investment(simulation_state: SimulationState) {
         investment.incr_value(annual_gains); // update investment value
 
         //steps c: add income to value of investment
-        if(investment.get_cost_basis() > 0) {
-            investment.incr_cost_basis(annual_income);
-        }
+        investment.incr_value(annual_income);
+        investment.incr_cost_basis(annual_income);
+        
         
         // steps e remove annual fee
         const avg = (investment.get_value() + investment_previous_value) / 2
