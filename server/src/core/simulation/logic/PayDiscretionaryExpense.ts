@@ -53,22 +53,25 @@ export function pay_discretionary_expenses(state: SimulationState): void {
       simulation_logger.error("Financial goal is violated incorrectly");
       throw new Error("Financial goal is violated incorrectly");
     }
-    const payment = Math.min(full_payment, partial_payment);
+    const payment = Math.min(full_payment, partial_payment); //have to pay that will not exceed the financial goal
 
-    simulation_logger.debug(`Have to pay ${payment}`);
+    simulation_logger.debug(`discretionary expense without violation: ${payment}`);
     const withdrawal_amount = Math.min(payment - state.account_manager.cash.get_value(), 0);
     
 
     const cash_paid = Math.min(payment, state.account_manager.cash.get_value());
     simulation_logger.debug(`Cash paid ${cash_paid}`);
+    state.event_manager.incr_discretionary_expense(cash_paid);
     state.account_manager.cash.incr_value(-cash_paid);
     
-    const withdrawaled = state.process_investment_withdrawal(withdrawal_amount);
-    simulation_logger.debug(`spend "${withdrawaled}" on discretionary!`);
-    state.event_manager.incr_discretionary_expense(withdrawal_amount);
-    // if we dont have enough money
-    if (withdrawal_amount > 0 && withdrawal_amount !== withdrawaled) {
-      break;
+    if(withdrawal_amount > 0) {
+      const withdrawaled = state.process_investment_withdrawal(withdrawal_amount);
+      simulation_logger.debug(`pay discretionary expense from non cash investment: ${withdrawaled}`);
+      state.event_manager.incr_discretionary_expense(withdrawal_amount);
+      // if we dont have enough money
+      if (withdrawal_amount > 0 && withdrawal_amount !== withdrawaled) {
+        break;
+      }
     }
   };
 

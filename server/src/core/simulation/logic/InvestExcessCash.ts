@@ -68,9 +68,9 @@ export function run_invest_event(
 		const planned_amounts = new Map<string, number>();
 
 		for (const [investment_id, percentage] of allocation.entries()) {
-			if (percentage <= 0 || percentage > 1) {
+			if (percentage < 0 || percentage > 1) {
 				simulation_logger.error(`Incorrect percentage ${percentage} for investment ${investment_id}`);
-				process.exit(1);
+				throw new Error(`Incorrect percentage ${percentage} for investment ${investment_id}`);
 			}
 
 			const planned_amount = excess_cash * percentage;

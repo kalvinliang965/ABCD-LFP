@@ -24,8 +24,8 @@ const base_format = winston.format.combine(
   winston.format.errors({ stack: true })
 );
 
-// let level = dev.is_dev?'debug': "info";
-let level = "error";
+let level = dev.is_dev?'debug': "info";
+//let level = "error";
 export const simulation_logger = winston.createLogger({
   level,
   format: winston.format.combine(
