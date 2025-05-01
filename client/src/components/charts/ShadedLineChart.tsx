@@ -354,6 +354,23 @@ const ShadedLineChart: React.FC<ShadedLineChartProps> = ({
           color: '#ddd',
         },
       },
+      // // Add custom min and max to provide more visual space for the data
+      // min: function(value: { min: number; max: number }) {
+      //   // For percentage values, add padding but ensure we don't go below 0%
+      //   if (selectedQuantity === 'discretionaryExpensesPct') {
+      //     return Math.max(0, value.min - 5); // Add 5% padding at bottom
+      //   }
+      //   // For dollar values, add 15% padding below minimum value
+      //   return value.min > 0 ? value.min * 0.85 : value.min * 1.15;
+      // },
+      // max: function(value: { min: number; max: number }) {
+      //   // For percentage values, add padding but cap at 100%
+      //   if (selectedQuantity === 'discretionaryExpensesPct') {
+      //     return Math.min(100, value.max + 5); // Add 5% padding at top
+      //   }
+      //   // For dollar values, add 15% padding above maximum value
+      //   return value.max > 0 ? value.max * 1.15 : value.max * 0.85;
+      // }
     },
     series: [
       // 10%-90% range (lightest shade)

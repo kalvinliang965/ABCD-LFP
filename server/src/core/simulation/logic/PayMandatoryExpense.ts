@@ -39,7 +39,8 @@ import { SimulationState } from "../SimulationState";
  */
 export function pay_mandatory_expenses(state: SimulationState): boolean {
   const cur_simulation_year = state.get_current_year();
-  
+  const spouse_alive = state.spouse?.is_alive() || false;
+
   let total_tax = 0;
   // step a to c
   // details are inside
@@ -51,7 +52,16 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   let mandatory_expenses = 0;
   state.event_manager
     .get_active_mandatory_event(cur_simulation_year)
-    .forEach((event: ExpenseEvent) => mandatory_expenses += state.event_manager.update_initial_amount(event));
+    .forEach((event: ExpenseEvent) => {
+      let amt = state.event_manager.update_initial_amount(event);
+      if (spouse_alive) {
+        simulation_logger.debug(`Spouse alive. User own ${event.user_fraction} of the event`);
+        amt *= event.user_fraction;
+      } else {
+        simulation_logger.debug(`Spouse not exist/alive. User own ${event.user_fraction} of the event`);
+      }
+      mandatory_expenses += amt;
+    });
   
   simulation_logger.debug(`total mandatory expenses: ${mandatory_expenses}`);
   const total_amount = mandatory_expenses + total_tax;
@@ -61,11 +71,14 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   const withdrawal_amount = Math.max(0, total_amount - state.account_manager.cash.get_value());
   state.account_manager.cash.incr_value(-Math.min(total_amount, state.account_manager.cash.get_value()));
 
-  simulation_logger.debug(`withdrawal amount needed: ${withdrawal_amount}`);
-  state.event_manager.update_mandatory_expense(withdrawal_amount);
+  simulation_logger.debug(`pay mandatory expense withdrawal from non cash investment: ${withdrawal_amount}`);
 
   // step f:
   // withdrawal from investments to fill withdrawal_amount
-  const res = state.process_investment_withdrawal(withdrawal_amount);
-  return withdrawal_amount === res;
+  if(withdrawal_amount > 0) {
+    const withrawaled = state.process_investment_withdrawal(withdrawal_amount);
+    state.event_manager.incr_mandatory_expense(total_amount);
+    return withdrawal_amount === withrawaled;
+  }
+  return true;
 }

@@ -1,6 +1,3 @@
-// AI-generated code
-// Prompt: Create an updated OneDimensionalExploration component that uses the specialized RothOptimizerParameter component
-
 import React, { useState, useEffect } from 'react';
 import {
   Modal,
@@ -29,7 +26,7 @@ import {
   Center,
 } from '@chakra-ui/react';
 
-import { RothOptimizerParameter } from './index';
+import { RothOptimizerParameter, StartYearParameter, DurationParameter } from './index';
 import InitialAmountParameter from './InitialAmountParameter';
 import InvestmentPercentageParameter from './InvestmentPercentageParameter';
 import { scenario_service } from '../../../services/scenarioService';
@@ -66,13 +63,13 @@ const PARAMETER_OPTIONS: ParameterOption[] = [
     value: 'duration',
     label: 'Duration',
     isNumeric: true,
-    description: 'The duration of an event series',
+    description: 'The fixed duration of an event series',
   },
   {
     value: 'initialAmount',
     label: 'Initial Amount',
     isNumeric: true,
-    description: 'The initial amount of an income or expense event series',
+    description: 'The fixed initial amount of an income or expense event series',
   },
   {
     value: 'investmentPercentage',
@@ -94,24 +91,26 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
   scenarioId,
 }) => {
   const [selectedParameter, set_selected_parameter] = useState<ParameterType | ''>('');
-  const [lowerBound, set_lower_bound] = useState<number>(0);
-  const [upperBound, set_upper_bound] = useState<number>(100);
-  const [stepSize, set_step_size] = useState<number>(10);
+  const [lower_bound, set_lower_bound] = useState<number>(0);
+  const [upper_bound, set_upper_bound] = useState<number>(100);
+  const [step_size, set_step_size] = useState<number>(10);
   const [scenario_data, set_scenario_data] = useState<ScenarioRaw>();
-  // Loading state for fetching original scenario data
+  //loading state for fetching original scenario data
   const [loading, set_loading] = useState<boolean>(false);
   const [error, set_error] = useState<string | null>(null);
   const [roth_flag, set_roth_flag] = useState<boolean>(false);
 
-  // Track if parameter value has changed from original
-  const [parameterChanged, set_parameter_changed] = useState<boolean>(false);
+  //track if parameter value has changed from original
+  const [parameter_changed, set_parameter_changed] = useState<boolean>(false);
 
-  const [selectedEventName, set_selected_event_name] = useState<string>('');
+  const [selected_event_name, set_selected_event_name] = useState<string>('');
+  const [start_year_value, set_start_year_value] = useState<number>(0);
+  const [duration_value, set_duration_value] = useState<number>(0);
 
   const parameter_option = PARAMETER_OPTIONS.find(option => option.value === selectedParameter);
   const is_numeric_parameter = parameter_option?.isNumeric ?? false;
 
-  // Fetch original scenario data when needed
+  //fetch original scenario data when needed
   useEffect(() => {
     const fetch_scenario_data = async () => {
       if (!scenarioId) return;
@@ -123,9 +122,7 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
         const response = await scenario_service.get_scenario_by_id(scenarioId);
 
         if (response?.data) {
-          // Extract roth optimizer value from scenario data
-          // Note: This assumes the API returns the Roth optimizer flag in this format
-          // Adjust the path based on your actual data structure
+
           set_scenario_data(response.data);
           console.log(
             'scenario_data from useEffect from fetch_scenario_data from one dimensional exploration',
@@ -150,10 +147,10 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
   const handle_parameter_change = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value as ParameterType | '';
     set_selected_parameter(value);
-    set_parameter_changed(false); // Reset change tracking
-    set_selected_event_name(''); // Reset selected event
+    set_parameter_changed(false); //reset change tracking
+    set_selected_event_name(''); //reset selected event
 
-    // Reset values to appropriate defaults based on parameter type
+    //reset values to appropriate defaults based on parameter type
     if (value === 'startYear') {
       set_lower_bound(2023);
       set_upper_bound(2033);
@@ -169,69 +166,137 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
     }
   };
 
-  // Handler for Roth Optimizer value change
-  const handle_roth_flag_change = (newValue: boolean) => {
-    set_roth_flag(newValue);
+  //handler for Roth Optimizer value change
+  const handle_roth_flag_change = (new_value: boolean) => {
+    set_roth_flag(new_value);
 
-    // Check if the new value is different from the original value
-    // and update parameterChanged accordingly
+    //check if the new value is different from the original value
+    //and update parameter_changed accordingly
     if (scenario_data) {
-      set_parameter_changed(newValue !== scenario_data.RothConversionOpt);
+      set_parameter_changed(new_value !== scenario_data.RothConversionOpt);
     }
   };
 
-  const handle_initial_amount_change = (newValue: number) => {
+  const handle_initial_amount_change = (new_value: number) => {
     if (!scenario_data) return;
     
-    const selectedEvent = Array.from(scenario_data.eventSeries).find(
-      event => event.name === selectedEventName && 'initialAmount' in event
+    const selected_event = Array.from(scenario_data.eventSeries).find(
+      event => event.name === selected_event_name && 'initialAmount' in event
     ) as IncomeEventRaw | ExpenseEventRaw | undefined;
 
-    if (selectedEvent) {
-      set_parameter_changed(newValue !== selectedEvent.initialAmount);
+    if (selected_event) {
+      set_parameter_changed(new_value !== selected_event.initialAmount);
     }
   };
 
-  const handle_investment_percentage_change = (newValue: number) => {
+  const handle_investment_percentage_change = (new_value: number) => {
     if (!scenario_data) return;
     
     //find the raw invest event
-    const selectedEvent = Array.from(scenario_data.eventSeries).find(
+    const selected_event = Array.from(scenario_data.eventSeries).find(
       (event): event is InvestmentEventRaw => 
-        event.type === 'invest' && event.name === selectedEventName
+        event.type === 'invest' && event.name === selected_event_name
     );
 
-    if (selectedEvent) {
+    if (selected_event) {
       //normalize whatever shape assetAllocation has into a simple key->value map
-      const allocRaw = (selectedEvent as any).assetAllocation;
-      const allocMap: Record<string, number> = Array.isArray(allocRaw)
-        ? allocRaw.reduce((m, { type, value }) => ({ ...m, [type]: value }), {})
-        : { ...allocRaw };
+      const alloc_raw = (selected_event as any).assetAllocation;
+      const alloc_map: Record<string, number> = Array.isArray(alloc_raw)
+        ? alloc_raw.reduce((m, { type, value }) => ({ ...m, [type]: value }), {})
+        : { ...alloc_raw };
 
       //pick out the first non-zero entry
-      const firstNonZero = Object.values(allocMap).find(v => v > 0) ?? 0;
+      const first_non_zero = Object.values(alloc_map).find(v => v > 0) ?? 0;
 
-      //compare newValue (0-100) to that *100
-      set_parameter_changed(newValue !== firstNonZero * 100);
+      //compare new_value (0-100) to that *100
+      set_parameter_changed(new_value !== first_non_zero * 100);
+    }
+  };
+
+  //handler for Start Year value change
+  const handle_start_year_change = (new_value: number) => {
+    if (!scenario_data) return;
+    set_start_year_value(new_value);
+
+    //find the selected event
+    const selected_event = Array.from(scenario_data.eventSeries).find(
+      event => event.name === selected_event_name
+    );
+
+    if (selected_event) {
+      //check if start field exists and is a proper object
+      const event_with_start = selected_event as any;
+      if (event_with_start.start && typeof event_with_start.start === 'object' && 
+          event_with_start.start.type === 'fixed' && 
+          typeof event_with_start.start.value === 'number') {
+        
+        //compare the new value with the original start year value
+        set_parameter_changed(new_value !== event_with_start.start.value);
+      }
+    }
+  };
+
+  //handler for Duration value change
+  const handle_duration_change = (new_value: number) => {
+    if (!scenario_data) return;
+    set_duration_value(new_value);
+
+    //find the selected event
+    const selected_event = Array.from(scenario_data.eventSeries).find(
+      event => event.name === selected_event_name
+    );
+
+    if (selected_event) {
+      //check if duration field exists and is a proper object
+      const event_with_duration = selected_event as any;
+      if (event_with_duration.duration && typeof event_with_duration.duration === 'object' && 
+          event_with_duration.duration.type === 'fixed' && 
+          typeof event_with_duration.duration.value === 'number') {
+        
+        //compare the new value with the original duration value
+        set_parameter_changed(new_value !== event_with_duration.duration.value);
+      }
     }
   };
 
   const run_exploration = () => {
-    // This would be implemented to call the backend API to run the simulations
-    console.log('Running exploration with:', {
+    //prepare payload based on selected parameter
+    let payload: any = {
       scenarioId,
       parameterType: selectedParameter,
-      isNumeric: is_numeric_parameter,
-      lowerBound: selectedParameter === 'initialAmount' ? undefined : lowerBound,
-      upperBound: selectedParameter === 'initialAmount' ? undefined : upperBound,
-      stepSize: selectedParameter === 'initialAmount' ? undefined : stepSize,
-      rothFlag: selectedParameter === 'rothOptimizer' ? roth_flag : undefined,
-      initialAmount: selectedParameter === 'initialAmount' ? lowerBound : undefined,
-      eventName: selectedParameter === 'initialAmount' ? selectedEventName : undefined,
-      investmentPercentage: selectedParameter === 'investmentPercentage' ? lowerBound : undefined,
-    });
+    };
 
-    // Close the modal after submission
+    switch (selectedParameter) {
+      case 'rothOptimizer':
+        payload.rothFlag = roth_flag;
+        break;
+      case 'initialAmount':
+        payload.initialAmount = lower_bound;
+        payload.eventName = selected_event_name;
+        break;
+      case 'investmentPercentage':
+        payload.investmentPercentage = lower_bound;
+        payload.eventName = selected_event_name;
+        break;
+      case 'startYear':
+        payload.startYear = start_year_value;
+        payload.eventName = selected_event_name;
+        break;
+      case 'duration':
+        payload.duration = duration_value;
+        payload.eventName = selected_event_name;
+        break;
+      default:
+        if (is_numeric_parameter) {
+          payload.lowerBound = lower_bound;
+          payload.upperBound = upper_bound;
+          payload.stepSize = step_size;
+        }
+    }
+
+    console.log('Running exploration with:', payload);
+
+    //close the modal after submission
     onClose();
 
     // In a real implementation, this would navigate to a results view or trigger a loading state
@@ -240,27 +305,36 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
   const is_valid_input = () => {
     if (!selectedParameter) return false;
 
-    // For Roth optimizer, the value must be different than original
+    //for Roth optimizer, the value must be different than original
     if (selectedParameter === 'rothOptimizer') {
-      return parameterChanged;
+      return parameter_changed;
     }
 
-    // For initial amount, we need a selected event and changed value
+    //for initial amount, we need a selected event and changed value
     if (selectedParameter === 'initialAmount') {
-      return selectedEventName && parameterChanged;
+      return selected_event_name && parameter_changed;
     }
 
     //for investment percentage, we need a selected event and changed value
     if (selectedParameter === 'investmentPercentage') {
-      //require that they've actually picked an event AND the value changed
-      return Boolean(selectedEventName) && parameterChanged;
+      return Boolean(selected_event_name) && parameter_changed;
+    }
+
+    //for start year, we need a selected event and changed value
+    if (selectedParameter === 'startYear') {
+      return Boolean(selected_event_name) && parameter_changed;
+    }
+
+    //for duration, we need a selected event and changed value
+    if (selectedParameter === 'duration') {
+      return Boolean(selected_event_name) && parameter_changed;
     }
 
     if (is_numeric_parameter) {
-      // Validate numeric inputs
-      if (lowerBound >= upperBound) return false;
-      if (stepSize <= 0) return false;
-      if ((upperBound - lowerBound) / stepSize > 100) return false; // Prevent too many steps
+      //validate numeric inputs
+      if (lower_bound >= upper_bound) return false;
+      if (step_size <= 0) return false;
+      if ((upper_bound - lower_bound) / step_size > 100) return false; // Prevent too many steps
     }
 
     return true;
@@ -303,7 +377,7 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
               </Box>
             )}
 
-            {/* Conditional rendering based on selected parameter */}
+
             {selectedParameter === 'rothOptimizer' &&
               (loading ? (
                 <Center p={6}>
@@ -331,8 +405,8 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
               <InitialAmountParameter
                 scenario_data={scenario_data}
                 onValueChange={handle_initial_amount_change}
-                originalValue={lowerBound}
-                selectedEventName={selectedEventName}
+                originalValue={lower_bound}
+                selectedEventName={selected_event_name}
                 onEventNameChange={set_selected_event_name}
               />
             )}
@@ -341,18 +415,43 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
               <InvestmentPercentageParameter
                 scenario_data={scenario_data}
                 onValueChange={handle_investment_percentage_change}
-                originalValue={lowerBound}
-                selectedEventName={selectedEventName}
+                originalValue={lower_bound}
+                selectedEventName={selected_event_name}
                 onEventNameChange={set_selected_event_name}
               />
             )}
 
-            {selectedParameter && selectedParameter !== 'rothOptimizer' && selectedParameter !== 'initialAmount' && selectedParameter !== 'investmentPercentage' && (
+            {selectedParameter === 'startYear' && scenario_data && (
+              <StartYearParameter
+                scenario_data={scenario_data}
+                onValueChange={handle_start_year_change}
+                originalValue={start_year_value}
+                selectedEventName={selected_event_name}
+                onEventNameChange={set_selected_event_name}
+              />
+            )}
+
+            {selectedParameter === 'duration' && scenario_data && (
+              <DurationParameter
+                scenario_data={scenario_data}
+                onValueChange={handle_duration_change}
+                originalValue={duration_value}
+                selectedEventName={selected_event_name}
+                onEventNameChange={set_selected_event_name}
+              />
+            )}
+
+            {selectedParameter && 
+              selectedParameter !== 'rothOptimizer' && 
+              selectedParameter !== 'initialAmount' && 
+              selectedParameter !== 'investmentPercentage' && 
+              selectedParameter !== 'startYear' &&
+              selectedParameter !== 'duration' && (
               <>
                 <FormControl id="lower-bound" isRequired>
                   <FormLabel>Lower Bound</FormLabel>
                   <NumberInput
-                    value={lowerBound}
+                    value={lower_bound}
                     onChange={(_, val) => set_lower_bound(val)}
                     min={0}
                   >
@@ -367,9 +466,9 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
                 <FormControl id="upper-bound" isRequired>
                   <FormLabel>Upper Bound</FormLabel>
                   <NumberInput
-                    value={upperBound}
+                    value={upper_bound}
                     onChange={(_, val) => set_upper_bound(val)}
-                    min={lowerBound + stepSize}
+                    min={lower_bound + step_size}
                   >
                     <NumberInputField />
                     <NumberInputStepper>
@@ -381,7 +480,7 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
 
                 <FormControl id="step-size" isRequired>
                   <FormLabel>Step Size</FormLabel>
-                  <NumberInput value={stepSize} onChange={(_, val) => set_step_size(val)} min={1}>
+                  <NumberInput value={step_size} onChange={(_, val) => set_step_size(val)} min={1}>
                     <NumberInputField />
                     <NumberInputStepper>
                       <NumberIncrementStepper />
@@ -393,13 +492,13 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
                 {is_numeric_parameter && (
                   <Box mt={2}>
                     <Text fontSize="sm" fontWeight="bold">
-                      This will create {Math.floor((upperBound - lowerBound) / stepSize) + 1}{' '}
+                      This will create {Math.floor((upper_bound - lower_bound) / step_size) + 1}{' '}
                       simulation runs
                     </Text>
                   </Box>
                 )}
 
-                {(upperBound - lowerBound) / stepSize > 50 && (
+                {(upper_bound - lower_bound) / step_size > 50 && (
                   <Alert status="warning">
                     <AlertIcon />
                     Large number of steps may cause performance issues. Consider increasing the step

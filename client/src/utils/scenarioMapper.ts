@@ -130,32 +130,48 @@ export function map_form_to_scenario_raw(
   // Map events
   const eventSeries = new Set(
     addedEvents.map((event: any) => {
+      // Log the event data to help diagnose issues
+      console.log('Processing event for API:', event.name, {
+        startYear: event.startYear,
+        start: event.start,
+      });
+
+      // Determine which field to use for start - some events have 'startYear', others 'start'
+      const startConfig = event.startYear || event.start;
+
+      if (!startConfig) {
+        console.warn(`Event ${event.name} has no start configuration, using default`);
+      }
+
       // Map start and duration to match YAML schema format as direct objects, not arrays
-      const startObj = event.startYear
+      const startObj = startConfig
         ? {
-            type: event.startYear.type || 'fixed',
-            ...(event.startYear.type === 'fixed'
-              ? { value: event.startYear.value }
-              : event.startYear.type === 'normal'
-                ? { mean: event.startYear.mean, stdev: event.startYear.stdev }
-                : event.startYear.type === 'uniform'
-                  ? { lower: event.startYear.min, upper: event.startYear.max }
-                  : event.startYear.type === 'startWith' || event.startYear.type === 'startAfter'
-                    ? { eventSeries: event.startYear.eventSeries }
-                    : {}),
+            type: startConfig.type || 'fixed',
+            ...(startConfig.type === 'fixed'
+              ? { value: startConfig.value ?? 2025 }
+              : startConfig.type === 'normal'
+              ? { mean: startConfig.mean ?? 2025, stdev: startConfig.stdev ?? 1 }
+              : startConfig.type === 'uniform'
+              ? { min: startConfig.min ?? 2025, max: startConfig.max ?? 2030 }
+              : startConfig.type === 'startWith' || startConfig.type === 'startAfter'
+              ? { eventSeries: startConfig.eventSeries ?? '' }
+              : {}),
           }
         : { type: 'fixed', value: 2025 };
+
+      // Log the mapped start configuration
+      console.log('Mapped start configuration:', startObj);
 
       const durationObj = event.duration
         ? {
             type: event.duration.type || 'fixed',
             ...(event.duration.type === 'fixed'
-              ? { value: event.duration.value }
+              ? { value: event.duration.value ?? 1 }
               : event.duration.type === 'normal'
-                ? { mean: event.duration.mean, stdev: event.duration.stdev }
-                : event.duration.type === 'uniform'
-                  ? { lower: event.duration.min, upper: event.duration.max }
-                  : {}),
+              ? { mean: event.duration.mean ?? 1, stdev: event.duration.stdev ?? 0 }
+              : event.duration.type === 'uniform'
+              ? { min: event.duration.min ?? 1, max: event.duration.max ?? 5 }
+              : {}),
           }
         : { type: 'fixed', value: 1 };
 
@@ -187,14 +203,17 @@ export function map_form_to_scenario_raw(
           discretionary: event.discretionary || false,
         } as ExpenseEventRaw;
       } else if (event.type === 'invest') {
+        // Use assetAllocation directly as an object
         return {
           ...baseEvent,
           assetAllocation: event.assetAllocation || {},
-          assetAllocation2: event.assetAllocation2 || event.assetAllocation || {},
+          assetAllocation2:
+            event.assetAllocation2 || (event.glidePath ? event.assetAllocation || {} : {}),
           glidePath: event.glidePath || false,
           maxCash: event.maxCash || 0,
         } as InvestmentEventRaw;
       } else if (event.type === 'rebalance') {
+        // Use assetAllocation directly as an object
         return {
           ...baseEvent,
           assetAllocation: event.assetAllocation || {},

@@ -21,10 +21,14 @@ function parse_investments(
     all.set(investment.id, investment);
     switch (investment.tax_status) {
       case TaxStatus.NON_RETIREMENT:
-        if (investment.id === "cash") {
+        let upper_case_investment_id = investment.id.toUpperCase();
+        if (
+          upper_case_investment_id === "CASH" ||
+          upper_case_investment_id === "CASH NON-RETIREMENT"
+        ) {
           cash_account = investment;
         } else {
-          non_retirement_account.set(investment.id, investment);
+          non_retirement_account.set(upper_case_investment_id, investment);
         }
         break;
       case TaxStatus.PRE_TAX:
@@ -53,72 +57,80 @@ function parse_investments(
 }
 
 export interface AccountManager {
-    cash: Investment,
-    non_retirement: AccountMap;
-    pre_tax: AccountMap;
-    after_tax: AccountMap;
-    all: AccountMap;
-    get_net_worth: () => number;
-    get_total_non_retirement_value: () => number;
-    get_total_pre_tax_value: () => number;
-    get_total_after_tax_value: () => number;
-    clone(): AccountManager;
-} 
+  cash: Investment;
+  non_retirement: AccountMap;
+  pre_tax: AccountMap;
+  after_tax: AccountMap;
+  all: AccountMap;
+  get_net_worth: () => number;
+  get_total_non_retirement_value: () => number;
+  get_total_pre_tax_value: () => number;
+  get_total_after_tax_value: () => number;
+  clone(): AccountManager;
+}
 
-export function create_account_manager(investments_raw: Set<InvestmentRaw>): AccountManager {
-    try {
-        const investments: Array<Investment> = Array.from(investments_raw).map(
-            (investment: InvestmentRaw): Investment => create_investment(investment)
-        );
-        const [cash, non_retirement, pre_tax, after_tax, all] = parse_investments(investments);
-        simulation_logger.info("Successfully created account manager");
-        return { 
-            cash,
-            non_retirement,
-            pre_tax, 
-            after_tax,
-            all,
-            get_net_worth: () => {
-              let res = 0;
-              all.forEach((inv: Investment) => {
-                res += (inv.get_cost_basis());
-              })
-              return res + cash.get_value();
-            },
-            get_total_non_retirement_value: (): number => {
-              let tot = 0
-              for (const investment of non_retirement.values()) {
-                if (investment.get_cost_basis() > 0) {
-                  tot += investment.get_value();
-                }
-              }
-              return tot;
-            },
-            get_total_pre_tax_value:():number => {
-              let tot = 0
-              for (const investment of pre_tax.values()) {
-                if (investment.get_cost_basis() > 0) {
-                  tot += investment.get_value();
-                }
-              }
-              return tot;
-            },
-            get_total_after_tax_value: (): number => {
-              let tot = 0;
-              for (const investment of after_tax.values()) {
-                if (investment.get_cost_basis() > 0) {
-                  tot += investment.get_value();
-                }
-              }
-              return tot;
-            },
-            clone: () => create_account_manager(investments_raw),
-          };
-    } catch(error) {
-        simulation_logger.info("Failed to create account manager", {
-            error: error instanceof Error? error.stack: error,
-            investment_raw: investments_raw
+export function create_account_manager(
+  investments_raw: Set<InvestmentRaw>
+): AccountManager {
+  try {
+    const investments: Array<Investment> = Array.from(investments_raw).map(
+      (investment: InvestmentRaw): Investment => create_investment(investment)
+    );
+    const [cash, non_retirement, pre_tax, after_tax, all] =
+      parse_investments(investments);
+    simulation_logger.info("Successfully created account manager");
+    return {
+      cash,
+      non_retirement,
+      pre_tax,
+      after_tax,
+      all,
+      // Chen removed cash.get_value() at 2025-04-30
+      get_net_worth: () => {
+        let res = 0;
+        all.forEach((inv: Investment) => {
+          res += inv.get_value();
         });
-        throw new Error(`Failed to create account manager ${error instanceof Error? error.message: error}`);
-    }
+        return res;
+      },
+      get_total_non_retirement_value: (): number => {
+        let tot = 0;
+        for (const investment of non_retirement.values()) {
+          if (investment.get_cost_basis() > 0) {
+            tot += investment.get_value();
+          }
+        }
+        return tot;
+      },
+      get_total_pre_tax_value: (): number => {
+        let tot = 0;
+        for (const investment of pre_tax.values()) {
+          if (investment.get_cost_basis() > 0) {
+            tot += investment.get_value();
+          }
+        }
+        return tot;
+      },
+      get_total_after_tax_value: (): number => {
+        let tot = 0;
+        for (const investment of after_tax.values()) {
+          if (investment.get_cost_basis() > 0) {
+            tot += investment.get_value();
+          }
+        }
+        return tot;
+      },
+      clone: () => create_account_manager(investments_raw),
+    };
+  } catch (error) {
+    simulation_logger.info("Failed to create account manager", {
+      error: error instanceof Error ? error.stack : error,
+      investment_raw: investments_raw,
+    });
+    throw new Error(
+      `Failed to create account manager ${
+        error instanceof Error ? error.message : error
+      }`
+    );
+  }
 }

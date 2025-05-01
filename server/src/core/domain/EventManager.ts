@@ -98,8 +98,8 @@ export interface EventManager {
     reset_expense_breakdown: () => void;
     get_mandatory_expenses: () => number,
     get_discretionary_expenses: () => number,
-    update_mandatory_expense: (amt: number) => void,
-    update_discretionary_expense: (amt: number) => void,
+    incr_mandatory_expense: (amt: number) => void,
+    incr_discretionary_expense: (amt: number) => void,
     get_last_year_tax_totals: () => { total: number } | undefined;
     update_last_year_tax_totals: (total: number) => void;
     update_initial_amount: (event: ExpenseEvent | IncomeEvent) => number;
@@ -148,8 +148,8 @@ export function create_event_manager_clone(
         },
         get_mandatory_expenses: () => mandatory_expenses,
         get_discretionary_expenses: () => discretionary_expenses,
-        update_mandatory_expense: (amt: number) => mandatory_expenses = amt,
-        update_discretionary_expense: (amt: number) => discretionary_expenses = amt,
+        incr_mandatory_expense: (amt: number) => mandatory_expenses += amt,
+        incr_discretionary_expense: (amt: number) => discretionary_expenses += amt,
         get_last_year_tax_totals: () => last_year_tax_totals,
         update_last_year_tax_totals: (total: number) => {
             last_year_tax_totals = { total };
