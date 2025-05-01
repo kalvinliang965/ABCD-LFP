@@ -69,6 +69,24 @@ export interface ConsolidatedResult {
           range40_60: [number, number];
         }
       };
+      earlyWithdrawalTax?: {
+        median: number;
+        ranges: {
+          range10_90: [number, number];
+          range20_80: [number, number];
+          range30_70: [number, number];
+          range40_60: [number, number];
+        }
+      };
+      discretionaryExpensesPct?: {
+        median: number;
+        ranges: {
+          range10_90: [number, number];
+          range20_80: [number, number];
+          range30_70: [number, number];
+          range40_60: [number, number];
+        }
+      };
     };
 
     // Median and average values for this specific year
@@ -587,6 +605,24 @@ export function createConsolidatedSimulationResult(
           allSimulations,
           yearIndex,
           y => y.total_expenses
+        ),
+        // Add early withdrawal tax statistics
+        earlyWithdrawalTax: getYearStatistics(
+          allSimulations,
+          yearIndex,
+          y => y.cur_year_early_withdrawals * 0.1 // 10% tax on early withdrawals
+        ),
+        //not sure if we use 10% tax on early withdrawals or not ???
+        // Add discretionary expenses percentage statistics
+        discretionaryExpensesPct: getYearStatistics(
+          allSimulations,
+          yearIndex,
+          y => {
+            // Calculate percentage of discretionary expenses
+            return y.total_expenses > 0 
+              ? (y.discretionary_expenses / y.total_expenses) * 100 
+              : 0;
+          }
         )
       },
       

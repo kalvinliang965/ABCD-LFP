@@ -161,21 +161,43 @@ const SimulationResults: React.FC = () => {
             totalInvestments: {
               years: result.yearlyData.map(yr => yr.year),
               median: result.yearlyData.map(yr => 
-                yr.total_after_tax + yr.total_pre_tax + yr.total_non_retirement
+                (yr.stats as any)?.totalInvestments?.median ?? 0
               ),
               ranges: extractRangesFromYearlyData(result.yearlyData, 'totalInvestments')
             },
             
             totalIncome: {
               years: result.yearlyData.map(yr => yr.year),
-              median: result.yearlyData.map(yr => yr.cur_year_income),
+              median: result.yearlyData.map(yr => 
+                (yr.stats as any)?.totalIncome?.median ?? 0
+              ),
               ranges: extractRangesFromYearlyData(result.yearlyData, 'totalIncome')
             },
             
             totalExpenses: {
               years: result.yearlyData.map(yr => yr.year),
-              median: result.yearlyData.map(yr => yr.total_expenses),
+              median: result.yearlyData.map(yr => 
+                (yr.stats as any)?.totalExpenses?.median ?? 0
+              
+              ),
               ranges: extractRangesFromYearlyData(result.yearlyData, 'totalExpenses')
+            },
+            
+            earlyWithdrawalTax: {
+              years: result.yearlyData.map(yr => yr.year),
+              median: result.yearlyData.map(yr => 
+                (yr.stats as any)?.earlyWithdrawalTax?.median ?? 0
+
+              ),
+              ranges: extractRangesFromYearlyData(result.yearlyData, 'earlyWithdrawalTax')
+            },
+            
+            discretionaryExpensesPct: {
+              years: result.yearlyData.map(yr => yr.year),
+              median: result.yearlyData.map(yr => 
+                (yr.stats as any)?.discretionaryExpensesPct?.median ?? 0
+              ),
+              ranges: extractRangesFromYearlyData(result.yearlyData, 'discretionaryExpensesPct')
             }
           }
         };
@@ -431,7 +453,7 @@ function transformYearlyDataToChartFormat(
  */
 function extractRangesFromYearlyData(
   yearlyData: Array<any>,
-  statType: 'totalInvestments' | 'totalIncome' | 'totalExpenses'
+  statType: 'totalInvestments' | 'totalIncome' | 'totalExpenses' | 'earlyWithdrawalTax' | 'discretionaryExpensesPct'
 ): {
   range10_90: number[][];
   range20_80: number[][];
