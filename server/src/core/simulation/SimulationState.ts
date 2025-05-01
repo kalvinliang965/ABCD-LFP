@@ -232,8 +232,8 @@ export async function create_simulation_state(
         const standard_deduction = state.federal_tax_service.find_deduction(state.get_tax_filing_status());
         simulation_logger.debug(`Standard deduction: ${standard_deduction}`)
 
-        const fed_tax = fed_taxable_income * state.federal_tax_service.find_rate(fed_taxable_income, IncomeType.TAXABLE_INCOME, state.get_tax_filing_status()) - standard_deduction;
-        const state_tax = state_taxable_income * state.state_tax_service.find_rate(state_taxable_income, state.get_tax_filing_status());
+        const fed_tax = Math.max(fed_taxable_income * state.federal_tax_service.find_rate(fed_taxable_income, IncomeType.TAXABLE_INCOME, state.get_tax_filing_status()) - standard_deduction, 0);
+        const state_tax = Math.max(state_taxable_income * state.state_tax_service.find_rate(state_taxable_income, state.get_tax_filing_status()), 0);
         simulation_logger.debug(`federal tax: ${fed_tax}`);
         simulation_logger.debug(`state tax: ${state_tax}`);
 
@@ -256,9 +256,9 @@ export async function create_simulation_state(
         const withdrawal_tax = state.user_tax_data.get_prev_year_early_withdrawal() * 0.10;
         simulation_logger.debug(`withdrawal tax: ${withdrawal_tax}`);
 
-        const total_tax = fed_tax + state_tax + withdrawal_tax + capital_gain_tax;
+        const total_tax = Math.max(fed_tax + state_tax + withdrawal_tax + capital_gain_tax, 0);
         simulation_logger.info(`Successfully process tax for ${state.get_current_year() - 1}: ${total_tax}`)
-        return Math.max(total_tax, 0);
+        return total_tax;
       },
     };
 

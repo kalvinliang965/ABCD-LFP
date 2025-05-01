@@ -43,7 +43,7 @@ export const create_user_tax_data = (): UserTaxData => {
     incr_after_tax_contribution: (amt: number): number => cur_after_tax_contribution += amt,
 
 
-    get_cur_fed_taxable_income: () => cur_year_income - 0.15 * cur_year_ss,
+    get_cur_fed_taxable_income: () => prev_year_income - 0.15 * prev_year_ss,
     get_cur_year_income: () => cur_year_income,
     get_cur_year_gains: () => cur_year_gains,
     get_cur_year_ss: () => cur_year_ss,

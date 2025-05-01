@@ -13,7 +13,7 @@ export interface SimulationEngine {
 export async function create_simulation_engine(simulation_environment: SimulationEnvironment, profiler = new Profiler()): Promise<SimulationEngine> {
 
     simulation_logger.info("Initializing the simulation engine...");
-    console.log(simulation_environment);
+    //console.log(simulation_environment);
     async function run_parallel(num_simulation: number): Promise<SimulationYearlyResult[]> {
         const pool = new SimulationWorkerPool();
         simulation_logger.info("Successfully initialize worker pool");
