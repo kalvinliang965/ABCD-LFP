@@ -128,7 +128,7 @@ function simulate_year(
     profiler?: Profiler
 ): boolean {
     try {
-        simulation_logger.debug(
+        simulation_logger.info(
             "Simulating new year", 
             {
                 simulation_state: simulation_state,
