@@ -15,6 +15,18 @@ interface DataItem {
 interface StackedBarChartProps {
   years?: number[];
   data?: {
+    // New structure with median and average
+    median?: {
+      investments?: DataItem[];
+      income?: DataItem[];
+      expenses?: DataItem[];
+    };
+    average?: {
+      investments?: DataItem[];
+      income?: DataItem[];
+      expenses?: DataItem[];
+    };
+    // Backward compatibility for old structure
     investments?: DataItem[];
     income?: DataItem[];
     expenses?: DataItem[];
@@ -58,12 +70,12 @@ const COLORS = {
 
 const StackedBarChart: React.FC<StackedBarChartProps> = ({
   years = [],
-  data = { investments: [], income: [], expenses: [] },
+  data = { median: { investments: [], income: [], expenses: [] }, average: { investments: [], income: [], expenses: [] } },
   title = 'Financial Values Over Time',
   loading = false,
   aggregationType = 'median',
   onAggregationTypeChange = () => {},
-  aggregationThreshold = 1000,
+  aggregationThreshold = 0,
   onAggregationThresholdChange = () => {},
 }) => {
   console.log('StackedBarChart props:', {
@@ -78,84 +90,31 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
   // State for the active tab
   const [activeTab, setActiveTab] = useState<'investments' | 'income' | 'expenses'>('investments');
 
-  // Generate mock data if no data is provided
-  // const mockYears = Array.from({ length: 30 }, (_, i) => 2023 + i);
-
-  // // Mock data for investments
-  // const mockInvestments: DataItem[] = [
-  //   {
-  //     name: 'S&P 500 non-retirement',
-  //     category: 'investment',
-  //     taxStatus: 'non-retirement',
-  //     values: Array.from({ length: 30 }, (_, i) => 9800 + i * 600 + Math.random() * 300),
-  //   },
-  //   {
-  //     name: 'S&P 500 pre-tax',
-  //     category: 'investment',
-  //     taxStatus: 'pre-tax',
-  //     values: Array.from({ length: 30 }, (_, i) => 15000 + i * 1200 + Math.random() * 500),
-  //   },
-  // ];
-
-  // // Mock data for income
-  // const mockIncome: DataItem[] = [
-  //   {
-  //     name: 'Salary',
-  //     category: 'income',
-  //     values: Array.from({ length: 30 }, (_, i) => 80000 + i * 2000 + Math.random() * 1000),
-  //   },
-  //   {
-  //     name: 'Dividends',
-  //     category: 'income',
-  //     values: Array.from({ length: 30 }, (_, i) => 5000 + i * 300 + Math.random() * 200),
-  //   },
-  //   {
-  //     name: 'Social Security',
-  //     category: 'income',
-  //     values: Array.from({ length: 30 }, (_, i) => (i < 10 ? 0 : 24000 + (i - 10) * 500)),
-  //   },
-  // ];
-
-  // // Mock data for expenses
-  // const mockExpenses: DataItem[] = [
-  //   {
-  //     name: 'Housing',
-  //     category: 'expense',
-  //     values: Array.from({ length: 30 }, (_, i) => 24000 + i * 500 + Math.random() * 300),
-  //   },
-  //   {
-  //     name: 'Healthcare',
-  //     category: 'expense',
-  //     values: Array.from({ length: 30 }, (_, i) => 6000 + i * 400 + Math.random() * 200),
-  //   },
-  //   {
-  //     name: 'Taxes',
-  //     category: 'expense',
-  //     values: Array.from({ length: 30 }, (_, i) => 20000 + i * 600 + Math.random() * 400),
-  //   },
-  //   {
-  //     name: 'Other',
-  //     category: 'expense',
-  //     values: Array.from({ length: 30 }, (_, i) => 15000 + i * 300 + Math.random() * 200),
-  //   },
-  // ];
-
-  // // Use provided data or fallback to mock data
-  // const chartYears = years.length > 0 ? years : mockYears;
-  // const chartData = {
-  //   investments: data.investments?.length ? data.investments : mockInvestments,
-  //   income: data.income?.length ? data.income : mockIncome,
-  //   expenses: data.expenses?.length ? data.expenses : mockExpenses,
-  // };
-
-    // Use provided data instead of mock data
-    const chartYears = years.length > 0 ? years : [];
-    const chartData = {
-      investments: data.investments?.length ? data.investments : [],
-      income: data.income?.length ? data.income : [],
-      expenses: data.expenses?.length ? data.expenses : [],
-    };
+  // Use provided data instead of mock data
+  const chartYears = years.length > 0 ? years : [];
   
+  // Check if we're using the old data format (direct properties) or new format (median/average objects)
+  const isOldFormat = !!(data.investments || data.income || data.expenses);
+  
+  // For backward compatibility - if old format is used, use it directly regardless of aggregationType
+  const chartData = isOldFormat
+    ? {
+        investments: data.investments?.length ? data.investments : [],
+        income: data.income?.length ? data.income : [],
+        expenses: data.expenses?.length ? data.expenses : [],
+      }
+    : {
+        // Otherwise use the new format based on aggregationType
+        investments: (aggregationType === 'median' 
+          ? data.median?.investments 
+          : data.average?.investments) || [],
+        income: (aggregationType === 'median' 
+          ? data.median?.income 
+          : data.average?.income) || [],
+        expenses: (aggregationType === 'median' 
+          ? data.median?.expenses 
+          : data.average?.expenses) || [],
+      };
 
   // Get the active data based on the selected tab
   const getActiveData = () => {

@@ -2,7 +2,7 @@ import { get_standard_deduction_from_db } from "../../../../db/repositories/Stan
 import { get_state_taxbrackets_by_state, state_taxbrackets_exist_in_db } from "../../../../db/repositories/StateTaxBracketRepository";
 import { get_capital_gains_brackets, get_taxable_income_brackets } from "../../../../db/repositories/TaxBracketRepository";
 import { create_scenario_raw_yaml, scenario_yaml_string } from "../../../../services/ScenarioYamlParser";
-import { create_scenario } from "../../../domain/scenario/Scenario";
+import { create_scenario } from "../../../domain/Scenario";
 import { IncomeType, StateType, TaxFilingStatus } from "../../../Enums";
 import { create_federal_tax_service } from "../../../tax/FederalTaxService";
 import { create_state_tax_service_db } from "../../../tax/StateTaxService";

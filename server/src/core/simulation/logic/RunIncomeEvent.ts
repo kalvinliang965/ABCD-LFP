@@ -25,9 +25,11 @@ export async function run_income_event(
 
     // step c: ignore spouse portion if they died
     // if both are alive, we use the entire amount
-    if (!spouse_alive) {
-      simulation_logger.debug(`Spouse is not alive. User own ${event.user_fraction} of the event`);
+    if (spouse_alive) {
+      simulation_logger.debug(`Spouse alive. User own ${event.user_fraction} of the event`);
       user_gains *= event.user_fraction;
+    } else {
+      simulation_logger.debug(`Spouse is not alive. User own ${event.user_fraction} of the event`);
     }
     simulation_logger.debug(`User gained ${user_gains}`);
 

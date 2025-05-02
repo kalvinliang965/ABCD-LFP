@@ -66,6 +66,24 @@ export interface ISimulationResult extends Document {
           range40_60: [number, number];
         }
       };
+      earlyWithdrawalTax?: {
+        median: number;
+        ranges: {
+          range10_90: [number, number];
+          range20_80: [number, number];
+          range30_70: [number, number];
+          range40_60: [number, number];
+        }
+      };
+      discretionaryExpensesPct?: {
+        median: number;
+        ranges: {
+          range10_90: [number, number];
+          range20_80: [number, number];
+          range30_70: [number, number];
+          range40_60: [number, number];
+        }
+      };
     }
   }>;
   
@@ -116,7 +134,9 @@ const StatCategorySchema = new Schema({
 const YearlyStatsSchema = new Schema({
   totalInvestments: { type: StatCategorySchema },
   totalIncome: { type: StatCategorySchema },
-  totalExpenses: { type: StatCategorySchema }
+  totalExpenses: { type: StatCategorySchema },
+  earlyWithdrawalTax: { type: StatCategorySchema },
+  discretionaryExpensesPct: { type: StatCategorySchema }
 }, { _id: false });
 
 // Schema for expense breakdown

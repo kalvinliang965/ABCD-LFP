@@ -1,4 +1,4 @@
-import create_value_generator from "../../../utils/ValueGenerator";
+import { ValueSource } from "../../../utils/ValueGenerator";
 import { DistributionType } from "../../Enums";
 import { StatisticType } from "../../Enums";
 import { simulation_logger } from "../../../utils/logger/logger";
@@ -25,17 +25,18 @@ export type StartCondition = {
 
 
 export function parse_start_condition(
-    start: StartCondition
+    start: StartCondition,
+    value_source: ValueSource
 ): ValueGenerator{
     if (start.type === "startWith" || start.type === "startAfter") {
         throw new Error(`Cannot resolve start condition of ${start.type}`);
     }
 
-    return parse_distribution(start as Distribution);
+    return parse_distribution(start as Distribution, value_source);
 }
 
 export function parse_distribution(
-  distribution: Distribution 
+  distribution: Distribution, value_source: ValueSource
 ): ValueGenerator {
   try {
     switch (distribution.type) {
@@ -45,7 +46,7 @@ export function parse_distribution(
           simulation_logger.error("distribution has type fixed without value")
           throw new Error(`distribution has type fixed without value`);
         }
-        return create_value_generator(
+        return value_source.create_value_generator(
           DistributionType.FIXED,
           new Map([[StatisticType.VALUE, value]])
         );
@@ -61,7 +62,7 @@ export function parse_distribution(
           simulation_logger.error("distribution has type normal without stdev")
           throw new Error(`distribution has type fixed without stdev`);
         }
-        return create_value_generator(
+        return value_source.create_value_generator(
           DistributionType.NORMAL,
           new Map([
             [StatisticType.MEAN, mean],
@@ -79,7 +80,7 @@ export function parse_distribution(
           simulation_logger.error("distribution has type normal without upper");
           throw new Error(`distribution has type fixed without upper`);
         }
-        return create_value_generator(
+        return value_source.create_value_generator(
           DistributionType.UNIFORM,
           new Map([
             [StatisticType.LOWER, lower],

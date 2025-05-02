@@ -132,14 +132,14 @@ export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
         start: { type: 'uniform', lower: 2025, upper: 2030 },
         duration: { type: 'fixed', value: 10 },
         type: 'invest',
-        assetAllocation: [
-          { type: 'S&P 500 non-retirement', value: 0.6 },
-          { type: 'S&P 500 after-tax', value: 0.4 },
-        ],
-        assetAllocation2: [
-          { type: 'S&P 500 non-retirement', value: 0.8 },
-          { type: 'S&P 500 after-tax', value: 0.2 },
-        ],
+        assetAllocation: {
+          'S&P 500 non-retirement': 0.6,
+          'S&P 500 after-tax': 0.4,
+        },
+        assetAllocation2: {
+          'S&P 500 non-retirement': 0.8,
+          'S&P 500 after-tax': 0.2,
+        },
         glidePath: true,
         maxCash: 1000,
       },
@@ -148,10 +148,10 @@ export const SAMPLE_SCENARIOS: ScenarioRaw[] = [
         start: { type: 'uniform', lower: 2025, upper: 2030 },
         duration: { type: 'fixed', value: 10 },
         type: 'rebalance',
-        assetAllocation: [
-          { type: 'S&P 500 non-retirement', value: 0.7 },
-          { type: 'tax-exempt bonds', value: 0.3 },
-        ],
+        assetAllocation: {
+          'S&P 500 non-retirement': 0.7,
+          'tax-exempt bonds': 0.3,
+        },
       },
     ]),
     inflationAssumption: { type: 'fixed', value: 0.03 },

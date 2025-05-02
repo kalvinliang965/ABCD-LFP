@@ -33,13 +33,6 @@ const CHART_TYPES = [
   },
 ];
 
-// Define the data structure for investments, income, and expenses
-// interface DataItem {
-//   name: string;
-//   category: 'investment' | 'income' | 'expense';
-//   taxStatus?: 'non-retirement' | 'pre-tax' | 'after-tax';
-//   values: number[];
-// }
 
 const SimulationResults: React.FC = () => {
   // Get parameters from URL - could be either simulationId or scenarioId
@@ -60,7 +53,7 @@ const SimulationResults: React.FC = () => {
 
   // New state variables for the stacked bar chart
   const [aggregationType, setAggregationType] = useState<'median' | 'average'>('median');
-  const [aggregationThreshold, setAggregationThreshold] = useState<number>(10000);
+  const [aggregationThreshold, setAggregationThreshold] = useState<number>(0);
 
   // Debugging helper
   // const toggleDebug = () => {
@@ -150,9 +143,16 @@ const SimulationResults: React.FC = () => {
           medianOrAverageValues: {
             years: result.yearlyData.map(yr => yr.year),
             data: {
-              investments: transformYearlyDataToChartFormat(result.yearlyData, 'investments'),
-              income: transformYearlyDataToChartFormat(result.yearlyData, 'income_breakdown'),
-              expenses: transformYearlyDataToChartFormat(result.yearlyData, 'expense_breakdown', 'expenses')
+              median: {
+                investments: transformYearlyDataToChartFormat(result.yearlyData, 'investments', "investments", 'median'),
+                income: transformYearlyDataToChartFormat(result.yearlyData, 'income', 'income', 'median'),
+                expenses: transformYearlyDataToChartFormat(result.yearlyData, 'expenses', 'expenses', 'median')
+              },
+              average: {
+                investments: transformYearlyDataToChartFormat(result.yearlyData, 'investments', "investments", 'average'),
+                income: transformYearlyDataToChartFormat(result.yearlyData, 'income', 'income', 'average'),
+                expenses: transformYearlyDataToChartFormat(result.yearlyData, 'expenses', 'expenses', 'average')
+              }
             }
           },
           
@@ -161,21 +161,43 @@ const SimulationResults: React.FC = () => {
             totalInvestments: {
               years: result.yearlyData.map(yr => yr.year),
               median: result.yearlyData.map(yr => 
-                yr.total_after_tax + yr.total_pre_tax + yr.total_non_retirement
+                (yr.stats as any)?.totalInvestments?.median ?? 0
               ),
               ranges: extractRangesFromYearlyData(result.yearlyData, 'totalInvestments')
             },
             
             totalIncome: {
               years: result.yearlyData.map(yr => yr.year),
-              median: result.yearlyData.map(yr => yr.cur_year_income),
+              median: result.yearlyData.map(yr => 
+                (yr.stats as any)?.totalIncome?.median ?? 0
+              ),
               ranges: extractRangesFromYearlyData(result.yearlyData, 'totalIncome')
             },
             
             totalExpenses: {
               years: result.yearlyData.map(yr => yr.year),
-              median: result.yearlyData.map(yr => yr.total_expenses),
+              median: result.yearlyData.map(yr => 
+                (yr.stats as any)?.totalExpenses?.median ?? 0
+              
+              ),
               ranges: extractRangesFromYearlyData(result.yearlyData, 'totalExpenses')
+            },
+            
+            earlyWithdrawalTax: {
+              years: result.yearlyData.map(yr => yr.year),
+              median: result.yearlyData.map(yr => 
+                (yr.stats as any)?.earlyWithdrawalTax?.median ?? 0
+
+              ),
+              ranges: extractRangesFromYearlyData(result.yearlyData, 'earlyWithdrawalTax')
+            },
+            
+            discretionaryExpensesPct: {
+              years: result.yearlyData.map(yr => yr.year),
+              median: result.yearlyData.map(yr => 
+                (yr.stats as any)?.discretionaryExpensesPct?.median ?? 0
+              ),
+              ranges: extractRangesFromYearlyData(result.yearlyData, 'discretionaryExpensesPct')
             }
           }
         };
@@ -384,7 +406,8 @@ export default SimulationResults;
 function transformYearlyDataToChartFormat(
   yearlyData: Array<any>, 
   property: string,
-  nestedProperty?: string
+  nestedProperty?: string,
+  aggregationType: 'median' | 'average' = 'median'
 ): Array<{
   name: string;
   category: 'investment' | 'income' | 'expense';
@@ -393,15 +416,32 @@ function transformYearlyDataToChartFormat(
 }> {
   // Get all unique keys across all years
   const allKeys = new Set<string>();
+  
+  // First pass: collect all possible keys
   yearlyData.forEach((yr: any) => {
-    const record = nestedProperty ? yr[property][nestedProperty] : yr[property];
-    Object.keys(record || {}).forEach(key => allKeys.add(key));
+    // Check if we're using medianValues/averageValues or the direct properties
+    const valuesObj = aggregationType === 'median' ? yr.medianValues : yr.averageValues;
+    
+    if (valuesObj && valuesObj[property]) {
+      // Handle medianValues/averageValues structure
+      Object.keys(valuesObj[property]).forEach(key => {
+        if (key !== '_id') { // Skip MongoDB ObjectId
+          allKeys.add(key);
+        }
+      });
+    } else {
+      // Fallback to direct property access (old method)
+      const record = nestedProperty ? yr[property]?.[nestedProperty] : yr[property];
+      if (record) {
+        Object.keys(record).forEach(key => allKeys.add(key));
+      }
+    }
   });
   
   // Determine category based on property
   let category: 'investment' | 'income' | 'expense';
   if (property === 'investments') category = 'investment';
-  else if (property === 'income_breakdown') category = 'income';
+  else if (property === 'income' || property === 'income_breakdown') category = 'income';
   else category = 'expense';
   
   // Convert to array format for charts
@@ -419,8 +459,16 @@ function transformYearlyDataToChartFormat(
       category,
       taxStatus,
       values: yearlyData.map((yr: any) => {
-        const record = nestedProperty ? yr[property][nestedProperty] : yr[property];
-        return record ? record[key] || 0 : 0;
+        // Try to get value from medianValues/averageValues first
+        const valuesObj = aggregationType === 'median' ? yr.medianValues : yr.averageValues;
+        
+        if (valuesObj && valuesObj[property] && valuesObj[property][key] !== undefined) {
+          return valuesObj[property][key];
+        } 
+        
+        // Fallback to direct property access
+        const record = nestedProperty ? yr[property]?.[nestedProperty] : yr[property];
+        return record && record[key] !== undefined ? record[key] : 0;
       })
     };
   });
@@ -431,7 +479,7 @@ function transformYearlyDataToChartFormat(
  */
 function extractRangesFromYearlyData(
   yearlyData: Array<any>,
-  statType: 'totalInvestments' | 'totalIncome' | 'totalExpenses'
+  statType: 'totalInvestments' | 'totalIncome' | 'totalExpenses' | 'earlyWithdrawalTax' | 'discretionaryExpensesPct'
 ): {
   range10_90: number[][];
   range20_80: number[][];

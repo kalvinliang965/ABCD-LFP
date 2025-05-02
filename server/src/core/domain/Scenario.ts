@@ -1,23 +1,25 @@
 // src/core/domain/Scenario.ts
 // we will use this function to read data read from front end and call other function to parse the data
 import {
+  create_value_source,
   ValueGenerator,
-} from "../../../utils/ValueGenerator";
+  ValueSource,
+} from "../../utils/ValueGenerator";
 import {
   StateType,
   TaxFilingStatus,
-} from "../../Enums";
-import { create_investment, Investment } from "../investment/Investment";
-import { ScenarioRaw } from "../raw/scenario_raw";
-import { InvestmentRaw } from "../raw/investment_raw";
-import { TaxStatus, parse_state_type, parse_taxpayer_type } from "../../Enums";
-import { AccountManager, create_account_manager } from "../AccountManager";
-import { AccountMap } from "../AccountManager";
-import { create_investment_type_manager, InvestmentTypeManager } from "../InvestmentTypeManager";
-import { dev } from "../../../config/environment";
-import { create_event_manager, EventManager } from "../EventManager";
-import { Distribution, parse_distribution } from "../raw/common";
-import { simulation_logger } from "../../../utils/logger/logger";
+} from "../Enums";
+import { create_investment, Investment } from "./investment/Investment";
+import { ScenarioRaw } from "./raw/scenario_raw";
+import { InvestmentRaw } from "./raw/investment_raw";
+import { TaxStatus, parse_state_type, parse_taxpayer_type } from "../Enums";
+import { AccountManager, create_account_manager } from "./AccountManager";
+import { AccountMap } from "./AccountManager";
+import { create_investment_type_manager, InvestmentTypeManager } from "./InvestmentTypeManager";
+import { dev } from "../../config/environment";
+import { create_event_manager, EventManager } from "./EventManager";
+import { Distribution, parse_distribution } from "./raw/common";
+import { simulation_logger } from "../../utils/logger/logger";
 
 
 const REQUIRED_FIELDS = [
@@ -61,7 +63,8 @@ function parse_birth_years(birthYears: Array<number>): Array<number> {
 }
 
 function parse_life_expectancy(
-  lifeExpectancy: Array<Distribution>
+  lifeExpectancy: Array<Distribution>,
+  value_source: ValueSource,
 ): Array<number> {
   if (lifeExpectancy.length > 2 || lifeExpectancy.length == 0) {
     throw new Error(`Invalid number of lifeExpectancy ${lifeExpectancy}`);
@@ -71,7 +74,7 @@ function parse_life_expectancy(
       simulation_logger.error(`Invalid life expectancy distribution ${distribution.type}`);
       throw new Error(`Invalid life expectancy distribution ${distribution.type}`);
     }
-    return parse_distribution(distribution).sample();
+    return parse_distribution(distribution, value_source).sample();
   };
   try {
     const user_life_expectancy = parse(lifeExpectancy[0]);
@@ -85,6 +88,7 @@ function parse_life_expectancy(
 
 
 export interface Scenario {
+  seed: string;
   name: string;
   tax_filing_status: TaxFilingStatus;
   user_birth_year: number;
@@ -107,18 +111,23 @@ export interface Scenario {
   account_manager: AccountManager
 }
 
-export function create_scenario(scenario_raw: ScenarioRaw): Scenario {
+export function create_scenario(scenario_raw: ScenarioRaw, seed: string): Scenario {
   try {
+    const value_source = create_value_source(seed);
+
     const taxfilingStatus: TaxFilingStatus = parse_taxpayer_type(
       scenario_raw.maritalStatus
     );
     const [user_birth_year, spouse_birth_year] = parse_birth_years(
       scenario_raw.birthYears
     );
-    const [user_life_expectancy, spouse_life_expectancy] = parse_life_expectancy(scenario_raw.lifeExpectancy);
+    const [user_life_expectancy, spouse_life_expectancy] = parse_life_expectancy(
+      scenario_raw.lifeExpectancy, 
+      value_source
+    );
 
     const inflation_assumption: ValueGenerator = parse_distribution(
-      scenario_raw.inflationAssumption
+      scenario_raw.inflationAssumption, value_source
     );
     const after_tax_contribution_limit: number =
       scenario_raw.afterTaxContributionLimit;
@@ -134,8 +143,8 @@ export function create_scenario(scenario_raw: ScenarioRaw): Scenario {
     const financialGoal: number = scenario_raw.financialGoal;
     const residenceState: StateType = parse_state_type(scenario_raw.residenceState);
 
-    const event_manager = create_event_manager(scenario_raw.eventSeries);
-    const investment_type_manager = create_investment_type_manager(scenario_raw.investmentTypes);
+    const event_manager = create_event_manager(scenario_raw.eventSeries, value_source);
+    const investment_type_manager = create_investment_type_manager(scenario_raw.investmentTypes, value_source);
     const account_manager = create_account_manager(scenario_raw.investments);
 
     // Sanity check
@@ -152,6 +161,7 @@ export function create_scenario(scenario_raw: ScenarioRaw): Scenario {
     }
 
     return {
+      seed,
       event_manager,
       account_manager,
       investment_type_manager,

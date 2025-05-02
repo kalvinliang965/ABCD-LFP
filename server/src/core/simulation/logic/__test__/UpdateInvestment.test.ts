@@ -1,5 +1,5 @@
 
-import update_investment from '../UpdateInvestment';
+import { update_investment } from '../UpdateInvestment';
 import { ChangeType, TaxStatus } from '../../../Enums';
 import { SimulationState } from '../../SimulationState';
 import { create_investment } from '../../../domain/investment/Investment';
@@ -9,6 +9,7 @@ import { TaxFilingStatus } from '../../../Enums';
 import { incr_300_investment_type_one, incr_300_investment_type_two } from '../../../domain/raw/investment_type_raw';
 import { InvestmentType } from '../../../domain/investment/InvestmentType';
 import { create_investment_type_manager } from '../../../domain/InvestmentTypeManager';
+import { create_value_source } from '../../../../utils/ValueGenerator';
 
 const non_retirement_300_non_tax_exempt = create_investment(incr_300_init_300_investment_one);
 non_retirement_300_non_tax_exempt.tax_status = TaxStatus.NON_RETIREMENT;
@@ -31,7 +32,7 @@ const createBaseState = (): SimulationState => ({
         ['pre_tax_300_non_tax_exempt', pre_tax_300_non_tax_exempt],
     ]),
   },
-  investment_type_manager: create_investment_type_manager(new Set([incr_300_investment_type_two, incr_300_investment_type_one])),
+  investment_type_manager: create_investment_type_manager(new Set([incr_300_investment_type_two, incr_300_investment_type_one]), create_value_source("blah")),
   get_tax_filing_status: () => TaxFilingStatus.INDIVIDUAL,
   federal_tax_service: {
     find_bracket: jest.fn().mockReturnValue({ min: 0, max: 100000, rate: 0.24 }),

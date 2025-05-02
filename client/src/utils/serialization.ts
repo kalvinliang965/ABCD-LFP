@@ -81,57 +81,53 @@ export function serialize_scenario_for_api(scenario: any) {
         }
       }
 
-      // Handle assetAllocation - ensure it's in array format
+      // Handle assetAllocation - keep as object format
       if (event.assetAllocation) {
-        // If it's a Map, convert to array of {type, value} objects
+        // If it's a Map, convert to object
         if (event.assetAllocation instanceof Map) {
-          const entries = Array.from(event.assetAllocation.entries()) as [string, any][];
-          processedEvent.assetAllocation = entries.map(([type, value]) => ({
-            type,
-            value,
-          }));
+          processedEvent.assetAllocation = Object.fromEntries(event.assetAllocation.entries());
         }
-        // If it's an object but not an array, convert to array of {type, value} objects
+        // If it's already an object but not an array, use it directly
         else if (
           typeof event.assetAllocation === 'object' &&
           !Array.isArray(event.assetAllocation)
         ) {
-          const entries = Object.entries(event.assetAllocation) as [string, any][];
-          processedEvent.assetAllocation = entries.map(([type, value]) => ({
-            type,
-            value: Number(value),
-          }));
+          processedEvent.assetAllocation = { ...event.assetAllocation };
         }
-        // If it's already an array, make sure it has the right structure
+        // If it's an array, convert to object format
         else if (Array.isArray(event.assetAllocation)) {
-          // It's already in the right format
+          const assetAllocationObj: Record<string, number> = {};
+          event.assetAllocation.forEach((item: any) => {
+            if (item.type && item.value !== undefined) {
+              assetAllocationObj[item.type] = Number(item.value);
+            }
+          });
+          processedEvent.assetAllocation = assetAllocationObj;
         }
       }
 
-      // Handle assetAllocation2 - ensure it's in array format
+      // Handle assetAllocation2 - keep as object format
       if (event.assetAllocation2) {
-        // If it's a Map, convert to array of {type, value} objects
+        // If it's a Map, convert to object
         if (event.assetAllocation2 instanceof Map) {
-          const entries = Array.from(event.assetAllocation2.entries()) as [string, any][];
-          processedEvent.assetAllocation2 = entries.map(([type, value]) => ({
-            type,
-            value,
-          }));
+          processedEvent.assetAllocation2 = Object.fromEntries(event.assetAllocation2.entries());
         }
-        // If it's an object but not an array, convert to array of {type, value} objects
+        // If it's already an object but not an array, use it directly
         else if (
           typeof event.assetAllocation2 === 'object' &&
           !Array.isArray(event.assetAllocation2)
         ) {
-          const entries = Object.entries(event.assetAllocation2) as [string, any][];
-          processedEvent.assetAllocation2 = entries.map(([type, value]) => ({
-            type,
-            value: Number(value),
-          }));
+          processedEvent.assetAllocation2 = { ...event.assetAllocation2 };
         }
-        // If it's already an array, make sure it has the right structure
+        // If it's an array, convert to object format
         else if (Array.isArray(event.assetAllocation2)) {
-          // It's already in the right format
+          const assetAllocationObj: Record<string, number> = {};
+          event.assetAllocation2.forEach((item: any) => {
+            if (item.type && item.value !== undefined) {
+              assetAllocationObj[item.type] = Number(item.value);
+            }
+          });
+          processedEvent.assetAllocation2 = assetAllocationObj;
         }
       }
 
