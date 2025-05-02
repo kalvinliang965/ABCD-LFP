@@ -3,8 +3,9 @@ import {
   ChangeType,
   StatisticType,
 } from "../../Enums";
-import create_value_generator, {
+import {
   ValueGenerator,
+  ValueSource,
 } from "../../../utils/ValueGenerator";
 import { InvestmentTypeRaw } from "../raw/investment_type_raw";
 import { Distribution, parse_distribution } from "../raw/common";
@@ -37,20 +38,23 @@ export function parse_change_type(change_type: string) {
     }
 }
 
-export function parse_investment_type_distribution(distribution: Distribution): ValueGenerator {
+export function parse_investment_type_distribution(
+  distribution: Distribution, 
+  value_source: ValueSource
+): ValueGenerator {
     if (distribution.type != "fixed" && distribution.type != "normal") {
       simulation_logger.error(`Invalid distribution type in investment type ${distribution.type}`)
       throw new Error(`Invalid distribution type in investment type ${distribution.type}`)
     }
-    return parse_distribution(distribution);
+    return parse_distribution(distribution, value_source);
 }
 
-function create_investment_type(raw_data: InvestmentTypeRaw): InvestmentType {
+function create_investment_type(raw_data: InvestmentTypeRaw, value_source: ValueSource): InvestmentType {
   try {
     const return_change_type = parse_change_type(raw_data.returnAmtOrPct);
-    const expected_annual_return = parse_investment_type_distribution(raw_data.returnDistribution);
+    const expected_annual_return = parse_investment_type_distribution(raw_data.returnDistribution, value_source);
     const income_change_type = parse_change_type(raw_data.incomeAmtOrPct);
-    const expected_annual_income = parse_investment_type_distribution(raw_data.incomeDistribution);
+    const expected_annual_income = parse_investment_type_distribution(raw_data.incomeDistribution, value_source);
     const taxability = raw_data.taxability;
     
     // annual income should always be positive...
@@ -67,7 +71,7 @@ function create_investment_type(raw_data: InvestmentTypeRaw): InvestmentType {
       resample_annual_values: () => {
         [annual_return, annual_income] = [expected_annual_return.sample(), Math.abs(expected_annual_income.sample())];
       },
-      clone: () => create_investment_type(raw_data),
+      clone: () => create_investment_type(raw_data, value_source),
       _expected_annual_income: expected_annual_income, // should not be use. ONLY for testing
       _expected_annual_return: expected_annual_return,
     }

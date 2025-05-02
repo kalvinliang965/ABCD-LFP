@@ -13,12 +13,13 @@ import { pay_mandatory_expenses } from "./logic/PayMandatoryExpense";
 import { pay_discretionary_expenses } from "./logic/PayDiscretionaryExpense";
 import { run_invest_event } from "./logic/InvestExcessCash";
 import { run_rebalance_investment } from "./logic/RebalanceInvestments";
-import { create_scenario } from "../domain/scenario/Scenario";
+import { create_scenario } from "../domain/Scenario";
 import { create_tax_brackets, TaxBracketSet } from "../tax/TaxBrackets";
 import { TaxFilingStatus } from "../Enums";
 import { create_standard_deductions } from "../tax/StandardDeduction";
 import { create_federal_service_wo, FederalTaxService } from "../tax/FederalTaxService";
 import { create_state_tax_service_wo, StateTaxService } from "../tax/StateTaxService";
+import { hash } from "bcrypt";
 
 function create_federal_service_from_scratch(
     federal_tax_service_taxable_income_bracket_raw: Map<TaxFilingStatus, TaxBracketSet>,
@@ -80,20 +81,23 @@ function create_state_tax_from_scratch(
 
 export async function execute_single_simulation(
     simulation_environment: SimulationEnvironment, 
+    index: number,          // an identifier for simulation 
 ): Promise<SimulationYearlyResult> {
 
-    const scenario = create_scenario(simulation_environment.scenario_raw);
-    simulation_logger.debug("Successfully created scenario from sratch");
+    const derived_seed = (`${simulation_environment.base_seed}-${index}`);
+    simulation_logger.info(`Derived seed for simuation ${index} is ${derived_seed}`);
+    const scenario = create_scenario(simulation_environment.scenario_raw, derived_seed);
+    simulation_logger.info("Successfully created scenario from sratch");
     const federal_tax_service = create_federal_service_from_scratch(
         simulation_environment.federal_tax_service_taxable_income_bracket_raw,
         simulation_environment.federal_tax_service_capital_gains_bracket_raw,
         simulation_environment.federal_tax_service_standard_deductions_raw,
     );
-    simulation_logger.debug("Successfully created federal tax service from sratch");
+    simulation_logger.info("Successfully created federal tax service from sratch");
     const state_tax_service = create_state_tax_from_scratch(
         simulation_environment.state_tax_service_taxable_income_bracket_raw
     );
-    simulation_logger.debug("Successfully created state tax service from sratch");
+    simulation_logger.info("Successfully created state tax service from sratch");
     const simulation_state = await create_simulation_state(
         scenario, 
         federal_tax_service, 
@@ -128,7 +132,7 @@ function simulate_year(
     profiler?: Profiler
 ): boolean {
     try {
-        simulation_logger.debug(
+        simulation_logger.info(
             "Simulating new year", 
             {
                 simulation_state: simulation_state,
@@ -149,7 +153,7 @@ function simulate_year(
             }
         }
 
-        simulation_logger.debug("Updating investments...");
+        simulation_logger.info("Updating investments...");
         profiler?.start("update_investment");
         update_investment(simulation_state);
         profiler?.end("update_investment");
@@ -160,7 +164,7 @@ function simulate_year(
             profiler?.end("process_roth_conversion");
         }
         
-        simulation_logger.debug(`Paying non discretionary expenses...`);
+        simulation_logger.info(`Paying non discretionary expenses...`);
         profiler?.start("pay_mandatory_expenses");
         if (!pay_mandatory_expenses(simulation_state)) {
             simulation_logger.info(`User cannnot pay all non discretionary expenses`);
@@ -168,17 +172,18 @@ function simulate_year(
         }
         profiler?.end("pay_mandatory_expenses");
         
-        simulation_logger.debug(`Paying discretionary expenses`);
+        simulation_logger.info(`Paying discretionary expenses`);
         profiler?.start("pay_discretionary_expenses");
         pay_discretionary_expenses(simulation_state);
         profiler?.end("pay_discretionary_expenses");
 
-        simulation_logger.debug(`Running invest event scheduled for current year...`);
+        simulation_logger.info(`Running invest event scheduled for current year...`);
         profiler?.start("run_invest_event");
         run_invest_event(simulation_state);
         profiler?.end("run_invest_event");
+        simulation_logger.info(`cash right after invest event: ${simulation_state.account_manager.cash.get_value()}`);
 
-        simulation_logger.debug(`Running rebalance events scheduled for the current year...`);
+        simulation_logger.info(`Running rebalance events scheduled for the current year...`);
         profiler?.start("run_rebalance_investment");
         run_rebalance_investment(simulation_state);
         profiler?.end("run_rebalance_investment");

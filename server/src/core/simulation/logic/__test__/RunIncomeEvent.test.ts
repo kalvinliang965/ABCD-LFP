@@ -1,16 +1,18 @@
-import run_income_event from '../RunIncomeEvent'; 
+import { run_income_event } from '../RunIncomeEvent';
 import { cash_investment_one } from '../../../domain/raw/investment_raw';
 import { create_investment } from '../../../domain/investment/Investment';
 import { create_event_manager, create_event_manager_clone } from '../../../domain/EventManager';
 import create_income_event, { IncomeEvent } from '../../../domain/event/IncomeEvent';
 import { salary_income_event_one, ss_income_event_one } from '../../../domain/raw/event_raw/event_raw';
 import { create_user_tax_data } from '../../UserTaxData';
+import { create_value_source } from '../../../../utils/ValueGenerator';
+import { val } from 'cheerio/lib/api/attributes';
 
 describe('ProcessIncome', () => {
 
   // Test basic income processing
   it('should process general case with no social security', async () => {
-    const salary = create_income_event(salary_income_event_one);
+    const salary = create_income_event(salary_income_event_one, create_value_source("blah"));
     const cash = create_investment(cash_investment_one);
 
     const mock_state: any = {
@@ -52,8 +54,9 @@ describe('ProcessIncome', () => {
   });
 
   it('should process general case with no social security', async () => {
-    const salary = create_income_event(salary_income_event_one);
-    const ss = create_income_event(ss_income_event_one);
+    const value_source = create_value_source("blah");
+    const salary = create_income_event(salary_income_event_one, value_source);
+    const ss = create_income_event(ss_income_event_one, value_source);
     const cash = create_investment(cash_investment_one);
 
     const mock_state: any = {

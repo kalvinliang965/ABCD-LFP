@@ -203,46 +203,20 @@ export function map_form_to_scenario_raw(
           discretionary: event.discretionary || false,
         } as ExpenseEventRaw;
       } else if (event.type === 'invest') {
-        // Convert assetAllocation from object to array format
-        const assetAllocationArray = event.assetAllocation
-          ? Object.entries(event.assetAllocation).map(([type, value]) => ({
-              type,
-              value: Number(value),
-            }))
-          : [];
-
-        // Convert assetAllocation2 from object to array format
-        const assetAllocation2Array = event.assetAllocation2
-          ? Object.entries(event.assetAllocation2).map(([type, value]) => ({
-              type,
-              value: Number(value),
-            }))
-          : event.assetAllocation
-          ? Object.entries(event.assetAllocation).map(([type, value]) => ({
-              type,
-              value: Number(value),
-            }))
-          : [];
-
+        // Use assetAllocation directly as an object
         return {
           ...baseEvent,
-          assetAllocation: assetAllocationArray,
-          assetAllocation2: assetAllocation2Array,
+          assetAllocation: event.assetAllocation || {},
+          assetAllocation2:
+            event.assetAllocation2 || (event.glidePath ? event.assetAllocation || {} : {}),
           glidePath: event.glidePath || false,
           maxCash: event.maxCash || 0,
         } as InvestmentEventRaw;
       } else if (event.type === 'rebalance') {
-        // Convert assetAllocation from object to array format
-        const assetAllocationArray = event.assetAllocation
-          ? Object.entries(event.assetAllocation).map(([type, value]) => ({
-              type,
-              value: Number(value),
-            }))
-          : [];
-
+        // Use assetAllocation directly as an object
         return {
           ...baseEvent,
-          assetAllocation: assetAllocationArray,
+          assetAllocation: event.assetAllocation || {},
         } as RebalanceEventRaw;
       }
       return baseEvent as EventRaw;

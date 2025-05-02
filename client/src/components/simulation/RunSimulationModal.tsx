@@ -28,6 +28,9 @@ import {
   Icon,
   useToast,
   useColorModeValue,
+  Alert,
+  AlertIcon,
+  AlertDescription,
 } from '@chakra-ui/react';
 import React, { useState, useEffect } from 'react';
 import { FaExclamationTriangle, FaUpload } from 'react-icons/fa';
@@ -129,6 +132,17 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
       return;
     }
 
+    // Show warning toast if state tax data is missing
+    if (state_tax_exists === false) {
+      toast({
+        title: 'State Tax Data Missing',
+        description: 'Proceeding with simulation assuming state tax is 0.',
+        status: 'warning',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+
     try {
       set_is_submitting(true);
 
@@ -146,7 +160,7 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
       // After successful submission, navigate to results page if there's a simulation ID
       if (result && result.simulationId) {
         navigate(`/simulations/${result.simulationId}`, {
-          state: { scenarioId: selected_scenario }
+          state: { scenarioId: selected_scenario },
         });
       }
 
@@ -192,13 +206,13 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
       const exists = await check_state_tax_exists(state);
       set_state_tax_exists(exists);
 
-      // Add toast notification when tax data doesn't exist
+      // Add informational toast notification when tax data doesn't exist
       if (!exists) {
         toast({
-          title: 'Simulation Disabled',
-          description: `This scenario cannot be used for simulation because tax data for ${state} is missing.`,
-          status: 'warning',
-          duration: 1500,
+          title: 'State Tax Data Missing',
+          description: `No tax data for ${state} found. If you proceed, state tax will be assumed to be 0.`,
+          status: 'info',
+          duration: 5000,
           isClosable: true,
         });
       }
@@ -209,8 +223,9 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
       // Show error toast
       toast({
         title: 'Tax Data Check Failed',
-        description: 'Unable to verify state tax data availability. Simulation is disabled.',
-        status: 'error',
+        description:
+          'Unable to verify state tax data availability. If you proceed, state tax will be assumed to be 0.',
+        status: 'warning',
         duration: 5000,
         isClosable: true,
       });
@@ -305,16 +320,27 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
                 </SimpleGrid>
               </FormControl>
 
+              {/* State Tax Data Warning */}
+              {selected_scenario && state_tax_exists === false && (
+                <Alert status="warning" borderRadius="md">
+                  <AlertIcon />
+                  <AlertDescription>
+                    State tax data is missing for this scenario. If you proceed, state tax will be
+                    assumed to be 0.
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {/* Tax Data Import Section - show when forced or when state tax data is missing */}
-              {selected_scenario && selected_scenario_object && (
-                (state_tax_exists === false || force_show_importer) ? (
-                  <ImportStateTaxYaml 
-                    state={selected_scenario_object.residenceState} 
+              {selected_scenario &&
+                selected_scenario_object &&
+                (state_tax_exists === false || force_show_importer ? (
+                  <ImportStateTaxYaml
+                    state={selected_scenario_object.residenceState}
                     onImportSuccess={handle_import_success}
                     isReupload={force_show_importer && state_tax_exists === true}
                   />
-                ) : null
-              )}
+                ) : null)}
 
               <FormControl isRequired isInvalid={!!count_error}>
                 <FormLabel fontWeight="bold">Number of Simulations</FormLabel>
@@ -345,18 +371,21 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
 
         <ModalFooter>
           {/* Re-upload button - show only when tax data exists */}
-          {selected_scenario && selected_scenario_object && state_tax_exists === true && !force_show_importer && (
-            <Button 
-              size="sm" 
-              variant="outline" 
-              colorScheme="purple"
-              leftIcon={<Icon as={FaUpload} />}
-              onClick={() => set_force_show_importer(true)}
-              mr="auto"
-            >
-              Re-upload State Tax Data
-            </Button>
-          )}
+          {selected_scenario &&
+            selected_scenario_object &&
+            state_tax_exists === true &&
+            !force_show_importer && (
+              <Button
+                size="sm"
+                variant="outline"
+                colorScheme="purple"
+                leftIcon={<Icon as={FaUpload} />}
+                onClick={() => set_force_show_importer(true)}
+                mr="auto"
+              >
+                Re-upload State Tax Data
+              </Button>
+            )}
           <Button variant="outline" mr={3} onClick={onClose}>
             Cancel
           </Button>
@@ -369,9 +398,7 @@ const RunSimulationModal: React.FC<RunSimulationModalProps> = ({ isOpen, onClose
               scenarios.filter(s => !s.isDraft).length === 0 ||
               !selected_scenario ||
               !!count_error ||
-              is_submitting ||
-              state_tax_exists === null ||
-              state_tax_exists === false
+              is_submitting
             }
           >
             Run Simulation

@@ -1,6 +1,6 @@
 // this is kalvin's code
 import { Investment } from "../domain/investment/Investment";
-import { Scenario } from "../domain/scenario/Scenario";
+import { Scenario } from "../domain/Scenario";
 import { IncomeType, TaxFilingStatus, TaxStatus} from "../Enums";
 import {
   FederalTaxService,
@@ -14,6 +14,7 @@ import { InvestmentTypeManager } from "../domain/InvestmentTypeManager";
 import { EventManager } from "../domain/EventManager";
 import UserTaxData, { create_user_tax_data } from "./UserTaxData";
 import { simulation_logger } from "../../utils/logger/logger";
+import { create_value_source } from "../../utils/ValueGenerator";
 export type EventMap = Map<string, Event>;
 
 export interface PersonDetails {
@@ -74,7 +75,7 @@ function create_person_details(
 export async function create_simulation_state(
   scenario: Scenario,
   federal_tax_service: FederalTaxService,
-  state_tax_service: StateTaxService
+  state_tax_service: StateTaxService,
 ): Promise<SimulationState> {
   try {
     const start_year: number = new Date().getFullYear();
@@ -109,6 +110,7 @@ export async function create_simulation_state(
     const total_pre_tax_value: Map<number, number> = new Map(); 
     const total_non_retirement_value: Map<number, number> = new Map();
 
+    let after_tax_contribution_limit = scenario.after_tax_contribution_limit;
     const state: SimulationState = {
       rmd_strategy: scenario.rmd_strategy,
       total_after_tax_value,
@@ -136,7 +138,10 @@ export async function create_simulation_state(
       get_start_year:() => start_year,
       setup: () => {
         const annual_inflation_rate = scenario.inflation_assumption.sample();
+        simulation_logger.info(`annual inflation rate: ${annual_inflation_rate}`);
         user_tax_data.advance_year();
+        after_tax_contribution_limit *= (1 + annual_inflation_rate);
+        simulation_logger.info(`Adjusted after tax contribution limit from inflation ${after_tax_contribution_limit}`);
         federal_tax_service.adjust_for_inflation(annual_inflation_rate);
         state_tax_service.adjust_for_inflation(annual_inflation_rate);
         investment_type_manager.resample_all();
@@ -158,7 +163,7 @@ export async function create_simulation_state(
       
       federal_tax_service,
       state_tax_service,
-      get_after_tax_contribution_limit: () => scenario.after_tax_contribution_limit,
+      get_after_tax_contribution_limit: () => after_tax_contribution_limit,
       process_investment_withdrawal: (withdrawal_amount: number) => {
         let withdrawaled=0;
         const investments = state.account_manager.all;

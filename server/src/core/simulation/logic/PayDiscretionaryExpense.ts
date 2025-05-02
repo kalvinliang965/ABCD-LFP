@@ -14,7 +14,7 @@ import { is_event_active } from "../../domain/EventManager";
  */
 export function pay_discretionary_expenses(state: SimulationState): void {
   const current_year = state.get_current_year();
-  
+  const spouse_alive = state.spouse?.is_alive() || false;
 
   // warning: I know using get_net_worth here gonna be inefficient, but i will fix get_net_worth later!
   function financial_goal_reach(): boolean {
@@ -46,7 +46,15 @@ export function pay_discretionary_expenses(state: SimulationState): void {
     simulation_logger.debug(`Paying for discretionary expense ${expense}`);
     
     // amount we have to pay
-    const full_payment = Math.min(state.event_manager.update_initial_amount(expense_event));
+    let amt = state.event_manager.update_initial_amount(expense_event);
+    if (spouse_alive) {
+      simulation_logger.debug(`Spouse alive. User own ${expense_event.user_fraction} of the event`);
+      amt *= expense_event.user_fraction;
+    } else {
+      simulation_logger.debug(`Spouse not exist/alive. User own ${expense_event.user_fraction} of the event`);
+    }
+
+    const full_payment = Math.min(amt);
     const partial_payment = Math.min(state.account_manager.get_net_worth() - state.get_financial_goal());
     // WARNING: This shouldnt be negative
     if (partial_payment <= 0) {

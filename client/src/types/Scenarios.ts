@@ -42,14 +42,14 @@ export type ExpenseEventRaw = EventRaw & {
 };
 
 export type InvestmentEventRaw = EventRaw & {
-  assetAllocation: Array<{ type: string; value: number }>; //! chen changed it to match with YAML
-  assetAllocation2: Array<{ type: string; value: number }>; //! chen changed it to match with YAML
+  assetAllocation: { [key: string]: number }; //! chen changed it to match with YAML
+  assetAllocation2: { [key: string]: number }; //! chen changed it to match with YAML
   glidePath: boolean;
   maxCash: number;
 };
 
 export type RebalanceEventRaw = EventRaw & {
-  assetAllocation: Array<{ type: string; value: number }>; //! chen changed it to match with YAML
+  assetAllocation: { [key: string]: number }; //! chen changed it to match with YAML
 };
 
 export interface ScenarioRaw {

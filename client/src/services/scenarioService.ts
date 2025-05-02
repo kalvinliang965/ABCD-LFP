@@ -137,6 +137,105 @@ export const scenario_service = {
       throw error;
     }
   },
+
+  // Diagnostic method to check if the shared scenarios endpoints are properly implemented
+  check_shared_scenarios_endpoints: async () => {
+    try {
+      console.log('Checking shared scenarios endpoint implementation...');
+      
+      // Check if the endpoints are accessible
+      const checkEndpoints = [];
+      
+      // Try checking the shared-with-me endpoint
+      try {
+        const response1 = await axios_instance.options(`${SCENARIO_ENDPOINT}/shared-with-me`);
+        checkEndpoints.push({ endpoint: 'shared-with-me', status: 'accessible', details: response1.status });
+      } catch (error: any) {
+        checkEndpoints.push({ 
+          endpoint: 'shared-with-me', 
+          status: 'error', 
+          details: error.response ? error.response.status : 'network-error' 
+        });
+      }
+      
+      // Try checking the shared-by-me endpoint
+      try {
+        const response2 = await axios_instance.options(`${SCENARIO_ENDPOINT}/shared-by-me`);
+        checkEndpoints.push({ endpoint: 'shared-by-me', status: 'accessible', details: response2.status });
+      } catch (error: any) {
+        checkEndpoints.push({ 
+          endpoint: 'shared-by-me', 
+          status: 'error', 
+          details: error.response ? error.response.status : 'network-error' 
+        });
+      }
+      
+      return {
+        success: true,
+        endpoints: checkEndpoints
+      };
+    } catch (error) {
+      console.error('Error checking shared scenario endpoints:', error);
+      throw error;
+    }
+  },
+
+  // Sharing functionality with improved error handling
+  get_shared_with_me_scenarios: async () => {
+    try {
+      console.log('Calling get_shared_with_me_scenarios API endpoint');
+      const response = await axios_instance.get(`${SCENARIO_ENDPOINT}/shared-with-me`);
+      console.log('get_shared_with_me_scenarios response:', response);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching shared scenarios:', error);
+      // Add more detailed error information
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
+      throw error;
+    }
+  },
+
+  share_scenario: async (scenarioId: string, shareWithEmail: string, permission: 'read' | 'write' = 'read') => {
+    try {
+      const response = await axios_instance.post(`${SCENARIO_ENDPOINT}/share`, {
+        scenarioId,
+        shareWithEmail,
+        permission
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error sharing scenario:', error);
+      throw error;
+    }
+  },
+
+  revoke_access: async (scenarioId: string, userId: string) => {
+    try {
+      const response = await axios_instance.post(`${SCENARIO_ENDPOINT}/revoke-access`, {
+        scenarioId,
+        userId
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error revoking access:', error);
+      throw error;
+    }
+  },
+
+  get_shared_by_me_scenarios: async () => {
+    try {
+      console.log('Calling get_shared_by_me_scenarios API endpoint');
+      const response = await axios_instance.get(`${SCENARIO_ENDPOINT}/shared-by-me`);
+      console.log('get_shared_by_me_scenarios response:', response);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching scenarios shared by you:', error);
+      throw error;
+    }
+  }
 };
 
 export default scenario_service;
