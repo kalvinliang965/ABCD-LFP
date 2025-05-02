@@ -12,6 +12,7 @@ import {
   Code,
   Button,
   HStack,
+  Divider,
 } from '@chakra-ui/react';
 import { useParams } from 'react-router-dom';
 import { Layout } from '../../layouts';
@@ -19,6 +20,7 @@ import { scenario_service } from '../../services/scenarioService';
 // AI-generated code
 // Prompt: Import the OneDimensionalExploration component from its new location
 import OneDimensionalExploration from '../../components/scenarios/OneDimensionalExploration/OneDimensionalExploration';
+import { ParameterSweepResults } from '../../components/scenarios/OneDimensionalExploration';
 
 // Keep internal functions as snake_case but the component itself must be PascalCase for React
 const ScenarioResultPage = () => {
@@ -30,6 +32,7 @@ const ScenarioResultPage = () => {
   // AI-generated code
   // Prompt: Add state and handlers for the OneDimensionalExploration modal
   const [isOneDimModalOpen, set_is_one_dim_modal_open] = useState<boolean>(false);
+  const [parameterSweepResults, set_parameter_sweep_results] = useState<any>(null);
 
   const open_one_dim_exploration = () => {
     set_is_one_dim_modal_open(true);
@@ -37,6 +40,11 @@ const ScenarioResultPage = () => {
 
   const close_one_dim_exploration = () => {
     set_is_one_dim_modal_open(false);
+  };
+  
+  const handle_exploration_complete = (results: any) => {
+    console.log('Exploration completed with results:', results);
+    set_parameter_sweep_results(results);
   };
 
   // Debug logs
@@ -111,15 +119,14 @@ const ScenarioResultPage = () => {
 
   return (
     <Layout title={`Simulation Results: ${scenarioName}`}>
-      <Center minH="60vh">
-        <Box
-          p={8}
-          borderWidth="1px"
-          borderRadius="lg"
-          boxShadow="md"
-          bg="white"
-          maxW="800px"
-          w="100%"
+      <Box maxW="1200px" mx="auto" px={4}>
+        <Box 
+          p={6} 
+          borderWidth="1px" 
+          borderRadius="lg" 
+          boxShadow="md" 
+          bg="white" 
+          mb={6}
         >
           <Heading size="lg" mb={4}>
             Simulation Results
@@ -128,28 +135,38 @@ const ScenarioResultPage = () => {
             Results for scenario: <b>{scenarioName}</b>
           </Text>
 
-          <Text mb={6} color="gray.400">
-            Simulation results will appear here.
-          </Text>
+          {!parameterSweepResults && (
+            <Text mb={6} color="gray.600">
+              Run a parameter exploration to see how different parameter values affect the scenario outcomes over time.
+              The visualization will include both time series charts and parameter impact analysis.
+            </Text>
+          )}
 
           {/* Exploration options */}
-          <Box mt={6}>
+          <Box mt={4} mb={6}>
             <Text fontWeight="bold" mb={3}>
               Exploration Options:
             </Text>
-            <HStack spacing={4} justify="center">
+            <HStack spacing={4} justify="flex-start">
               {/* AI-generated code
                  Prompt: Update one-dimensional exploration button to open the modal */}
-              <Button colorScheme="blue" size="lg" minW="200px" onClick={open_one_dim_exploration}>
+              <Button colorScheme="blue" onClick={open_one_dim_exploration}>
                 One-dimensional Scenario Exploration
               </Button>
-              <Button colorScheme="purple" size="lg" minW="200px">
+              <Button colorScheme="purple" isDisabled>
                 Two-dimensional Scenario Exploration
               </Button>
             </HStack>
           </Box>
         </Box>
-      </Center>
+        
+        {/* Parameter sweep results section */}
+        {parameterSweepResults && (
+          <Box mb={6}>
+            <ParameterSweepResults results={parameterSweepResults} />
+          </Box>
+        )}
+      </Box>
 
       {/* AI-generated code
          Prompt: Add the OneDimensionalExploration modal component */}
@@ -158,6 +175,7 @@ const ScenarioResultPage = () => {
           isOpen={isOneDimModalOpen}
           onClose={close_one_dim_exploration}
           scenarioId={scenarioId}
+          onExplorationComplete={handle_exploration_complete}
         />
       )}
     </Layout>
