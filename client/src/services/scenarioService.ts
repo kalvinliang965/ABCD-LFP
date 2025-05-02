@@ -126,6 +126,17 @@ export const scenario_service = {
       return false;
     }
   },
+  
+  //simulate parameter sweep for one-dimensional exploration
+  simulate_parameter_sweep: async (payload: any) => {
+    try {
+      const response = await axios_instance.post(`${API_URL}/simulations/param-sweep`, payload);
+      return response.data;
+    } catch (error) {
+      console.error('Error running parameter sweep simulation:', error);
+      throw error;
+    }
+  },
 };
 
 export default scenario_service;
