@@ -1,28 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
   FormControl,
   FormLabel,
   Select,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
   VStack,
   Text,
   Alert,
   AlertIcon,
+  Box,
+  Flex,
+  Badge,
+  Divider,
   useColorModeValue,
 } from '@chakra-ui/react';
-import { ScenarioRaw, InvestmentEventRaw, EventRaw } from '../../../types/Scenarios';
+import { ScenarioRaw, InvestmentEventRaw } from '../../../types/Scenarios';
 
 interface InvestmentPercentageParameterProps {
   scenario_data: ScenarioRaw;
   onValueChange: (newValue: number) => void;
   originalValue: number;
   selectedEventName: string;
-  onEventNameChange: (eventName: string) => void;
+  onEventNameChange: (name: string) => void;
 }
 
 //helper to normalize allocation to a simple Record<string, number>
@@ -33,7 +31,7 @@ const normalize_allocation = (allocation: any): Record<string, number> => {
       return acc;
     }, {} as Record<string, number>);
   }
-  return { ...allocation }; //assume it's already { [key]: number }
+  return { ...allocation }; //ATTN: assume it's already { [key]: number } recheck after merge
 };
 
 //count non-zero allocations in a normalized allocation object
@@ -50,10 +48,12 @@ const format_allocation = (allocation: Record<string, number>): string => {
 };
 
 interface NormalizedEvent {
+  name: string;
   raw: InvestmentEventRaw;
   start: Record<string, number>;
   end: Record<string, number>;
   has_glide_path: boolean;
+  percentage: number; //first investment percentage
 }
 
 const InvestmentPercentageParameter: React.FC<InvestmentPercentageParameterProps> = ({
@@ -63,174 +63,126 @@ const InvestmentPercentageParameter: React.FC<InvestmentPercentageParameterProps
   selectedEventName,
   onEventNameChange,
 }) => {
-  //state to track user-entered value separately from initialization
-  const [current_value, set_current_value] = useState<number>(originalValue);
-  const [selected_event, set_selected_event] = useState<InvestmentEventRaw | null>(null);
-  //track if the value has been initialized from the selected event
-  const [is_initialized, set_is_initialized] = useState<boolean>(false);
+  const [available_events, set_available_events] = useState<NormalizedEvent[]>([]);
+  
+  //investment events have a blue theme
+  const color_scheme = 'blue';
+  const bg_color = useColorModeValue('blue.50', 'blue.900');
+  const selected_bg_color = useColorModeValue('blue.100', 'blue.800');
 
-  //find and normalize investment events with exactly two non-zero allocations in either start or end
-  const valid_investment_events: NormalizedEvent[] = Array.from(scenario_data.eventSeries)
-    .filter((event): event is InvestmentEventRaw => event.type === 'invest')
-    .map(event => {
-      const start = normalize_allocation((event as any).assetAllocation);
-      const end = normalize_allocation((event as any).assetAllocation2 || (event as any).assetAllocation);
-      const has_glide_path = (event as any).glidePath === true && 
-                          JSON.stringify(start) !== JSON.stringify(end);
-      return { raw: event, start, end, has_glide_path };
-    })
-    .filter(({ start, end }) => 
-      count_non_zero_allocations(start) === 2 || count_non_zero_allocations(end) === 2
-    );
-
-  //update selected event when event name changes
   useEffect(() => {
-    const event = valid_investment_events.find(e => e.raw.name === selectedEventName);
-    if (event) {
-      set_selected_event(event.raw);
-      //only set the initial value when first selecting the event
-      if (!is_initialized || selectedEventName !== selected_event?.name) {
-        const first_non_zero = Object.entries(event.start).find(([_, value]) => value > 0);
-        if (first_non_zero) {
-          const [_, value] = first_non_zero;
-          const initial_value = value * 100;
-          set_current_value(initial_value);
-          onValueChange(initial_value);
-          set_is_initialized(true);
+    if (!scenario_data) return;
+
+    //find and normalize investment events with exactly two non-zero allocations
+    const filtered_events: NormalizedEvent[] = [];
+    
+    Array.from(scenario_data.eventSeries)
+      .filter((event): event is InvestmentEventRaw => event.type === 'invest')
+      .forEach(event => {
+        const start = normalize_allocation((event as any).assetAllocation);
+        const end = normalize_allocation((event as any).assetAllocation2 || (event as any).assetAllocation);
+        const has_glide_path = (event as any).glidePath === true && 
+                            JSON.stringify(start) !== JSON.stringify(end);
+                            
+        //only include events with exactly 2 allocations
+        if (count_non_zero_allocations(start) === 2 || count_non_zero_allocations(end) === 2) {
+          //get the first non-zero allocation as the percentage (0-1 scale)
+          const first_non_zero = Object.entries(start).find(([_, value]) => value > 0);
+          const percentage = first_non_zero ? first_non_zero[1] * 100 : 0;
+          
+          filtered_events.push({ 
+            name: event.name, 
+            raw: event, 
+            start, 
+            end, 
+            has_glide_path,
+            percentage
+          });
         }
+      });
+
+    set_available_events(filtered_events);
+  }, [scenario_data]);
+
+  useEffect(() => {
+    //when event is selected, update the parent with the event's original percentage
+    if (selectedEventName) {
+      const selected_event = available_events.find(event => event.name === selectedEventName);
+      if (selected_event) {
+        onValueChange(selected_event.percentage);
       }
-    } else {
-      set_selected_event(null);
-      set_current_value(originalValue);
-      set_is_initialized(false);
     }
-  }, [selectedEventName, valid_investment_events, originalValue]);
+  }, [selectedEventName, available_events, onValueChange]);
 
   const handle_event_change = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const event_name = e.target.value;
     onEventNameChange(event_name);
   };
 
-  const handle_percentage_change = (value: number) => {
-    //ensure value is within 0-100 range and not NaN
-    if (isNaN(value)) {
-      //default to 0 if input is empty or NaN
-      set_current_value(0);
-      onValueChange(0);
-      return;
-    }
-    
-    const clamped_value = Math.max(0, Math.min(100, value));
-    set_current_value(clamped_value);
-    onValueChange(clamped_value);
-  };
-
-  //find normalized version of selected event
-  const normalized_selected = selected_event 
-    ? valid_investment_events.find(e => e.raw === selected_event)
-    : null;
-
-  //get the original value for the selected event
-  const get_original_value = () => {
-    if (!normalized_selected) return 0;
-    const first_non_zero = Object.values(normalized_selected.start).find(v => v > 0);
-    return first_non_zero ? first_non_zero * 100 : 0;
-  };
-
-  const original_value = get_original_value();
-  const has_value_changed = current_value !== original_value;
-
-  const changed_bg = useColorModeValue('green.50', 'green.900');
-  const unchanged_bg = useColorModeValue('gray.50', 'gray.700');
+  //get selected event
+  const selected_event = available_events.find(e => e.name === selectedEventName);
 
   return (
     <VStack spacing={4} align="stretch">
-      <Box
-        p={4}
-        borderRadius="md"
-        bg={has_value_changed ? changed_bg : unchanged_bg}
-        borderLeft={has_value_changed ? '4px solid green.400' : 'none'}
-      >
-        <Text fontWeight="medium" mb={3}>
-          Original scenario setting:
+      <Alert status="info" mb={2}>
+        <AlertIcon />
+        <Text fontSize="sm">
+          Only investment events with exactly two assets can be modified for one-dimensional exploration.
         </Text>
-        <Text>
-          {normalized_selected ? (
-            <>
-              {normalized_selected.raw.name}<br />
-              Start: {format_allocation(normalized_selected.start)}<br />
-              {normalized_selected.has_glide_path && 
-                `End: ${format_allocation(normalized_selected.end)}`}
-            </>
-          ) : (
-            'No event selected'
-          )}
-        </Text>
-      </Box>
+      </Alert>
 
-      <FormControl>
-        <FormLabel>Select Investment Event</FormLabel>
+      <FormControl isRequired mt={3}>
+        <FormLabel>Investment Event</FormLabel>
         <Select
           placeholder="Select an investment event"
           value={selectedEventName}
           onChange={handle_event_change}
-          isDisabled={false} //never disable the dropdown
+          isDisabled={available_events.length === 0}
+          bg={`${color_scheme}.50`}
+          borderColor={`${color_scheme}.200`}
         >
-          {valid_investment_events.map(({ raw, has_glide_path }) => (
-            <option key={raw.name} value={raw.name}>
-              {raw.name}{has_glide_path ? " (Glide Path)" : ""}
+          {available_events.map(event => (
+            <option key={event.name} value={event.name}>
+              {event.name}{event.has_glide_path ? " (Glide Path)" : ""}
             </option>
           ))}
         </Select>
-        {has_value_changed && (
-          <Text fontSize="sm" color="orange.500" mt={1}>
-            Note: Changing the event will discard your current changes.
-          </Text>
-        )}
       </FormControl>
 
-      {selected_event && (
-        <FormControl>
-          <FormLabel>First Investment Percentage</FormLabel>
-          <NumberInput
-            value={current_value}
-            onChange={(value_string, value_number) => {
-              handle_percentage_change(value_number);
-            }}
-            min={0}
-            max={100}
-            keepWithinRange={true}
-            clampValueOnBlur={true}
-            isInvalid={isNaN(current_value) || current_value < 0 || current_value > 100}
-          >
-            <NumberInputField />
-            <NumberInputStepper>
-              <NumberIncrementStepper />
-              <NumberDecrementStepper />
-            </NumberInputStepper>
-          </NumberInput>
-          <Text mt={2} fontSize="sm" color="gray.600">
-            Second investment will be automatically set to {isNaN(current_value) ? "100" : (100 - current_value).toFixed(0)}%
-          </Text>
-          {(isNaN(current_value) || current_value < 0 || current_value > 100) && (
-            <Text color="red.500" fontSize="sm" mt={1}>
-              Value must be a number between 0% and 100%
+      {selectedEventName && selected_event && (
+        <>
+          <Divider my={2} />
+          <Box p={3} bg={selected_bg_color}>
+            <Text fontSize="sm" fontWeight="medium" mb={2}>
+              Original asset allocation:
             </Text>
-          )}
-        </FormControl>
+            <Text fontSize="sm">
+              {format_allocation(selected_event.start)}
+            </Text>
+            {selected_event.has_glide_path && (
+              <>
+                <Text fontSize="sm" fontWeight="medium" mt={2} mb={1}>
+                  Ending allocation (glide path):
+                </Text>
+                <Text fontSize="sm">
+                  {format_allocation(selected_event.end)}
+                </Text>
+              </>
+            )}
+            <Text fontSize="sm" mt={2}>
+              First investment percentage:{' '}
+              <Badge colorScheme={color_scheme}>
+                {selected_event.percentage.toFixed(0)}%
+              </Badge>
+            </Text>
+          </Box>
+        </>
       )}
 
-      {valid_investment_events.length === 0 && (
+      {available_events.length === 0 && (
         <Alert status="warning" borderRadius="md">
           <AlertIcon />
           No investment events found with exactly two non-zero allocations. This parameter can only be used with investment events that have exactly two investments in their allocation.
-        </Alert>
-      )}
-
-      {selected_event && !has_value_changed && (
-        <Alert status="warning" borderRadius="md">
-          <AlertIcon />
-          The selected value is the same as the original setting. Change it to enable comparison.
         </Alert>
       )}
     </VStack>
