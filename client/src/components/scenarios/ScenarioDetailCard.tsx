@@ -34,6 +34,7 @@ import {
   FaShoppingBag,
   FaDownload,
   FaTrash,
+  FaEdit,
 } from 'react-icons/fa';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
@@ -222,11 +223,11 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
           <Box position="absolute" right="4" top="4">
             <IconButton
               aria-label="Delete scenario"
-              icon={<FaTrash />}
+              icon={<FaEdit />}
               size="sm"
-              colorScheme="red"
+              colorScheme="blue"
               variant="solid"
-              bg="rgba(229, 62, 62, 0.85)"
+              bg="rgba(66, 153, 225, 0.85)"
               color="white"
               fontWeight="normal"
               _hover={{ bg: 'rgba(229, 62, 62, 0.95)' }}
