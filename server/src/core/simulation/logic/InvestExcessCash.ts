@@ -22,9 +22,38 @@ export function run_invest_event(
 	for (const invest_event of invest_events) {
 		simulation_logger.debug(`Processing invest event: ${invest_event.name}`);
 		
+		//check if any cash allocations exist before proceeding
+		for (const [investment_id, percentage] of invest_event.asset_allocation.entries()) {
+			if (investment_id.toUpperCase().includes('CASH') && percentage > 0) {
+				throw new Error(
+					`Invalid invest-event allocation: cash was given ${(percentage*100).toFixed(1)}%. ` +
+					`You must only allocate into non-cash assets.`
+				);
+			}
+		}
+		
+		//if using glide path, also check the second allocation
+		if (invest_event.glide_path && invest_event.asset_allocation2) {
+			for (const [investment_id, percentage] of invest_event.asset_allocation2.entries()) {
+				if (investment_id.toUpperCase().includes('CASH') && percentage > 0) {
+					throw new Error(
+						`Invalid invest-event glide path allocation: cash was given ${(percentage*100).toFixed(1)}%. ` +
+						`You must only allocate into non-cash assets.`
+					);
+				}
+			}
+		}
+		
 		//calculate excess cash above the maximum cash threshold
 		const cash_account = state.account_manager.cash;
+		//before you compute excess cash
+		simulation_logger.debug(
+			`Before invest: cash=${cash_account.get_value()}, max_cash=${invest_event.max_cash}`
+		);
 		const excess_cash = cash_account.get_value() - invest_event.max_cash;
+		simulation_logger.debug(
+			`Computed excess_cash = ${cash_account.get_value()} - ${invest_event.max_cash} = ${excess_cash}`
+		);
 		simulation_logger.debug(`Excess cash: ${excess_cash}`);
 		
 		//if no excess cash, do nothing
@@ -61,6 +90,7 @@ export function run_invest_event(
 			simulation_logger.warn(`Allocation percentages sum to ${total_percentage}, but should sum to 1`);
 			continue;
 		}
+		
 		//calculate how much cash we are planning to invest for each investement
 		//and classify them by acc type
 		let after_tax_total = 0;
@@ -72,13 +102,19 @@ export function run_invest_event(
 				simulation_logger.error(`Incorrect percentage ${percentage} for investment ${investment_id}`);
 				throw new Error(`Incorrect percentage ${percentage} for investment ${investment_id}`);
 			}
+			
+			//skip cash investments in the planned amounts calculation
+			if (investment_id.toUpperCase().includes('CASH')) {
+				simulation_logger.debug(`Skipping planning cash allocation for ${investment_id}`);
+				continue;
+			}
 
 			const planned_amount = excess_cash * percentage;
 			planned_amounts.set(investment_id, planned_amount);
 			//determine account type and add to its own total
 			if (state.account_manager.after_tax.has(investment_id)) {
 				after_tax_total += planned_amount;
-			} else if (state.account_manager.non_retirement.has(investment_id)) {
+			} else if (state.account_manager.non_retirement.has(investment_id.toUpperCase())) {
 				non_retirement_total += planned_amount;
 			}
 		}
@@ -105,7 +141,7 @@ export function run_invest_event(
 			for (const [investment_id, planned_amount] of planned_amounts.entries()) {
 				if (state.account_manager.after_tax.has(investment_id)) {
 					planned_amounts.set(investment_id, planned_amount * after_tax_scale);
-				} else if (state.account_manager.non_retirement.has(investment_id)) {
+				} else if (state.account_manager.non_retirement.has(investment_id.toUpperCase())) {
 					planned_amounts.set(investment_id, planned_amount * non_retirement_scale);
 				}
 			}
@@ -117,8 +153,8 @@ export function run_invest_event(
 			let investment: Investment | undefined;
 			if (state.account_manager.after_tax.has(investment_id)) {
 				investment = state.account_manager.after_tax.get(investment_id);
-			} else if (state.account_manager.non_retirement.has(investment_id)) {
-				investment = state.account_manager.non_retirement.get(investment_id);
+			} else if (state.account_manager.non_retirement.has(investment_id.toUpperCase())) {
+				investment = state.account_manager.non_retirement.get(investment_id.toUpperCase());
 			}
 			
 			if (!investment) {
@@ -132,6 +168,11 @@ export function run_invest_event(
 			cash_account.incr_value(-amount_to_invest);
 			simulation_logger.debug(`Investment: ${investment_id} (${state.account_manager.after_tax.has(investment_id) ? 'after-tax' : 'non-retirement'}) -> Amount: ${amount_to_invest}, New Value: ${investment.get_value()}, Cash Balance: ${cash_account.get_value()}`);
 		}
+		
+		//after investment loop
+		simulation_logger.debug(
+			`After invest: cash=${cash_account.get_value()} (should equal max_cash=${invest_event.max_cash})`
+		);
 	}
 }
 
