@@ -35,12 +35,11 @@ export function transfer_investment_value(
         
         // update cost basis
         const fraction = transfer_amt / from_investment.get_value();
-        const from_cost_basis = (1 - fraction) * from_investment.get_cost_basis()
-        simulation_logger.debug(`cost basis of from investment decrease by ${from_cost_basis}`);
-        simulation_logger.warn(`the cost basis of to investment will only be use if to investment is type of non retirement`);
-        simulation_logger.debug(`cost basis of to investment increase by ${transfer_amt}`);
-        from_investment.incr_cost_basis(-from_cost_basis);
-        to_investment.incr_cost_basis(transfer_amt);
+        const transfer_purchase = fraction * from_investment.get_cost_basis(); 
+        simulation_logger.debug(`cost basis of from investment decrease by ${transfer_purchase}`);
+        simulation_logger.debug(`cost basis of to investment increase by ${transfer_purchase}`);
+        from_investment.incr_cost_basis(-transfer_purchase);
+        to_investment.incr_cost_basis(transfer_purchase);
 
         transferred += transfer_amt;
     }
