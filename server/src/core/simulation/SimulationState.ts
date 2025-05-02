@@ -1,6 +1,6 @@
 // this is kalvin's code
 import { Investment } from "../domain/investment/Investment";
-import { Scenario } from "../domain/scenario/Scenario";
+import { Scenario } from "../domain/Scenario";
 import { IncomeType, TaxFilingStatus, TaxStatus} from "../Enums";
 import {
   FederalTaxService,
@@ -14,6 +14,7 @@ import { InvestmentTypeManager } from "../domain/InvestmentTypeManager";
 import { EventManager } from "../domain/EventManager";
 import UserTaxData, { create_user_tax_data } from "./UserTaxData";
 import { simulation_logger } from "../../utils/logger/logger";
+import { create_value_source } from "../../utils/ValueGenerator";
 export type EventMap = Map<string, Event>;
 
 export interface PersonDetails {
@@ -74,7 +75,7 @@ function create_person_details(
 export async function create_simulation_state(
   scenario: Scenario,
   federal_tax_service: FederalTaxService,
-  state_tax_service: StateTaxService
+  state_tax_service: StateTaxService,
 ): Promise<SimulationState> {
   try {
     const start_year: number = new Date().getFullYear();

@@ -10,7 +10,7 @@ export interface SimulationEngine {
     run_parallel: (num_simulation: number) => Promise<SimulationYearlyResult[]>;
 }
 
-export async function create_simulation_engine(simulation_environment: SimulationEnvironment, profiler = new Profiler()): Promise<SimulationEngine> {
+export async function create_simulation_engine(simulation_environment: SimulationEnvironment): Promise<SimulationEngine> {
 
     simulation_logger.info("Initializing the simulation engine...");
     //console.log(simulation_environment);
@@ -18,8 +18,8 @@ export async function create_simulation_engine(simulation_environment: Simulatio
         const pool = new SimulationWorkerPool();
         simulation_logger.info("Successfully initialize worker pool");
         try {
-            const promise = Array(num_simulation).fill(null).map(() => 
-                pool.run_simulation(simulation_environment)
+            const promise = Array(num_simulation).fill(null).map((_, i) => 
+                pool.run_simulation(simulation_environment, i)
             );
             const worker_result = await Promise.all(promise);
             simulation_logger.info("All worker completed assigned tasks");
@@ -38,7 +38,7 @@ export async function create_simulation_engine(simulation_environment: Simulatio
         let i = 0
         try {
             for (; i < num_simulations; i++) {
-                const simulation_result = await execute_single_simulation(simulation_environment);
+                const simulation_result = await execute_single_simulation(simulation_environment, i);
                 simulation_logger.info(
                     `${i + 1} simulation completed`,
                     {

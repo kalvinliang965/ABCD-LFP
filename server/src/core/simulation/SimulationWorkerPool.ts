@@ -47,11 +47,12 @@ export class SimulationWorkerPool {
     }
 
     public async run_simulation(
-        simulation_environment: SimulationEnvironment
+        simulation_environment: SimulationEnvironment,
+        index: number
     ): Promise<SimulationYearlyResult> {
         return new Promise((resolve, reject) => {
             this.task_queue.push({
-                task: stringify(simulation_environment), 
+                task: {environment: stringify(simulation_environment), index: index}, 
                 resolve, 
                 reject
             });
