@@ -83,15 +83,42 @@ export function run_rebalance_investment(
 	for (const rebalance_event of rebalance_events) {
 		simulation_logger.debug(`Processing rebalance event: ${rebalance_event.name}`);
 		
+		//check for positive cash allocations (fail-fast for user feedback)
+		let has_cash_allocation = false;
+		for (const [investment_id, percentage] of rebalance_event.asset_allocation.entries()) {
+			if (investment_id.toUpperCase().includes('CASH') && percentage > 0) {
+				simulation_logger.error(
+					`Invalid rebalance-event allocation: cash was given ${(percentage*100).toFixed(1)}%. ` +
+					`You must only rebalance non-cash assets.`
+				);
+				has_cash_allocation = true;
+				break;
+			}
+		}
+		
+		//skip this event if it has positive cash allocations
+		if (has_cash_allocation) {
+			simulation_logger.debug(`Skipping rebalance event ${rebalance_event.name} due to cash allocation`);
+			continue;
+		}
+		
 		//get all investments from the asset allocation
-		const investment_ids = Array.from(rebalance_event.asset_allocation.keys());
+		const investment_ids = Array.from(rebalance_event.asset_allocation.keys())
+			//filter out any cash investments from the list to avoid "not found" errors
+			.filter(id => !id.toUpperCase().includes('CASH'));
+		
+		//skip this rebalance event if no investments remain after filtering
+		if (investment_ids.length === 0) {
+			simulation_logger.debug(`Skipping rebalance event ${rebalance_event.name} - only cash investments found`);
+			continue;
+		}
 		
 		//verify that all investments are of the same account type
 		let account_type: TaxStatus | undefined;
 		
 		//get the first investment's account type
 		const first_investment = state.account_manager.after_tax.get(investment_ids[0]) || 
-		                        state.account_manager.non_retirement.get(investment_ids[0]) || 
+		                        state.account_manager.non_retirement.get(investment_ids[0].toUpperCase()) || 
 		                        state.account_manager.pre_tax.get(investment_ids[0]);
 		
 		if (!first_investment) {
@@ -104,7 +131,7 @@ export function run_rebalance_investment(
 		//verify all other investments are in the same account type
 		for (const investment_id of investment_ids.slice(1)) {
 			const investment = state.account_manager.after_tax.get(investment_id) || 
-			                  state.account_manager.non_retirement.get(investment_id) || 
+			                  state.account_manager.non_retirement.get(investment_id.toUpperCase()) || 
 			                  state.account_manager.pre_tax.get(investment_id);
 			
 			if (!investment || investment.tax_status !== account_type) {
@@ -117,7 +144,7 @@ export function run_rebalance_investment(
 		const investments = new Map<string, Investment>();
 		for (const investment_id of investment_ids) {
 			const investment = state.account_manager.after_tax.get(investment_id) || 
-			                   state.account_manager.non_retirement.get(investment_id) || 
+			                   state.account_manager.non_retirement.get(investment_id.toUpperCase()) || 
 			                  state.account_manager.pre_tax.get(investment_id);
 			if (investment && investment.tax_status === account_type) {
 				investments.set(investment_id, investment);
@@ -131,12 +158,19 @@ export function run_rebalance_investment(
 		}
 		simulation_logger.debug(`Total value to rebalance: ${total_value}`);
 		
-		//verify that the allocation percentages sum to 100
-		const total_percentage = Array.from(rebalance_event.asset_allocation.values()).reduce((sum: number, percentage: number) => sum + percentage, 0);
+		//verify that the allocation percentages sum to 100 for non-cash investments
+		let total_percentage = 0;
+		
+		//calculate sum of percentages for non-cash investments
+		for (const investment_id of investment_ids) {
+			const percentage = rebalance_event.asset_allocation.get(investment_id) || 0;
+			total_percentage += percentage;
+		}
+		
 		const epsilon = 0.01; //epsilon for floating-point comparison
 		
 		if (Math.abs(total_percentage - 1) > epsilon) {
-			simulation_logger.warn(`Allocation percentages sum to ${total_percentage}, but should sum to 1`);
+			simulation_logger.warn(`Allocation percentages for non-cash investments sum to ${total_percentage}, but should sum to 1`);
 			continue;
 		}
 		
@@ -145,6 +179,11 @@ export function run_rebalance_investment(
 		const purchases = new Map<string, number>();
 		
 		for (const [investment_id, percentage] of rebalance_event.asset_allocation.entries()) {
+			//skip cash or zero allocation investments
+			if (investment_id.toUpperCase().includes('CASH') || percentage === 0) {
+				continue;
+			}
+			
 			const investment = investments.get(investment_id);
 			if (!investment) continue;
 			
