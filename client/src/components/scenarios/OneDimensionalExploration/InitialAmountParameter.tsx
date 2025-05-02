@@ -1,31 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
   FormControl,
   FormLabel,
-  Radio,
-  RadioGroup,
   Select,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
   VStack,
   Text,
   Alert,
   AlertIcon,
+  Box,
+  Flex,
+  Badge,
+  Divider,
   useColorModeValue,
 } from '@chakra-ui/react';
-import { ScenarioRaw, IncomeEventRaw, ExpenseEventRaw } from '../../../types/Scenarios';
+import { ScenarioRaw } from '../../../types/Scenarios';
 
 interface InitialAmountParameterProps {
   scenario_data: ScenarioRaw;
   onValueChange: (newValue: number) => void;
   originalValue: number;
   selectedEventName: string;
-  onEventNameChange: (eventName: string) => void;
+  onEventNameChange: (name: string) => void;
 }
+
+//for simpler type checking and access
+interface EventWithAmount {
+  name: string;
+  type: string;
+  initialAmount: number;
+}
+
+type EventType = 'income' | 'expense';
 
 const InitialAmountParameter: React.FC<InitialAmountParameterProps> = ({
   scenario_data,
@@ -34,36 +39,75 @@ const InitialAmountParameter: React.FC<InitialAmountParameterProps> = ({
   selectedEventName,
   onEventNameChange,
 }) => {
-  const [event_type, set_event_type] = useState<'income' | 'expense'>('income');
-  const [current_value, set_current_value] = useState<number>(originalValue);
-  const [selected_event, set_selected_event] = useState<IncomeEventRaw | ExpenseEventRaw | null>(null);
+  const [available_events, set_available_events] = useState<Array<{ name: string; initialAmount: number; type: string }>>([]);
+  const [filtered_events, set_filtered_events] = useState<Array<{ name: string; initialAmount: number; type: string }>>([]);
+  const [selected_event_type, set_selected_event_type] = useState<EventType | ''>('');
 
-  //filter events based on type and ensure they have initialAmount
-  const filtered_events = Array.from(scenario_data.eventSeries).filter(
-    event => event.type === event_type && 'initialAmount' in event
-  ) as (IncomeEventRaw | ExpenseEventRaw)[];
+  //different event types colors
+  const color_schemes = {
+    income: 'green',
+    expense: 'red',
+  };
 
-  //update selected event when event name changes
+  const bg_colors = {
+    income: useColorModeValue('green.50', 'green.900'),
+    expense: useColorModeValue('red.50', 'red.900'),
+  };
+
+  const selected_bg_colors = {
+    income: useColorModeValue('green.100', 'green.800'),
+    expense: useColorModeValue('red.100', 'red.800'),
+  };
+
   useEffect(() => {
-    const event = filtered_events.find(e => e.name === selectedEventName);
-    if (event) {
-      set_selected_event(event);
-      //only set the initial value if we haven't selected an event before
-      if (!selected_event || selected_event.name !== event.name) {
-        set_current_value(event.initialAmount);
-        onValueChange(event.initialAmount);
+    if (!scenario_data) return;
+
+    //filter event series with initialAmount property
+    const filtered_events: Array<{ name: string; initialAmount: number; type: string }> = [];
+    
+    Array.from(scenario_data.eventSeries).forEach(event => {
+      if (['income', 'expense'].includes(event.type)) {
+        const event_with_amount = event as unknown as EventWithAmount;
+        
+        //check if initialAmount exists and is a number
+        if (typeof event_with_amount.initialAmount === 'number') {
+          filtered_events.push({
+            name: event.name,
+            initialAmount: event_with_amount.initialAmount,
+            type: event.type
+          });
+        }
       }
+    });
+
+    set_available_events(filtered_events);
+  }, [scenario_data]);
+
+  //filter events based on selected event type
+  useEffect(() => {
+    if (selected_event_type) {
+      const filtered = available_events.filter(event => event.type === selected_event_type);
+      set_filtered_events(filtered);
     } else {
-      set_selected_event(null);
-      set_current_value(originalValue);
+      set_filtered_events([]);
     }
-  }, [selectedEventName, filtered_events, originalValue, onValueChange]);
+    
+    //reset selected event name when event type changes
+    onEventNameChange('');
+  }, [selected_event_type, available_events, onEventNameChange]);
+
+  useEffect(() => {
+    //when event is selected, update the parent with the event's original initial amount
+    if (selectedEventName) {
+      const selected_event = filtered_events.find(event => event.name === selectedEventName);
+      if (selected_event) {
+        onValueChange(selected_event.initialAmount);
+      }
+    }
+  }, [selectedEventName, filtered_events, onValueChange]);
 
   const handle_event_type_change = (value: string) => {
-    set_event_type(value as 'income' | 'expense');
-    onEventNameChange(''); //reset selected event when type changes
-    set_selected_event(null);
-    set_current_value(originalValue);
+    set_selected_event_type(value as EventType);
   };
 
   const handle_event_change = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -71,103 +115,93 @@ const InitialAmountParameter: React.FC<InitialAmountParameterProps> = ({
     onEventNameChange(event_name);
   };
 
-  const handle_amount_change = (value: number) => {
-    //ensure value is not NaN
-    if (isNaN(value)) {
-      //default to 0 if input is empty or NaN
-      set_current_value(0);
-      onValueChange(0);
-      return;
-    }
-    
-    //ensure value is positive
-    const valid_value = Math.max(0, value);
-    set_current_value(valid_value);
-    onValueChange(valid_value);
+  const event_type_counts = {
+    income: available_events.filter(e => e.type === 'income').length,
+    expense: available_events.filter(e => e.type === 'expense').length
   };
 
-  const has_value_changed = selected_event ? current_value !== selected_event.initialAmount : false;
-
-  const changed_bg = useColorModeValue('green.50', 'green.900');
-  const unchanged_bg = useColorModeValue('gray.50', 'gray.700');
+  const event_type_options: Array<{ value: EventType; label: string; }> = [
+    { value: 'income', label: 'Income' },
+    { value: 'expense', label: 'Expense' }
+  ];
 
   return (
     <VStack spacing={4} align="stretch">
-      <Box
-        p={4}
-        borderRadius="md"
-        bg={has_value_changed ? changed_bg : unchanged_bg}
-        borderLeft={has_value_changed ? '4px solid green.400' : 'none'}
-      >
-        <Text fontWeight="medium" mb={3}>
-          Original scenario setting:
+      <Alert status="info" mb={2}>
+        <AlertIcon />
+        <Text fontSize="sm">
+          Select an event to modify its initial amount.
         </Text>
-        <Text>
-          {selected_event ? `${selected_event.name}: $${selected_event.initialAmount}` : 'No event selected'}
-        </Text>
-      </Box>
-
-      <FormControl>
+      </Alert>
+      
+      <FormControl isRequired>
         <FormLabel>Event Type</FormLabel>
-        <RadioGroup value={event_type} onChange={handle_event_type_change}>
-          <VStack align="start" spacing={2}>
-            <Radio value="income">Income Event</Radio>
-            <Radio value="expense">Expense Event</Radio>
-          </VStack>
-        </RadioGroup>
-      </FormControl>
-
-      <FormControl>
-        <FormLabel>Select Event</FormLabel>
-        <Select
-          placeholder="Select an event"
-          value={selectedEventName}
-          onChange={handle_event_change}
-          isDisabled={false} //never disable the dropdown
-        >
-          {filtered_events.map(event => (
-            <option key={event.name} value={event.name}>
-              {event.name}
-            </option>
+        <Flex justifyContent="space-between" wrap="wrap" gap={2}>
+          {event_type_options.map(option => (
+            <Box 
+              key={option.value}
+              flex={{ base: '1 0 46%', md: '1' }}
+              bg={selected_event_type === option.value ? selected_bg_colors[option.value] : bg_colors[option.value]}
+              borderRadius="md"
+              p={3}
+              cursor={event_type_counts[option.value] > 0 ? "pointer" : "not-allowed"}
+              opacity={event_type_counts[option.value] > 0 ? 1 : 0.5}
+              onClick={() => {
+                if (event_type_counts[option.value] > 0) {
+                  handle_event_type_change(option.value);
+                }
+              }}
+              border="1px solid"
+              borderColor={selected_event_type === option.value ? `${color_schemes[option.value]}.500` : "transparent"}
+              transition="all 0.2s"
+              _hover={{
+                boxShadow: event_type_counts[option.value] > 0 ? "md" : "none",
+                transform: event_type_counts[option.value] > 0 ? "translateY(-2px)" : "none"
+              }}
+            >
+              <Text fontWeight={selected_event_type === option.value ? "bold" : "normal"} color={`${color_schemes[option.value]}.600`}>
+                {option.label}
+              </Text>
+              <Badge colorScheme={color_schemes[option.value]}>
+                {event_type_counts[option.value]}
+              </Badge>
+            </Box>
           ))}
-        </Select>
-        {has_value_changed && (
-          <Text fontSize="sm" color="orange.500" mt={1}>
-            Note: Changing the event will discard your current changes.
-          </Text>
-        )}
+        </Flex>
       </FormControl>
 
-      {selected_event && (
-        <FormControl>
-          <FormLabel>Initial Amount</FormLabel>
-          <NumberInput
-            value={current_value}
-            onChange={(_, value) => handle_amount_change(value)}
-            min={0}
-            keepWithinRange={true}
-            clampValueOnBlur={true}
-            isInvalid={isNaN(current_value) || current_value < 0}
+      {selected_event_type && (
+        <FormControl isRequired mt={3}>
+          <FormLabel>Event Series</FormLabel>
+          <Select
+            placeholder={`Select a ${selected_event_type} event`}
+            value={selectedEventName}
+            onChange={handle_event_change}
+            isDisabled={filtered_events.length === 0}
+            bg={selected_event_type ? `${color_schemes[selected_event_type]}.50` : undefined}
+            borderColor={selected_event_type ? `${color_schemes[selected_event_type]}.200` : undefined}
           >
-            <NumberInputField />
-            <NumberInputStepper>
-              <NumberIncrementStepper />
-              <NumberDecrementStepper />
-            </NumberInputStepper>
-          </NumberInput>
-          {(isNaN(current_value) || current_value < 0) && (
-            <Text color="red.500" fontSize="sm" mt={1}>
-              Value must be a positive number
-            </Text>
-          )}
+            {filtered_events.map(event => (
+              <option key={event.name} value={event.name}>
+                {event.name}
+              </option>
+            ))}
+          </Select>
         </FormControl>
       )}
 
-      {selected_event && !has_value_changed && (
-        <Alert status="warning" borderRadius="md">
-          <AlertIcon />
-          The selected value is the same as the original setting. Change it to enable comparison.
-        </Alert>
+      {selectedEventName && (
+        <>
+          <Divider my={2} />
+          <Box p={3} bg={selected_event_type ? selected_bg_colors[selected_event_type] : undefined}>
+            <Text fontSize="sm">
+              Original initial amount:{' '}
+              <strong>
+                ${filtered_events.find(e => e.name === selectedEventName)?.initialAmount.toLocaleString()}
+              </strong>
+            </Text>
+          </Box>
+        </>
       )}
     </VStack>
   );

@@ -1,6 +1,6 @@
 import { simulation_logger } from "../../utils/logger/logger";
 import ScenarioModel from "../models/Scenario";
-import { create_scenario, Scenario } from "../../core/domain/scenario/Scenario";
+import { create_scenario, Scenario } from "../../core/domain/Scenario";
 import { create_scenario_raw, ScenarioRaw } from "../../core/domain/raw/scenario_raw";
 import { IScenario } from "../models/Scenario";
 

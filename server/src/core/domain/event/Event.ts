@@ -1,5 +1,5 @@
 import { Cloneable } from "../../../utils/CloneUtil";
-import  {create_value_generator,  ValueGenerator } from "../../../utils/ValueGenerator";
+import  { ValueGenerator, ValueSource } from "../../../utils/ValueGenerator";
 import { ChangeType, DistributionType, StatisticType } from "../../Enums";
 import { Distribution, parse_distribution, parse_start_condition, StartCondition } from "../raw/common";
 import { EventRaw } from "../raw/event_raw/event_raw";
@@ -8,17 +8,18 @@ import { IncomeEvent } from "./IncomeEvent";
 import { InvestEvent } from "./InvestEvent";
 import { RebalanceEvent } from "./RebalanceEvent";
 
-export function parse_duration(distribution: Distribution): number {
-  return parse_distribution(distribution).sample();
+export function parse_duration(distribution: Distribution, value_source: ValueSource): number {
+  return parse_distribution(distribution, value_source).sample();
 }
 
-export function parse_start_year(start_condition: StartCondition): number {
-  return parse_start_condition(start_condition).sample()
+export function parse_start_year(start_condition: StartCondition, value_source: ValueSource): number {
+  return parse_start_condition(start_condition, value_source).sample()
 }
 
 export function parse_expected_annual_change(
   changeAmtOrPct: string,
-  distribution: Distribution 
+  distribution: Distribution,
+  value_source: ValueSource, 
 ): [ChangeType, ValueGenerator] {
   function parse_change_amt_or_pct(): ChangeType {
     switch (changeAmtOrPct) {
@@ -33,7 +34,7 @@ export function parse_expected_annual_change(
 
   try {
     const change_type: ChangeType = parse_change_amt_or_pct();
-    const change_distribution: ValueGenerator = parse_distribution(distribution);
+    const change_distribution: ValueGenerator = parse_distribution(distribution, value_source);
     return [change_type, change_distribution];
   } catch (error) {
     throw error;

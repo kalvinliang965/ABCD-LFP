@@ -34,7 +34,7 @@ import {
 } from '@chakra-ui/react';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { FaUser, FaShareAlt, FaEdit, FaArrowLeft } from 'react-icons/fa';
+import { FaArrowLeft, FaEdit, FaShareAlt, FaTimes, FaUser } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../../contexts/AuthContext';
@@ -57,12 +57,45 @@ interface Scenario {
   name: string;
   description?: string;
   createdAt: Date;
-  sharedWith: Array<any>;
+  sharedWith: Array<{
+    _id: string;
+    name?: string;
+    email: string;
+    permission: 'read' | 'write';
+  }>;
   data?: any;
   permissions?: string;
   maritalStatus?: string;
   residenceState?: string;
+  ownerId?: string;
+  ownerName?: string;
 }
+
+// Add type for shared scenario response
+interface SharedScenarioResponse {
+  _id: string;
+  name: string;
+  maritalStatus?: string;
+  residenceState?: string;
+  createdAt: Date;
+  ownerName: string;
+  ownerId: string;
+  permission: 'read' | 'write';
+  sharedWith?: Array<{
+    userId: string;
+    userName: string;
+    email: string;
+    permission: 'read' | 'write';
+  }>;
+}
+
+// Type declaration for the scenario service with sharing methods
+type ScenarioServiceWithSharing = typeof scenario_service & {
+  get_shared_with_me_scenarios: () => Promise<any>;
+  get_shared_by_me_scenarios: () => Promise<any>;
+  share_scenario: (scenarioId: string, shareWithEmail: string, permission: 'read' | 'write') => Promise<any>;
+  revoke_access: (scenarioId: string, userId: string) => Promise<any>;
+};
 
 // API base URL
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3346';
@@ -71,10 +104,24 @@ const UserProfile: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const { user, updateUser } = useAuth();
+  
+  // Ensure TypeScript recognizes the sharing methods
+  const scenarioServiceWithSharing = scenario_service as ScenarioServiceWithSharing;
+  
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [scenariosLoading, setScenariosLoading] = useState(false);
   const [userScenarios, setUserScenarios] = useState<Scenario[]>([]);
+  const [sharedWithMeScenarios, setSharedWithMeScenarios] = useState<Array<{
+    _id: string;
+    name: string;
+    maritalStatus?: string;
+    residenceState?: string;
+    createdAt: Date;
+    ownerName: string;
+    ownerId: string;
+    permission: 'read' | 'write';
+  }>>([]);
 
   const [userData, setUserData] = useState({
     name: '',
@@ -101,7 +148,7 @@ const UserProfile: React.FC = () => {
   const [shareEmail, setShareEmail] = useState<string>('');
   const [sharePermission, setSharePermission] = useState<string>('read');
 
-  // Add these state variables back
+  // Additional state variables
   const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
   const {
     isOpen: isEditModalOpen,
@@ -110,12 +157,25 @@ const UserProfile: React.FC = () => {
   } = useDisclosure();
   const [editScenarioName, setEditScenarioName] = useState('');
 
+  // Data for scenarios shared by the user
+  const [sharedByMeData, setSharedByMeData] = useState<Record<string, Array<{
+    userId: string;
+    userName: string;
+    email: string;
+    permission: 'read' | 'write';
+  }>>>({});
+
   // Colors
   const cardBg = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.600', 'gray.400');
 
-  // Fetch user scenarios separately
+  // Handle return to dashboard
+  const handleReturnToDashboard = () => {
+    navigate('/dashboard');
+  };
+
+  // Fetch user scenarios
   const fetchUserScenarios = async () => {
     try {
       setScenariosLoading(true);
@@ -135,10 +195,88 @@ const UserProfile: React.FC = () => {
     }
   };
 
-  // Define fetchUserProfile outside useEffect so it can be called elsewhere
+  // Fetch scenarios shared with the user
+  const fetchSharedWithMeScenarios = async () => {
+    try {
+      setScenariosLoading(true);
+      const response = await scenarioServiceWithSharing.get_shared_with_me_scenarios();
+      
+      if (response && response.data) {
+        // Make sure we have valid data
+        const validScenarios = Array.isArray(response.data) ? response.data : [];
+        
+        // Transform the data if needed to ensure consistent format
+        const formattedScenarios = validScenarios.map((scenario: any) => ({
+          _id: scenario._id,
+          name: scenario.name || 'Unnamed Scenario',
+          maritalStatus: scenario.maritalStatus || 'Not specified',
+          residenceState: scenario.residenceState || 'Not specified',
+          createdAt: scenario.createdAt || new Date(),
+          ownerName: scenario.ownerName || 'Unknown',
+          ownerId: scenario.ownerId || '',
+          // Handle different possible property names for permissions
+          permission: scenario.permission || scenario.permissions || 'read'
+        }));
+        
+        setSharedWithMeScenarios(formattedScenarios);
+      } else {
+        setSharedWithMeScenarios([]);
+      }
+    } catch (error) {
+      console.log('Error fetching shared scenarios:', error);
+      // toast({
+      //   title: 'Error',
+      //   description: 'Failed to fetch scenarios shared with you',
+      //   status: 'error',
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
+      setSharedWithMeScenarios([]);
+    } finally {
+      setScenariosLoading(false);
+    }
+  };
+  
+  // Revoke access to a scenario
+  const handleRevokeAccess = async (scenarioId: string, userId: string) => {
+    try {
+      await scenarioServiceWithSharing.revoke_access(scenarioId, userId);
+      
+      // Refresh the scenario lists
+      fetchUserScenarios();
+      //fetchSharedByMeScenarios();
+      
+      toast({
+        title: 'Access revoked',
+        description: 'User access has been removed',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error revoking access:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to revoke access',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+  
+  // Navigate to a scenario with appropriate permissions
+  const navigateToScenario = (scenarioId: string, canEdit: boolean) => {
+    navigate(`/scenarios/${scenarioId}`, { 
+      state: { 
+        mode: canEdit ? 'edit' : 'view' 
+      }
+    });
+  };
+
+  // Fetch user profile data
   const fetchUserProfile = async () => {
     try {
-      console.log('usere is ', user);
       setIsLoading(true);
 
       // Try to get user data from the API directly
@@ -155,9 +293,6 @@ const UserProfile: React.FC = () => {
         // Otherwise try to use the userService (which might use cookies)
         profileData = await userService.getProfile();
       }
-
-      console.log('profileData is ', profileData);
-      console.log('user is ', user);
 
       if (profileData) {
         setUserData({
@@ -186,26 +321,66 @@ const UserProfile: React.FC = () => {
     }
   };
 
-  // Then in your useEffect
-  useEffect(() => {
-    // Always try to fetch the profile, even if user is null
-    fetchUserProfile();
-    fetchUserScenarios();
-  }, [toast]); // Remove user dependency to always fetch
+  // // Fetch scenarios shared by the user
+  // const fetchSharedByMeScenarios = async () => {
+  //   try {
+  //     const response = await scenarioServiceWithSharing.get_shared_by_me_scenarios();
+      
+  //     if (response && response.data && Array.isArray(response.data)) {
+  //       // Create a mapping of scenarioId -> sharedWith array
+  //       const scenarioShares: Record<string, Array<{
+  //         userId: string;
+  //         userName: string;
+  //         email: string;
+  //         permission: 'read' | 'write';
+  //       }>> = {};
+        
+  //       response.data.forEach((item: any) => {
+  //         if (item._id && Array.isArray(item.sharedWith)) {
+  //           scenarioShares[item._id] = item.sharedWith;
+  //         }
+  //       });
+        
+  //       setSharedByMeData(scenarioShares);
+  //     } else {
+  //       setSharedByMeData({});
+  //     }
+  //   } catch (error) {
+  //     console.log('Error fetching scenarios shared by me:', error);
+  //     // toast({
+  //     //   title: 'Error',
+  //     //   description: 'Failed to fetch your shared scenarios',
+  //     //   status: 'error',
+  //     //   duration: 3000,
+  //     //   isClosable: true,
+  //     // });
+  //     setSharedByMeData({});
+  //   }
+  // };
 
-  // Handle return to dashboard
-  const handleReturnToDashboard = () => {
-    navigate('/dashboard');
+  // Helper function to determine if a user has write permission
+  const hasWritePermission = (permission: string | undefined): boolean => {
+    if (!permission) return false;
+    
+    // Normalize the permission string to handle different formats
+    const normalizedPermission = permission.toLowerCase();
+    
+    // Check for various ways "write" permission might be represented
+    return normalizedPermission === 'write' || 
+           normalizedPermission === 'edit' ||
+           normalizedPermission === 'readwrite' ||
+           normalizedPermission === 'read & write' ||
+           normalizedPermission === 'read-write';
   };
 
-  // Update the handleSubmit function to use the editName value
+  // Handle profile update form submission
   const handleSubmit = async () => {
     try {
       setIsLoading(true);
 
       // Use the editName value from the modal
       const updatedProfile = await userService.updateProfile({
-        name: editName, // Use editName instead of userData.name
+        name: editName,
         email: userData.email,
         profilePicture: userData.profilePicture,
       });
@@ -248,23 +423,19 @@ const UserProfile: React.FC = () => {
     }
   };
 
-  // Handle share scenario
+  // Handle sharing a scenario with another user
   const handleShareScenario = async () => {
-    if (user && selectedScenario && shareEmail) {
+    if (selectedScenario && shareEmail) {
       try {
-        await axios.post(
-          `${API_BASE_URL}/api/scenarios/share`,
-          {
-            userId: user.googleId,
-            scenarioId: selectedScenario._id,
-            shareWithEmail: shareEmail,
-            permission: sharePermission,
-          },
-          { withCredentials: true }
+        await scenarioServiceWithSharing.share_scenario(
+          selectedScenario._id,
+          shareEmail,
+          sharePermission as 'read' | 'write'
         );
 
         // Fetch updated scenarios to get the latest sharing info
         fetchUserScenarios();
+        //fetchSharedByMeScenarios();
 
         setShareEmail('');
         setSharePermission('read');
@@ -296,7 +467,7 @@ const UserProfile: React.FC = () => {
     onShareScenarioOpen();
   };
 
-  // Add this function to handle edit button clicks
+  // Handle editing a scenario
   const handleEditScenario = (id: string) => {
     // Find the scenario to edit
     const scenarioToEdit = userScenarios.find(s => s._id === id);
@@ -306,6 +477,14 @@ const UserProfile: React.FC = () => {
       onEditModalOpen();
     }
   };
+
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchUserProfile();
+    fetchUserScenarios();
+    fetchSharedWithMeScenarios();
+    //fetchSharedByMeScenarios();
+  }, [toast]);
 
   // Show loading state while fetching user data
   if (isLoading) {
@@ -318,7 +497,6 @@ const UserProfile: React.FC = () => {
 
   // Show error if there was a problem fetching data
   if (!user) {
-    console.log('user2 is ', user);
     return (
       <Box p={5} textAlign="center">
         <Text fontSize="xl">No profile data available.</Text>
@@ -328,7 +506,7 @@ const UserProfile: React.FC = () => {
       </Box>
     );
   }
-  //console.log('userScenarios is ', userScenarios);
+
   // Render user profile information
   return (
     <Box p={5}>
@@ -339,7 +517,7 @@ const UserProfile: React.FC = () => {
         variant="outline"
         size="sm"
         mb={4}
-        onClick={handleReturnToDashboard}
+        onClick={() => navigate('/dashboard')}
       >
         Return to Dashboard
       </Button>
@@ -408,10 +586,7 @@ const UserProfile: React.FC = () => {
               <Text>You haven't created any scenarios yet.</Text>
             ) : (
               <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={5}>
-                {userScenarios.map(scenario => {
-                  // console.log('Scenario object:', scenario);
-                  // console.log('Scenario data:', scenario.data);
-                   return (
+                {userScenarios.map(scenario => (
                   <Card
                     key={scenario._id}
                     bg={cardBg}
@@ -431,21 +606,12 @@ const UserProfile: React.FC = () => {
                             variant="ghost"
                             onClick={() => openShareModal(scenario as Scenario)}
                           />
-                          {/* <IconButton
-                            aria-label="Edit scenario"
-                            icon={<FaEdit />}
-                            size="sm"
-                            colorScheme="green"
-                            variant="ghost"
-                            onClick={() => handleEditScenario(scenario._id)}
-                          /> */}
                         </HStack>
                       </Flex>
                     </CardHeader>
                     <CardBody pt={0}>
                       <Text fontSize="md" color={textColor} mb={3}>
                         Marital Status: {scenario.maritalStatus || scenario.data?.maritalStatus || scenario.data?.personal?.maritalStatus || 'Not specified'}
-                  
                       </Text>
                       <Text fontSize="md" color={textColor} mb={3}>
                         State: {scenario.residenceState || scenario.data?.residenceState || scenario.data?.personal?.residenceState || 'Not specified'}
@@ -455,32 +621,103 @@ const UserProfile: React.FC = () => {
                         Created: {new Date(scenario.createdAt).toLocaleDateString()}
                       </Text>
 
-                      {scenario.sharedWith && scenario.sharedWith.length > 0 && (
+                      {/* Show shared users from our sharedByMeData */}
+                      {sharedByMeData[scenario._id] && sharedByMeData[scenario._id].length > 0 && (
                         <Box mt={2}>
                           <Text fontSize="xs" fontWeight="bold" mb={1}>
                             Shared with:
                           </Text>
-                          {scenario.sharedWith.map(user => (
-                            <Badge key={user._id} mr={1} mb={1} colorScheme="purple" fontSize="sm">
-                              {user.name || user.email}
+                          {sharedByMeData[scenario._id].map(user => (
+                            <Badge 
+                              key={user.userId} 
+                              mr={1} mb={1} 
+                              colorScheme={hasWritePermission(user.permission) ? 'green' : 'purple'} 
+                              fontSize="sm"
+                            >
+                              {user.userName} ({hasWritePermission(user.permission) ? 'Edit' : 'View'})
+                              <IconButton
+                                aria-label="Remove sharing"
+                                icon={<FaTimes />}
+                                size="xs"
+                                ml={1}
+                                onClick={() => handleRevokeAccess(scenario._id, user.userId)}
+                              />
                             </Badge>
                           ))}
                         </Box>
                       )}
+
+                      {/* <Button 
+                        size="sm" 
+                        colorScheme="blue" 
+                        mt={3}
+                        onClick={() => navigateToScenario(scenario._id, true)}
+                      >
+                        Open Scenario
+                      </Button> */}
                     </CardBody>
                   </Card>
-                  );
-                })}
+                ))}
               </SimpleGrid>
             )}
           </TabPanel>
 
           {/* Shared With Me Tab */}
           <TabPanel>
-            <Heading size="md" mb={4}>
-              Scenarios Shared With Me
-            </Heading>
-            <Text>No scenarios have been shared with you yet.</Text>
+            <Flex justify="space-between" align="center" mb={5}>
+              <Heading size="lg">
+                Scenarios Shared With Me
+              </Heading>
+            </Flex>
+            
+            {scenariosLoading ? (
+              <Text>Loading shared scenarios...</Text>
+            ) : !sharedWithMeScenarios || sharedWithMeScenarios.length === 0 ? (
+              <Text>No scenarios have been shared with you yet.</Text>
+            ) : (
+              <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={5}>
+                {sharedWithMeScenarios.map(scenario => (
+                  <Card
+                    key={scenario._id}
+                    bg={cardBg}
+                    shadow="md"
+                    borderWidth="1px"
+                    borderColor={borderColor}
+                  >
+                    <CardHeader>
+                      <Flex justify="space-between" align="center">
+                        <Heading size="md">{scenario.name || 'Unnamed Scenario'}</Heading>
+                        <Badge colorScheme={hasWritePermission(scenario.permission) ? 'green' : 'purple'}>
+                          {hasWritePermission(scenario.permission) ? 'Can Edit' : 'View Only'}
+                        </Badge>
+                      </Flex>
+                    </CardHeader>
+                    <CardBody pt={0}>
+                      <Text fontSize="md" color={textColor} mb={3}>
+                        <strong>Shared by:</strong> {scenario.ownerName || 'Unknown'}
+                      </Text>
+                      <Text fontSize="md" color={textColor} mb={3}>
+                        Marital Status: {scenario.maritalStatus || 'Not specified'}
+                      </Text>
+                      <Text fontSize="md" color={textColor} mb={3}>
+                        State: {scenario.residenceState || 'Not specified'}
+                      </Text>
+                      <Text fontSize="sm" color={textColor} mb={2}>
+                        Created: {new Date(scenario.createdAt || new Date()).toLocaleDateString()}
+                      </Text>
+                      {/* <Button 
+                        size="sm" 
+                        colorScheme="blue" 
+                        mt={3}
+                        onClick={() => navigateToScenario(scenario._id, hasWritePermission(scenario.permission))}
+                      >
+                        Open Scenario
+                      </Button> */}
+                    </CardBody>
+                  </Card>
+                ))}
+              </SimpleGrid>
+            )}
           </TabPanel>
         </TabPanels>
       </Tabs>
@@ -564,36 +801,6 @@ const UserProfile: React.FC = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
-
-      {/* Edit Scenario Modal */}
-      {/* <Modal isOpen={isEditModalOpen} onClose={onEditModalClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Edit Scenario</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Text mb={4}>The following is the scenario will be implementation:</Text>
-            <VStack align="start" spacing={2} pl={4}>
-              <Text>• Change the scenario name</Text>
-              <Text>• Modify financial parameters</Text>
-              <Text>• Update investment allocations</Text>
-              <Text>• Adjust retirement goals</Text>
-            </VStack>
-            <FormControl mt={4}>
-              <FormLabel>Scenario Name</FormLabel>
-              <Input value={editScenarioName} onChange={e => setEditScenarioName(e.target.value)} />
-            </FormControl>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onEditModalClose}>
-              Cancel
-            </Button>
-            <Button colorScheme="blue" onClick={onEditModalClose}>
-              Close
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal> */}
     </Box>
   );
 };

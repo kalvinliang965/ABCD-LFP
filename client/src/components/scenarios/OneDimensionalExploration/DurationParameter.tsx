@@ -3,11 +3,6 @@ import {
   FormControl,
   FormLabel,
   Select,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
   VStack,
   Text,
   Alert,
@@ -46,7 +41,6 @@ const DurationParameter: React.FC<DurationParameterProps> = ({
 }) => {
   const [available_events, set_available_events] = useState<Array<{ name: string; duration: number; type: string }>>([]);
   const [filtered_events, set_filtered_events] = useState<Array<{ name: string; duration: number; type: string }>>([]);
-  const [duration_value, set_duration_value] = useState<number>(originalValue);
   const [selected_event_type, set_selected_event_type] = useState<EventType | ''>('');
 
   //different event types colors
@@ -112,14 +106,14 @@ const DurationParameter: React.FC<DurationParameterProps> = ({
   }, [selected_event_type, available_events, onEventNameChange]);
 
   useEffect(() => {
-    //when event is selected, set the duration value to its current duration
+    //when event is selected, update the parent with the event's original duration
     if (selectedEventName) {
       const selected_event = filtered_events.find(event => event.name === selectedEventName);
       if (selected_event) {
-        set_duration_value(selected_event.duration);
+        onValueChange(selected_event.duration);
       }
     }
-  }, [selectedEventName, filtered_events]);
+  }, [selectedEventName, filtered_events, onValueChange]);
 
   const handle_event_type_change = (value: string) => {
     set_selected_event_type(value as EventType);
@@ -128,11 +122,6 @@ const DurationParameter: React.FC<DurationParameterProps> = ({
   const handle_event_change = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const event_name = e.target.value;
     onEventNameChange(event_name);
-  };
-
-  const handle_duration_change = (_: string, value_as_number: number) => {
-    set_duration_value(value_as_number);
-    onValueChange(value_as_number);
   };
 
   const event_type_counts = {
@@ -217,28 +206,15 @@ const DurationParameter: React.FC<DurationParameterProps> = ({
       {selectedEventName && (
         <>
           <Divider my={2} />
-          <FormControl isRequired>
-            <FormLabel>Duration (years)</FormLabel>
-            <NumberInput
-              value={duration_value}
-              onChange={handle_duration_change}
-              min={1}
-              max={100}
-            >
-              <NumberInputField />
-              <NumberInputStepper>
-                <NumberIncrementStepper />
-                <NumberDecrementStepper />
-              </NumberInputStepper>
-            </NumberInput>
-          </FormControl>
-
-          <Alert status="info" mt={2}>
-            <AlertIcon />
-            <Text>
-              Original duration: {filtered_events.find(e => e.name === selectedEventName)?.duration} years
+          <Box p={3} bg={selected_event_type ? selected_bg_colors[selected_event_type] : undefined}>
+            <Text fontSize="sm">
+              Original duration:{' '}
+              <strong>
+                {filtered_events.find(e => e.name === selectedEventName)?.duration}
+              </strong>{' '}
+              years
             </Text>
-          </Alert>
+          </Box>
         </>
       )}
     </VStack>

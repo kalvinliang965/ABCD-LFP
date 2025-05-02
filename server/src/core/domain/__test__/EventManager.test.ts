@@ -1,14 +1,11 @@
-jest.mock('@stdlib/random-base-normal', () => {
-  return jest.fn((mean: number, sd: number) => mean);
-});
-
 import { create_expense_event_raw, streaming_services_expense_one } from "../raw/event_raw/expense_event_raw";
-import { create_event_manager, resolve_event_chain } from "../EventManager";
+import { create_event_manager, differentiate_events, resolve_event_chain } from "../EventManager";
 import { EventUnionRaw, salary_income_event_one } from "../raw/event_raw/event_raw";
 import { resolve } from "path";
 import { EventUnion } from "../event/Event";
 import { create_invest_event_raw } from "../raw/event_raw/investment_event_raw";
 import { create_rebalance_event_raw } from "../raw/event_raw/rebalance_event_raw";
+import { create_value_source } from "../../../utils/ValueGenerator";
 
 
 const create_cycle_event = (
@@ -62,6 +59,7 @@ const create_cycle_event = (
     }
 }
 describe("EventManager", () => {
+    const source = create_value_source("seed");
 
     describe("clone", () => {
         it('should create independent copy', () => {
@@ -71,7 +69,7 @@ describe("EventManager", () => {
                 create_cycle_event("B2", "startWith", "A"),
                 create_cycle_event("C", "startWith", "B1"),
             ]);
-            const result = resolve_event_chain(events);
+            const result = resolve_event_chain(events, source);
             result.forEach((event: EventUnion) => {
                 expect(event.start).toBe(2025)
             })
@@ -80,14 +78,102 @@ describe("EventManager", () => {
     });
 
     describe("resolve event", () => {
-        it("should detect direct cycle", () => {
-          const events = new Set<EventUnionRaw>([
-            create_cycle_event("A", "startWith", "B"),
-            create_cycle_event("B", "startWith", "A")
-          ]);
-          expect(() => resolve_event_chain(events)).toThrow(/Unresolvable event chain/);
+        it("should resolve dependent events with based event fixed", () => {
+            const events = new Set<EventUnionRaw>([
+                create_expense_event_raw(
+                "BaseEvent",
+                { type: "fixed", value: 2025 },
+                { type: "fixed", value: 5 },
+                500,
+                "amount",
+                { type: "fixed", value: 0 },
+                true,
+                1.0,
+                true,
+                ),
+                create_expense_event_raw(
+                "DependentEvent",
+                {
+                    type: "startAfter",
+                    eventSeries: "BaseEvent" 
+                },
+                {
+                    type: "normal",
+                    mean: 3,
+                    stdev: 0.5
+                },
+                500,
+                "amount",
+                { type: "fixed", value: 0 },
+                true,
+                1.0,
+                true,
+                )
+            ]);
+            
+            const resolved = resolve_event_chain(events, source);
+            const [income, expense, invest, rebalance] = differentiate_events(resolved);
+            expect(expense.get("BaseEvent")!.start).toBe(2025);
+            expect(expense.get("BaseEvent")!.duration).toBe(5);
+
+            expect(expense.get("DependentEvent")!.start).toBe(2031);
+            expect(typeof(expense.get("BaseEvent")!.duration)).toBe("number");
+
         });
-    })
+
+        it("should resolve dependent events with based event fixed", () => {
+            const events = new Set<EventUnionRaw>([
+                create_expense_event_raw(
+                "BaseEvent",
+                { 
+                    type: "normal", 
+                    mean: 3,
+                    stdev: 0.5, 
+                },
+                { type: "fixed", value: 5 },
+                500,
+                "amount",
+                { type: "fixed", value: 0 },
+                true,
+                1.0,
+                true,
+                ),
+                create_expense_event_raw(
+                "DependentEvent",
+                {
+                    type: "startAfter",
+                    eventSeries: "BaseEvent" 
+                },
+                {
+                    type: "normal",
+                    mean: 3,
+                    stdev: 0.5
+                },
+                500,
+                "amount",
+                { type: "fixed", value: 0 },
+                true,
+                1.0,
+                true,
+                )
+            ]);
+            
+            const resolved = resolve_event_chain(events, source);
+            const [income, expense, invest, rebalance] = differentiate_events(resolved);
+            const start = expense.get("BaseEvent")!.start;
+            expect(typeof(start)).toBe("number");
+            expect(expense.get("BaseEvent")!.duration).toBe(5);
+
+            expect(expense.get("DependentEvent")!.start).toBe(start + 5 + 1);
+            expect(typeof(expense.get("BaseEvent")!.duration)).toBe("number");
+
+        });
+        it("should resolve event with uniform distribution", () => {
+          const events = new Set<EventUnionRaw>([
+          ]);
+        });
+    });
+
     describe("cycle detection", () => {
         // invalid chain A <-> B
         it("should detect direct cycle", () => {
@@ -95,7 +181,7 @@ describe("EventManager", () => {
             create_cycle_event("A", "startWith", "B"),
             create_cycle_event("B", "startWith", "A")
           ]);
-          expect(() => resolve_event_chain(events)).toThrow(/Unresolvable event chain/);
+          expect(() => resolve_event_chain(events, source)).toThrow(/Unresolvable event chain/);
         });
     
         // invalid chain: A -> B -> C -> A
@@ -105,7 +191,7 @@ describe("EventManager", () => {
             create_cycle_event("B", "startWith", "C"),
             create_cycle_event("C", "startWith", "A")
           ]);
-          expect(() => resolve_event_chain(events)).toThrow(/Unresolvable event chain/);
+          expect(() => resolve_event_chain(events, source)).toThrow(/Unresolvable event chain/);
         });
     
         // vaild chain：A -> B -> C
@@ -115,7 +201,7 @@ describe("EventManager", () => {
             create_cycle_event("B", "startWith", "C"),
             create_cycle_event("C", "none")
           ]);
-          const result = resolve_event_chain(events);
+          const result = resolve_event_chain(events, source);
           expect(result.map(e => e.name)).toEqual(['C', 'B', 'A']);
         });
     
@@ -123,7 +209,7 @@ describe("EventManager", () => {
           const events = new Set<EventUnionRaw>([
             create_cycle_event("A", "none")
           ]);
-          const result = resolve_event_chain(events);
+          const result = resolve_event_chain(events, source);
           expect(result.map(e => e.name)).toEqual(['A']);
         });
     
@@ -131,7 +217,7 @@ describe("EventManager", () => {
           const events = new Set<EventUnionRaw>([
             create_cycle_event("A", "startWith", "GHOST_EVENT")
           ]);
-          expect(() => resolve_event_chain(events)).toThrow(/Unresolvable event chain/);
+          expect(() => resolve_event_chain(events, source)).toThrow(/Unresolvable event chain/);
         });
     
         it("should resolve correct", () => {
@@ -141,7 +227,7 @@ describe("EventManager", () => {
             create_cycle_event("B2", "startWith", "A"),
             create_cycle_event("C", "startAfter", "B1"),
           ]);
-          const result = resolve_event_chain(events);
+          const result = resolve_event_chain(events, source);
           expect(result.map(e => e.name)).toEqual([
             'A', 
             'B1', 'B2', 
@@ -173,7 +259,7 @@ describe("EventManager", () => {
             const raw2 = make_invest_raw('E2', 2027, 1);  //covers 2027–2028, overlaps E1
         
             //resolve and build the manager
-            const manager = create_event_manager(new Set([raw1, raw2]));
+            const manager = create_event_manager(new Set([raw1, raw2]), source);
         
             //E1 should be the only active event in 2027:
             const active_2027 = manager.get_active_invest_event(2027);
@@ -192,7 +278,7 @@ describe("EventManager", () => {
             const raw1 = make_invest_raw('E1', 2025, 2); //2025–2027
             const raw2 = make_invest_raw('E2', 2028, 2); //2028–2030
         
-            const manager = create_event_manager(new Set([raw1, raw2]));
+            const manager = create_event_manager(new Set([raw1, raw2]), source);
         
             expect(manager.get_active_invest_event(2026).map(e => e.name)).toEqual(['E1']);
             expect(manager.get_active_invest_event(2028).map(e => e.name)).toEqual(['E2']);
@@ -229,7 +315,7 @@ describe("EventManager", () => {
                     { type: 'uniform', lower: 1, upper: 1 }
                 );
             
-                const mgr = create_event_manager(new Set([raw1, raw2]));
+                const mgr = create_event_manager(new Set([raw1, raw2]), source);
             
                 //2027 is in both windows, but we should only see E1:
                 const act = mgr.get_active_invest_event(2027);
@@ -250,7 +336,7 @@ describe("EventManager", () => {
                     { type: 'normal', mean: 1, stdev: 0 }
                 );
             
-                const mgr = create_event_manager(new Set([raw1, raw2]));
+                const mgr = create_event_manager(new Set([raw1, raw2]), source);
             
                 //2032 is in both, but only E1 is kept
                 expect(mgr.get_active_invest_event(2032)[0].name).toBe('E1');
@@ -294,7 +380,7 @@ describe("EventManager", () => {
             const raw2 = make_rebalance_raw('R2', 2027, 1);  //covers 2027–2028, overlaps R1
         
             //resolve and build the manager
-            const manager = create_event_manager(new Set([raw1, raw2]));
+            const manager = create_event_manager(new Set([raw1, raw2]), source);
         
             //R1 should be the only active event in 2027:
             const active_2027 = manager.get_active_rebalance_event(2027);
@@ -313,7 +399,7 @@ describe("EventManager", () => {
             const raw1 = make_rebalance_raw('R1', 2025, 2); //2025–2027
             const raw2 = make_rebalance_raw('R2', 2028, 2); //2028–2030
         
-            const manager = create_event_manager(new Set([raw1, raw2]));
+            const manager = create_event_manager(new Set([raw1, raw2]), source);
         
             expect(manager.get_active_rebalance_event(2026).map(e => e.name)).toEqual(['R1']);
             expect(manager.get_active_rebalance_event(2028).map(e => e.name)).toEqual(['R2']);
@@ -333,7 +419,7 @@ describe("EventManager", () => {
                 { 'S&P 500 after-tax': 1.0 }  //different account
             );
         
-            const manager = create_event_manager(new Set([raw1, raw2]));
+            const manager = create_event_manager(new Set([raw1, raw2]), source);
         
             //both events should be active in 2027 since they're for different accounts
             const active_2027 = manager.get_active_rebalance_event(2027);
@@ -360,7 +446,7 @@ describe("EventManager", () => {
                 }
             );
         
-            const manager = create_event_manager(new Set([raw1, raw2]));
+            const manager = create_event_manager(new Set([raw1, raw2]), source);
         
             //R1 should be the only active event in 2027 since it's for the same account type
             const active_2027 = manager.get_active_rebalance_event(2027);
@@ -388,7 +474,7 @@ describe("EventManager", () => {
                 }
             );
         
-            const manager = create_event_manager(new Set([raw1, raw2]));
+            const manager = create_event_manager(new Set([raw1, raw2]), source);
         
             //both events should be active in 2027 since they're for different account types
             const active_2027 = manager.get_active_rebalance_event(2027);
@@ -416,7 +502,7 @@ describe("EventManager", () => {
                     }
                 );
             
-                const manager = create_event_manager(new Set([raw1, raw2]));
+                const manager = create_event_manager(new Set([raw1, raw2]), source);
             
                 //R1 should be the only active event in 2027
                 const active_2027 = manager.get_active_rebalance_event(2027);
@@ -444,7 +530,7 @@ describe("EventManager", () => {
                     }
                 );
             
-                const manager = create_event_manager(new Set([raw1, raw2]));
+                const manager = create_event_manager(new Set([raw1, raw2]), source);
             
                 //R1 should be the only active event in 2032
                 const active_2032 = manager.get_active_rebalance_event(2032);

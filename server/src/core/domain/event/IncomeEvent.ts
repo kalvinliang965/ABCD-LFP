@@ -1,5 +1,5 @@
 import { Cloneable } from "../../../utils/CloneUtil";
-import { ValueGenerator } from "../../../utils/ValueGenerator";
+import { ValueGenerator, ValueSource } from "../../../utils/ValueGenerator";
 import { ChangeType } from "../../Enums";
 import { IncomeEventRaw } from "../raw/event_raw/income_event_raw";
 import { parse_distribution, parse_start_condition } from "../raw/common";
@@ -28,13 +28,14 @@ function parse_user_fraction(user_fraction: number) {
   return user_fraction;
 }
 
-function create_income_event(raw_data: IncomeEventRaw): IncomeEvent {
+function create_income_event(raw_data: IncomeEventRaw, value_source: ValueSource): IncomeEvent {
   try {
-    const start = parse_start_year(raw_data.start);
-    const duration = parse_duration(raw_data.duration);
+    const start = parse_start_year(raw_data.start, value_source);
+    const duration = parse_duration(raw_data.duration, value_source);
     const [change_type, expected_annual_change] = parse_expected_annual_change(
       raw_data.changeAmtOrPct,
-      raw_data.changeDistribution
+      raw_data.changeDistribution,
+      value_source,
     );
     const user_fraction = parse_user_fraction(raw_data.userFraction);
     return {
@@ -48,7 +49,7 @@ function create_income_event(raw_data: IncomeEventRaw): IncomeEvent {
       inflation_adjusted: raw_data.inflationAdjusted,
       user_fraction,
       social_security: raw_data.socialSecurity,
-      clone: () => create_income_event(raw_data)
+      clone: () => create_income_event(raw_data, value_source)
     };
   } catch (error) {
     throw new Error(`Failed to initialize IncomeEvent: ${error}`);

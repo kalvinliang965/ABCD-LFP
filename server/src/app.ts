@@ -41,7 +41,7 @@ async function initialize_application() {
   // run demo code below
 
   // await fetch_and_parse_rmd();
-  //await run_demo()
+  // await run_demo()
 }
 
 function start_server() {

@@ -3,11 +3,11 @@ import {
   cash_investment_type_one,
   s_and_p_500_investment_type_one,
   tax_exempt_bonds_investment_type_one,
-} from "../../raw/investment_type_raw";
-import { InvestmentRaw } from "../../raw/investment_raw";
-import { TaxStatus } from "../../../Enums";
-import { create_investment, Investment } from "../Investment";
-import { create_investment_type } from "../InvestmentType";
+} from "../raw/investment_type_raw";
+import { InvestmentRaw } from "../raw/investment_raw";
+import { TaxStatus } from "../../Enums";
+import { create_investment, Investment } from "../investment/Investment";
+import { create_investment_type } from "../investment/InvestmentType";
 
 describe("create_investment", () => {
     const baseRawData: InvestmentRaw = {
