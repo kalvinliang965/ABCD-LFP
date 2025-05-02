@@ -1,5 +1,5 @@
 import { Cloneable } from "../../../utils/CloneUtil";
-import { ValueGenerator } from "../../../utils/ValueGenerator";
+import { ValueGenerator, ValueSource } from "../../../utils/ValueGenerator";
 import { ChangeType } from "../../Enums";
 import { parse_distribution } from "../raw/common";
 import { ExpenseEventRaw } from "../raw/event_raw/expense_event_raw";
@@ -28,16 +28,17 @@ function parse_user_fraction(user_fraction: number) {
   return user_fraction;
 }
 
-function create_expense_event(raw_data: ExpenseEventRaw): ExpenseEvent {
+function create_expense_event(raw_data: ExpenseEventRaw, value_source: ValueSource): ExpenseEvent {
   try {
     //打印正在处理的event的name
 
-    const start = parse_start_year(raw_data.start);
-    const duration = parse_duration(raw_data.duration);
+    const start = parse_start_year(raw_data.start, value_source);
+    const duration = parse_duration(raw_data.duration, value_source);
 
     const [change_type, expected_annual_change] = parse_expected_annual_change(
       raw_data.changeAmtOrPct,
-      raw_data.changeDistribution
+      raw_data.changeDistribution,
+      value_source
     );
     const user_fraction = parse_user_fraction(raw_data.userFraction);
 
@@ -52,7 +53,7 @@ function create_expense_event(raw_data: ExpenseEventRaw): ExpenseEvent {
       inflation_adjusted: raw_data.inflationAdjusted,
       user_fraction,
       discretionary: raw_data.discretionary,
-      clone: () => create_expense_event(raw_data),
+      clone: () => create_expense_event(raw_data, value_source),
     };
   } catch (error) {
     throw new Error(`Failed to initialize ExpenseEvent: ${error}`);

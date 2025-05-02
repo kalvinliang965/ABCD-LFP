@@ -48,8 +48,8 @@ router.post("/", async (req: Request, res: Response) => {
 
     // Create simulation environment
     const simulationEnvironment = await create_simulation_environment(scenarioId);
-    console.log("we are ");
     
+    simulation_logger.info("simulation routes: Start greating simulation");
     // Create simulation engine with the environment
     //! TODO: APril 28 th, Chen will work on this now
     const engine = await create_simulation_engine(simulationEnvironment);

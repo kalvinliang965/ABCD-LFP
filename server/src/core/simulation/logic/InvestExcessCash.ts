@@ -1,5 +1,5 @@
 import { SimulationState } from '../SimulationState';
-import { Scenario } from '../../domain/scenario/Scenario';
+import { Scenario } from '../../domain/Scenario';
 import { Investment } from '../../domain/investment/Investment';
 import { simulation_logger } from '../../../utils/logger/logger';
 

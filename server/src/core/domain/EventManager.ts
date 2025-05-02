@@ -10,6 +10,7 @@ import Deque from "double-ended-queue";
 import { EventUnion } from "./event/Event";
 import { ChangeType } from "../Enums";
 import { prune_overlapping_rebalance_events } from "../simulation/logic/RebalanceInvestments";
+import { ValueSource } from "../../utils/ValueGenerator";
 export type InvestEventMap = Map<string, InvestEvent>;
 export type IncomeEventMap = Map<string, IncomeEvent>;
 export type RebalanceEventMap = Map<string, RebalanceEvent>;
@@ -21,7 +22,7 @@ export function is_event_active(event: EventUnion, year: number): boolean {
   return year >= startYear && year <= endYear;
 }
 
-function differentiate_events(
+export function differentiate_events(
     eventSeries: Array<EventUnion>
 ): [IncomeEventMap, ExpenseEventMap, InvestEventMap, RebalanceEventMap] {
     const income_event_map = new Map<string, IncomeEvent>();
@@ -186,23 +187,24 @@ export function create_event_manager_clone(
     }
 }
 
-function resolve_event(event: EventUnionRaw): EventUnion {
+function resolve_event(event: EventUnionRaw, value_source: ValueSource): EventUnion {
     switch (event.type) {
         case "income":
-            return create_income_event(event as IncomeEventRaw);
+            return create_income_event(event as IncomeEventRaw, value_source);
         case "expense":
-            return create_expense_event(event as ExpenseEventRaw);
+            return create_expense_event(event as ExpenseEventRaw, value_source);
         case "invest":
-            return create_invest_event(event as InvestEventRaw);
+            return create_invest_event(event as InvestEventRaw, value_source);
         case "rebalance":
-            return create_rebalance_event(event as RebalanceEventRaw);
+            return create_rebalance_event(event as RebalanceEventRaw, value_source);
         default:
             throw new Error(`Unknown event type: ${event.type}`);
     }
 }
 
 export function resolve_event_chain(
-    event_series: Set<EventUnionRaw>
+    event_series: Set<EventUnionRaw>,
+    value_source: ValueSource,
   ): Array<EventUnion> {
     const event_map = new Map<string, EventUnionRaw>();
     const adj = new Map<string, string[]>();
@@ -248,7 +250,7 @@ export function resolve_event_chain(
             throw new Error(`Event ${current_event_name} not registered`);
         }
         
-        const resolved_event = resolve_event(current_event)
+        const resolved_event = resolve_event(current_event, value_source);
         resolved_events.push(resolved_event);
         processed_count++;
   
@@ -267,7 +269,7 @@ export function resolve_event_chain(
                 else {
                     dependent_event.start = {
                         type: "fixed",
-                        value: resolved_event.start + resolved_event.duration,
+                        value: resolved_event.start + resolved_event.duration + 1,
                     };
                 }
                 processing_queue.push(dependent_event_name);
@@ -292,9 +294,12 @@ export function resolve_event_chain(
     }
   }
 
-export function create_event_manager(event_series: Set<EventUnionRaw>): EventManager {
+export function create_event_manager(
+    event_series: Set<EventUnionRaw>, 
+    value_source: ValueSource
+): EventManager {
     try {
-        const resolved = resolve_event_chain(event_series);
+        const resolved = resolve_event_chain(event_series, value_source);
         const [income_event, expense_event, invest_map, rebalance_map] = differentiate_events(resolved);
         //prune overlaps on the InvestEventMap
         const invest_event = prune_overlapping_invest_events(invest_map);
