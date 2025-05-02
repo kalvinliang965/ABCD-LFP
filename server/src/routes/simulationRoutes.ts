@@ -8,8 +8,6 @@ import { save_simulation_result, get_simulation_result_by_id, get_simulation_res
 import { simulation_logger } from "../utils/logger/logger";
 import { create_simulation_environment } from "../core/simulation/ LoadSimulationEnvironment";
 import cloneDeep from "lodash.clonedeep";
-import { create_scenario } from "../core/domain/scenario/Scenario";
-
 // Extend the Express Request type to include user
 declare global {
   namespace Express {
