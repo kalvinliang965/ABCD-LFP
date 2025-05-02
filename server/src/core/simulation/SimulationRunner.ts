@@ -149,7 +149,7 @@ function simulate_year(
             }
         }
 
-        simulation_logger.debug("Updating investments...");
+        simulation_logger.info("Updating investments...");
         profiler?.start("update_investment");
         update_investment(simulation_state);
         profiler?.end("update_investment");
@@ -160,7 +160,7 @@ function simulate_year(
             profiler?.end("process_roth_conversion");
         }
         
-        simulation_logger.debug(`Paying non discretionary expenses...`);
+        simulation_logger.info(`Paying non discretionary expenses...`);
         profiler?.start("pay_mandatory_expenses");
         if (!pay_mandatory_expenses(simulation_state)) {
             simulation_logger.info(`User cannnot pay all non discretionary expenses`);
@@ -168,17 +168,18 @@ function simulate_year(
         }
         profiler?.end("pay_mandatory_expenses");
         
-        simulation_logger.debug(`Paying discretionary expenses`);
+        simulation_logger.info(`Paying discretionary expenses`);
         profiler?.start("pay_discretionary_expenses");
         pay_discretionary_expenses(simulation_state);
         profiler?.end("pay_discretionary_expenses");
 
-        simulation_logger.debug(`Running invest event scheduled for current year...`);
+        simulation_logger.info(`Running invest event scheduled for current year...`);
         profiler?.start("run_invest_event");
         run_invest_event(simulation_state);
         profiler?.end("run_invest_event");
+        simulation_logger.info(`cash right after invest event: ${simulation_state.account_manager.cash.get_value()}`);
 
-        simulation_logger.debug(`Running rebalance events scheduled for the current year...`);
+        simulation_logger.info(`Running rebalance events scheduled for the current year...`);
         profiler?.start("run_rebalance_investment");
         run_rebalance_investment(simulation_state);
         profiler?.end("run_rebalance_investment");
