@@ -207,7 +207,7 @@ router.get("/scenario/:scenarioId", async (req: Request, res: Response) => {
 router.post("/param-sweep", async (req: Request, res: Response) => {
   try {
     //ATTN: CHANGE SIMULATION NUMBER HERE
-    const { scenarioId, parameterType, eventName, value, range, numSimulations = 1 } = req.body;
+    const { scenarioId, parameterType, eventName, value, range, numSimulations = 5} = req.body;
     const userId = req.user?._id; //get user ID from auth middleware
 
     if (!userId) {
