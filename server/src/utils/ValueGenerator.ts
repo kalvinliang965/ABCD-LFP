@@ -44,7 +44,6 @@ export function create_value_source(
       switch (distribution_type) {
         case DistributionType.FIXED:
           const value = params.get(StatisticType.VALUE);
-          console.log(params);
           if (typeof value !== "number") {
             throw new Error("selecting value for fixed type with out `value`");
           }

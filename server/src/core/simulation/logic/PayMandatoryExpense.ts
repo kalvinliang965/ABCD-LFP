@@ -54,7 +54,7 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   state.event_manager
     .get_active_mandatory_event(cur_simulation_year)
     .forEach((event: ExpenseEvent) => {
-      let amt = state.event_manager.update_initial_amount(event, state.annual_inflation_rate);
+      let amt = state.event_manager.update_initial_amount(event, state.get_annual_inflation_rate());
       if (spouse_alive) {
         simulation_logger.debug(`Spouse alive. User own ${event.user_fraction} of the event`);
         amt *= event.user_fraction;

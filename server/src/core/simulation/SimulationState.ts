@@ -57,7 +57,7 @@ export interface SimulationState {
   total_pre_tax_value: Map<number, number>; 
   total_non_retirement_value: Map<number, number>;
 
-  annual_inflation_rate: number;
+  get_annual_inflation_rate(): number;
 }
 
 // Create person details object
@@ -116,7 +116,7 @@ export async function create_simulation_state(
     let annual_inflation_rate = 0;
 
     const state: SimulationState = {
-      annual_inflation_rate,
+      get_annual_inflation_rate: () => annual_inflation_rate,
       rmd_strategy: scenario.rmd_strategy,
       total_after_tax_value,
       total_non_retirement_value,

@@ -39,7 +39,7 @@ async function simulation_engine_demo(N: number) {
 
   const simulation_engine_parallel = await create_simulation_engine(simulation_environment);
   profiler.start("run_parallel");
-  await simulation_engine_parallel.run_parallel(N);
+  await simulation_engine_parallel.run(N);
   profiler.end("run_parallel");
   
   profiler.export_to_CSV();
@@ -64,6 +64,6 @@ async function optimize_scenario_environment_initialization_demo(N: number) {
   profiler.printSummary();
 }
 export async function run_demo() {
-  await simulation_engine_demo(10);
+  await simulation_engine_demo(1);
   // await optimize_scenario_environment_initialization_demo(1);
 }

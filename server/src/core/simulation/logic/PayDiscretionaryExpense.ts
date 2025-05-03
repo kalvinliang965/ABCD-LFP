@@ -46,7 +46,7 @@ export function pay_discretionary_expenses(state: SimulationState): void {
     simulation_logger.debug(`Paying for discretionary expense ${expense}`);
     
     // amount we have to pay
-    let amt = state.event_manager.update_initial_amount(expense_event, state.annual_inflation_rate);
+    let amt = state.event_manager.update_initial_amount(expense_event, state.get_annual_inflation_rate());
     if (spouse_alive) {
       simulation_logger.debug(`Spouse alive. User own ${expense_event.user_fraction} of the event`);
       amt *= expense_event.user_fraction;
