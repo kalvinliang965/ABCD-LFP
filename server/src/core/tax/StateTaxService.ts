@@ -128,11 +128,13 @@ export async function create_state_tax_service_yaml(resident_state: StateType , 
     }
 }
 
-export async function create_state_tax_service_db(entered_resident_state: StateType): Promise<StateTaxService> {
+export async function create_state_tax_service(entered_resident_state: StateType): Promise<StateTaxService> {
     try {
         const taxable_income_bracket = create_tax_brackets()
         if (!await state_taxbrackets_exist_in_db(entered_resident_state)) {
-            throw new Error(`DB does not contain data for ${entered_resident_state}`);
+            // no state tax
+            taxable_income_bracket.add_bracket(0, Infinity, 0, TaxFilingStatus.INDIVIDUAL);
+            taxable_income_bracket.add_bracket(0, Infinity, 0, TaxFilingStatus.COUPLE);
         } else {
             const tax_bracket_list = await get_state_taxbrackets_by_state(entered_resident_state);
             tax_bracket_list.forEach((ti) => {

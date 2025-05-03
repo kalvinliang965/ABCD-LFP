@@ -5,7 +5,7 @@ import { create_scenario_raw_yaml, scenario_yaml_string } from "../../../../serv
 import { create_scenario } from "../../../domain/Scenario";
 import { IncomeType, StateType, TaxFilingStatus } from "../../../Enums";
 import { create_federal_tax_service } from "../../../tax/FederalTaxService";
-import { create_state_tax_service_db } from "../../../tax/StateTaxService";
+import { create_state_tax_service } from "../../../tax/StateTaxService";
 import { create_simulation_state, SimulationState } from "../../SimulationState"
 import { pay_mandatory_expenses } from "../PayMandatoryExpense";
 
@@ -123,7 +123,7 @@ describe("Pay mandatory expense", () => {
 
         // Create service instance
         const federal_service = await create_federal_tax_service();
-        const state_tax_service = await create_state_tax_service_db(StateType.NY);
+        const state_tax_service = await create_state_tax_service(StateType.NY);
 
         const scenario_raw = await create_scenario_raw_yaml(scenario_yaml_string);
         const scenario = await create_scenario(scenario_raw);

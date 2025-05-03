@@ -1,7 +1,7 @@
 import { StateTaxService } from "../StateTaxService";
 import { create_tax_brackets } from "../TaxBrackets";
 import { TaxFilingStatus } from "../../Enums";
-import { create_state_tax_service_wo, create_state_tax_service_yaml, create_state_tax_service_db } from "../StateTaxService";
+import { create_state_tax_service_wo, create_state_tax_service_yaml, create_state_tax_service } from "../StateTaxService";
 import { StateType } from "../../Enums";
 import { state_taxbrackets_exist_in_db, get_state_taxbrackets_by_state, create_state_taxbracket_in_db } from "../../../db/repositories/StateTaxBracketRepository";
 
@@ -90,14 +90,14 @@ describe('StateTaxService', () => {
                 }
                 
             ]);
-            const service = await create_state_tax_service_db(StateType.CT);
+            const service = await create_state_tax_service(StateType.CT);
             expect(service.find_rate(200, TaxFilingStatus.INDIVIDUAL)).toBe(0.1)
             expect(service.find_rate(5000000, TaxFilingStatus.INDIVIDUAL)).toBe(0.2);
             expect(create_state_taxbracket_in_db).not.toHaveBeenCalled();
         });
         it("should throw error if database contain no data", async () => {
             (state_taxbrackets_exist_in_db as jest.Mock).mockResolvedValue(false);
-            await expect(create_state_tax_service_db(StateType.CT))
+            await expect(create_state_tax_service(StateType.CT))
                 .rejects.toThrow();
         });
         it("should throw error if data return does not match data ask for", async ()=> {
@@ -122,7 +122,7 @@ describe('StateTaxService', () => {
                 }
                 
             ]);
-            await expect(create_state_tax_service_db(StateType.CT))
+            await expect(create_state_tax_service(StateType.CT))
                 .rejects.toThrow("process.exit called");
             expect(exitSpy).toHaveBeenCalled();
             exitSpy.mockRestore();

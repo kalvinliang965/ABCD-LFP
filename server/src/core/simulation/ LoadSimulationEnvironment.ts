@@ -1,19 +1,14 @@
-import { rm } from "fs";
 import { tax_config } from "../../config/tax";
 import { get_rmd_factors_from_db, save_rmd_factors_to_db } from "../../db/repositories/RMDFactorRepository";
 import { get_scenario_from_db } from "../../db/repositories/ScenarioRepository";
-import { delete_state_tax_brackets_by_state } from "../../db/repositories/StateTaxBracketRepository";
 import { fetch_and_parse_rmd } from "../../services/RMDScraper";
 import { simulation_logger } from "../../utils/logger/logger";
 import { Profiler } from "../../utils/Profiler";
 import { ScenarioRaw } from "../domain/raw/scenario_raw";
-import { Scenario } from "../domain/Scenario";
 import { parse_state_type, TaxFilingStatus } from "../Enums";
 import { create_federal_tax_service, FederalTaxService } from "../tax/FederalTaxService";
-import { StandardDeduction } from "../tax/StandardDeduction";
-import { create_state_tax_service_db, create_state_tax_service_yaml, StateTaxService } from "../tax/StateTaxService";
-import { TaxBrackets, TaxBracketSet } from "../tax/TaxBrackets";
-import { generate_seed } from "../../utils/ValueGenerator";
+import { create_state_tax_service, create_state_tax_service_yaml, StateTaxService } from "../tax/StateTaxService";
+import { TaxBracketSet } from "../tax/TaxBrackets";
 
 export interface SimulationEnvironment {
     // The raw data..
@@ -39,6 +34,7 @@ const get_rmd_factors = async() => {
 
 export async function create_simulation_environment_parallel(
     scenario_id: string,
+    seed: string,
 ): Promise<SimulationEnvironment> {
     try {
         const [scenario_raw, federal_tax_service, rmd_table] =  await Promise.all([
@@ -47,7 +43,7 @@ export async function create_simulation_environment_parallel(
             get_rmd_factors()
         ])
         // need to know scenario first.
-        const state_tax_service = await create_state_tax_service_db(
+        const state_tax_service = await create_state_tax_service(
             parse_state_type(scenario_raw.residenceState)
         );
         return {
@@ -58,7 +54,7 @@ export async function create_simulation_environment_parallel(
             state_tax_service_taxable_income_bracket_raw: state_tax_service.__taxable_income_brackets.__brackets,
             rmd_table: rmd_table,
             scenario_raw,
-            base_seed: generate_seed(),
+            base_seed: seed,
         }
     } catch (error) {
         simulation_logger.error(`Failed to create simulation environment ${error instanceof Error? error.stack: String(error)}`);
@@ -68,6 +64,7 @@ export async function create_simulation_environment_parallel(
 
 export async function create_simulation_environment(
     scenario_id: string,
+    seed: string,
     profiler?: Profiler,
 ): Promise<SimulationEnvironment> {
 
@@ -81,7 +78,7 @@ export async function create_simulation_environment(
         
         // initialize state tax service 
         simulation_logger.debug("initializing state tax service from db....");
-        const state_tax_service = await create_state_tax_service_db(
+        const state_tax_service = await create_state_tax_service(
             parse_state_type(scenario_raw.residenceState)
         );
         simulation_logger.info("Successfully initialize state tax service from db");
@@ -103,7 +100,7 @@ export async function create_simulation_environment(
             rmd_table: rmd_table,
             scenario_raw,
             profiler: profiler,
-            base_seed: generate_seed(),
+            base_seed: seed,
         }
 
     } catch (error) {
