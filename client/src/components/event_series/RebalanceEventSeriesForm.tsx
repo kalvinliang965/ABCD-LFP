@@ -49,7 +49,10 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
 
   useEffect(() => {
     if (selectedTaxStatus) {
-      const matchingInvestments = investments.filter(inv => inv.taxStatus === selectedTaxStatus);
+      //filter out cash investments from the allocations
+      const matchingInvestments = investments.filter(
+        inv => inv.taxStatus === selectedTaxStatus && !inv.id.toLowerCase().includes('cash')
+      );
 
       //initialize allocations with empty values
       const initialAllocations: { [key: string]: number } = {};
@@ -74,16 +77,19 @@ export const RebalanceEventSeriesForm: React.FC<RebalanceEventSeriesFormProps> =
   const renderAllocationInputs = () => {
     if (!selectedTaxStatus) return null;
 
-    const matchingInvestments = investments.filter(inv => inv.taxStatus === selectedTaxStatus);
+    //filter out cash investments from the displayed allocation options
+    const matchingInvestments = investments.filter(
+      inv => inv.taxStatus === selectedTaxStatus && !inv.id.toLowerCase().includes('cash')
+    );
 
     if (matchingInvestments.length === 0) {
       return (
         <Alert status="warning" mb={4}>
           <AlertIcon />
           <Box>
-            <AlertTitle>No investments available</AlertTitle>
+            <AlertTitle>No valid investments available</AlertTitle>
             <AlertDescription>
-              Please add investments in the previous step before creating a rebalance event.
+              Please add non-cash investments with this tax status in the previous step before creating a rebalance event.
             </AlertDescription>
           </Box>
         </Alert>

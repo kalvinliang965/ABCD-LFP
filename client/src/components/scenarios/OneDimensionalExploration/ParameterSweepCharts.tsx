@@ -45,7 +45,7 @@ interface ParameterSweepChartsProps {
   results: any;
 }
 
-type MetricType = 'successProbability' | 'medianTotalInvestments';
+type MetricType = 'successProbability' | 'medianTotalInvestments' | 'averageTotalInvestments';
 
 const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) => {
   const [selected_metric, set_selected_metric] = useState<MetricType>('successProbability');
@@ -61,7 +61,9 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
   const is_numeric_parameter = !isNaN(Number(results.data[0].param));
   const metric_label = selected_metric === 'successProbability' 
     ? 'Success Probability' 
-    : 'Median Total Investments';
+    : selected_metric === 'medianTotalInvestments'
+    ? 'Median Total Investments'
+    : 'Average Total Investments';
   
   //count successful simulations
   const successful_runs = results.data.filter((item: any) => !item.error).length;
@@ -80,8 +82,7 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
 
   //5.1 Multi-line chart, value over time
   const prepare_time_series_data = () => {
-    //check if we have yearly data
-    if (!results.data[0]?.results?.yearlyData) {
+    if (!results.data[0]?.results) {
       return null;
     }
 
@@ -97,30 +98,47 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
 
     //prepare datasets
     results.data.forEach((item: any, index: number) => {
-      if (!item.results?.yearlyData) return;
-
-      const yearly_data = item.results.yearlyData;
+      if (!item.results) return;
+      
       const data_points: { x: number; y: number }[] = [];
-
-      //extract metric from yearly results
-      yearly_data.forEach((yearly: any) => {
-        const year = yearly.year;
-        all_years.add(year);
-        let value = 0;
-        
-        if (selected_metric === 'successProbability') {
-          //using the probability of success map
-          value = (item.results.probabilityOfSuccess[year] || 0) / 100;
-        } else if (selected_metric === 'medianTotalInvestments') {
-          //get median total investments from stats
-          value = yearly.stats?.totalInvestments?.median || 0;
+      
+      if (selected_metric === 'successProbability') {
+        // For success probability, use the probability map directly
+        const probMap = item.results.probabilityOfSuccess;
+        if (probMap) {
+          // Extract years and values
+          Object.entries(probMap).forEach(([yearStr, probValue]) => {
+            const year = parseInt(yearStr);
+            all_years.add(year);
+            // Convert percentage (0-100) to decimal (0-1)
+            data_points.push({
+              x: year,
+              y: (probValue as number) / 100
+            });
+          });
         }
-        
-        data_points.push({
-          x: year,
-          y: value,
-        });
-      });
+      } else {
+        // For investment metrics, use yearlyData
+        const yearlyData = item.results.yearlyData;
+        if (yearlyData && yearlyData.length) {
+          yearlyData.forEach((snapshot: any) => {
+            // Make sure the year is available
+            if (snapshot.year) {
+              all_years.add(snapshot.year);
+              // Use the sum of all investment types instead of looking for a non-existent totalInvestments field
+              const totalValue = 
+                snapshot.total_after_tax + 
+                snapshot.total_pre_tax + 
+                snapshot.total_non_retirement;
+              
+              data_points.push({
+                x: snapshot.year,
+                y: totalValue
+              });
+            }
+          });
+        }
+      }
 
       //sort data points by year
       data_points.sort((a, b) => a.x - b.x);
@@ -156,6 +174,9 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
       Number(a.param) - Number(b.param)
     );
 
+    // Debug log to inspect the structure
+    console.log("Parameter sweep data structure:", sorted_data[0]?.results);
+
     //extract final values for the selected metric
     sorted_data.forEach((item: any) => {
       if (!item.results) return;
@@ -163,13 +184,29 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
       let value = 0;
       
       if (selected_metric === 'successProbability') {
-        value = item.results.successProbability || 0;
-      } else if (selected_metric === 'medianTotalInvestments') {
-        //get the final year's median total investments
-        const yearly_data = item.results.yearlyData;
-        if (yearly_data && yearly_data.length > 0) {
-          const last_year = yearly_data[yearly_data.length - 1];
-          value = last_year.stats?.totalInvestments?.median || 0;
+        if (item.results.probabilityOfSuccess) {
+          // pull the very last year's value instead of the always-zero top-level field
+          const probMap = item.results.probabilityOfSuccess;
+          const years = Object.keys(probMap).map(Number).sort((a,b) => a - b);
+          const lastYear = years[years.length - 1];
+          value = (probMap[lastYear] || 0) / 100;
+          console.log(`Parameter ${item.param}: Last year=${lastYear}, Probability=${value*100}%`);
+        }
+      } else if (selected_metric === 'medianTotalInvestments' || selected_metric === 'averageTotalInvestments') {
+        const snaps = item.results.yearlyData;
+        if (snaps && snaps.length) {
+          // grab the total investment value at the last snapshot
+          const lastSnap = snaps[snaps.length - 1];
+          // Use the sum of all investment types
+          value = lastSnap.total_after_tax + 
+                  lastSnap.total_pre_tax + 
+                  lastSnap.total_non_retirement;
+          
+          console.log(`Parameter ${item.param}: Last snapshot total investment values: 
+            after_tax=${lastSnap.total_after_tax}, 
+            pre_tax=${lastSnap.total_pre_tax}, 
+            non_retirement=${lastSnap.total_non_retirement}, 
+            Total=${value}`);
         }
       }
       
@@ -202,6 +239,7 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
     maintainAspectRatio: false,
     scales: {
       x: {
+        type: 'linear',  // Use linear scale for numeric year values
         title: {
           display: true,
           text: 'Year',
@@ -274,6 +312,7 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
     ...chart_options,
     scales: {
       x: {
+        type: 'linear',  // Use linear scale for numeric parameter values
         title: {
           display: true,
           text: `${results.parameterType} Value`,
@@ -319,6 +358,7 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
         >
           <option value="successProbability">Success Probability</option>
           <option value="medianTotalInvestments">Median Total Investments</option>
+          <option value="averageTotalInvestments">Average Total Investments</option>
         </Select>
       </FormControl>
 

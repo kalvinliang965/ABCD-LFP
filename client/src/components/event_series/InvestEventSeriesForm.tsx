@@ -55,12 +55,14 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
 
   //filter out pre-tax investments
   useEffect(() => {
-    const nonPreTaxInvestments = investments.filter(
-      inv => inv.taxStatus !== ('pre-tax' as TaxStatus)
+    // Filter out pre-tax investments AND cash investments
+    const validInvestments = investments.filter(
+      inv => inv.taxStatus !== ('pre-tax' as TaxStatus) && 
+             !inv.id.toLowerCase().includes('cash')
     );
 
     const initialAllocations: { [key: string]: number } = {};
-    nonPreTaxInvestments.forEach(inv => {
+    validInvestments.forEach(inv => {
       initialAllocations[inv.id] = 0;
     });
     setAllocations(initialAllocations);
@@ -87,18 +89,20 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
 
   const renderAllocationInputs = (isFinal: boolean = false) => {
     const targetAllocations = isFinal ? finalAllocations : allocations;
-    const nonPreTaxInvestments = investments.filter(
-      inv => inv.taxStatus !== ('pre-tax' as TaxStatus)
+    // Filter out pre-tax investments AND cash investments
+    const validInvestments = investments.filter(
+      inv => inv.taxStatus !== ('pre-tax' as TaxStatus) && 
+             !inv.id.toLowerCase().includes('cash')
     );
 
-    if (nonPreTaxInvestments.length === 0) {
+    if (validInvestments.length === 0) {
       return (
         <Alert status="warning" mb={4}>
           <AlertIcon />
           <Box>
-            <AlertTitle>No investments available</AlertTitle>
+            <AlertTitle>No valid investments available</AlertTitle>
             <AlertDescription>
-              Please add investments in the previous step before creating an invest event.
+              Please add non-cash investments in the previous step before creating an invest event.
             </AlertDescription>
           </Box>
         </Alert>
@@ -117,7 +121,7 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
             </AlertDescription>
           </Box>
         </Alert>
-        {nonPreTaxInvestments.map(inv => (
+        {validInvestments.map(inv => (
           <FormControl key={inv.id} isRequired>
             <FormLabel>{inv.id} (%)</FormLabel>
             <NumberInput
@@ -211,12 +215,14 @@ export const InvestEventSeriesForm: React.FC<InvestEventSeriesFormProps> = ({
     setMaxCashError('');
     setUseGlidePath(false);
     //reset allocations to equal distribution
-    const nonPreTaxInvestments = investments.filter(
-      inv => inv.taxStatus !== ('pre-tax' as TaxStatus)
+    // Filter out pre-tax AND cash investments
+    const validInvestments = investments.filter(
+      inv => inv.taxStatus !== ('pre-tax' as TaxStatus) && 
+             !inv.id.toLowerCase().includes('cash')
     );
-    const equalShare = 100 / nonPreTaxInvestments.length;
+    const equalShare = validInvestments.length > 0 ? 100 / validInvestments.length : 0;
     const initialAllocations: { [key: string]: number } = {};
-    nonPreTaxInvestments.forEach(inv => {
+    validInvestments.forEach(inv => {
       initialAllocations[inv.id] = equalShare;
     });
     setAllocations(initialAllocations);
