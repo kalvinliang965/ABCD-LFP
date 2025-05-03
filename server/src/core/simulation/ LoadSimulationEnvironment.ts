@@ -7,7 +7,7 @@ import { Profiler } from "../../utils/Profiler";
 import { ScenarioRaw } from "../domain/raw/scenario_raw";
 import { parse_state_type, TaxFilingStatus } from "../Enums";
 import { create_federal_tax_service, FederalTaxService } from "../tax/FederalTaxService";
-import { create_state_tax_service, create_state_tax_service_yaml, StateTaxService } from "../tax/StateTaxService";
+import { create_state_tax_service } from "../tax/StateTaxService";
 import { TaxBracketSet } from "../tax/TaxBrackets";
 
 export interface SimulationEnvironment {
