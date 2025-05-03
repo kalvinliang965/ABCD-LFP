@@ -1,7 +1,5 @@
-import { clone_map } from "../../utils/CloneUtil";
-import { Investment } from "../domain/investment/Investment";
 import { SimulationState } from "./SimulationState"
-import lodash from "lodash";
+import { equal_record } from "../../utils/general";
 
 // edit: I dont think financial goal is needed here
 // this is kalvin's code
@@ -91,4 +89,42 @@ export function create_simulation_yearly_result(): SimulationYearlyResult {
             return yearly_results.length > 0 ? success / yearly_results.length : 0;
         }
     }
+}
+
+function compare_year_result(a: YearResult, b: YearResult): boolean {
+    if (a.year !== b.year) return false;
+    if (a.total_after_tax !== b.total_after_tax) return false;
+    if (a.total_pre_tax !== b.total_pre_tax) return false;
+    if (a.total_non_retirement !== b.total_non_retirement) return false;
+    if (a.is_goal_met !== b.is_goal_met) return false;
+    if (a.cash_value !== b.cash_value) return false;
+    if (a.cur_year_income !== b.cur_year_income) return false;
+    if (a.cur_year_social_security !== b.cur_year_social_security) return false;
+    if (a.cur_year_capital_gains !== b.cur_year_capital_gains) return false;
+    if (a.cur_year_after_tax_contributions !== b.cur_year_after_tax_contributions) return false;
+    if (a.cur_year_early_withdrawals !== b.cur_year_early_withdrawals) return false;
+  
+    if (!equal_record(a.investments, b.investments)) return false;
+    if (!equal_record(a.income_breakdown, b.income_breakdown)) return false;
+    if (!equal_record(a.mandatory_expenses, b.mandatory_expenses)) return false;
+    if (!equal_record(a.discretionary_expenses, b.discretionary_expenses)) return false;
+  
+    return true;
+  }
+  
+export function compare_simulation_yearly_result(
+    sr1: SimulationYearlyResult,
+    sr2: SimulationYearlyResult,
+): boolean {
+    const N = sr1.yearly_results.length;
+    const M = sr2.yearly_results.length;
+    if (N != M) return false;
+    for (let i = 0; i < N; ++i) {
+        const ys1 = sr1.yearly_results[i];
+        const ys2 = sr2.yearly_results[i];
+        if (!compare_year_result(ys1, ys2)) {
+            return false;
+        }
+    }
+    return true;
 }

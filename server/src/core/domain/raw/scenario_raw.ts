@@ -97,7 +97,7 @@ export const scenario_one = create_scenario_raw(
     value: 0.03,
   },
   7000,
-  ["vaction", "streaming services"],
+  ["vacation", "streaming services"],
   ["S&P 500 non-retirement", "tax-exempt bonds", "S&P 500 after-tax"], // list of investments, identified by id
   ["S&P 500 pre-tax"], // list of pre-tax investments, identified by id
   true, // boolean indicating whether the Roth Conversion optimizer is enabled

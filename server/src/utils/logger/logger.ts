@@ -25,27 +25,56 @@ const base_format = winston.format.combine(
 );
 
 let level = dev.is_dev?'debug': "info";
-//let level = "error";
+
 export const simulation_logger = winston.createLogger({
-  level,
+  level: dev.is_test ? 'error' : level, // use error or any valid level
+  silent: dev.is_test, // this disables ALL logging
   format: winston.format.combine(
     base_format,
     winston.format.label({ label: 'SIMULATION' }),
     winston.format.json(),
   ),
-  transports: [
-    new winston.transports.Console({
-      level,
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.printf(({ level, message, timestamp, label }) => {
-          return `[${label}] ${timestamp} ${level}: ${message}`;
-        })
-      )
-    }),
-    new winston.transports.File({ 
-      filename: path.join(logsDir, generate_filename("simulation")),
-      level,
-    }),
-  ],
+  transports: dev.is_test
+    ? [] // you can leave this empty because `silent: true` handles it
+    : [
+        new winston.transports.Console({
+          level,
+          format: winston.format.combine(
+            winston.format.colorize(),
+            winston.format.printf(({ level, message, timestamp, label }) => {
+              return `[${label}] ${timestamp} ${level}: ${message}`;
+            })
+          )
+        }),
+        new winston.transports.File({ 
+          filename: path.join(logsDir, generate_filename("simulation")),
+          level,
+        }),
+      ],
 });
+
+
+//let level = "error";
+// export const simulation_logger = winston.createLogger({
+//   level,
+//   format: winston.format.combine(
+//     base_format,
+//     winston.format.label({ label: 'SIMULATION' }),
+//     winston.format.json(),
+//   ),
+//   transports: [
+//     new winston.transports.Console({
+//       level,
+//       format: winston.format.combine(
+//         winston.format.colorize(),
+//         winston.format.printf(({ level, message, timestamp, label }) => {
+//           return `[${label}] ${timestamp} ${level}: ${message}`;
+//         })
+//       )
+//     }),
+//     new winston.transports.File({ 
+//       filename: path.join(logsDir, generate_filename("simulation")),
+//       level,
+//     }),
+//   ],
+// });

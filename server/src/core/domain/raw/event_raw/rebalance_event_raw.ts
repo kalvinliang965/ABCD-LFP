@@ -6,7 +6,7 @@ export type RebalanceEventRaw = EventRaw & {
 };
 
 export const rebalance_one: RebalanceEventRaw = create_rebalance_event_raw(
-    "my investments",
+    "rebalance",
     {
         "type": "uniform",
         "lower": 2025,

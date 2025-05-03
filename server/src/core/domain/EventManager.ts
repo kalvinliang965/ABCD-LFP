@@ -1,4 +1,4 @@
-import { IncomeEventRaw, ExpenseEventRaw, InvestEventRaw, RebalanceEventRaw, EventUnionRaw, create_income_event_raw, create_invest_event_raw } from "./raw/event_raw/event_raw";
+import { IncomeEventRaw, ExpenseEventRaw, InvestEventRaw, RebalanceEventRaw, EventUnionRaw, create_income_event_raw, create_invest_event_raw, is_event } from "./raw/event_raw/event_raw";
 import create_income_event, { IncomeEvent } from "./event/IncomeEvent";
 import create_expense_event, { ExpenseEvent } from "./event/ExpenseEvent";
 import create_invest_event from "./event/InvestEvent";
@@ -222,6 +222,9 @@ export function resolve_event_chain(
     event_series: Set<EventUnionRaw>,
     value_source: ValueSource,
   ): Array<EventUnion> {
+  
+    if (!event_series || event_series.size < 0) return [];
+
     const event_map = new Map<string, EventUnionRaw>();
     const adj = new Map<string, string[]>();
     const in_degree = new Map<string, number>();
@@ -306,7 +309,7 @@ export function resolve_event_chain(
       simulation_logger.error("Event chain resolution failed", {
         error: error instanceof Error ? error.message : error
       });
-      throw error;
+      throw new Error(`Failed to resolve event chain: ${error instanceof Error? error.message: error}`);
     }
   }
 
@@ -315,6 +318,8 @@ export function create_event_manager(
     value_source: ValueSource
 ): EventManager {
     try {
+        event_series = new Set(Array.from(event_series).filter((event) => is_event(event)));
+        
         const resolved = resolve_event_chain(event_series, value_source);
         const [income_event, expense_event, invest_map, rebalance_map] = differentiate_events(resolved);
         //prune overlaps on the InvestEventMap
@@ -329,6 +334,6 @@ export function create_event_manager(
         simulation_logger.error("Failed to create the event manager", {
             error: error instanceof Error? error.stack: error,
         });
-        throw new Error(`Failed to create the event manager ${error instanceof Error? error.message: error}`);
+        throw new Error(`Failed to create the event manager: ${error instanceof Error? error.message: error}`);
     }
 }
