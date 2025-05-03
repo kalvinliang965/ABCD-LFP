@@ -104,7 +104,7 @@ export interface EventManager {
 
     reset_all(): void; 
 
-    update_initial_amount: (event: ExpenseEvent | IncomeEvent) => number;
+    update_initial_amount: (event: ExpenseEvent | IncomeEvent, inflation_factor: number) => number;
 }
 
 export function create_event_manager_clone(
@@ -154,7 +154,7 @@ export function create_event_manager_clone(
             }
         },
 
-        update_initial_amount(event: IncomeEvent | ExpenseEvent) {
+        update_initial_amount(event: IncomeEvent | ExpenseEvent, inflation_factor: number) {
             simulation_logger.debug(`Updating event ${event.name}...`);
             const initial_amount = event.initial_amount;
             simulation_logger.debug(`initial amount: ${initial_amount}`);
@@ -164,14 +164,18 @@ export function create_event_manager_clone(
             simulation_logger.debug(`change type: ${change_type}`);
             let change;
             if (change_type === ChangeType.AMOUNT) {
-            change = annual_change;
+              change = annual_change;
             } else if (change_type === ChangeType.PERCENT) {
-            change = annual_change * initial_amount
+              change = annual_change * initial_amount
             } else {
-            simulation_logger.error(`event ${event.name} contain invalid change_type ${event.change_type}`)
-            throw new Error(`Invalid Change type ${change_type}`);
+              simulation_logger.error(`event ${event.name} contain invalid change_type ${event.change_type}`)
+              throw new Error(`Invalid Change type ${change_type}`);
             }
-            let current_amount = Math.round(initial_amount + change);
+
+            if (event.inflation_adjusted) {
+              change += initial_amount * inflation_factor;
+            }
+            let current_amount = Math.round((initial_amount + change) * 100) / 100;
             // update the event
             event.initial_amount = current_amount;
             simulation_logger.debug(`Updated amount: ${current_amount}`);
