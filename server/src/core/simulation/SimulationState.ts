@@ -150,6 +150,7 @@ export async function create_simulation_state(
         federal_tax_service.adjust_for_inflation(annual_inflation_rate);
         state_tax_service.adjust_for_inflation(annual_inflation_rate);
         investment_type_manager.resample_all();
+        event_manager.reset_all();
       },
       advance_year: () => {
 
