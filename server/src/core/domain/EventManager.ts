@@ -173,9 +173,12 @@ export function create_event_manager_clone(
             }
 
             if (event.inflation_adjusted) {
-              change += initial_amount * inflation_factor;
+              const from_inflation = initial_amount * inflation_factor;
+              simulation_logger.debug(`change from inflation ${from_inflation}. inflation factor: ${inflation_factor}`);
+              change += from_inflation;
             }
-            let current_amount = Math.round((initial_amount + change) * 100) / 100;
+
+            let current_amount = initial_amount + change;
             // update the event
             event.initial_amount = current_amount;
             simulation_logger.debug(`Updated amount: ${current_amount}`);
