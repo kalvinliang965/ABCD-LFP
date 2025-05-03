@@ -1,6 +1,7 @@
 import { clone_map } from "../../utils/CloneUtil";
 import { Investment } from "../domain/investment/Investment";
 import { SimulationState } from "./SimulationState"
+import lodash from "lodash";
 
 // edit: I dont think financial goal is needed here
 // this is kalvin's code
@@ -70,9 +71,9 @@ export function create_simulation_yearly_result(): SimulationYearlyResult {
                 cur_year_capital_gains: simulation_state.user_tax_data.get_cur_year_gains(),
                 cur_year_after_tax_contributions: simulation_state.user_tax_data.get_cur_after_tax_contribution(),
                 cur_year_early_withdrawals: simulation_state.user_tax_data.get_cur_year_early_withdrawal(),
-                income_breakdown: simulation_state.event_manager.income_breakdown,
-                mandatory_expenses: simulation_state.event_manager.mandatory_expenses,
-                discretionary_expenses: simulation_state.event_manager.discretionary_expenses,
+                income_breakdown: { ...simulation_state.event_manager.income_breakdown },
+                mandatory_expenses: { ...simulation_state.event_manager.mandatory_expenses },
+                discretionary_expenses: { ...simulation_state.event_manager.discretionary_expenses },
             };
 
             if (yearly_results.length > 0 && yearly_results[yearly_results.length - 1].year === year_snapshot.year) {
