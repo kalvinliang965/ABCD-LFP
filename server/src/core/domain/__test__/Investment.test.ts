@@ -23,7 +23,9 @@ describe("create_investment", () => {
       ["pre-tax", TaxStatus.PRE_TAX],
       ["after-tax", TaxStatus.AFTER_TAX]
     ])("should convert %s tax status correctly", (input, expected) => {
-      const investment = create_investment({ ...baseRawData, taxStatus: input });
+      const investment = create_investment({ ...baseRawData, taxStatus: input.valueOf() as "non-retirement" | "pre-tax" | "after-tax"
+  
+       });
       expect(investment.tax_status).toBe(expected);
     });
   

@@ -16,6 +16,7 @@ import {
 import { simulation_logger } from "../utils/logger/logger";
 import { create_simulation_environment } from "../core/simulation/ LoadSimulationEnvironment";
 import cloneDeep from "lodash.clonedeep";
+import { generate_seed } from "../utils/ValueGenerator";
 // Extend the Express Request type to include user
 declare global {
   namespace Express {
@@ -57,10 +58,9 @@ router.post("/", async (req: Request, res: Response) => {
     simulation_logger.info(`Running ${count} simulations`);
 
     // Create simulation environment
-    const simulationEnvironment = await create_simulation_environment(
-      scenarioId
-    );
-
+    const random_base_seed = generate_seed();
+    const simulationEnvironment = await create_simulation_environment(scenarioId, random_base_seed);
+    
     simulation_logger.info("simulation routes: Start greating simulation");
     // Create simulation engine with the environment
     //! TODO: APril 28 th, Chen will work on this now
@@ -242,14 +242,7 @@ router.get("/scenario/:scenarioId", async (req: Request, res: Response) => {
 router.post("/param-sweep", async (req: Request, res: Response) => {
   try {
     //ATTN: CHANGE SIMULATION NUMBER HERE
-    const {
-      scenarioId,
-      parameterType,
-      eventName,
-      value,
-      range,
-      numSimulations = 1,
-    } = req.body;
+    const { scenarioId, parameterType, eventName, value, range, numSimulations = 5} = req.body;
     const userId = req.user?._id; //get user ID from auth middleware
 
     if (!userId) {
@@ -285,12 +278,12 @@ router.post("/param-sweep", async (req: Request, res: Response) => {
     );
 
     const results = [];
-
+    
+    // ! do we really want random seed?
+    const random_base_seed = generate_seed();
     //create simulation environment for original scenario
-    const original_environment = await create_simulation_environment(
-      scenarioId
-    );
-
+    const original_environment = await create_simulation_environment(scenarioId, random_base_seed);
+    
     for (const paramVal of values) {
       //deep clone the scenario for modification
       const mod_environment = cloneDeep(original_environment);

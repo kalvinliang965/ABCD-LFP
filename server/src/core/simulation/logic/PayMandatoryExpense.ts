@@ -46,6 +46,7 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   // details are inside
   if (cur_simulation_year !== state.get_start_year()) {
     total_tax = state.process_tax();
+    state.event_manager.update_mandatory_expenses("tax", total_tax);
   }
 
   // step d: calculate total amount P = sum of mandatory expense in current year + previous year tax
@@ -60,6 +61,7 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
       } else {
         simulation_logger.debug(`Spouse not exist/alive. User own ${event.user_fraction} of the event`);
       }
+      state.event_manager.update_mandatory_expenses(event.name, amt);
       mandatory_expenses += amt;
     });
   
@@ -77,7 +79,6 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   // withdrawal from investments to fill withdrawal_amount
   if(withdrawal_amount > 0) {
     const withrawaled = state.process_investment_withdrawal(withdrawal_amount);
-    state.event_manager.incr_mandatory_expense(total_amount);
     return withdrawal_amount === withrawaled;
   }
   return true;

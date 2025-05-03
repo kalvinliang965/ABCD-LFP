@@ -120,12 +120,12 @@ const ScenarioResultPage = () => {
   return (
     <Layout title={`Simulation Results: ${scenarioName}`}>
       <Box maxW="1200px" mx="auto" px={4}>
-        <Box 
+        <Box
           p={6} 
-          borderWidth="1px" 
-          borderRadius="lg" 
-          boxShadow="md" 
-          bg="white" 
+          borderWidth="1px"
+          borderRadius="lg"
+          boxShadow="md"
+          bg="white"
           mb={6}
         >
           <Heading size="lg" mb={4}>
@@ -139,7 +139,7 @@ const ScenarioResultPage = () => {
             <Text mb={6} color="gray.600">
               Run a parameter exploration to see how different parameter values affect the scenario outcomes over time.
               The visualization will include both time series charts and parameter impact analysis.
-            </Text>
+          </Text>
           )}
 
           {/* Exploration options */}

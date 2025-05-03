@@ -1,3 +1,5 @@
+import { clone_map } from "../../utils/CloneUtil";
+import { Investment } from "../domain/investment/Investment";
 import { SimulationState } from "./SimulationState"
 
 // edit: I dont think financial goal is needed here
@@ -21,13 +23,8 @@ export interface YearResult {
     cur_year_after_tax_contributions: number;
     cur_year_early_withdrawals: number;
     income_breakdown: Record<string, number>; 
-    mandatory_expenses: number;
-    discretionary_expenses: number;
-    total_expenses: number;
-    expense_breakdown: {
-        expenses: Record<string, number>;
-        taxes: number; //previous years taxes
-    };
+    mandatory_expenses: Record<string, number>;
+    discretionary_expenses: Record<string, number>;
     //% of discretionary expenses needs to be stored, tbd
 }
 
@@ -47,19 +44,15 @@ export function create_simulation_yearly_result(): SimulationYearlyResult {
     return {
         yearly_results,
         update: async (simulation_state: SimulationState) => {
-            //get expenses
-            // next 3 lines under question since it depends on the expense logic update
-            const total_expenses = simulation_state.event_manager.get_discretionary_expenses() + 
-                            simulation_state.event_manager.get_mandatory_expenses();
-            const expense_breakdown = simulation_state.event_manager.get_expense_breakdown();
-
-            //previous years tax to have a breakdown of expense
-            const prev_year_tax_base = simulation_state.event_manager.get_last_year_tax_totals()?.total || 0;
-
-            //collect data for the year:
-            //we need to know total inv value, i did not find one
-            //and we need the investments recorded for each year
+  
             const investments: Record<string, number> = {};
+
+            for (const inv of simulation_state.account_manager.all.values()) {
+                if (inv.id in investments) {
+                    throw new Error(`Duplicate inv.id ${inv.id}`);
+                }
+                investments[inv.id] = inv.get_value();
+            }
             
             const year_snapshot: YearResult = {
                 // Here are the one haifeng ask for
@@ -77,19 +70,16 @@ export function create_simulation_yearly_result(): SimulationYearlyResult {
                 cur_year_capital_gains: simulation_state.user_tax_data.get_cur_year_gains(),
                 cur_year_after_tax_contributions: simulation_state.user_tax_data.get_cur_after_tax_contribution(),
                 cur_year_early_withdrawals: simulation_state.user_tax_data.get_cur_year_early_withdrawal(),
-                income_breakdown: simulation_state.event_manager.get_income_breakdown(),
-                mandatory_expenses: simulation_state.event_manager.get_mandatory_expenses(),
-                discretionary_expenses: simulation_state.event_manager.get_discretionary_expenses(),
-                total_expenses,
-                expense_breakdown: {
-                    expenses: expense_breakdown,
-                    taxes: prev_year_tax_base
-                },
+                income_breakdown: simulation_state.event_manager.income_breakdown,
+                mandatory_expenses: simulation_state.event_manager.mandatory_expenses,
+                discretionary_expenses: simulation_state.event_manager.discretionary_expenses,
             };
 
+            if (yearly_results.length > 0 && yearly_results[yearly_results.length - 1].year === year_snapshot.year) {
+                throw new Error(`Year already exist ${year_snapshot.year}`);
+            }
             //push the snapshot into the result
             yearly_results.push(year_snapshot);
-
             //update success count if goal is met
             if (year_snapshot.is_goal_met) {
                 success++;

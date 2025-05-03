@@ -11,6 +11,8 @@ import { EventUnion } from "./event/Event";
 import { ChangeType } from "../Enums";
 import { prune_overlapping_rebalance_events } from "../simulation/logic/RebalanceInvestments";
 import { ValueSource } from "../../utils/ValueGenerator";
+import { string } from "zod";
+import { reset_record, update_record } from "../../utils/general";
 export type InvestEventMap = Map<string, InvestEvent>;
 export type IncomeEventMap = Map<string, IncomeEvent>;
 export type RebalanceEventMap = Map<string, RebalanceEvent>;
@@ -91,18 +93,17 @@ export interface EventManager {
     expense_event: ExpenseEventMap,
     invest_event: InvestEventMap,
     rebalance_event: RebalanceEventMap,
-    get_income_breakdown: () => Record<string, number>;
+
+    income_breakdown: Record<string, number>;
+    mandatory_expenses: Record<string, number>;
+    discretionary_expenses: Record<string, number>;
+
     update_income_breakdown: (eventName: string, amount: number) => void;
-    reset_income_breakdown: () => void;
-    get_expense_breakdown: () => Record<string, number>;
-    update_expense_breakdown: (eventName: string, amount: number) => void;
-    reset_expense_breakdown: () => void;
-    get_mandatory_expenses: () => number,
-    get_discretionary_expenses: () => number,
-    incr_mandatory_expense: (amt: number) => void,
-    incr_discretionary_expense: (amt: number) => void,
-    get_last_year_tax_totals: () => { total: number } | undefined;
-    update_last_year_tax_totals: (total: number) => void;
+    update_mandatory_expenses: (eventName: string, amount: number) => void;
+    update_discretionary_expenses: (eventName: string, amount: number) => void;
+
+    reset_all(): void; 
+
     update_initial_amount: (event: ExpenseEvent | IncomeEvent) => number;
 }
 
@@ -113,10 +114,8 @@ export function create_event_manager_clone(
     rebalance_event: RebalanceEventMap,
 ): EventManager {
     const income_breakdown: Record<string, number> = {};
-    const expense_breakdown: Record<string, number> = {};
-    let mandatory_expenses = 0;
-    let discretionary_expenses = 0;
-    let last_year_tax_totals: { total: number } | undefined;
+    const mandatory_expenses:Record<string, number> = {};
+    const discretionary_expenses: Record<string, number> = {};
 
     return {
         income_event,
@@ -133,28 +132,28 @@ export function create_event_manager_clone(
                                 .filter((event: ExpenseEvent) => is_event_active(event, year) && event.discretionary == false),
         get_active_discretionary_event: (year: number) => Array.from(expense_event.values())
                                 .filter((event: ExpenseEvent) => is_event_active(event, year) && event.discretionary == true),
-        get_income_breakdown: () => income_breakdown,
-        update_income_breakdown: (eventName: string, amount: number) => {
-            income_breakdown[eventName] = (income_breakdown[eventName] || 0) + amount;
+        
+        income_breakdown,
+        update_income_breakdown: (event_name: string, amount: number) => {
+            if (update_record(income_breakdown, event_name, amount)) {
+              simulation_logger.warn(`Failed to update income breakdown. ${event_name} already exist`);
+            }
         },
-        reset_income_breakdown: () => {
-            Object.keys(income_breakdown).forEach(key => delete income_breakdown[key]);
+
+        mandatory_expenses,
+        update_mandatory_expenses: (event_name: string, amount: number) => {
+            if (update_record(mandatory_expenses, event_name, amount)) {
+              simulation_logger.warn(`Failed to update mandatory expenses. ${event_name} already exist`);
+            }
         },
-        get_expense_breakdown: () => expense_breakdown,
-        update_expense_breakdown: (eventName: string, amount: number) => {
-            expense_breakdown[eventName] = (expense_breakdown[eventName] || 0) + amount;
+
+        discretionary_expenses,
+        update_discretionary_expenses: (event_name: string, amount: number) => {
+            if (update_record(discretionary_expenses, event_name, amount)) {
+              simulation_logger.warn(`Failed to update discretionary expenses. ${event_name} already exist`);
+            }
         },
-        reset_expense_breakdown: () => {
-            Object.keys(expense_breakdown).forEach(key => delete expense_breakdown[key]);
-        },
-        get_mandatory_expenses: () => mandatory_expenses,
-        get_discretionary_expenses: () => discretionary_expenses,
-        incr_mandatory_expense: (amt: number) => mandatory_expenses += amt,
-        incr_discretionary_expense: (amt: number) => discretionary_expenses += amt,
-        get_last_year_tax_totals: () => last_year_tax_totals,
-        update_last_year_tax_totals: (total: number) => {
-            last_year_tax_totals = { total };
-        },
+
         update_initial_amount(event: IncomeEvent | ExpenseEvent) {
             simulation_logger.debug(`Updating event ${event.name}...`);
             const initial_amount = event.initial_amount;
@@ -178,6 +177,13 @@ export function create_event_manager_clone(
             simulation_logger.debug(`Updated amount: ${current_amount}`);
             return current_amount;
         },
+
+        reset_all: () => {
+          reset_record(income_breakdown)
+          reset_record(mandatory_expenses);
+          reset_record(discretionary_expenses);
+        },
+
         clone: () => create_event_manager_clone(
             clone_map(income_event),
             clone_map(expense_event),
