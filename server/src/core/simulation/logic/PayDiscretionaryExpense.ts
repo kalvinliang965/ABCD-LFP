@@ -54,8 +54,8 @@ export function pay_discretionary_expenses(state: SimulationState): void {
       simulation_logger.debug(`Spouse not exist/alive. User own ${expense_event.user_fraction} of the event`);
     }
 
-    const full_payment = Math.min(amt);
-    const partial_payment = Math.min(state.account_manager.get_net_worth() - state.get_financial_goal());
+    const full_payment = amt;
+    const partial_payment = Math.min(state.account_manager.get_net_worth() - state.get_financial_goal(), full_payment);
     // WARNING: This shouldnt be negative
     if (partial_payment <= 0) {
       simulation_logger.error("Financial goal is violated incorrectly");

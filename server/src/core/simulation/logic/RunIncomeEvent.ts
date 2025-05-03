@@ -31,6 +31,9 @@ export async function run_income_event(
     } else {
       simulation_logger.debug(`Spouse is not alive. User own ${event.user_fraction} of the event`);
     }
+
+    user_gains = Math.round(user_gains * 100) / 100;
+    
     simulation_logger.debug(`User gained ${user_gains}`);
 
     // step d: add income to cash investment
