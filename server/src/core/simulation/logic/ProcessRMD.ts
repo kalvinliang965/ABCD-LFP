@@ -51,7 +51,7 @@ export async function process_rmd(
             rmd,
             simulation_state.account_manager.pre_tax_group,
             simulation_state.account_manager.non_retirement_group,
-            simulation_state.spending_strategy,
+            simulation_state.expense_withrawal_strategy,
         );
         simulation_logger.info(`${transferred} is transferred from pre tax to non retirement for rmd processing`);
     }
