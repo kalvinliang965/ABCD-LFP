@@ -64,13 +64,14 @@ export function pay_discretionary_expenses(state: SimulationState): void {
     const payment = Math.min(full_payment, partial_payment); //have to pay that will not exceed the financial goal
 
     simulation_logger.debug(`discretionary expense without violation: ${payment}`);
-    const withdrawal_amount = Math.min(payment - state.account_manager.cash.get_value(), 0);
-    
 
-    const cash_paid = Math.min(payment, state.account_manager.cash.get_value());
+    const cash_value = state.account_manager.cash.get_value();
+    simulation_logger.debug(`Cash still has ${cash_value}`);
+    const cash_paid = Math.min(payment, cash_value);
     simulation_logger.debug(`Cash paid ${cash_paid}`);
     state.event_manager.update_discretionary_expenses(expense_event.name, cash_paid);
     state.account_manager.cash.incr_value(-cash_paid);
+    const withdrawal_amount = payment - cash_paid;
     
     if(withdrawal_amount > 0) {
       const withdrawaled = state.process_investment_withdrawal(withdrawal_amount);
