@@ -126,7 +126,7 @@ export async function create_simulation_state(
       roth_conversion_start: scenario.roth_conversion_start,
       roth_conversion_end: scenario.roth_conversion_end,
       spending_strategy: scenario.spending_strategy,
-      expense_withrawal_strategy: scenario.expense_withrawal_strategy,
+      expense_withrawal_strategy: scenario.expense_withdrawal_strategy,
       roth_conversion_strategy: scenario.roth_conversion_strategy,
       user,
       spouse,
