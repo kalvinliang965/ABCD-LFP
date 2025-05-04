@@ -4,17 +4,17 @@ import { simulation_logger } from "../../utils/logger/logger";
 //TODO: 这里开始都可以被移走到另一个专门管理simulation result的文件
 // AI-generated code
 // Generic event interface for income, expense and investment
-interface Event {
+export interface Event {
   name: string;
   mean: number;
   median: number;
 }
 
-type AllIncomeEvent = Array<Event>;
-type AllExpenseEvent = Array<Event>;
-type AllInvestment = Array<Event>;
+export type AllIncomeEvent = Array<Event>;
+export type AllExpenseEvent = Array<Event>;
+export type AllInvestment = Array<Event>;
 
-interface yearly_result {
+export interface yearly_result {
   year: number;
   success_probability: number;
   all_income_event: AllIncomeEvent;
@@ -27,7 +27,7 @@ interface yearly_result {
   total_discretionary_expenses_pct: shaded_chart;
 }
 
-interface shaded_chart {
+export interface shaded_chart {
   median: number;
   ranges: {
     range10_90: [number, number];
