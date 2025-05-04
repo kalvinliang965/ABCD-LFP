@@ -81,7 +81,7 @@ export interface Scenario {
   account_manager: AccountManager
 }
 
-export function create_scenario(scenario_raw: ScenarioRaw, seed: string): Scenario {
+export function create_scenario(scenario_raw: ScenarioRaw, seed: string = "default"): Scenario {
   try {
     const value_source = create_value_source(seed);
 
@@ -141,7 +141,7 @@ export function create_scenario(scenario_raw: ScenarioRaw, seed: string): Scenar
       });
     // append more to withdrawal strategy
     const in_expense_withdrawal = new Set(expense_withdrawal_strategy);
-    for (const inv of account_manager.all.values()) {
+    for (const inv of account_manager.all().values()) {
       const id = inv.id;
       if (!in_expense_withdrawal.has(id)) {
         expense_withdrawal_strategy.push(id);
@@ -185,7 +185,7 @@ export function create_scenario(scenario_raw: ScenarioRaw, seed: string): Scenar
     }
 
     // Sanity check
-    for (const investment of account_manager.all.values()) {
+    for (const investment of account_manager.all().values()) {
         if (!investment_type_manager.has(investment.investment_type)) {
             simulation_logger.error(`investment type ${investment.investment_type} does not exist`);
             throw new Error(`investment type ${investment.investment_type} does not exist`);

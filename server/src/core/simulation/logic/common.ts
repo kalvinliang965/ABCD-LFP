@@ -45,14 +45,19 @@ export function transfer_investment_value(
         const to_investment = target_pool.account_map.get(to_label)!;
         // if we have nothing in investment, nothing is transferred
         const transfer_amt = Math.min(from_investment.get_value(), amt);
+        simulation_logger.debug("transfer amount", transfer_amt)
+        const fraction = transfer_amt / from_investment.get_value();
+        simulation_logger.debug("transfer fraction", fraction);
+        const transfer_purchase = fraction * from_investment.get_cost_basis(); 
+        simulation_logger.debug("transfer purchase", transfer_purchase);
+        
+        // update value
         simulation_logger.debug(`value of from investment decrease by ${transfer_amt}`)
         simulation_logger.debug(`value of to investment increase by ${transfer_amt}`);
         from_investment.incr_value(-transfer_amt);
         to_investment.incr_value(transfer_amt);
         
         // update cost basis
-        const fraction = transfer_amt / from_investment.get_value();
-        const transfer_purchase = fraction * from_investment.get_cost_basis(); 
         simulation_logger.debug(`cost basis of from investment decrease by ${transfer_purchase}`);
         simulation_logger.debug(`cost basis of to investment increase by ${transfer_purchase}`);
         from_investment.incr_cost_basis(-transfer_purchase);

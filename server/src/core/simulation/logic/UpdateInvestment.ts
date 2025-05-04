@@ -8,7 +8,7 @@ export function update_investment(simulation_state: SimulationState) {
     
     // we could just iterate the non-retirment account list
     // but here i just wanna double check for invalid account type
-    for (const investment of simulation_state.account_manager.all.values()) {
+    for (const investment of simulation_state.account_manager.all().values()) {
         simulation_logger.debug(`Updating investment ${investment.id}`, {
             tax_status: investment.tax_status,
             cost_basis: investment.get_cost_basis(),
