@@ -3,11 +3,12 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IScenarioShare extends Document {
   originalScenarioId: mongoose.Types.ObjectId;  // Original scenario ID
   originalOwnerId: mongoose.Types.ObjectId;     // Original owner
+  originalOwnerName?: string;                   // Original owner's name
   copiedScenarioId: mongoose.Types.ObjectId;    // The copy's ID
   sharedWithId: mongoose.Types.ObjectId;        // User who received the copy
-  sharedWithName?: string;
-  sharedWithEmail: string;
-  permission: 'read' | 'write';
+  sharedWithName?: string;                      // Recipient's name
+  sharedWithEmail: string;                      // Recipient's email
+  permission: 'read' | 'write';                 // The permission level
   createdAt: Date;
   updatedAt: Date;
 }
@@ -15,6 +16,7 @@ export interface IScenarioShare extends Document {
 const ScenarioShareSchema: Schema = new Schema({
   originalScenarioId: { type: Schema.Types.ObjectId, ref: 'Scenario', required: true },
   originalOwnerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  originalOwnerName: { type: String },
   copiedScenarioId: { type: Schema.Types.ObjectId, ref: 'Scenario', required: true },
   sharedWithId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   sharedWithName: { type: String },

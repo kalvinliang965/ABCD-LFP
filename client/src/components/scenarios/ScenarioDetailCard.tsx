@@ -52,6 +52,7 @@ import { StateType } from '../../types/Enum';
 interface ScenarioDetailCardProps {
   scenario: ScenarioRaw;
   onDelete?: () => void;
+  onEdit?: () => void;
   hideFooter?: boolean;
 }
 //moved up
@@ -98,6 +99,7 @@ const InfoItem = ({
 const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
   scenario,
   onDelete,
+  onEdit,
   hideFooter = false,
 }) => {
   const toast = useToast();
@@ -163,6 +165,14 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
     navigate(`/scenarios/${scenarioIdentifier}/results`);
   };
 
+  const handle_edit_scenario = () => {
+    // Use the same identifier logic as in handle_view_simulation_result
+    const id = (scenario as any)._id || (scenario as any).data?._id;
+    const scenarioIdentifier = id || encodeURIComponent(scenario.name);
+    console.log('ScenarioDetailCard: Navigating to edit scenario:', scenarioIdentifier);
+    navigate(`/scenarios/${scenarioIdentifier}`);
+  };
+
   return (
     <Box
       borderWidth="1px"
@@ -221,18 +231,34 @@ const ScenarioDetailCard: React.FC<ScenarioDetailCardProps> = ({
       <Box position="relative">
         {onDelete && (
           <Box position="absolute" right="4" top="4">
-            <IconButton
-              aria-label="Delete scenario"
-              icon={<FaEdit />}
-              size="sm"
-              colorScheme="blue"
-              variant="solid"
-              bg="rgba(66, 153, 225, 0.85)"
-              color="white"
-              fontWeight="normal"
-              _hover={{ bg: 'rgba(229, 62, 62, 0.95)' }}
-              onClick={onDelete}
-            />
+            <Flex gap={2}>
+              <IconButton
+                aria-label="Delete scenario"
+                icon={<FaTrash />}
+                size="sm"
+                colorScheme="red"
+                variant="solid"
+                bg="rgba(229, 62, 62, 0.85)"
+                color="white"
+                fontWeight="normal"
+                _hover={{ bg: 'rgba(229, 62, 62, 0.95)' }}
+                onClick={onDelete}
+              />
+
+              {/* ! we don't have time, so no edit feature now*/}
+              {/* <IconButton
+                aria-label="Edit scenario"
+                icon={<FaEdit />}
+                size="sm"
+                colorScheme="blue"
+                variant="solid"
+                bg="rgba(66, 153, 225, 0.85)"
+                color="white"
+                fontWeight="normal"
+                _hover={{ bg: 'rgba(66, 153, 225, 0.95)' }}
+                onClick={onEdit || handle_edit_scenario}
+              /> */}
+            </Flex>
           </Box>
         )}
         <Grid templateColumns="repeat(2, 1fr)" gap={4} p={4}>

@@ -33,6 +33,26 @@ const CHART_TYPES = [
   },
 ];
 
+// Define the new schema interface
+interface SimulationResult_v1 {
+  scenarioId: string;
+  seed: string;
+  runCount: number;
+  yearlyResults: Array<{
+    year: number;
+    success_probability: number;
+    all_income_event: Array<{ name: string; mean: number; median: number }>;
+    all_expense_event: Array<{ name: string; mean: number; median: number }>;
+    all_investment: Array<{ name: string; mean: number; median: number }>;
+    total_investment: { median: number; ranges: { [key: string]: [number, number] } };
+    total_income: { median: number; ranges: { [key: string]: [number, number] } };
+    total_expense: { median: number; ranges: { [key: string]: [number, number] } };
+    total_early_withdrawal_tax: { median: number; ranges: { [key: string]: [number, number] } };
+    total_discretionary_expenses_pct: { median: number; ranges: { [key: string]: [number, number] } };
+  }>;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 const SimulationResults: React.FC = () => {
   // Get parameters from URL - could be either simulationId or scenarioId
@@ -124,81 +144,48 @@ const SimulationResults: React.FC = () => {
           throw new Error('No simulation results found');
         }
         
-        // Validate required fields
-        if (!result.yearlyData || !Array.isArray(result.yearlyData) || result.yearlyData.length === 0) {
-          console.error('Missing or invalid yearlyData array in response:', result);
-          throw new Error('Invalid data format: missing yearlyData array');
+        // Validate required fields for new schema
+        const typedResult = result as unknown as SimulationResult_v1;
+        if (!typedResult.yearlyResults || !Array.isArray(typedResult.yearlyResults) || typedResult.yearlyResults.length === 0) {
+          console.error('Missing or invalid yearlyResults array in response:', typedResult);
+          throw new Error('Invalid data format: missing yearlyResults array');
         }
-        console.log('yearly data', result.yearlyData);
-        // Transform the data for charts
+
+        console.log('yearly results', typedResult.yearlyResults);
+        
+        // Transform the data for charts based on new SimulationResult_v1 schema
         const formattedData = {
           // Probability of success data
           probabilityOfSuccess: {
-            years: result.yearlyData.map(yr => yr.year),
-            // Calculate probability based on is_goal_met
-            probabilities: result.yearlyData.map(yr => yr.is_goal_met ? 100 : 0)
+            years: typedResult.yearlyResults.map((yr) => yr.year),
+            // Get success_probability directly from the new schema (as percentage)
+            probabilities: typedResult.yearlyResults.map((yr) => yr.success_probability * 100)
           },
           
           // Chart data for investments, income, and expenses
           medianOrAverageValues: {
-            years: result.yearlyData.map(yr => yr.year),
+            years: typedResult.yearlyResults.map((yr) => yr.year),
             data: {
               median: {
-                investments: transformYearlyDataToChartFormat(result.yearlyData, 'investments', "investments", 'median'),
-                income: transformYearlyDataToChartFormat(result.yearlyData, 'income', 'income', 'median'),
-                expenses: transformYearlyDataToChartFormat(result.yearlyData, 'expenses', 'expenses', 'median')
+                investments: transformInvestmentEvents(typedResult.yearlyResults, 'median'),
+                income: transformIncomeEvents(typedResult.yearlyResults, 'median'),
+                expenses: transformExpenseEvents(typedResult.yearlyResults, 'median')
               },
               average: {
-                investments: transformYearlyDataToChartFormat(result.yearlyData, 'investments', "investments", 'average'),
-                income: transformYearlyDataToChartFormat(result.yearlyData, 'income', 'income', 'average'),
-                expenses: transformYearlyDataToChartFormat(result.yearlyData, 'expenses', 'expenses', 'average')
+                investments: transformInvestmentEvents(typedResult.yearlyResults, 'average'),
+                income: transformIncomeEvents(typedResult.yearlyResults, 'average'),
+                expenses: transformExpenseEvents(typedResult.yearlyResults, 'average')
               }
             }
           },
           
           // Probability ranges data for shaded line chart
           probabilityRanges: {
-            totalInvestments: {
-              years: result.yearlyData.map(yr => yr.year),
-              median: result.yearlyData.map(yr => 
-                (yr.stats as any)?.totalInvestments?.median ?? 0
-              ),
-              ranges: extractRangesFromYearlyData(result.yearlyData, 'totalInvestments')
-            },
-            
-            totalIncome: {
-              years: result.yearlyData.map(yr => yr.year),
-              median: result.yearlyData.map(yr => 
-                (yr.stats as any)?.totalIncome?.median ?? 0
-              ),
-              ranges: extractRangesFromYearlyData(result.yearlyData, 'totalIncome')
-            },
-            
-            totalExpenses: {
-              years: result.yearlyData.map(yr => yr.year),
-              median: result.yearlyData.map(yr => 
-                (yr.stats as any)?.totalExpenses?.median ?? 0
-              
-              ),
-              ranges: extractRangesFromYearlyData(result.yearlyData, 'totalExpenses')
-            },
-            
-            earlyWithdrawalTax: {
-              years: result.yearlyData.map(yr => yr.year),
-              median: result.yearlyData.map(yr => 
-                (yr.stats as any)?.earlyWithdrawalTax?.median ?? 0
-
-              ),
-              ranges: extractRangesFromYearlyData(result.yearlyData, 'earlyWithdrawalTax')
-            },
-            
-            discretionaryExpensesPct: {
-              years: result.yearlyData.map(yr => yr.year),
-              median: result.yearlyData.map(yr => 
-                (yr.stats as any)?.discretionaryExpensesPct?.median ?? 0
-              ),
-              ranges: extractRangesFromYearlyData(result.yearlyData, 'discretionaryExpensesPct')
-            }
+            totalInvestments: transformShadedChartData(typedResult.yearlyResults, 'total_investment'),
+            totalIncome: transformShadedChartData(typedResult.yearlyResults, 'total_income'),
+            totalExpenses: transformShadedChartData(typedResult.yearlyResults, 'total_expense'),
+            earlyWithdrawalTax: transformShadedChartData(typedResult.yearlyResults, 'total_early_withdrawal_tax'),
+            discretionaryExpensesPct: transformShadedChartData(typedResult.yearlyResults, 'total_discretionary_expenses_pct')
           }
         };
         
@@ -403,90 +390,141 @@ export default SimulationResults;
 /**
  * Helper function to transform yearly data to the chart format
  */
-function transformYearlyDataToChartFormat(
-  yearlyData: Array<any>, 
-  property: string,
-  nestedProperty?: string,
+function transformIncomeEvents(
+  yearlyResults: Array<any>,
   aggregationType: 'median' | 'average' = 'median'
 ): Array<{
   name: string;
-  category: 'investment' | 'income' | 'expense';
-  taxStatus?: 'non-retirement' | 'pre-tax' | 'after-tax';
+  category: 'income';
   values: number[];
 }> {
-  // Get all unique keys across all years
-  const allKeys = new Set<string>();
+  // First, get all unique income event names across all years
+  const allEventNames = new Set<string>();
   
-  // First pass: collect all possible keys
-  yearlyData.forEach((yr: any) => {
-    // Check if we're using medianValues/averageValues or the direct properties
-    const valuesObj = aggregationType === 'median' ? yr.medianValues : yr.averageValues;
-    
-    if (valuesObj && valuesObj[property]) {
-      // Handle medianValues/averageValues structure
-      Object.keys(valuesObj[property]).forEach(key => {
-        if (key !== '_id') { // Skip MongoDB ObjectId
-          allKeys.add(key);
-        }
-      });
-    } else {
-      // Fallback to direct property access (old method)
-      const record = nestedProperty ? yr[property]?.[nestedProperty] : yr[property];
-      if (record) {
-        Object.keys(record).forEach(key => allKeys.add(key));
-      }
-    }
+  yearlyResults.forEach(yearResult => {
+    yearResult.all_income_event.forEach((event: any) => {
+      allEventNames.add(event.name);
+    });
   });
   
-  // Determine category based on property
-  let category: 'investment' | 'income' | 'expense';
-  if (property === 'investments') category = 'investment';
-  else if (property === 'income' || property === 'income_breakdown') category = 'income';
-  else category = 'expense';
-  
-  // Convert to array format for charts
-  return Array.from(allKeys).map(key => {
-    // For investments, determine tax status based on key name
-    let taxStatus: 'non-retirement' | 'pre-tax' | 'after-tax' | undefined;
-    if (category === 'investment') {
-      if (key.includes('pre-tax')) taxStatus = 'pre-tax';
-      else if (key.includes('after-tax')) taxStatus = 'after-tax';
-      else taxStatus = 'non-retirement';
-    }
-    
+  // Map each income event name to its values across years
+  return Array.from(allEventNames).map(eventName => {
     return {
-      name: key,
-      category,
-      taxStatus,
-      values: yearlyData.map((yr: any) => {
-        // Try to get value from medianValues/averageValues first
-        const valuesObj = aggregationType === 'median' ? yr.medianValues : yr.averageValues;
-        
-        if (valuesObj && valuesObj[property] && valuesObj[property][key] !== undefined) {
-          return valuesObj[property][key];
-        } 
-        
-        // Fallback to direct property access
-        const record = nestedProperty ? yr[property]?.[nestedProperty] : yr[property];
-        return record && record[key] !== undefined ? record[key] : 0;
+      name: eventName,
+      category: 'income',
+      values: yearlyResults.map(yearResult => {
+        const event = yearResult.all_income_event.find((e: any) => e.name === eventName);
+        // Use median or mean based on selected aggregation type
+        return event ? (aggregationType === 'median' ? event.median : event.mean) : 0;
       })
     };
   });
 }
 
 /**
- * Helper function to extract ranges from yearly data
+ * Helper function to transform expense events to chart format based on new schema
  */
-function extractRangesFromYearlyData(
-  yearlyData: Array<any>,
-  statType: 'totalInvestments' | 'totalIncome' | 'totalExpenses' | 'earlyWithdrawalTax' | 'discretionaryExpensesPct'
+function transformExpenseEvents(
+  yearlyResults: Array<any>,
+  aggregationType: 'median' | 'average' = 'median'
+): Array<{
+  name: string;
+  category: 'expense';
+  values: number[];
+}> {
+  // First, get all unique expense event names across all years
+  const allEventNames = new Set<string>();
+  
+  yearlyResults.forEach(yearResult => {
+    yearResult.all_expense_event.forEach((event: any) => {
+      allEventNames.add(event.name);
+    });
+  });
+  
+  // Map each expense event name to its values across years
+  return Array.from(allEventNames).map(eventName => {
+    return {
+      name: eventName,
+      category: 'expense',
+      values: yearlyResults.map(yearResult => {
+        const event = yearResult.all_expense_event.find((e: any) => e.name === eventName);
+        // Use median or mean based on selected aggregation type
+        return event ? (aggregationType === 'median' ? event.median : event.mean) : 0;
+      })
+    };
+  });
+}
+
+/**
+ * Helper function to transform investment events to chart format based on new schema
+ */
+function transformInvestmentEvents(
+  yearlyResults: Array<any>,
+  aggregationType: 'median' | 'average' = 'median'
+): Array<{
+  name: string;
+  category: 'investment';
+  taxStatus?: 'non-retirement' | 'pre-tax' | 'after-tax';
+  values: number[];
+}> {
+  // First, get all unique investment event names across all years
+  const allEventNames = new Set<string>();
+  
+  yearlyResults.forEach(yearResult => {
+    yearResult.all_investment.forEach((event: any) => {
+      allEventNames.add(event.name);
+    });
+  });
+  
+  // Map each investment event name to its values across years
+  return Array.from(allEventNames).map(eventName => {
+    // Determine tax status based on name
+    let taxStatus: 'non-retirement' | 'pre-tax' | 'after-tax' | undefined;
+    if (eventName.includes('pre-tax')) taxStatus = 'pre-tax';
+    else if (eventName.includes('after-tax')) taxStatus = 'after-tax';
+    else taxStatus = 'non-retirement';
+    
+    return {
+      name: eventName,
+      category: 'investment',
+      taxStatus,
+      values: yearlyResults.map(yearResult => {
+        const event = yearResult.all_investment.find((e: any) => e.name === eventName);
+        // Use median or mean based on selected aggregation type
+        return event ? (aggregationType === 'median' ? event.median : event.mean) : 0;
+      })
+    };
+  });
+}
+
+/**
+ * Helper function to transform shaded chart data from the new schema
+ */
+function transformShadedChartData(
+  yearlyResults: Array<any>,
+  property: 'total_investment' | 'total_income' | 'total_expense' | 'total_early_withdrawal_tax' | 'total_discretionary_expenses_pct'
 ): {
-  range10_90: number[][];
-  range20_80: number[][];
-  range30_70: number[][];
-  range40_60: number[][];
+  years: number[];
+  median: number[];
+  ranges: {
+    range10_90: number[][];
+    range20_80: number[][];
+    range30_70: number[][];
+    range40_60: number[][];
+  }
 } {
-  // Initialize empty range arrays
+  // Extract years
+  const years = yearlyResults.map(yr => yr.year);
+
+  const isPercentage = property === 'total_discretionary_expenses_pct';
+  
+  // Extract median values
+  const median = yearlyResults.map(yr => {
+    const val = yr[property]?.median || 0;
+    return isPercentage ? val * 100 : val;
+  });
+  
+  // Initialize ranges object
   const ranges = {
     range10_90: [[] as number[], [] as number[]],
     range20_80: [[] as number[], [] as number[]],
@@ -494,42 +532,26 @@ function extractRangesFromYearlyData(
     range40_60: [[] as number[], [] as number[]]
   };
   
-  // Check if stats exist in yearly data
-  const hasStats = yearlyData.some((yr: any) => yr.stats && yr.stats[statType]);
-  
-  if (hasStats) {
-    // Extract ranges from each year's stats
-    yearlyData.forEach((yr: any) => {
-      if (yr.stats && yr.stats[statType]) {
-        const statRanges = yr.stats[statType].ranges;
-        
-        // Extract low and high values for each range
-        for (const rangeKey of Object.keys(ranges) as Array<keyof typeof ranges>) {
-          if (statRanges[rangeKey]) {
-            ranges[rangeKey][0].push(statRanges[rangeKey][0]);
-            ranges[rangeKey][1].push(statRanges[rangeKey][1]);
-          } else {
-            // Default to 0 if range is missing
-            ranges[rangeKey][0].push(0);
-            ranges[rangeKey][1].push(0);
-          }
-        }
-      } else {
-        // No stats for this year, use 0 values
-        for (const rangeKey of Object.keys(ranges) as Array<keyof typeof ranges>) {
-          ranges[rangeKey][0].push(0);
-          ranges[rangeKey][1].push(0);
-        }
+  // Fill ranges data
+  yearlyResults.forEach(yr => {
+    const shaded = yr[property];
+    if (shaded && shaded.ranges) {
+      for (const rangeKey of Object.keys(ranges) as Array<keyof typeof ranges>) {
+        const [lower, upper] = shaded.ranges[rangeKey] || [shaded.median, shaded.median];
+        ranges[rangeKey][0].push(isPercentage ? lower * 100 : lower);
+        ranges[rangeKey][1].push(isPercentage ? upper * 100 : upper);
       }
-    });
-  } else {
-    // No stats at all, create default ranges
-    const length = yearlyData.length;
-    for (const rangeKey of Object.keys(ranges) as Array<keyof typeof ranges>) {
-      ranges[rangeKey][0] = Array(length).fill(0);
-      ranges[rangeKey][1] = Array(length).fill(0);
+    } else {
+      for (const rangeKey of Object.keys(ranges) as Array<keyof typeof ranges>) {
+        ranges[rangeKey][0].push(0);
+        ranges[rangeKey][1].push(0);
+      }
     }
-  }
+  });
   
-  return ranges;
+  return {
+    years,
+    median,
+    ranges
+  };
 }
