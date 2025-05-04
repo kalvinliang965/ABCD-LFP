@@ -19,6 +19,8 @@ import { runParameterSweep1D } from "./parameterSweep1D";
 import { runParameterSweep2D } from "./parameterSweep2D";
 
 import { generate_seed } from "../utils/ValueGenerator";
+import { create_simulation_result_v1 } from "../core/simulation/SimulationResult_v1";
+import { debug_simulation_result } from "../core/simulation/SimulationResult_v1";
 // Extend the Express Request type to include user
 declare global {
   namespace Express {
@@ -61,8 +63,11 @@ router.post("/", async (req: Request, res: Response) => {
 
     // Create simulation environment
     const random_base_seed = generate_seed();
-    const simulationEnvironment = await create_simulation_environment(scenarioId, random_base_seed);
-    
+    const simulationEnvironment = await create_simulation_environment(
+      scenarioId,
+      random_base_seed
+    );
+
     simulation_logger.info("simulation routes: Start greating simulation");
     // Create simulation engine with the environment
     //! TODO: APril 28 th, Chen will work on this now
@@ -77,13 +82,19 @@ router.post("/", async (req: Request, res: Response) => {
     );
     //console.log("simulationResults", simulationResults);
     //! seed and run count should be added to the consolidated result !!!!!!!
-    const consolidatedResult = createConsolidatedSimulationResult(
+    const simulation_result = create_simulation_result_v1(
       simulationResults,
+      random_base_seed,
       scenarioId
     );
 
+    simulation_logger.info(`simulation_result: ${simulation_result}`);
+    // AI-generated code
+    // Add debug call to inspect simulation result
+    debug_simulation_result(simulation_result, true);
+
     // Save only the consolidated result to database
-    const savedResult = await save_simulation_result(consolidatedResult);
+    const savedResult = await save_simulation_result(simulation_result);
 
     // Return the saved consolidated result
     res.status(200).json({
@@ -91,8 +102,6 @@ router.post("/", async (req: Request, res: Response) => {
       simulationId: savedResult._id,
       scenarioId: scenarioId,
       //successProbability: consolidatedResult.successProbability,
-      startYear: consolidatedResult.startYear,
-      endYear: consolidatedResult.endYear,
       message: `Successfully ran ${simulationResults.length} simulations and saved consolidated result`,
     });
   } catch (error) {

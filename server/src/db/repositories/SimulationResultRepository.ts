@@ -1,27 +1,29 @@
 import mongoose from 'mongoose';
-import SimulationResultModel, { ISimulationResult } from '../models/SimulationResultModel';
-import { ConsolidatedResult } from '../../core/simulation/SimulationResult';
+import simulationResult,{ISimulationResult_v1} from '../models/SimulationResult_v1'
 import { simulation_logger } from '../../utils/logger/logger';
-
+import { simulation_result } from '../../core/simulation/SimulationResult_v1';
+import SimulationResultModel_v1 from '../models/SimulationResult_v1';
 
 export async function save_simulation_result(
-  result: ConsolidatedResult,
+  result: simulation_result,
   //userId: mongoose.Types.ObjectId | string
-): Promise<ISimulationResult> {
+): Promise<ISimulationResult_v1> {
   try {
-    simulation_logger.info(`Saving simulation result for scenario: ${result.scenarioId}`);
+    simulation_logger.info(`inside save_simulation_result function, Ready to save simulation result to database`);
     
     // Create a new document using the model
-    const simulationResult = new SimulationResultModel({
-      ...result,
-      //...(userId && { userId })
+    const simulationResult = new SimulationResultModel_v1({
+      scenarioId: result.scenarioId,
+      seed: result.seed,
+      runCount: result.run_count,
+      yearlyResults: result.yearly_results,
     });
     
     // Save to database
-    const savedResult = await simulationResult.save();
-    simulation_logger.info(`Successfully saved simulation result with ID: ${savedResult._id}`);
+    const saved_result = await simulationResult.save();
+    simulation_logger.info(`Successfully saved simulation result with ID: ${saved_result._id}`);
     
-    return savedResult;
+    return saved_result;
   } catch (error) {
     simulation_logger.error(
       `Failed to save simulation result: ${error instanceof Error ? error.stack : String(error)}`
@@ -35,11 +37,11 @@ export async function save_simulation_result(
  * @param id The ID of the simulation result to retrieve
  * @returns The simulation result document
  */
-export async function get_simulation_result_by_id(id: string): Promise<ISimulationResult | null> {
+export async function get_simulation_result_by_id(id: string): Promise<ISimulationResult_v1 | null> {
   try {
     simulation_logger.debug(`Retrieving simulation result with ID: ${id}`);
     
-    const result = await SimulationResultModel.findById(id);
+    const result = await SimulationResultModel_v1.findById(id);
     
     if (!result) {
       simulation_logger.info(`No simulation result found with ID: ${id}`);
@@ -63,11 +65,11 @@ export async function get_simulation_result_by_id(id: string): Promise<ISimulati
  */
 export async function get_simulation_results_by_scenario_id(
   scenarioId: string
-): Promise<ISimulationResult[]> {
+): Promise<ISimulationResult_v1[]> {
   try {
     simulation_logger.debug(`Retrieving simulation results for scenario: ${scenarioId}`);
     
-    const results = await SimulationResultModel.find({ scenarioId });
+    const results = await SimulationResultModel_v1.find({ scenarioId });
     
     simulation_logger.debug(`Found ${results.length} simulation results for scenario: ${scenarioId}`);
     return results;
@@ -86,11 +88,11 @@ export async function get_simulation_results_by_scenario_id(
  */
 export async function get_simulation_results_by_user_id(
   userId: mongoose.Types.ObjectId | string
-): Promise<ISimulationResult[]> {
+): Promise<ISimulationResult_v1[]> {
   try {
     simulation_logger.debug(`Retrieving simulation results for user: ${userId}`);
     
-    const results = await SimulationResultModel.find({ userId });
+    const results = await SimulationResultModel_v1.find({ userId });
     
     simulation_logger.debug(`Found ${results.length} simulation results for user: ${userId}`);
     return results;
@@ -111,7 +113,7 @@ export async function delete_simulation_result(id: string): Promise<boolean> {
   try {
     simulation_logger.debug(`Deleting simulation result with ID: ${id}`);
     
-    const result = await SimulationResultModel.findByIdAndDelete(id);
+    const result = await SimulationResultModel_v1.findByIdAndDelete(id);
     
     if (!result) {
       simulation_logger.info(`No simulation result found with ID: ${id}`);
