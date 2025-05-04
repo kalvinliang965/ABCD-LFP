@@ -7,6 +7,11 @@ import { clone_map } from "../../utils/CloneUtil";
 
 export type AccountMap = Map<string, Investment>;
 
+export type AccountGroup = {
+  type: "after-tax" | "non-retirement" | "pre-tax";
+  account_map: AccountMap;
+}
+
 // Parse investments by tax status
 function parse_investments(
   investments: Investment[]
@@ -21,14 +26,12 @@ function parse_investments(
     all.set(investment.id, investment);
     switch (investment.tax_status) {
       case TaxStatus.NON_RETIREMENT:
-        let upper_case_investment_id = investment.id.toUpperCase();
         if (
-          upper_case_investment_id === "CASH" ||
-          upper_case_investment_id === "CASH NON-RETIREMENT"
+          investment.investment_type === "cash"
         ) {
           cash_account = investment;
         } else {
-          non_retirement_account.set(upper_case_investment_id, investment);
+          non_retirement_account.set(investment.id, investment);
         }
         break;
       case TaxStatus.PRE_TAX:
@@ -43,8 +46,8 @@ function parse_investments(
   }
 
   if (!cash_account) {
-    console.log("cash investment not found");
-    process.exit(1);
+    simulation_logger.error("cash investment not found");
+    throw new Error("Cash investment not found");
   }
 
   return [
@@ -62,6 +65,9 @@ export interface AccountManager {
   pre_tax: AccountMap;
   after_tax: AccountMap;
   all: AccountMap;
+  non_retirement_group: AccountGroup;
+  after_tax_group: AccountGroup;
+  pre_tax_group: AccountGroup;
   get_net_worth: () => number;
   get_total_non_retirement_value: () => number;
   get_total_pre_tax_value: () => number;
@@ -84,6 +90,18 @@ export function create_account_manager(
       non_retirement,
       pre_tax,
       after_tax,
+      non_retirement_group: {
+        type: "non-retirement",
+        account_map: non_retirement
+      },
+      after_tax_group: {
+        type: "after-tax",
+        account_map: after_tax
+      },
+      pre_tax_group: {
+        type: "pre-tax",
+        account_map: pre_tax
+      },
       all,
       // Chen removed cash.get_value() at 2025-04-30
       get_net_worth: () => {
