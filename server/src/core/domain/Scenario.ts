@@ -20,6 +20,7 @@ import { dev } from "../../config/environment";
 import { create_event_manager, EventManager } from "./EventManager";
 import { Distribution, parse_distribution } from "./raw/common";
 import { simulation_logger } from "../../utils/logger/logger";
+import { ExpenseEvent } from "./event/ExpenseEvent";
 
 function parse_birth_years(birthYears: Array<number>): Array<number> {
   if (birthYears.length > 2 || birthYears.length == 0) {
@@ -113,42 +114,81 @@ export function create_scenario(scenario_raw: ScenarioRaw, seed: string): Scenar
 
     // rename the strategies...
     const rmd_strategy: Array<string> = scenario_raw.RMDStrategy
-      .filter(strat => account_manager.update_id_mapping.has(strat))
-      .map(strat => account_manager.update_id_mapping.get(strat)!);
+      .map(strat => {
+        if (!account_manager.legacy_id_registry.has(strat)) {
+          simulation_logger.error(`Failed to parse rmd strategy. Investment ${strat} does not exist`);
+          throw new Error(`Failed to parse rmd strategy. Investment ${strat} does not exist`);
+        }
+        return account_manager.legacy_id_registry.get(strat)!
+      });
+    // append more in rmd
+    const in_rmd = new Set(rmd_strategy);
+    for (const inv of account_manager.pre_tax.values()) {
+      const id = inv.id;
+      if (!in_rmd.has(id)) {
+        rmd_strategy.push(id);
+      }
+    }
 
     const expense_withdrawal_strategy: Array<string> =
       scenario_raw.expenseWithdrawalStrategy
-      .filter(strat => account_manager.update_id_mapping.has(strat))
-      .map(strat => account_manager.update_id_mapping.get(strat)!);
-      
-    const roth_conversion_strategy: Array<string> =
-      scenario_raw.RothConversionStrategy
-      .filter(strat => account_manager.update_id_mapping.has(strat))
-      .map(strat => account_manager.update_id_mapping.get(strat)!);
-
-    const spending_strategy: Array<string> = scenario_raw.spendingStrategy
-      .filter(strat => account_manager.update_id_mapping.has(strat))
-      .map(strat => account_manager.update_id_mapping.get(strat)!);
-
-    // append more to spending strategy
-    const in_spending = new Set(expense_withdrawal_strategy);
+      .map(strat => {
+        if (!account_manager.legacy_id_registry.has(strat)) {
+          simulation_logger.error(`Failed to parse expense withdrawal strategy. Investment ${strat} does not exist`);
+          throw new Error(`Failed to parse expense withdrawal strategy Investment ${strat} does not exist`);
+        }
+        return account_manager.legacy_id_registry.get(strat)!
+      });
+    // append more to withdrawal strategy
+    const in_expense_withdrawal = new Set(expense_withdrawal_strategy);
     for (const inv of account_manager.all.values()) {
       const id = inv.id;
-      if (!in_spending.has(id) && inv.investment_type !== "cash") {
+      if (!in_expense_withdrawal.has(id)) {
         expense_withdrawal_strategy.push(id);
       }
     }
 
+    const roth_conversion_strategy: Array<string> =
+      scenario_raw.RothConversionStrategy
+      .map(strat => {
+        if (!account_manager.legacy_id_registry.has(strat)) {
+          simulation_logger.error(`Failed to parse roth conversion strategy. Investment ${strat} does not exist`);
+          throw new Error(`Failed to parse roth conversion withdrawal strategy Investment ${strat} does not exist`);
+        }
+        return account_manager.legacy_id_registry.get(strat)!
+      });
+    // append more in rmd
+    const in_roth = new Set(roth_conversion_strategy);
+    for (const inv of account_manager.pre_tax.values()) {
+      const id = inv.id;
+      if (!in_roth.has(id)) {
+        roth_conversion_strategy.push(id);
+      }
+    }
+
+    const spending_strategy: Array<string> = scenario_raw.spendingStrategy;
+    const in_spending = new Set(spending_strategy);
+    for (const event of event_manager.expense_event.values()) {
+      if (event.discretionary && !in_spending.has(event.name)) {
+        spending_strategy.push(event.name);
+      }
+    }
+
+    // update the asset allocation field inside event series
+
+    for (const event of event_manager.rebalance_event.values()) {
+      event.asset_allocation = update_asset_allocation_key(event.asset_allocation, account_manager.legacy_id_registry);
+    }
+    for (const event of event_manager.invest_event.values()) {
+      event.asset_allocation = update_asset_allocation_key(event.asset_allocation, account_manager.legacy_id_registry);
+      event.asset_allocation2 = update_asset_allocation_key(event.asset_allocation2, account_manager.legacy_id_registry);
+    }
+
     // Sanity check
-    if (dev.is_dev) {
-        const investments: Array<Investment> = Array.from(scenario_raw.investments).map(
-            (investment: InvestmentRaw): Investment => create_investment(investment)
-        );
-        for (const investment of investments) {
-            if (!investment_type_manager.has(investment.investment_type)) {
-                console.log(`investment type ${investment.investment_type} does not exist`);
-                process.exit(1);
-            }
+    for (const investment of account_manager.all.values()) {
+        if (!investment_type_manager.has(investment.investment_type)) {
+            simulation_logger.error(`investment type ${investment.investment_type} does not exist`);
+            throw new Error(`investment type ${investment.investment_type} does not exist`);
         }
     }
 
@@ -180,4 +220,30 @@ export function create_scenario(scenario_raw: ScenarioRaw, seed: string): Scenar
       `An error occured while creating Scenario instance: ${error}`
     );
   }
+}
+
+/**
+ * Updates the keys of `asset_allocation` using `legacy_id_registry`.
+ * For each key in `asset_allocation` that exists in `legacy_id_registry`,
+ * it renames the key to the mapped value.
+ *
+ * @param asset_allocation The source map to modify (in-place).
+ * @param legacy_id_registry A mapping from old keys to new keys.
+ */
+function update_asset_allocation_key(
+  asset_allocation: Map<string, number>,
+  legacy_id_registry: Map<string, string>
+): Map<string, number> {
+  const res: Map<string, number> = new Map();
+  for (const [old_key, value] of asset_allocation.entries()) {
+    if (legacy_id_registry.has(old_key)) {
+      const newKey = legacy_id_registry.get(old_key)!;
+      res.set(newKey, value);
+    } else {
+      simulation_logger.error(`Asset allocation key does not exist ${old_key}`);
+      throw new Error(`Asset allocation key does not exist ${old_key}`);
+    }
+  }
+
+  return res;
 }

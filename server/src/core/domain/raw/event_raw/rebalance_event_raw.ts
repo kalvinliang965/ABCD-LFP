@@ -17,7 +17,7 @@ export const rebalance_one: RebalanceEventRaw = create_rebalance_event_raw(
         "value": 10,
     },
     { 
-        "S&P non-retirement": 0.7,
+        "S&P 500 non-retirement": 0.7,
         "tax-exempt bonds": 0.3,
     },
 )
