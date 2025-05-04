@@ -225,8 +225,8 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
   // Helper function to format currency
   function formatCurrency(value: number, includeSymbol = true): string {
     return includeSymbol
-      ? `$${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
-      : value.toLocaleString('en-US', { maximumFractionDigits: 0 });
+      ? `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      : value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   // Helper function to apply aggregation threshold

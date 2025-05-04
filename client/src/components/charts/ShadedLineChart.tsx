@@ -48,111 +48,6 @@ const ShadedLineChart: React.FC<ShadedLineChartProps> = ({
   // State for the selected quantity
   const [selectedQuantity, setSelectedQuantity] = useState<string>('totalInvestments');
 
-  // Generate mock data if no data is provided
-  const mockYears = Array.from({ length: 30 }, (_, i) => 2023 + i);
-  //   const mockAges = Array.from({ length: 30 }, (_, i) => userCurrentAge + i);
-
-  // Helper function to generate mock range data with more realistic patterns
-  // const generateMockRangeData = (
-  //   baseValue: number,
-  //   growthRate: number,
-  //   volatility: number,
-  //   hasGoal: boolean = false,
-  //   pattern: 'growth' | 'decline' | 'peak' | 'valley' = 'growth'
-  // ): ProbabilityRangeData => {
-  //   const years = mockYears;
-  //   //const ages = mockAges;
-  //   const median: number[] = [];
-  //   const range10_90: [number[], number[]] = [[], []];
-  //   const range20_80: [number[], number[]] = [[], []];
-  //   const range30_70: [number[], number[]] = [[], []];
-  //   const range40_60: [number[], number[]] = [[], []];
-
-  //   for (let i = 0; i < years.length; i++) {
-  //     let yearValue: number;
-
-  //     // Apply different patterns to create more realistic scenarios
-  //     switch (pattern) {
-  //       case 'growth':
-  //         yearValue = baseValue * Math.pow(1 + growthRate, i);
-  //         break;
-  //       case 'decline':
-  //         yearValue = baseValue * (1 - i * 0.02);
-  //         yearValue = Math.max(yearValue, baseValue * 0.3); // Prevent going too low
-  //         break;
-  //       case 'peak':
-  //         // Rise then fall (retirement spending pattern)
-  //         if (i < years.length / 3) {
-  //           yearValue = baseValue * Math.pow(1 + growthRate, i);
-  //         } else {
-  //           yearValue =
-  //             baseValue *
-  //             Math.pow(1 + growthRate, years.length / 3) *
-  //             Math.pow(1 - growthRate / 2, i - years.length / 3);
-  //         }
-  //         break;
-  //       case 'valley':
-  //         // Fall then rise (market recovery pattern)
-  //         if (i < years.length / 4) {
-  //           yearValue = baseValue * Math.pow(1 - growthRate, i);
-  //         } else {
-  //           yearValue =
-  //             baseValue *
-  //             Math.pow(1 - growthRate, years.length / 4) *
-  //             Math.pow(1 + growthRate, i - years.length / 4);
-  //         }
-  //         break;
-  //       default:
-  //         yearValue = baseValue * Math.pow(1 + growthRate, i);
-  //     }
-
-  //     // Volatility increases with time - square root relationship
-  //     const yearVolatility = volatility * Math.sqrt(i + 1);
-
-  //     median.push(yearValue);
-
-  //     // Calculate ranges based on volatility
-  //     range10_90[0].push(Math.max(0, yearValue * (1 - 1.65 * yearVolatility))); // 10th percentile
-  //     range10_90[1].push(yearValue * (1 + 1.65 * yearVolatility)); // 90th percentile
-
-  //     range20_80[0].push(Math.max(0, yearValue * (1 - 1.28 * yearVolatility))); // 20th percentile
-  //     range20_80[1].push(yearValue * (1 + 1.28 * yearVolatility)); // 80th percentile
-
-  //     range30_70[0].push(Math.max(0, yearValue * (1 - 0.84 * yearVolatility))); // 30th percentile
-  //     range30_70[1].push(yearValue * (1 + 0.84 * yearVolatility)); // 70th percentile
-
-  //     range40_60[0].push(Math.max(0, yearValue * (1 - 0.52 * yearVolatility))); // 40th percentile
-  //     range40_60[1].push(yearValue * (1 + 0.52 * yearVolatility)); // 60th percentile
-  //   }
-
-  //   return {
-  //     years,
-  //     // ages,
-  //     median,
-  //     ranges: {
-  //       range10_90: [range10_90[0], range10_90[1]],
-  //       range20_80: [range20_80[0], range20_80[1]],
-  //       range30_70: [range30_70[0], range30_70[1]],
-  //       range40_60: [range40_60[0], range40_60[1]],
-  //     },
-  //     goal: hasGoal ? baseValue * 1.5 : undefined, // Only set goal for investments
-  //   };
-  // };
-
-  // // Generate mock data for each quantity with realistic patterns
-  // const mockData = {
-  //   totalInvestments: generateMockRangeData(1000000, 0.06, 0.15, true, 'peak'), // Investments peak then decline in retirement
-  //   totalIncome: generateMockRangeData(120000, 0.03, 0.08, false, 'decline'), // Income declines in retirement
-  //   totalExpenses: generateMockRangeData(80000, 0.025, 0.05, false, 'growth'), // Expenses grow with inflation
-  //   earlyWithdrawalTax: generateMockRangeData(5000, 0.02, 0.2, false, 'valley'), // Taxes might vary with market conditions
-  //   discretionaryExpensesPct: generateMockRangeData(50, 0.01, 0.1, false, 'growth'), // Percentage starts at 50%
-  //   // totalInvestments: [],
-  //   // totalIncome: [],
-  //   // totalExpenses: [],
-  //   // earlyWithdrawalTax: [], // Taxes might vary with market conditions
-  //   // discretionaryExpensesPct: [] // Percentage starts at 50%
-  // };
-
   // Use provided data or fallback to empty data with proper structure
   const chartData = {
     totalInvestments: data.totalInvestments || emptyProbabilityData,
@@ -306,6 +201,22 @@ const ShadedLineChart: React.FC<ShadedLineChartProps> = ({
       top: '15%',
       containLabel: true,
     },
+    dataZoom: [
+      {
+        type: 'slider',      
+        show: true,
+        xAxisIndex: 0,
+        start: 70,            
+        end: 100
+      },
+      {
+        type: 'inside',       
+        xAxisIndex: 0,
+        start: 70,
+        end: 100
+      }
+    ],
+    
     xAxis: {
       type: 'category',
       data: activeData.years.map((year: number, i: number) => {
@@ -354,23 +265,20 @@ const ShadedLineChart: React.FC<ShadedLineChartProps> = ({
           color: '#ddd',
         },
       },
-      // // Add custom min and max to provide more visual space for the data
-      // min: function(value: { min: number; max: number }) {
-      //   // For percentage values, add padding but ensure we don't go below 0%
-      //   if (selectedQuantity === 'discretionaryExpensesPct') {
-      //     return Math.max(0, value.min - 5); // Add 5% padding at bottom
-      //   }
-      //   // For dollar values, add 15% padding below minimum value
-      //   return value.min > 0 ? value.min * 0.85 : value.min * 1.15;
-      // },
-      // max: function(value: { min: number; max: number }) {
-      //   // For percentage values, add padding but cap at 100%
-      //   if (selectedQuantity === 'discretionaryExpensesPct') {
-      //     return Math.min(100, value.max + 5); // Add 5% padding at top
-      //   }
-      //   // For dollar values, add 15% padding above maximum value
-      //   return value.max > 0 ? value.max * 1.15 : value.max * 0.85;
-      // }
+      // Add custom min and max to provide more visual space for the data
+
+      min: function (value: { min: number; max: number }) {
+        if (selectedQuantity === 'discretionaryExpensesPct') {
+          return Math.max(0, Math.floor(value.min - 5));
+        }
+        return Math.floor(value.min * 0.95); // 保留整十、整百的刻度
+      },
+      max: function (value: { min: number; max: number }) {
+        if (selectedQuantity === 'discretionaryExpensesPct') {
+          return Math.min(100, Math.ceil(value.max + 5));
+        }
+        return Math.ceil(value.max * 1.05); // 向上取整
+      },
     },
     series: [
       // 10%-90% range (lightest shade)
