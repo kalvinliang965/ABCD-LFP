@@ -27,7 +27,7 @@ export interface SimulationState {
   roth_conversion_opt: boolean;
   roth_conversion_start: number;
   roth_conversion_end: number;
-  roth_conversion_strategy: Array<string>;
+  get_roth_conversion_strategy: () => Array<string>;
   rmd_strategy: Array<string>;
   user: PersonDetails;
   spouse?: PersonDetails;
@@ -115,6 +115,7 @@ export async function create_simulation_state(
     let after_tax_contribution_limit = scenario.after_tax_contribution_limit;
     let annual_inflation_rate = 0;
 
+
     const state: SimulationState = {
       get_annual_inflation_rate: () => annual_inflation_rate,
       rmd_strategy: scenario.rmd_strategy,
@@ -127,7 +128,7 @@ export async function create_simulation_state(
       roth_conversion_end: scenario.roth_conversion_end,
       spending_strategy: scenario.spending_strategy,
       expense_withrawal_strategy: scenario.expense_withdrawal_strategy,
-      roth_conversion_strategy: scenario.roth_conversion_strategy,
+      get_roth_conversion_strategy: () => scenario.roth_conversion_strategy,
       user,
       spouse,
       get_early_withdrawal_penalty: () => early_withdrawal_penalty,
@@ -188,7 +189,7 @@ export async function create_simulation_state(
           const investment = investments.get(inv_id)!;
           const purchase_price = investment.get_cost_basis();
           simulation_logger.debug(`Planning to sell investment: ${inv_id}`, {
-            purchase_price,
+            purchase_price: purchase_price,
             tax_status: investment.tax_status,
           })
           simulation_logger.debug(`${withdrawal_amount - withdrawaled} left`);
