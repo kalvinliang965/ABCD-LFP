@@ -114,12 +114,12 @@ export function run_invest_event(
 			//determine account type and add to its own total
 			if (state.account_manager.after_tax.has(investment_id)) {
 				after_tax_total += planned_amount;
-			} else if (state.account_manager.non_retirement.has(investment_id.toUpperCase())) {
+			} else if (state.account_manager.non_retirement.has(investment_id)) {
 				non_retirement_total += planned_amount;
 			}
 		}
 
-		simulation_logger.debug(`Planned fter-tax total: ${after_tax_total}, planned non-retirement total: ${non_retirement_total}`);
+		simulation_logger.debug(`Planned after-tax total: ${after_tax_total}, planned non-retirement total: ${non_retirement_total}`);
 
 		//for after tax account we check if it exceeds inflation adjusted limits
 		//if it does, we scale down after-tax amounts to limit, then reallocate difference into non-retirement investments
@@ -141,7 +141,7 @@ export function run_invest_event(
 			for (const [investment_id, planned_amount] of planned_amounts.entries()) {
 				if (state.account_manager.after_tax.has(investment_id)) {
 					planned_amounts.set(investment_id, planned_amount * after_tax_scale);
-				} else if (state.account_manager.non_retirement.has(investment_id.toUpperCase())) {
+				} else if (state.account_manager.non_retirement.has(investment_id)) {
 					planned_amounts.set(investment_id, planned_amount * non_retirement_scale);
 				}
 			}
@@ -153,8 +153,8 @@ export function run_invest_event(
 			let investment: Investment | undefined;
 			if (state.account_manager.after_tax.has(investment_id)) {
 				investment = state.account_manager.after_tax.get(investment_id);
-			} else if (state.account_manager.non_retirement.has(investment_id.toUpperCase())) {
-				investment = state.account_manager.non_retirement.get(investment_id.toUpperCase());
+			} else if (state.account_manager.non_retirement.has(investment_id)) {
+				investment = state.account_manager.non_retirement.get(investment_id);
 			}
 			
 			if (!investment) {
