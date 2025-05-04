@@ -21,6 +21,7 @@ import { scenario_service } from '../../services/scenarioService';
 // Prompt: Import the OneDimensionalExploration component from its new location
 import OneDimensionalExploration from '../../components/scenarios/OneDimensionalExploration/OneDimensionalExploration';
 import { ParameterSweepResults } from '../../components/scenarios/OneDimensionalExploration';
+import { TwoDimensionalExploration, ParameterSweepResults2D } from '../../components/scenarios/TwoDimensionalExploration';
 
 // Keep internal functions as snake_case but the component itself must be PascalCase for React
 const ScenarioResultPage = () => {
@@ -32,7 +33,9 @@ const ScenarioResultPage = () => {
   // AI-generated code
   // Prompt: Add state and handlers for the OneDimensionalExploration modal
   const [isOneDimModalOpen, set_is_one_dim_modal_open] = useState<boolean>(false);
+  const [isTwoDimModalOpen, set_is_two_dim_modal_open] = useState<boolean>(false);
   const [parameterSweepResults, set_parameter_sweep_results] = useState<any>(null);
+  const [parameterSweep2DResults, set_parameter_sweep_2d_results] = useState<any>(null);
 
   const open_one_dim_exploration = () => {
     set_is_one_dim_modal_open(true);
@@ -42,9 +45,24 @@ const ScenarioResultPage = () => {
     set_is_one_dim_modal_open(false);
   };
   
+  const open_two_dim_exploration = () => {
+    set_is_two_dim_modal_open(true);
+  };
+
+  const close_two_dim_exploration = () => {
+    set_is_two_dim_modal_open(false);
+  };
+  
   const handle_exploration_complete = (results: any) => {
-    console.log('Exploration completed with results:', results);
+    console.log('1D Exploration completed with results:', results);
     set_parameter_sweep_results(results);
+    set_parameter_sweep_2d_results(null);
+  };
+  
+  const handle_2d_exploration_complete = (results: any) => {
+    console.log('2D Exploration completed with results:', results);
+    set_parameter_sweep_2d_results(results);
+    set_parameter_sweep_results(null);
   };
 
   // Debug logs
@@ -135,11 +153,11 @@ const ScenarioResultPage = () => {
             Results for scenario: <b>{scenarioName}</b>
           </Text>
 
-          {!parameterSweepResults && (
+          {!parameterSweepResults && !parameterSweep2DResults && (
             <Text mb={6} color="gray.600">
               Run a parameter exploration to see how different parameter values affect the scenario outcomes over time.
               The visualization will include both time series charts and parameter impact analysis.
-          </Text>
+            </Text>
           )}
 
           {/* Exploration options */}
@@ -153,7 +171,7 @@ const ScenarioResultPage = () => {
               <Button colorScheme="blue" onClick={open_one_dim_exploration}>
                 One-dimensional Scenario Exploration
               </Button>
-              <Button colorScheme="purple" isDisabled>
+              <Button colorScheme="purple" onClick={open_two_dim_exploration}>
                 Two-dimensional Scenario Exploration
               </Button>
             </HStack>
@@ -166,17 +184,32 @@ const ScenarioResultPage = () => {
             <ParameterSweepResults results={parameterSweepResults} />
           </Box>
         )}
+        
+        {/* 2D Parameter sweep results section */}
+        {parameterSweep2DResults && (
+          <Box mb={6}>
+            <ParameterSweepResults2D results={parameterSweep2DResults} />
+          </Box>
+        )}
       </Box>
 
       {/* AI-generated code
          Prompt: Add the OneDimensionalExploration modal component */}
       {scenarioId && (
-        <OneDimensionalExploration
-          isOpen={isOneDimModalOpen}
-          onClose={close_one_dim_exploration}
-          scenarioId={scenarioId}
-          onExplorationComplete={handle_exploration_complete}
-        />
+        <>
+          <OneDimensionalExploration
+            isOpen={isOneDimModalOpen}
+            onClose={close_one_dim_exploration}
+            scenarioId={scenarioId}
+            onExplorationComplete={handle_exploration_complete}
+          />
+          <TwoDimensionalExploration
+            isOpen={isTwoDimModalOpen}
+            onClose={close_two_dim_exploration}
+            scenarioId={scenarioId}
+            onExplorationComplete={handle_2d_exploration_complete}
+          />
+        </>
       )}
     </Layout>
   );

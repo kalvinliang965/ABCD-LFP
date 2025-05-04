@@ -138,6 +138,17 @@ export const scenario_service = {
     }
   },
 
+  //simulate parameter sweep for two-dimensional exploration
+  simulate_parameter_sweep_2d: async (payload: any) => {
+    try {
+      const response = await axios_instance.post(`${API_URL}/simulations/param-sweep-2d`, payload);
+      return response.data;
+    } catch (error) {
+      console.error('Error running 2D parameter sweep simulation:', error);
+      throw error;
+    }
+  },
+
   // Diagnostic method to check if the shared scenarios endpoints are properly implemented
   check_shared_scenarios_endpoints: async () => {
     try {
