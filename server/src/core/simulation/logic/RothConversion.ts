@@ -29,7 +29,7 @@ export function process_roth_conversion(simulation_state: SimulationState) {
         // does not go into annual contribution for after tax
         if (transfer_amt > 0) {
             const transferred = transfer_investment_value(
-                simulation_state.roth_conversion_strategy,
+                simulation_state.get_roth_conversion_strategy(),
                 transfer_amt,
                 simulation_state.account_manager.pre_tax_group,
                 simulation_state.account_manager.after_tax_group,

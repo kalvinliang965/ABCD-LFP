@@ -148,7 +148,7 @@ export function create_scenario(scenario_raw: ScenarioRaw, seed: string = "defau
       }
     }
 
-    const roth_conversion_strategy: Array<string> =
+    const roth_conversion_strategy: Array<string> = Array.from(
       scenario_raw.RothConversionStrategy
       .map(strat => {
         if (!account_manager.legacy_id_registry.has(strat)) {
@@ -156,7 +156,10 @@ export function create_scenario(scenario_raw: ScenarioRaw, seed: string = "defau
           throw new Error(`Failed to parse roth conversion withdrawal strategy Investment ${strat} does not exist`);
         }
         return account_manager.legacy_id_registry.get(strat)!
-      });
+      })
+    )
+
+    console.log(roth_conversion_strategy);
     // append more in rmd
     const in_roth = new Set(roth_conversion_strategy);
     for (const inv of account_manager.pre_tax.values()) {
