@@ -46,7 +46,7 @@ export function create_simulation_yearly_result(): SimulationYearlyResult {
   
             const investments: Record<string, number> = {};
 
-            for (const inv of simulation_state.account_manager.all.values()) {
+            for (const inv of simulation_state.account_manager.all().values()) {
                 if (inv.id in investments) {
                     throw new Error(`Duplicate inv.id ${inv.id}`);
                 }

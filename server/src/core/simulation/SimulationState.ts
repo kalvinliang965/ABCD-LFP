@@ -172,7 +172,7 @@ export async function create_simulation_state(
       get_after_tax_contribution_limit: () => after_tax_contribution_limit,
       process_investment_withdrawal: (withdrawal_amount: number) => {
         let withdrawaled=0;
-        const investments = state.account_manager.all;
+        const investments = state.account_manager.all();
         for (const inv_id of state.expense_withrawal_strategy) {
           
           // withdrawaled enough money
