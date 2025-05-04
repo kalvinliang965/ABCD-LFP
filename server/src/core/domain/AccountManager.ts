@@ -46,7 +46,7 @@ function parse_investments(
   }
 
   if (!cash_account) {
-    simulation_logger.error("cash investment not found");
+    simulation_logger.error("cash investment of non retirement status not found");
     throw new Error("cash investment not found");
   }
 
@@ -60,7 +60,7 @@ function parse_investments(
 }
 
 export interface AccountManager {
-  update_id_mapping: Map<string, string>;
+  legacy_id_registry: Map<string, string>;
   cash: Investment;
   non_retirement: AccountMap;
   pre_tax: AccountMap;
@@ -97,8 +97,8 @@ export function create_account_manager(
     const legacy_id_registry: Map<string, string> = new Map();
     for (const inv of investments.values()) {
       if (legacy_id_registry.has(inv.old_id)) {
-        simulation_logger.error(`Failed to create account manager. Duplicate old id ${inv.id}`);
-        throw new Error(`Failed to create account manager. Duplicate old id ${inv.id}`);
+        simulation_logger.error(`Failed to create account manager. Duplicate old id ${inv.old_id}`);
+        throw new Error(`Failed to create account manager. Duplicate old id ${inv.old_id}`);
       }
       legacy_id_registry.set(inv.old_id, inv.id);
     }
@@ -118,7 +118,7 @@ export function create_account_manager(
 
     simulation_logger.info("Successfully created account manager");
     return {
-      update_id_mapping: legacy_id_registry,
+      legacy_id_registry,
       cash,
       non_retirement,
       pre_tax,
