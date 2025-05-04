@@ -2,10 +2,12 @@ import { create_investment_type, InvestmentType } from "./InvestmentType";
 import { ChangeType, TaxStatus } from "../../Enums";
 import { InvestmentRaw } from "../raw/investment_raw";
 import { Cloneable } from "../../../utils/CloneUtil";
+import { has_required_word_occurrences } from "../../../utils/general";
 /**
  * Public information about an investment
  */
 export interface Investment extends Cloneable<Investment> {
+  old_id: string;
   id: string;
   tax_status: TaxStatus;
   investment_type: string;
@@ -39,6 +41,15 @@ export function create_investment(raw_data: InvestmentRaw): Investment {
       default:
         throw new Error(`Invalid tax status: ${raw_data.taxStatus}`);
     }
+
+    // reformat the id of it contain some tax status
+    let old_id: string = raw_data.id;
+    let id: string = old_id;
+    // the id must contain both [investment type] + [tax_status]
+    if (!has_required_word_occurrences(old_id, [tax_status.valueOf(), investment_type])) {
+      id = investment_type + " " + tax_status.valueOf();    
+    }
+
     // how much we bought the investment for
     let cost_basis = raw_data.value;
     // how much we invested
@@ -46,7 +57,8 @@ export function create_investment(raw_data: InvestmentRaw): Investment {
     const investment = {
       investment_type,
       tax_status,
-      id: raw_data.id,
+      old_id: raw_data.id,
+      id,
       get_value: () => value,
       get_cost_basis: () => cost_basis,
       incr_value: (amt: number) => (value += amt),

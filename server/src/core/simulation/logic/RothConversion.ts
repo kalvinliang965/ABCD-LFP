@@ -33,7 +33,7 @@ export function process_roth_conversion(simulation_state: SimulationState) {
                 transfer_amt,
                 simulation_state.account_manager.pre_tax_group,
                 simulation_state.account_manager.after_tax_group,
-                simulation_state.spending_strategy,
+                simulation_state.expense_withrawal_strategy,
             );
             simulation_logger.info(`${transferred} is transferred from pre tax to after tax for roth conversion`);
             simulation_state.user_tax_data.incr_cur_year_income(transferred);

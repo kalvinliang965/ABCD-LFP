@@ -21,37 +21,6 @@ import { create_event_manager, EventManager } from "./EventManager";
 import { Distribution, parse_distribution } from "./raw/common";
 import { simulation_logger } from "../../utils/logger/logger";
 
-
-const REQUIRED_FIELDS = [
-  'name',
-  'maritalStatus',
-  'birthYears',
-  'financialGoal',
-  'residenceState',
-  'lifeExpectancy',
-  'investments', // cash
-  'investmentTypes', // cash
-];
-
-  // Optional: Set defualt value for them...
-  // 'inflationAssumption', // think
-  // 'afterTaxContributionLimit', // think
-
-  // if roth conversion opt is true, we have to check for roth converstion start and end
-  // 'RothConversionOpt',
-  // 'RothConversionStart',
-  // 'RothConversionEnd',
-
-// 可选字段列表
-const OPTIONAL_FIELDS = [
-  'eventSeries',  
-  'spendingStrategy',
-  'expenseWithdrawalStrategy',
-  'RMDStrategy',
-  'RothConversionStrategy'
-];
-
-
 function parse_birth_years(birthYears: Array<number>): Array<number> {
   if (birthYears.length > 2 || birthYears.length == 0) {
     throw new Error(`Invalid number of birth year ${birthYears}`);
@@ -100,7 +69,7 @@ export interface Scenario {
   inflation_assumption: ValueGenerator;
   after_tax_contribution_limit: number;
   spending_strategy: Array<string>;
-  expense_withrawal_strategy: Array<string>;
+  expense_withdrawal_strategy: Array<string>;
   rmd_strategy: Array<string>;
   roth_conversion_opt: boolean;
   roth_conversion_start: number;
@@ -115,7 +84,7 @@ export function create_scenario(scenario_raw: ScenarioRaw, seed: string): Scenar
   try {
     const value_source = create_value_source(seed);
 
-    const taxfilingStatus: TaxFilingStatus = parse_taxpayer_type(
+    const tax_filing_status: TaxFilingStatus = parse_taxpayer_type(
       scenario_raw.maritalStatus
     );
     const [user_birth_year, spouse_birth_year] = parse_birth_years(
@@ -131,21 +100,44 @@ export function create_scenario(scenario_raw: ScenarioRaw, seed: string): Scenar
     );
     const after_tax_contribution_limit: number =
       scenario_raw.afterTaxContributionLimit;
-    const spending_strategy: Array<string> = scenario_raw.spendingStrategy;
-    const expense_withrawal_strategy: Array<string> =
-      scenario_raw.expenseWithdrawalStrategy;
-    const rmd_strategy: Array<string> = scenario_raw.RMDStrategy;
+
     const roth_conversion_opt: boolean = scenario_raw.RothConversionOpt;
     const roth_conversion_start: number = scenario_raw.RothConversionStart;
     const roth_conversion_end: number = scenario_raw.RothConversionEnd;
-    const roth_conversion_strategy: Array<string> =
-      scenario_raw.RothConversionStrategy;
     const financialGoal: number = scenario_raw.financialGoal;
-    const residenceState: StateType = parse_state_type(scenario_raw.residenceState);
+    const residence_state: StateType = parse_state_type(scenario_raw.residenceState);
 
     const event_manager = create_event_manager(scenario_raw.eventSeries, value_source);
     const investment_type_manager = create_investment_type_manager(scenario_raw.investmentTypes, value_source);
     const account_manager = create_account_manager(scenario_raw.investments);
+
+    // rename the strategies...
+    const rmd_strategy: Array<string> = scenario_raw.RMDStrategy
+      .filter(strat => account_manager.update_id_mapping.has(strat))
+      .map(strat => account_manager.update_id_mapping.get(strat)!);
+
+    const expense_withdrawal_strategy: Array<string> =
+      scenario_raw.expenseWithdrawalStrategy
+      .filter(strat => account_manager.update_id_mapping.has(strat))
+      .map(strat => account_manager.update_id_mapping.get(strat)!);
+      
+    const roth_conversion_strategy: Array<string> =
+      scenario_raw.RothConversionStrategy
+      .filter(strat => account_manager.update_id_mapping.has(strat))
+      .map(strat => account_manager.update_id_mapping.get(strat)!);
+
+    const spending_strategy: Array<string> = scenario_raw.spendingStrategy
+      .filter(strat => account_manager.update_id_mapping.has(strat))
+      .map(strat => account_manager.update_id_mapping.get(strat)!);
+
+    // append more to spending strategy
+    const in_spending = new Set(expense_withdrawal_strategy);
+    for (const inv of account_manager.all.values()) {
+      const id = inv.id;
+      if (!in_spending.has(id) && inv.investment_type !== "cash") {
+        expense_withdrawal_strategy.push(id);
+      }
+    }
 
     // Sanity check
     if (dev.is_dev) {
@@ -166,7 +158,7 @@ export function create_scenario(scenario_raw: ScenarioRaw, seed: string): Scenar
       account_manager,
       investment_type_manager,
       name: scenario_raw.name,
-      tax_filing_status: taxfilingStatus,
+      tax_filing_status,
       user_birth_year,
       spouse_birth_year,
       user_life_expectancy,
@@ -174,14 +166,14 @@ export function create_scenario(scenario_raw: ScenarioRaw, seed: string): Scenar
       inflation_assumption,
       after_tax_contribution_limit,
       spending_strategy,
-      expense_withrawal_strategy,
+      expense_withdrawal_strategy,
       rmd_strategy,
       roth_conversion_opt,
       roth_conversion_start,
       roth_conversion_end,
       roth_conversion_strategy,
       financialGoal,
-      residence_state: residenceState,
+      residence_state,
     };
   } catch (error) {
     throw new Error(

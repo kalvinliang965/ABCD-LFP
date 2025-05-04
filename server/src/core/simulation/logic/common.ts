@@ -10,7 +10,7 @@ export function transfer_investment_value(
     amt: number, 
     source_pool: AccountGroup,       
     target_pool: AccountGroup,
-    spending_strategy: string[], // newly created investment need to be added to this strategy
+    withdrawal_expense_strategy: string[], // newly created investment need to be added to this strategy
 ) {
         
     const from_type = source_pool.type;
@@ -63,7 +63,7 @@ export function transfer_investment_value(
 
     // append newly created investment to expense_strategy
     for (const label of newly_created_investment) {
-        spending_strategy.push(label);
+        withdrawal_expense_strategy.push(label);
     }
     
     return transferred;

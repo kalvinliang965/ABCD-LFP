@@ -47,7 +47,7 @@ function parse_investments(
 
   if (!cash_account) {
     simulation_logger.error("cash investment not found");
-    throw new Error("Cash investment not found");
+    throw new Error("cash investment not found");
   }
 
   return [
@@ -60,6 +60,7 @@ function parse_investments(
 }
 
 export interface AccountManager {
+  update_id_mapping: Map<string, string>;
   cash: Investment;
   non_retirement: AccountMap;
   pre_tax: AccountMap;
@@ -79,13 +80,45 @@ export function create_account_manager(
   investments_raw: Set<InvestmentRaw>
 ): AccountManager {
   try {
+    let seen = new Set();
+    for (const inv of investments_raw) {
+      const id = inv.id;
+      if (id in seen) {
+        simulation_logger.error(`Failed to create account manager. Duplicate old id ${id}`);
+        throw new Error(`Failed to create account manager. Duplicate old id ${id}`);
+      }
+      seen.add(id);
+    }
+
     const investments: Array<Investment> = Array.from(investments_raw).map(
       (investment: InvestmentRaw): Investment => create_investment(investment)
     );
+
+    const legacy_id_registry: Map<string, string> = new Map();
+    for (const inv of investments.values()) {
+      if (legacy_id_registry.has(inv.old_id)) {
+        simulation_logger.error(`Failed to create account manager. Duplicate old id ${inv.id}`);
+        throw new Error(`Failed to create account manager. Duplicate old id ${inv.id}`);
+      }
+      legacy_id_registry.set(inv.old_id, inv.id);
+    }
+
+    seen = new Set();
+    for (const new_id of legacy_id_registry.values()) {
+      if (seen.has(new_id)) {
+        simulation_logger.error(`Failed to create account manager. Duplicate new id ${new_id}`);
+        throw new Error(`Failed to create account manager. Duplicate new id ${new_id}`);
+      }
+      seen.add(new_id);
+    }
+
     const [cash, non_retirement, pre_tax, after_tax, all] =
       parse_investments(investments);
+
+
     simulation_logger.info("Successfully created account manager");
     return {
+      update_id_mapping: legacy_id_registry,
       cash,
       non_retirement,
       pre_tax,

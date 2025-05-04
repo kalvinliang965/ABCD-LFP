@@ -26,3 +26,25 @@ export function equal_record(
   
     return true;
   }
+
+
+export function has_required_word_occurrences(inputString: string, required_words: string[]): boolean {
+    const required_occurrences: Record<string, number> = {};
+
+    for (const target_word of required_words) {
+        required_occurrences[target_word] = (required_occurrences[target_word] || 0) + 1;
+    }
+
+    const words_in_input = inputString.split(' ').filter(word => word.length > 0);
+
+    const actual_occurrences: Record<string, number> = {};
+    for (const current_word of words_in_input) {
+        if (current_word in required_occurrences) {
+        actual_occurrences[current_word] = (actual_occurrences[current_word] || 0) + 1;
+        }
+    }
+
+    return Object.keys(required_occurrences).every(requiredWord => 
+        (actual_occurrences[requiredWord] || 0) >= required_occurrences[requiredWord]
+    );
+}
