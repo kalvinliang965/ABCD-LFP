@@ -22,6 +22,9 @@ export function transfer_investment_value(
         }
         if (!target_pool.has(label)) {
             const cloned_investment = from_investment.clone();
+            // reset the fields of the investment
+            cloned_investment.incr_cost_basis(-cloned_investment.get_cost_basis());
+            cloned_investment.incr_value(-cloned_investment.get_value());
             cloned_investment.tax_status = TaxStatus.AFTER_TAX
             target_pool.set(label, cloned_investment);
         }
