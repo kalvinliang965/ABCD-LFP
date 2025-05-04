@@ -361,7 +361,7 @@ export function create_simulation_result_v1(
   }
   simulation_logger.info(`Now you are in consolidatedSimulationResult`);
   //all simulation should give us how many simulations we have
-  simulation_logger.debug(`allSimulations length is: ${allSimulations.length}`);
+  simulation_logger.silly(`allSimulations length is: ${allSimulations.length}`);
 
   const yearly_simulation_results: simulation_result = {
     scenarioId: scenarioId,
@@ -382,8 +382,8 @@ export function create_simulation_result_v1(
         allSimulations[i].yearly_results[longest_yearly_results - 1].year;
     }
   }
-  simulation_logger.debug(`begining year is: ${begining_year}`);
-  simulation_logger.debug(`end year is: ${end_year}`);
+  simulation_logger.silly(`begining year is: ${begining_year}`);
+  simulation_logger.silly(`end year is: ${end_year}`);
 
   //TODO:计算每年的simulation的所有需要的信息
   for (
@@ -403,7 +403,7 @@ export function create_simulation_result_v1(
     let total_discretionary_expenses_pct: shaded_chart;
     //TODO:1 写入今年年份
     curr_year = begining_year + loop_for_year;
-    simulation_logger.debug(`curr_year is: ${curr_year}`);
+    simulation_logger.silly(`curr_year is: ${curr_year}`);
 
     //TODO:2 计算每年成功概率
     success_probability = calculate_success_probability(
