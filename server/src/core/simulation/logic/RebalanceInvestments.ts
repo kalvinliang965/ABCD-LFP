@@ -118,9 +118,8 @@ export function run_rebalance_investment(
 		
 		//get the first investment's account type
 		const first_investment = state.account_manager.after_tax.get(investment_ids[0]) || 
-		                        state.account_manager.non_retirement.get(investment_ids[0].toUpperCase()) || 
+		                        state.account_manager.non_retirement.get(investment_ids[0]) || 
 		                        state.account_manager.pre_tax.get(investment_ids[0]);
-		
 		if (!first_investment) {
 			simulation_logger.error(`First investment ${investment_ids[0]} not found in any account type`);
 			continue;
@@ -131,11 +130,11 @@ export function run_rebalance_investment(
 		//verify all other investments are in the same account type
 		for (const investment_id of investment_ids.slice(1)) {
 			const investment = state.account_manager.after_tax.get(investment_id) || 
-			                  state.account_manager.non_retirement.get(investment_id.toUpperCase()) || 
+			                  state.account_manager.non_retirement.get(investment_id) || 
 			                  state.account_manager.pre_tax.get(investment_id);
 			
 			if (!investment || investment.tax_status !== account_type) {
-				simulation_logger.error(`Investment ${investment_id} is not in ${account_type} account type`);
+				simulation_logger.error(`Second investment ${investment_id} is not in ${account_type} account type`);
 				continue;
 			}
 		}
@@ -144,7 +143,7 @@ export function run_rebalance_investment(
 		const investments = new Map<string, Investment>();
 		for (const investment_id of investment_ids) {
 			const investment = state.account_manager.after_tax.get(investment_id) || 
-			                   state.account_manager.non_retirement.get(investment_id.toUpperCase()) || 
+			                   state.account_manager.non_retirement.get(investment_id) || 
 			                  state.account_manager.pre_tax.get(investment_id);
 			if (investment && investment.tax_status === account_type) {
 				investments.set(investment_id, investment);

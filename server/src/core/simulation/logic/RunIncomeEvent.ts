@@ -21,7 +21,7 @@ export async function run_income_event(
     simulation_logger.debug(`run income event ${event.name}`);
 
     // step a: update the initial amount field for this event for next year
-    let user_gains=state.event_manager.update_initial_amount(event);
+    let user_gains=state.event_manager.update_initial_amount(event, state.get_annual_inflation_rate());
 
     // step c: ignore spouse portion if they died
     // if both are alive, we use the entire amount
@@ -31,6 +31,9 @@ export async function run_income_event(
     } else {
       simulation_logger.debug(`Spouse is not alive. User own ${event.user_fraction} of the event`);
     }
+
+    user_gains = Math.round(user_gains * 100) / 100;
+    
     simulation_logger.debug(`User gained ${user_gains}`);
 
     // step d: add income to cash investment

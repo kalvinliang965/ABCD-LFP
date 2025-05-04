@@ -6,4 +6,5 @@ dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 export const dev = {
     is_dev: process.env.NODE_ENV === "development",
+    is_test: process.env.NODE_ENV === 'test',
 };

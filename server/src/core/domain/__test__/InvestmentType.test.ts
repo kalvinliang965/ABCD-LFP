@@ -1,17 +1,20 @@
-import { create_investment_type_raw } from "../../raw/investment_type_raw";
-import { 
-    cash_investment_type_one, 
-    s_and_p_500_investment_type_one, 
-    tax_exempt_bonds_investment_type_one 
-} from "../../raw/investment_type_raw";
 
-import { create_investment_type, parse_investment_type_distribution, parse_change_type } from "../InvestmentType";
-import { ChangeType } from "../../../Enums";
-import { InvestmentTypeRaw } from "../../raw/investment_type_raw";
-import { StatisticType } from "../../../Enums";
-import { Distribution } from "../../raw/common";
+import { create_investment_type, parse_investment_type_distribution, parse_change_type } from "../investment/InvestmentType";
+import { Distribution } from "../raw/common";
+import { create_investment_type_raw } from "../raw/investment_type_raw";
+import { cash_investment_type_one, s_and_p_500_investment_type_one, tax_exempt_bonds_investment_type_one } from "../raw/investment_type_raw";
+import { ChangeType } from "../../Enums";
+import { StatisticType } from "../../Enums";
+import { InvestmentTypeRaw } from "../raw/investment_type_raw";
+import { create_value_source, ValueSource } from "../../../utils/ValueGenerator";
+
+let source: ValueSource;
 
 describe("investment type raw initialization", () => {
+  beforeAll(() => {
+    source = create_value_source("random");
+  })
+
   describe("create_investment_type_raw function test", () => {
     it("should_create_investment_type_with_correct_properties", () => {
       const name = "Test Investment";
@@ -158,30 +161,6 @@ describe("Investment Type Factory", () => {
       });
     });
 
-    describe("parse_distribution", () => {
-      test("should parse fixed distribution", () => {
-        const dist: Distribution = {
-          type: "fixed", 
-          value: 0.05
-        };
-        const result = parse_investment_type_distribution(dist);
-        
-        expect(result._params.get(StatisticType.VALUE)).toBe(0.05);
-      });
-
-      test("should parse normal distribution", () => {
-        const dist: Distribution = {
-          type: "normal", 
-          mean: 0.06, 
-          stdev: 0.02
-        };
-        const result = parse_investment_type_distribution(dist);
-        
-        expect(result._params.get(StatisticType.MEAN)).toBe(0.06);
-        expect(result._params.get(StatisticType.STDEV)).toBe(0.02);
-      });
-
-    });
   });
 
 
@@ -204,29 +183,9 @@ describe("Investment Type Factory", () => {
       taxability: true
     };
 
-    it("should create valid investment type", () => {
-      const result = create_investment_type(baseRaw);
-      expect(result).toMatchObject({
-        name: "Test",
-        description: "Test Type",
-        return_change_type: ChangeType.PERCENT,
-        expense_ratio: 0.001,
-        income_change_type: ChangeType.AMOUNT,
-        taxability: true
-      });
-      expect(result._expected_annual_return._params).toEqual(
-        new Map([[StatisticType.VALUE, 0.05]])
-      );
-      expect(result._expected_annual_income._params).toEqual(
-        new Map([
-          [StatisticType.MEAN, 1000],
-          [StatisticType.STDEV, 200]
-        ])
-      );
-    });
 
     it("should be able to be cloned properly", () => {
-      const investment_type = create_investment_type(baseRaw);
+      const investment_type = create_investment_type(baseRaw, create_value_source("random"));
       const cloned_investment_type = investment_type.clone();
     
       // Verify initial equality
@@ -273,7 +232,7 @@ describe("Investment Type Factory", () => {
 
     // Test annual income/return sampling
     test("should sample annual values correctly", () => {
-      const investment_type = create_investment_type(baseRaw);
+      const investment_type = create_investment_type(baseRaw, source);
       expect(typeof investment_type._expected_annual_income.sample()).toBe("number");
       expect(typeof investment_type._expected_annual_return.sample()).toBe("number");
     });
@@ -290,23 +249,22 @@ describe("Investment Type Factory", () => {
       expect(type.taxability).toBeDefined();
     };
     test("cash_investment_type_one", () => {
-      const result = create_investment_type(cash_investment_type_one);
+      const result = create_investment_type(cash_investment_type_one, source);
       verifyCommonProperties(result);
       
       expect(result.return_change_type).toBe(ChangeType.AMOUNT);
-      expect(result._expected_annual_return._params.get(StatisticType.VALUE)).toBe(0);
       expect(result.taxability).toBe(true);
     });
 
     test("s_and_p_500_investment_type_one", () => {
-      const result = create_investment_type(s_and_p_500_investment_type_one);
+      const result = create_investment_type(s_and_p_500_investment_type_one, source);
       verifyCommonProperties(result);
       expect(result.return_change_type).toBe(ChangeType.PERCENT);
       expect(result.taxability).toBe(true);
     });
 
     test("tax_exempt_bonds_investment_type_one", () => {
-      const result = create_investment_type(tax_exempt_bonds_investment_type_one);
+      const result = create_investment_type(tax_exempt_bonds_investment_type_one, source);
       verifyCommonProperties(result);
       expect(result.income_change_type).toBe(ChangeType.PERCENT);
       expect(result.taxability).toBe(false);

@@ -114,6 +114,7 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
   const [selected_event_name, set_selected_event_name] = useState<string>('');
   const [start_year_value, set_start_year_value] = useState<number>(0);
   const [duration_value, set_duration_value] = useState<number>(0);
+  const [simulations_per_value, set_simulations_per_value] = useState<number>(5);
 
   const [exploration_results, set_exploration_results] = useState<any[]>([]);
   const [is_loading, set_is_loading] = useState<boolean>(false);
@@ -285,6 +286,7 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
     const payload: any = {
       scenarioId,
       parameterType: selectedParameter,
+      numSimulations: simulations_per_value
     };
 
     if (selectedParameter === 'rothOptimizer') {
@@ -534,12 +536,33 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
                     </NumberInputStepper>
                   </NumberInput>
                 </FormControl>
+                
+                <FormControl id="simulations-per-value" isRequired mt={4}>
+                  <FormLabel>Simulations Per Value</FormLabel>
+                  <NumberInput 
+                    value={simulations_per_value} 
+                    onChange={(_, val) => set_simulations_per_value(val)} 
+                    min={1}
+                    max={100}
+                  >
+                    <NumberInputField />
+                    <NumberInputStepper>
+                      <NumberIncrementStepper />
+                      <NumberDecrementStepper />
+                    </NumberInputStepper>
+                  </NumberInput>
+                  <Text fontSize="xs" color="gray.500" mt={1}>
+                    Number of Monte Carlo simulations to run for each parameter value
+                  </Text>
+                </FormControl>
 
                 {lower_bound !== upper_bound && (
                   <Box mt={2}>
                     <Text fontSize="sm" fontWeight="bold">
                       This will create {Math.floor((upper_bound - lower_bound) / step_size) + 1}{' '}
-                      simulation runs
+                      parameter values × {simulations_per_value} simulations each = {' '}
+                      {(Math.floor((upper_bound - lower_bound) / step_size) + 1) * simulations_per_value}{' '}
+                      total simulations
                     </Text>
                   </Box>
                 )}

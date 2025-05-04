@@ -51,14 +51,14 @@ export const cash_investment_one: InvestmentRaw = create_investment_raw(
     cash_investment_type_one.name,
     100,
     "non-retirement",
-    "cash-one",
+    "cash non-retirement",
 );
 
 export const s_and_p_500_investment_non_retirement_one: InvestmentRaw = create_investment_raw(
     s_and_p_500_investment_type_one.name, 
     100000, 
     "non-retirement", 
-    "S&P 500 non-retirment"
+    "S&P 500 non-retirement"
 );
 
 export const tax_exempt_bonds_investment_one: InvestmentRaw = create_investment_raw(

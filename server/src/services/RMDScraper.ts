@@ -86,7 +86,6 @@ export async function scrape_rmd_table(html: string): Promise<Map<number, number
     // it is require to start doing rmd at 73 for previous yera that is 72
     for (let i = 72; i <= tax_config.MAX_RMD_AGE; ++i) {
       if (!rmd_factors.has(i)) {
-        console.log(rmd_factors.get(i));
         simulation_logger.error(`RMD table is missing age ${i}`);
         throw new Error(`RMD table is missing age ${i}`);
       }

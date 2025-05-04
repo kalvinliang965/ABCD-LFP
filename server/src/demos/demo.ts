@@ -10,6 +10,7 @@ import { Profiler } from "../utils/Profiler";
 import { delete_all_federal_brackets_from_db } from "../db/repositories/TaxBracketRepository";
 import { delete_all_rmd_factors_from_db } from "../db/repositories/RMDFactorRepository";
 import { delete_all_standard_deduction_from_db } from "../db/repositories/StandardDeductionRepository";
+import { generate_seed } from "../utils/ValueGenerator";
 
 async function scrapping_demo() {
     console.log("Scrapping demo");
@@ -30,26 +31,15 @@ async function simulation_engine_demo(N: number) {
   await clear_tax_data_before_scraping();
   const profiler = new Profiler();
   
+  const random_base_seed = generate_seed();
   // set up the environment
   profiler.start("create_simulation_environment");
-  const simulation_environment = await create_simulation_environment_parallel("680d5df88650c1b31ef2604f");
+  const simulation_environment = await create_simulation_environment_parallel("680d5df88650c1b31ef2604f", random_base_seed);
   profiler.end("create_simulation_environment");
 
-  // set up the simulation engine
-  // const simulation_engine = await create_simulation_engine(simulation_environment);
-  // profiler.start("run");
-  // await simulation_engine.run(N);
-  // profiler.end("run");
-  
-  // // optimize
-  // profiler.start("create_simulation_environment_parallel");
-  // const simulation_environment_parallel = await create_simulation_environment_parallel("680d5df88650c1b31ef2604f");
-  // profiler.end("create_simulation_environment_parallel");
-
-  // // set up the simulation engine
   const simulation_engine_parallel = await create_simulation_engine(simulation_environment);
   profiler.start("run_parallel");
-  await simulation_engine_parallel.run_parallel(N);
+  await simulation_engine_parallel.run(N);
   profiler.end("run_parallel");
   
   profiler.export_to_CSV();
@@ -57,22 +47,23 @@ async function simulation_engine_demo(N: number) {
 
 async function optimize_scenario_environment_initialization_demo(N: number) { 
 
+  const random_base_seed = generate_seed();
   const profiler = new Profiler();
   for (let i = 0; i < N; ++i) {
     await clear_tax_data_before_scraping();
     profiler.start("create_simulation_environment");
-    await create_simulation_environment("680d5df88650c1b31ef2604f");
+    await create_simulation_environment("680d5df88650c1b31ef2604f", random_base_seed);
     profiler.end("create_simulation_environment");
 
     await clear_tax_data_before_scraping();
     profiler.start("create_simulation_environment_parallel");
-    await create_simulation_environment_parallel("680d5df88650c1b31ef2604f");
+    await create_simulation_environment_parallel("680d5df88650c1b31ef2604f", random_base_seed);
     profiler.end("create_simulation_environment_parallel");
     
   }
   profiler.printSummary();
 }
 export async function run_demo() {
-  await simulation_engine_demo(10);
+  await simulation_engine_demo(1);
   // await optimize_scenario_environment_initialization_demo(1);
 }

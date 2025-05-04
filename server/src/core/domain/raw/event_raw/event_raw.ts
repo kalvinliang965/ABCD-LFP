@@ -16,5 +16,21 @@ export type EventRaw = {
   type: "income" | "expense" | "invest" | "rebalance";
 };
 
+export function is_event(event: unknown): event is EventRaw {
+  return (
+    typeof event === 'object' &&
+    event !== null &&
+    'name' in event &&
+    typeof (event as any).name === 'string' &&
+    'start' in event &&
+    typeof (event as any).start === 'object' &&
+    event.start !== null &&
+    'duration' in event &&
+    typeof (event as any).duration === 'object' &&
+    event.duration !== null &&
+    'type' in event &&
+    ['income', 'expense', 'invest', 'rebalance'].includes((event as any).type)
+  );
+}
 
 export type EventUnionRaw = ExpenseEventRaw | InvestEventRaw | RebalanceEventRaw | IncomeEventRaw;

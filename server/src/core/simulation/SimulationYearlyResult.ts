@@ -1,4 +1,5 @@
 import { SimulationState } from "./SimulationState"
+import { equal_record } from "../../utils/general";
 
 // edit: I dont think financial goal is needed here
 // this is kalvin's code
@@ -21,13 +22,8 @@ export interface YearResult {
     cur_year_after_tax_contributions: number;
     cur_year_early_withdrawals: number;
     income_breakdown: Record<string, number>; 
-    mandatory_expenses: number;
-    discretionary_expenses: number;
-    total_expenses: number;
-    expense_breakdown: {
-        expenses: Record<string, number>;
-        taxes: number; //previous years taxes
-    };
+    mandatory_expenses: Record<string, number>;
+    discretionary_expenses: Record<string, number>;
     //% of discretionary expenses needs to be stored, tbd
 }
 
@@ -47,19 +43,15 @@ export function create_simulation_yearly_result(): SimulationYearlyResult {
     return {
         yearly_results,
         update: async (simulation_state: SimulationState) => {
-            //get expenses
-            // next 3 lines under question since it depends on the expense logic update
-            const total_expenses = simulation_state.event_manager.get_discretionary_expenses() + 
-                            simulation_state.event_manager.get_mandatory_expenses();
-            const expense_breakdown = simulation_state.event_manager.get_expense_breakdown();
-
-            //previous years tax to have a breakdown of expense
-            const prev_year_tax_base = simulation_state.event_manager.get_last_year_tax_totals()?.total || 0;
-
-            //collect data for the year:
-            //we need to know total inv value, i did not find one
-            //and we need the investments recorded for each year
+  
             const investments: Record<string, number> = {};
+
+            for (const inv of simulation_state.account_manager.all.values()) {
+                if (inv.id in investments) {
+                    throw new Error(`Duplicate inv.id ${inv.id}`);
+                }
+                investments[inv.id] = inv.get_value();
+            }
             
             const year_snapshot: YearResult = {
                 // Here are the one haifeng ask for
@@ -77,19 +69,16 @@ export function create_simulation_yearly_result(): SimulationYearlyResult {
                 cur_year_capital_gains: simulation_state.user_tax_data.get_cur_year_gains(),
                 cur_year_after_tax_contributions: simulation_state.user_tax_data.get_cur_after_tax_contribution(),
                 cur_year_early_withdrawals: simulation_state.user_tax_data.get_cur_year_early_withdrawal(),
-                income_breakdown: simulation_state.event_manager.get_income_breakdown(),
-                mandatory_expenses: simulation_state.event_manager.get_mandatory_expenses(),
-                discretionary_expenses: simulation_state.event_manager.get_discretionary_expenses(),
-                total_expenses,
-                expense_breakdown: {
-                    expenses: expense_breakdown,
-                    taxes: prev_year_tax_base
-                },
+                income_breakdown: { ...simulation_state.event_manager.income_breakdown },
+                mandatory_expenses: { ...simulation_state.event_manager.mandatory_expenses },
+                discretionary_expenses: { ...simulation_state.event_manager.discretionary_expenses },
             };
 
+            if (yearly_results.length > 0 && yearly_results[yearly_results.length - 1].year === year_snapshot.year) {
+                throw new Error(`Year already exist ${year_snapshot.year}`);
+            }
             //push the snapshot into the result
             yearly_results.push(year_snapshot);
-
             //update success count if goal is met
             if (year_snapshot.is_goal_met) {
                 success++;
@@ -100,4 +89,42 @@ export function create_simulation_yearly_result(): SimulationYearlyResult {
             return yearly_results.length > 0 ? success / yearly_results.length : 0;
         }
     }
+}
+
+function compare_year_result(a: YearResult, b: YearResult): boolean {
+    if (a.year !== b.year) return false;
+    if (a.total_after_tax !== b.total_after_tax) return false;
+    if (a.total_pre_tax !== b.total_pre_tax) return false;
+    if (a.total_non_retirement !== b.total_non_retirement) return false;
+    if (a.is_goal_met !== b.is_goal_met) return false;
+    if (a.cash_value !== b.cash_value) return false;
+    if (a.cur_year_income !== b.cur_year_income) return false;
+    if (a.cur_year_social_security !== b.cur_year_social_security) return false;
+    if (a.cur_year_capital_gains !== b.cur_year_capital_gains) return false;
+    if (a.cur_year_after_tax_contributions !== b.cur_year_after_tax_contributions) return false;
+    if (a.cur_year_early_withdrawals !== b.cur_year_early_withdrawals) return false;
+  
+    if (!equal_record(a.investments, b.investments)) return false;
+    if (!equal_record(a.income_breakdown, b.income_breakdown)) return false;
+    if (!equal_record(a.mandatory_expenses, b.mandatory_expenses)) return false;
+    if (!equal_record(a.discretionary_expenses, b.discretionary_expenses)) return false;
+  
+    return true;
+  }
+  
+export function compare_simulation_yearly_result(
+    sr1: SimulationYearlyResult,
+    sr2: SimulationYearlyResult,
+): boolean {
+    const N = sr1.yearly_results.length;
+    const M = sr2.yearly_results.length;
+    if (N != M) return false;
+    for (let i = 0; i < N; ++i) {
+        const ys1 = sr1.yearly_results[i];
+        const ys2 = sr2.yearly_results[i];
+        if (!compare_year_result(ys1, ys2)) {
+            return false;
+        }
+    }
+    return true;
 }

@@ -46,7 +46,7 @@ export function pay_discretionary_expenses(state: SimulationState): void {
     simulation_logger.debug(`Paying for discretionary expense ${expense}`);
     
     // amount we have to pay
-    let amt = state.event_manager.update_initial_amount(expense_event);
+    let amt = state.event_manager.update_initial_amount(expense_event, state.get_annual_inflation_rate());
     if (spouse_alive) {
       simulation_logger.debug(`Spouse alive. User own ${expense_event.user_fraction} of the event`);
       amt *= expense_event.user_fraction;
@@ -54,8 +54,8 @@ export function pay_discretionary_expenses(state: SimulationState): void {
       simulation_logger.debug(`Spouse not exist/alive. User own ${expense_event.user_fraction} of the event`);
     }
 
-    const full_payment = Math.min(amt);
-    const partial_payment = Math.min(state.account_manager.get_net_worth() - state.get_financial_goal());
+    const full_payment = amt;
+    const partial_payment = Math.min(state.account_manager.get_net_worth() - state.get_financial_goal(), full_payment);
     // WARNING: This shouldnt be negative
     if (partial_payment <= 0) {
       simulation_logger.error("Financial goal is violated incorrectly");
@@ -69,13 +69,14 @@ export function pay_discretionary_expenses(state: SimulationState): void {
 
     const cash_paid = Math.min(payment, state.account_manager.cash.get_value());
     simulation_logger.debug(`Cash paid ${cash_paid}`);
-    state.event_manager.incr_discretionary_expense(cash_paid);
+    state.event_manager.update_discretionary_expenses(expense_event.name, cash_paid);
     state.account_manager.cash.incr_value(-cash_paid);
     
     if(withdrawal_amount > 0) {
       const withdrawaled = state.process_investment_withdrawal(withdrawal_amount);
       simulation_logger.debug(`pay discretionary expense from non cash investment: ${withdrawaled}`);
-      state.event_manager.incr_discretionary_expense(withdrawal_amount);
+      state.event_manager.update_discretionary_expenses(expense_event.name, cash_paid + withdrawal_amount);
+      simulation_logger.debug(`Updated discretionary expenses ${expense_event.name} adding withdrawal amt`);
       // if we dont have enough money
       if (withdrawal_amount > 0 && withdrawal_amount !== withdrawaled) {
         break;

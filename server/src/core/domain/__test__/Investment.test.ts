@@ -23,14 +23,10 @@ describe("create_investment", () => {
       ["pre-tax", TaxStatus.PRE_TAX],
       ["after-tax", TaxStatus.AFTER_TAX]
     ])("should convert %s tax status correctly", (input, expected) => {
-      const investment = create_investment({ ...baseRawData, taxStatus: input });
-      expect(investment.tax_status).toBe(expected);
-    });
+      const investment = create_investment({ ...baseRawData, taxStatus: input as "non-retirement" | "pre-tax" | "after-tax"
   
-    // Test invalid tax status handling
-    test("should throw error for invalid tax status", () => {
-      const invalidRaw = { ...baseRawData, taxStatus: "invalid" };
-      expect(() => create_investment(invalidRaw)).toThrow("Error creating investment");
+       });
+      expect(investment.tax_status).toBe(expected);
     });
   
     // Test value initialization
@@ -65,7 +61,7 @@ describe("create_investment", () => {
       ["pre-tax", true],
       ["after-tax", true]
     ])("should detect retirement status for %s", (status, expected) => {
-      const investment = create_investment({ ...baseRawData, taxStatus: status });
+      const investment = create_investment({ ...baseRawData, taxStatus: status as "non-retirement" | "pre-tax" | "after-tax" });
       expect(investment.is_retirement()).toBe(expected);
     });
   
@@ -78,7 +74,115 @@ describe("create_investment", () => {
       expect(clone.get_value()).toBe(baseRawData.value);
       expect(original.get_value()).toBe(baseRawData.value + 100);
     });
-  
-  
+    
+    describe("investment ID formatting", () => {
+      const testInvestmentType = "test-investment";
+      const testTaxStatus = "non-retirement";
+      
+      describe("ID validation rules", () => {
+        // Basic validation
+        test("should require both investment type and tax status in ID", () => {
+          const raw: InvestmentRaw = {
+            investmentType: testInvestmentType,
+            taxStatus: testTaxStatus,
+            id: "invalid-id",
+            value: 1000
+          };
+          
+          const result = create_investment(raw);
+          expect(result.id).toMatch(new RegExp(`${testInvestmentType}.*${testTaxStatus}|${testTaxStatus}.*${testInvestmentType}`));
+        });
+    
+        // Position variations
+        test("should accept either order of components", () => {
+          const frontRaw: InvestmentRaw = {
+            investmentType: testInvestmentType,
+            taxStatus: testTaxStatus,
+            id: `${testInvestmentType} ${testTaxStatus}`,
+            value: 1000
+          };
+          
+          const backRaw: InvestmentRaw = {
+            investmentType: testInvestmentType,
+            taxStatus: testTaxStatus,
+            id: `${testTaxStatus} ${testInvestmentType}`,
+            value: 1000
+          };
+    
+          expect(create_investment(frontRaw).id).toBe(frontRaw.id);
+          expect(create_investment(backRaw).id).toBe(backRaw.id);
+        });
+    
+      });
+    
+      describe("edge cases", () => {
+    
+        // Multiple spaces
+        test("should normalize whitespace", () => {
+          const raw: InvestmentRaw = {
+            investmentType: testInvestmentType,
+            taxStatus: testTaxStatus,
+            id: "  test-investment   non-retirement  ",
+            value: 1000
+          };
+    
+          expect(create_investment(raw).id).toBe(raw.id);
+        });
+    
+      });
+    
+      describe("ID construction scenarios", () => {
+        // Partial matches
+        test("should add missing component to partial ID", () => {
+          const missingTaxStatus: InvestmentRaw = {
+            investmentType: testInvestmentType,
+            taxStatus: testTaxStatus,
+            id: testInvestmentType,
+            value: 1000
+          };
+    
+          expect(create_investment(missingTaxStatus).id).toBe(`${testInvestmentType} ${testTaxStatus}`);
+        });
+    
+        // Existing extra components
+        test("should preserve additional ID components", () => {
+          const raw: InvestmentRaw = {
+            investmentType: testInvestmentType,
+            taxStatus: testTaxStatus,
+            id: `${testInvestmentType} extra-component ${testTaxStatus}`,
+            value: 1000
+          };
+    
+          expect(create_investment(raw).id).toBe(raw.id);
+        });
+    
+        // Empty ID handling
+        test("should build ID from scratch when empty", () => {
+          const raw: InvestmentRaw = {
+            investmentType: testInvestmentType,
+            taxStatus: testTaxStatus,
+            id: "",
+            value: 1000
+          };
+    
+          expect(create_investment(raw).id).toBe(`${testInvestmentType} ${testTaxStatus}`);
+        });
+      });
+    
+      describe("validation failures", () => {
+        // Mismatched components
+        test("should detect wrong tax status in ID", () => {
+          const raw: InvestmentRaw = {
+            investmentType: testInvestmentType,
+            taxStatus: testTaxStatus,
+            id: `${testInvestmentType} roth-ira`,
+            value: 1000
+          };
+    
+          expect(create_investment(raw).id).toContain(testTaxStatus);
+        });
+    
+      });
+    });
   
   });

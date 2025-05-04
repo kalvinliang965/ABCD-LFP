@@ -7,6 +7,11 @@ import { clone_map } from "../../utils/CloneUtil";
 
 export type AccountMap = Map<string, Investment>;
 
+export type AccountGroup = {
+  type: "after-tax" | "non-retirement" | "pre-tax";
+  account_map: AccountMap;
+}
+
 // Parse investments by tax status
 function parse_investments(
   investments: Investment[]
@@ -21,14 +26,12 @@ function parse_investments(
     all.set(investment.id, investment);
     switch (investment.tax_status) {
       case TaxStatus.NON_RETIREMENT:
-        let upper_case_investment_id = investment.id.toUpperCase();
         if (
-          upper_case_investment_id === "CASH" ||
-          upper_case_investment_id === "CASH NON-RETIREMENT"
+          investment.investment_type === "cash"
         ) {
           cash_account = investment;
         } else {
-          non_retirement_account.set(upper_case_investment_id, investment);
+          non_retirement_account.set(investment.id, investment);
         }
         break;
       case TaxStatus.PRE_TAX:
@@ -43,8 +46,8 @@ function parse_investments(
   }
 
   if (!cash_account) {
-    console.log("cash investment not found");
-    process.exit(1);
+    simulation_logger.error("cash investment not found");
+    throw new Error("cash investment not found");
   }
 
   return [
@@ -57,11 +60,15 @@ function parse_investments(
 }
 
 export interface AccountManager {
+  update_id_mapping: Map<string, string>;
   cash: Investment;
   non_retirement: AccountMap;
   pre_tax: AccountMap;
   after_tax: AccountMap;
   all: AccountMap;
+  non_retirement_group: AccountGroup;
+  after_tax_group: AccountGroup;
+  pre_tax_group: AccountGroup;
   get_net_worth: () => number;
   get_total_non_retirement_value: () => number;
   get_total_pre_tax_value: () => number;
@@ -73,17 +80,61 @@ export function create_account_manager(
   investments_raw: Set<InvestmentRaw>
 ): AccountManager {
   try {
+    let seen = new Set();
+    for (const inv of investments_raw) {
+      const id = inv.id;
+      if (id in seen) {
+        simulation_logger.error(`Failed to create account manager. Duplicate old id ${id}`);
+        throw new Error(`Failed to create account manager. Duplicate old id ${id}`);
+      }
+      seen.add(id);
+    }
+
     const investments: Array<Investment> = Array.from(investments_raw).map(
       (investment: InvestmentRaw): Investment => create_investment(investment)
     );
+
+    const legacy_id_registry: Map<string, string> = new Map();
+    for (const inv of investments.values()) {
+      if (legacy_id_registry.has(inv.old_id)) {
+        simulation_logger.error(`Failed to create account manager. Duplicate old id ${inv.id}`);
+        throw new Error(`Failed to create account manager. Duplicate old id ${inv.id}`);
+      }
+      legacy_id_registry.set(inv.old_id, inv.id);
+    }
+
+    seen = new Set();
+    for (const new_id of legacy_id_registry.values()) {
+      if (seen.has(new_id)) {
+        simulation_logger.error(`Failed to create account manager. Duplicate new id ${new_id}`);
+        throw new Error(`Failed to create account manager. Duplicate new id ${new_id}`);
+      }
+      seen.add(new_id);
+    }
+
     const [cash, non_retirement, pre_tax, after_tax, all] =
       parse_investments(investments);
+
+
     simulation_logger.info("Successfully created account manager");
     return {
+      update_id_mapping: legacy_id_registry,
       cash,
       non_retirement,
       pre_tax,
       after_tax,
+      non_retirement_group: {
+        type: "non-retirement",
+        account_map: non_retirement
+      },
+      after_tax_group: {
+        type: "after-tax",
+        account_map: after_tax
+      },
+      pre_tax_group: {
+        type: "pre-tax",
+        account_map: pre_tax
+      },
       all,
       // Chen removed cash.get_value() at 2025-04-30
       get_net_worth: () => {

@@ -1,4 +1,4 @@
-import { IncomeEventRaw, ExpenseEventRaw, InvestEventRaw, RebalanceEventRaw, EventUnionRaw, create_income_event_raw, create_invest_event_raw } from "./raw/event_raw/event_raw";
+import { IncomeEventRaw, ExpenseEventRaw, InvestEventRaw, RebalanceEventRaw, EventUnionRaw, create_income_event_raw, create_invest_event_raw, is_event } from "./raw/event_raw/event_raw";
 import create_income_event, { IncomeEvent } from "./event/IncomeEvent";
 import create_expense_event, { ExpenseEvent } from "./event/ExpenseEvent";
 import create_invest_event from "./event/InvestEvent";
@@ -11,6 +11,8 @@ import { EventUnion } from "./event/Event";
 import { ChangeType } from "../Enums";
 import { prune_overlapping_rebalance_events } from "../simulation/logic/RebalanceInvestments";
 import { ValueSource } from "../../utils/ValueGenerator";
+import { string } from "zod";
+import { reset_record, update_record } from "../../utils/general";
 export type InvestEventMap = Map<string, InvestEvent>;
 export type IncomeEventMap = Map<string, IncomeEvent>;
 export type RebalanceEventMap = Map<string, RebalanceEvent>;
@@ -91,19 +93,18 @@ export interface EventManager {
     expense_event: ExpenseEventMap,
     invest_event: InvestEventMap,
     rebalance_event: RebalanceEventMap,
-    get_income_breakdown: () => Record<string, number>;
+
+    income_breakdown: Record<string, number>;
+    mandatory_expenses: Record<string, number>;
+    discretionary_expenses: Record<string, number>;
+
     update_income_breakdown: (eventName: string, amount: number) => void;
-    reset_income_breakdown: () => void;
-    get_expense_breakdown: () => Record<string, number>;
-    update_expense_breakdown: (eventName: string, amount: number) => void;
-    reset_expense_breakdown: () => void;
-    get_mandatory_expenses: () => number,
-    get_discretionary_expenses: () => number,
-    incr_mandatory_expense: (amt: number) => void,
-    incr_discretionary_expense: (amt: number) => void,
-    get_last_year_tax_totals: () => { total: number } | undefined;
-    update_last_year_tax_totals: (total: number) => void;
-    update_initial_amount: (event: ExpenseEvent | IncomeEvent) => number;
+    update_mandatory_expenses: (eventName: string, amount: number) => void;
+    update_discretionary_expenses: (eventName: string, amount: number) => void;
+
+    reset_all(): void; 
+
+    update_initial_amount: (event: ExpenseEvent | IncomeEvent, inflation_factor: number) => number;
 }
 
 export function create_event_manager_clone(
@@ -113,10 +114,8 @@ export function create_event_manager_clone(
     rebalance_event: RebalanceEventMap,
 ): EventManager {
     const income_breakdown: Record<string, number> = {};
-    const expense_breakdown: Record<string, number> = {};
-    let mandatory_expenses = 0;
-    let discretionary_expenses = 0;
-    let last_year_tax_totals: { total: number } | undefined;
+    const mandatory_expenses:Record<string, number> = {};
+    const discretionary_expenses: Record<string, number> = {};
 
     return {
         income_event,
@@ -133,29 +132,29 @@ export function create_event_manager_clone(
                                 .filter((event: ExpenseEvent) => is_event_active(event, year) && event.discretionary == false),
         get_active_discretionary_event: (year: number) => Array.from(expense_event.values())
                                 .filter((event: ExpenseEvent) => is_event_active(event, year) && event.discretionary == true),
-        get_income_breakdown: () => income_breakdown,
-        update_income_breakdown: (eventName: string, amount: number) => {
-            income_breakdown[eventName] = (income_breakdown[eventName] || 0) + amount;
+        
+        income_breakdown,
+        update_income_breakdown: (event_name: string, amount: number) => {
+            if (update_record(income_breakdown, event_name, amount)) {
+              simulation_logger.warn(`Failed to update income breakdown. ${event_name} already exist`);
+            }
         },
-        reset_income_breakdown: () => {
-            Object.keys(income_breakdown).forEach(key => delete income_breakdown[key]);
+
+        mandatory_expenses,
+        update_mandatory_expenses: (event_name: string, amount: number) => {
+            if (update_record(mandatory_expenses, event_name, amount)) {
+              simulation_logger.warn(`Failed to update mandatory expenses. ${event_name} already exist`);
+            }
         },
-        get_expense_breakdown: () => expense_breakdown,
-        update_expense_breakdown: (eventName: string, amount: number) => {
-            expense_breakdown[eventName] = (expense_breakdown[eventName] || 0) + amount;
+
+        discretionary_expenses,
+        update_discretionary_expenses: (event_name: string, amount: number) => {
+            if (update_record(discretionary_expenses, event_name, amount)) {
+              simulation_logger.warn(`Failed to update discretionary expenses. ${event_name} already exist`);
+            }
         },
-        reset_expense_breakdown: () => {
-            Object.keys(expense_breakdown).forEach(key => delete expense_breakdown[key]);
-        },
-        get_mandatory_expenses: () => mandatory_expenses,
-        get_discretionary_expenses: () => discretionary_expenses,
-        incr_mandatory_expense: (amt: number) => mandatory_expenses += amt,
-        incr_discretionary_expense: (amt: number) => discretionary_expenses += amt,
-        get_last_year_tax_totals: () => last_year_tax_totals,
-        update_last_year_tax_totals: (total: number) => {
-            last_year_tax_totals = { total };
-        },
-        update_initial_amount(event: IncomeEvent | ExpenseEvent) {
+
+        update_initial_amount(event: IncomeEvent | ExpenseEvent, inflation_factor: number) {
             simulation_logger.debug(`Updating event ${event.name}...`);
             const initial_amount = event.initial_amount;
             simulation_logger.debug(`initial amount: ${initial_amount}`);
@@ -165,19 +164,36 @@ export function create_event_manager_clone(
             simulation_logger.debug(`change type: ${change_type}`);
             let change;
             if (change_type === ChangeType.AMOUNT) {
-            change = annual_change;
+              change = annual_change;
             } else if (change_type === ChangeType.PERCENT) {
-            change = annual_change * initial_amount
+              change = annual_change * initial_amount
             } else {
-            simulation_logger.error(`event ${event.name} contain invalid change_type ${event.change_type}`)
-            throw new Error(`Invalid Change type ${change_type}`);
+              simulation_logger.error(`event ${event.name} contain invalid change_type ${event.change_type}`)
+              throw new Error(`Invalid Change type ${change_type}`);
             }
-            let current_amount = Math.round(initial_amount + change);
+
+            if (event.inflation_adjusted) {
+              simulation_logger.debug("This event is inflation adjusted");
+              const from_inflation = initial_amount * inflation_factor;
+              simulation_logger.debug(`change from inflation ${from_inflation}. inflation factor: ${inflation_factor}`);
+              change += from_inflation;
+            } else {
+              simulation_logger.debug("This event is not inflation adjusted");
+            }
+
+            let current_amount = initial_amount + change;
             // update the event
             event.initial_amount = current_amount;
             simulation_logger.debug(`Updated amount: ${current_amount}`);
             return current_amount;
         },
+
+        reset_all: () => {
+          reset_record(income_breakdown)
+          reset_record(mandatory_expenses);
+          reset_record(discretionary_expenses);
+        },
+
         clone: () => create_event_manager_clone(
             clone_map(income_event),
             clone_map(expense_event),
@@ -206,6 +222,9 @@ export function resolve_event_chain(
     event_series: Set<EventUnionRaw>,
     value_source: ValueSource,
   ): Array<EventUnion> {
+  
+    if (!event_series || event_series.size < 0) return [];
+
     const event_map = new Map<string, EventUnionRaw>();
     const adj = new Map<string, string[]>();
     const in_degree = new Map<string, number>();
@@ -290,7 +309,7 @@ export function resolve_event_chain(
       simulation_logger.error("Event chain resolution failed", {
         error: error instanceof Error ? error.message : error
       });
-      throw error;
+      throw new Error(`Failed to resolve event chain: ${error instanceof Error? error.message: error}`);
     }
   }
 
@@ -299,6 +318,8 @@ export function create_event_manager(
     value_source: ValueSource
 ): EventManager {
     try {
+        event_series = new Set(Array.from(event_series).filter((event) => is_event(event)));
+        
         const resolved = resolve_event_chain(event_series, value_source);
         const [income_event, expense_event, invest_map, rebalance_map] = differentiate_events(resolved);
         //prune overlaps on the InvestEventMap
@@ -313,6 +334,6 @@ export function create_event_manager(
         simulation_logger.error("Failed to create the event manager", {
             error: error instanceof Error? error.stack: error,
         });
-        throw new Error(`Failed to create the event manager ${error instanceof Error? error.message: error}`);
+        throw new Error(`Failed to create the event manager: ${error instanceof Error? error.message: error}`);
     }
 }

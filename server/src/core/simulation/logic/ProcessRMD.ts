@@ -2,6 +2,7 @@ import { SimulationState } from "../SimulationState";
 import { tax_config } from "../../../config/tax";
 import { simulation_logger } from "../../../utils/logger/logger";
 import { transfer_investment_value } from "./common";
+import { state } from "@stdlib/random-base-normal";
 
 /**
  * Process Required Minimum Distributions (RMDs) for the user
@@ -48,8 +49,9 @@ export async function process_rmd(
         const transferred = transfer_investment_value(
             simulation_state.rmd_strategy,
             rmd,
-            simulation_state.account_manager.pre_tax,
-            simulation_state.account_manager.non_retirement
+            simulation_state.account_manager.pre_tax_group,
+            simulation_state.account_manager.non_retirement_group,
+            simulation_state.expense_withrawal_strategy,
         );
         simulation_logger.info(`${transferred} is transferred from pre tax to non retirement for rmd processing`);
     }

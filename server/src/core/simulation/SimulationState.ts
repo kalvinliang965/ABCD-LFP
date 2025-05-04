@@ -56,6 +56,8 @@ export interface SimulationState {
   total_after_tax_value:Map<number, number>;
   total_pre_tax_value: Map<number, number>; 
   total_non_retirement_value: Map<number, number>;
+
+  get_annual_inflation_rate(): number;
 }
 
 // Create person details object
@@ -111,7 +113,10 @@ export async function create_simulation_state(
     const total_non_retirement_value: Map<number, number> = new Map();
 
     let after_tax_contribution_limit = scenario.after_tax_contribution_limit;
+    let annual_inflation_rate = 0;
+
     const state: SimulationState = {
+      get_annual_inflation_rate: () => annual_inflation_rate,
       rmd_strategy: scenario.rmd_strategy,
       total_after_tax_value,
       total_non_retirement_value,
@@ -121,7 +126,7 @@ export async function create_simulation_state(
       roth_conversion_start: scenario.roth_conversion_start,
       roth_conversion_end: scenario.roth_conversion_end,
       spending_strategy: scenario.spending_strategy,
-      expense_withrawal_strategy: scenario.expense_withrawal_strategy,
+      expense_withrawal_strategy: scenario.expense_withdrawal_strategy,
       roth_conversion_strategy: scenario.roth_conversion_strategy,
       user,
       spouse,
@@ -137,7 +142,7 @@ export async function create_simulation_state(
       get_current_year: () => current_year,
       get_start_year:() => start_year,
       setup: () => {
-        const annual_inflation_rate = scenario.inflation_assumption.sample();
+        annual_inflation_rate = scenario.inflation_assumption.sample();
         simulation_logger.info(`annual inflation rate: ${annual_inflation_rate}`);
         user_tax_data.advance_year();
         after_tax_contribution_limit *= (1 + annual_inflation_rate);
@@ -145,6 +150,7 @@ export async function create_simulation_state(
         federal_tax_service.adjust_for_inflation(annual_inflation_rate);
         state_tax_service.adjust_for_inflation(annual_inflation_rate);
         investment_type_manager.resample_all();
+        event_manager.reset_all();
       },
       advance_year: () => {
 

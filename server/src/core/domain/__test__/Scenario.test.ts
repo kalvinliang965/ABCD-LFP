@@ -1,22 +1,23 @@
-import { create_scenario_raw, scenario_one } from "../../raw/scenario_raw";
+import { create_scenario_raw, scenario_one } from "../raw/scenario_raw";
 import {
   cash_investment_one,
   s_and_p_500_investment_non_retirement_one,
   tax_exempt_bonds_investment_one,
   s_and_p_500_investment_pre_tax_one,
   s_and_p_500_investment_after_tax_one,
-} from "../../raw/investment_raw";
+} from "../raw/investment_raw";
 import {
   streaming_services_expense_one,
   food_expense_one,
   vacation_expense_one,
-} from "../../raw/event_raw/expense_event_raw";
-import { my_investments_investment_one } from "../../raw/event_raw/investment_event_raw";
-import { rebalance_one } from "../../raw/event_raw/rebalance_event_raw";
-import { salary_income_event_one } from "../../raw/event_raw/income_event_raw";
-import { cash_investment_type_one } from "../../raw/investment_type_raw";
-import { scenario_yaml_string, create_scenario_raw_yaml } from "../../../../services/ScenarioYamlParser";
-import { Distribution } from "../../raw/common";
+} from "../raw/event_raw/expense_event_raw";
+import { my_investments_investment_one } from "../raw/event_raw/investment_event_raw";
+import { rebalance_one } from "../raw/event_raw/rebalance_event_raw";
+import { salary_income_event_one } from "../raw/event_raw/income_event_raw";
+import { cash_investment_type_one } from "../raw/investment_type_raw";
+import { scenario_yaml_string, create_scenario_raw_yaml } from "../../../services/ScenarioYamlParser";
+import { Distribution } from "../raw/common";
+import { create_scenario } from "../Scenario";
 
 describe("Scenario initialization test", () => {
   describe("create_scenario_raw function test", () => {
@@ -153,9 +154,8 @@ describe("Scenario initialization test", () => {
     });
 
     test("should_verify_scenario_one_strategies", () => {
-      // Assert
       expect(scenario_one.spendingStrategy).toEqual([
-        "vaction",
+        "vacation",
         "streaming services",
       ]);
       expect(scenario_one.expenseWithdrawalStrategy).toEqual([
@@ -221,3 +221,20 @@ describe("Scenario initialization test", () => {
     });
   });
 });
+
+
+describe("scenario initialization strategy", () => {
+
+
+ it("should add investment to spending strategy", () => {
+  const scenario = create_scenario(scenario_one, "random");
+
+  expect(scenario.expense_withdrawal_strategy).toEqual([
+    "S&P 500 non-retirement",
+    "tax-exempt bonds non-retirement",
+    "S&P 500 after-tax",
+    "S&P 500 pre-tax"
+  ])
+ });
+
+})
