@@ -515,9 +515,14 @@ function transformShadedChartData(
 } {
   // Extract years
   const years = yearlyResults.map(yr => yr.year);
+
+  const isPercentage = property === 'total_discretionary_expenses_pct';
   
   // Extract median values
-  const median = yearlyResults.map(yr => yr[property]?.median || 0);
+  const median = yearlyResults.map(yr => {
+    const val = yr[property]?.median || 0;
+    return isPercentage ? val * 100 : val;
+  });
   
   // Initialize ranges object
   const ranges = {
@@ -529,22 +534,14 @@ function transformShadedChartData(
   
   // Fill ranges data
   yearlyResults.forEach(yr => {
-    const shadedChartData = yr[property];
-    
-    if (shadedChartData && shadedChartData.ranges) {
-      // Fill in the ranges with data from the shaded chart
+    const shaded = yr[property];
+    if (shaded && shaded.ranges) {
       for (const rangeKey of Object.keys(ranges) as Array<keyof typeof ranges>) {
-        if (shadedChartData.ranges[rangeKey]) {
-          ranges[rangeKey][0].push(shadedChartData.ranges[rangeKey][0]);
-          ranges[rangeKey][1].push(shadedChartData.ranges[rangeKey][1]);
-        } else {
-          // Default to median if range is missing
-          ranges[rangeKey][0].push(shadedChartData.median);
-          ranges[rangeKey][1].push(shadedChartData.median);
-        }
+        const [lower, upper] = shaded.ranges[rangeKey] || [shaded.median, shaded.median];
+        ranges[rangeKey][0].push(isPercentage ? lower * 100 : lower);
+        ranges[rangeKey][1].push(isPercentage ? upper * 100 : upper);
       }
     } else {
-      // No data for this property, use zeros
       for (const rangeKey of Object.keys(ranges) as Array<keyof typeof ranges>) {
         ranges[rangeKey][0].push(0);
         ranges[rangeKey][1].push(0);

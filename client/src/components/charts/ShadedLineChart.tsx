@@ -89,7 +89,7 @@ const ShadedLineChart: React.FC<ShadedLineChartProps> = ({
   // Helper function to format values to better display in the chart
   const formatValue = (value: number): string => {
     if (selectedQuantity === 'discretionaryExpensesPct') {
-      return `${value.toFixed(1)}%`;
+      return `${(value).toFixed(1)}%`;
     }
     return `$${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
   };
@@ -206,7 +206,7 @@ const ShadedLineChart: React.FC<ShadedLineChartProps> = ({
         type: 'slider',      
         show: true,
         xAxisIndex: 0,
-        start: 70,            
+        start: 0,            
         end: 100
       },
       {
