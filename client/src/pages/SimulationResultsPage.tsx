@@ -85,16 +85,17 @@ const SimulationResults: React.FC = () => {
     const fetchSimulationResults = async () => {
       console.log('Current URL:', window.location.href);
       console.log('Route params:', { simulationId, scenarioId });
-      // Determine which ID to use (prefer scenarioId if available)
-      const idToUse = scenarioId || simulationId;
-      const idType = scenarioId ? 'scenarioId' : 'simulationId';
+      
+      // Determine which ID to use (prioritize simulationId if available)
+      const idToUse = simulationId || scenarioId;
+      const idType = simulationId ? 'simulationId' : 'scenarioId';
       
       if (!idToUse) {
         // Try to get ID from location state
-        const stateId = location.state?.scenarioId || location.state?.simulationId;
+        const stateId = location.state?.simulationId || location.state?.scenarioId;
         if (stateId) {
           console.log(`Using ${idType} from state:`, stateId);
-          const path = scenarioId ? `/scenarios/${stateId}/results` : `/simulations/${stateId}`;
+          const path = simulationId ? `/simulations/${stateId}` : `/scenarios/${stateId}/results`;
           navigate(path, { replace: true });
           return;
         }
@@ -109,14 +110,14 @@ const SimulationResults: React.FC = () => {
         
         let response;
         // Call the appropriate service method based on ID type
-        if (scenarioId) {
-          // Get results by scenario ID
-          response = await simulation_service.get_simulations_by_scenario(idToUse);
-          console.log('API response: for scenarioId', response);
-        } else {
+        if (simulationId) {
           // Get results by simulation ID
           response = await simulation_service.get_simulation_results(idToUse);
           console.log('API response: for simulationId', response);
+        } else {
+          // Get results by scenario ID
+          response = await simulation_service.get_simulations_by_scenario(idToUse);
+          console.log('API response: for scenarioId', response);
         }
         
         console.log('API response: for all', response);
@@ -128,7 +129,7 @@ const SimulationResults: React.FC = () => {
         
         // Handle both single result and array of results
         let result;
-        if (scenarioId && Array.isArray(response.data) && response.data.length > 0) {
+        if (!simulationId && scenarioId && Array.isArray(response.data) && response.data.length > 0) {
           // If retrieving by scenarioId, use the most recent result if multiple exist
           // because same scenarioId can have multiple simulation results
           result = response.data.sort((a, b) => 
