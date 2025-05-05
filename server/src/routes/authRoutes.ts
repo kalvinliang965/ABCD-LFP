@@ -1,13 +1,14 @@
 import express from "express";
 import passport from "passport";
 import { client_confg } from "../config/client";
-import { login, signup } from '../controllers/authController';
+import { guestLogin, login, signup } from '../controllers/authController';
 
 const router = express.Router();
 
 // Add traditional login/signup routes
 router.post('/login', login);
 router.post('/signup', signup);
+router.post('/guest-login', guestLogin);
 
 // Google OAuth login route
 router.get(

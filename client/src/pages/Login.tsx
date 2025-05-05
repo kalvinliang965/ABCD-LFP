@@ -100,6 +100,7 @@ const Login: React.FC = () => {
         localStorage.setItem('token', response.data.token);
         await checkAuthStatus();
         navigate(response.data.redirectUrl || '/scenarios');
+        console.log('Login successful:'+response.data.redirectUrl);
       } else {
         console.error('Login failed');
       }
@@ -150,26 +151,33 @@ const Login: React.FC = () => {
   };
 
   // Handle guest login
-  const handleGuestLogin = () => {
-    // Generate a temporary guest ID
-    const guestId = uuidv4();
-    const guestUser = {
-      _id: guestId,
-      name: 'Guest User',
-      email: `guest-${guestId.slice(0, 8)}@example.com`,
-      isGuest: true
-    };
+  const handleGuestLogin = async () => {
+    try {
+      // Call the API to create a guest account
+      const response = await axios.post(
+        `${appConfig.api.baseURL}/auth/guest-login`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
 
-    // Store guest information in localStorage
-    localStorage.setItem('guestUser', JSON.stringify(guestUser));
-    
-    // Update auth context with guest user (assuming you'll add this method)
-    if (loginAsGuest) {
-      loginAsGuest(guestUser);
+      if (response.data.success) {
+        // Store token
+        localStorage.setItem('token', response.data.token);
+        
+        // Update auth context
+        await checkAuthStatus();
+        
+        // Navigate to dashboard
+        navigate(response.data.redirectUrl || '/scenarios');
+      } else {
+        console.error('Guest login failed');
+      }
+    } catch (error) {
+      console.error('Error during guest login:', error);
+      alert('Failed to login as guest. Please try again.');
     }
-    
-    // Navigate to dashboard
-    navigate('/scenarios');
   };
 
   return (
