@@ -35,7 +35,7 @@ export class TaxProcessor {
 
         const fed_tax = Math.max(
             fed_taxable_income * this.federal_tax_service.find_rate(
-                fed_taxable_income - standard_deduction, 
+                Math.max(fed_taxable_income - standard_deduction, 0), 
                 IncomeType.TAXABLE_INCOME, 
                 this.get_tax_filing_status()
             ), 0
@@ -58,7 +58,7 @@ export class TaxProcessor {
         );
 
         simulation_logger.debug(`capital gains: ${capital_gain_tax}`);
-        if (capital_gain_tax != 0) {
+        if (capital_gain_tax > 0) {
           const capital_gain_rate = this.federal_tax_service.find_rate(
             capital_gain_tax, 
             IncomeType.CAPITAL_GAINS, 
