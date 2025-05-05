@@ -30,7 +30,10 @@ export async function process_rmd(
     }
     
     // step c: get sum of values of the investments with tax status = pre-tax, as of the end of the previous year.
-    const total_prev_tax_balance = simulation_state.total_pre_tax_value.get(prev_user_age);
+    const total_prev_tax_balance = simulation_state.get_total_prev_prev_tax_value();
+    if (total_prev_tax_balance === undefined) {
+      throw new Error("Failed RMD: total prev tax balance is undefined");
+    }
     simulation_logger.debug(`pre tax value from preivous year ${total_prev_tax_balance}`);
 
     // there are no investment with tax status = "pre tax" user own

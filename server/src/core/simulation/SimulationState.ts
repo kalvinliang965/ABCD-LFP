@@ -17,6 +17,7 @@ import { simulation_logger } from "../../utils/logger/logger";
 import { create_value_source } from "../../utils/ValueGenerator";
 import { TaxProcessor } from "../domain/TaxProcessor";
 import { WithdrawalProcessor } from "../domain/WithdrawalProcessor";
+import { number } from "zod";
 export type EventMap = Map<string, Event>;
 
 export interface PersonDetails {
@@ -55,9 +56,9 @@ export interface SimulationState {
   withdrawal_processor: WithdrawalProcessor;
 
   // calculate investment market value
-  total_after_tax_value:Map<number, number>;
-  total_pre_tax_value: Map<number, number>; 
-  total_non_retirement_value: Map<number, number>;
+  get_total_prev_after_tax_value: () => number;
+  get_total_prev_prev_tax_value: () => number; 
+  get_total_prev_non_retirement_value: () => number;
 
   get_annual_inflation_rate(): number;
 }
@@ -110,9 +111,9 @@ export async function create_simulation_state(
     const investment_type_manager = scenario.investment_type_manager;
     
     // total investment value for given year
-    const total_after_tax_value:Map<number, number> = new Map();
-    const total_pre_tax_value: Map<number, number> = new Map(); 
-    const total_non_retirement_value: Map<number, number> = new Map();
+    let total_prev_after_tax_value = 0;
+    let total_prev_prev_tax_value = 0; 
+    let total_prev_non_retirement_value = 0;
 
     let after_tax_contribution_limit = scenario.after_tax_contribution_limit;
     let annual_inflation_rate = 0;
@@ -123,9 +124,9 @@ export async function create_simulation_state(
     const state: SimulationState = {
       get_annual_inflation_rate: () => annual_inflation_rate,
       rmd_strategy: scenario.rmd_strategy,
-      total_after_tax_value,
-      total_non_retirement_value,
-      total_pre_tax_value,
+      get_total_prev_after_tax_value: () => total_prev_after_tax_value,
+      get_total_prev_non_retirement_value: () => total_prev_non_retirement_value,
+      get_total_prev_prev_tax_value: () => total_prev_prev_tax_value,
       
       roth_conversion_opt: scenario.roth_conversion_opt,
       roth_conversion_start: scenario.roth_conversion_start,
@@ -159,9 +160,9 @@ export async function create_simulation_state(
       },
       advance_year: () => {
 
-        total_after_tax_value.set(current_year, account_manager.get_total_after_tax_value());
-        total_non_retirement_value.set(current_year, account_manager.get_total_non_retirement_value());
-        total_pre_tax_value.set(current_year, account_manager.get_total_pre_tax_value());
+        total_prev_after_tax_value = account_manager.get_total_after_tax_value();
+        total_prev_non_retirement_value = account_manager.get_total_non_retirement_value();
+        total_prev_prev_tax_value = account_manager.get_total_pre_tax_value();
 
         current_year++;
         if (!spouse?.is_alive) {
