@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
 import Scenario from "../db/models/Scenario";
 import { create_simulation_engine } from "../core/simulation/SimulationEngine";
-import { createConsolidatedSimulationResult } from "../core/simulation/SimulationResult";
+import { create_simulation_result_v1 } from "../core/simulation/SimulationResult_v1";
 import { simulation_logger } from "../utils/logger/logger";
 import { create_simulation_environment } from "../core/simulation/ LoadSimulationEnvironment";
 import cloneDeep from "lodash.clonedeep";
+import SimulationResultModel_v1 from "../db/models/SimulationResult_v1";
 
 //route to run a parameter sweep simulation for 1D
 export const runParameterSweep1D = async (req: Request, res: Response) => {
@@ -29,6 +30,19 @@ export const runParameterSweep1D = async (req: Request, res: Response) => {
     }
     
     simulation_logger.info(`Parameter sweep simulation request received for scenario ${scenarioId} by user ${userId}`);
+    simulation_logger.info(`Number of simulations to run per parameter value: ${numSimulations}`);
+    
+    //get the seed from the most recent simulation result
+    const lastSim = await SimulationResultModel_v1.findOne({ scenarioId }).sort({ createdAt: -1 });
+    if (!lastSim) {
+      return res.status(404).json({
+        success: false,
+        message: "No previous simulation found for this scenario",
+      });
+    }
+    
+    const seedToUse = lastSim.seed;
+    simulation_logger.info(`Using seed ${seedToUse} from previous simulation for parameter sweep`);
     
     //determine list of parameter values to test
     const values = range
@@ -42,8 +56,8 @@ export const runParameterSweep1D = async (req: Request, res: Response) => {
 
     const results = [];
     
-    //create simulation environment for original scenario
-    const original_environment = await create_simulation_environment(scenarioId);
+    //create simulation environment for original scenario using the same seed
+    const original_environment = await create_simulation_environment(scenarioId, seedToUse);
     
     for (const paramVal of values) {
       //deep clone the scenario for modification
@@ -116,51 +130,24 @@ export const runParameterSweep1D = async (req: Request, res: Response) => {
         //create simulation engine with the modified environment
         const engine = await create_simulation_engine(mod_environment);
         
+        simulation_logger.info(`Running ${numSimulations} simulations for parameter value ${paramVal}`);
         //run simulations with the modified scenario
         const simulation_results = await engine.run(numSimulations);
         
         //create a consolidated result with the original scenarioId
-        const consolidated_result = createConsolidatedSimulationResult(simulation_results, scenarioId);
+        const consolidated_result = create_simulation_result_v1(simulation_results, seedToUse, scenarioId);
         
-        //override key fields based on parameter type to reflect the modified scenario
-        if (parameterType === 'startYear') {
-          //for start year parameter, override the start year
-          consolidated_result.startYear = paramVal;
-          
-          //maintain the same duration by adjusting the end year
-          const originalStartYear = consolidated_result.startYear; //use the original start year from the result
-          const originalEndYear = consolidated_result.endYear;
-          const duration = originalEndYear - originalStartYear;
-          consolidated_result.endYear = paramVal + duration;
-          
-          simulation_logger.info(`Adjusted startYear to ${paramVal} and endYear to ${consolidated_result.endYear}`);
-        } else if (parameterType === 'duration' && eventName) {
-          //for duration parameter adjust the end year
-          //find the modified event to get its start year
-          const modifiedEvent = Array.from(mod_raw.eventSeries)
-            .find((e: any) => e.name === eventName);
-            
-          if (modifiedEvent && modifiedEvent.start?.type === 'fixed' && typeof modifiedEvent.start?.value === 'number') {
-            //if we have a fixed start, end year would be start + duration - 1
-            consolidated_result.endYear = modifiedEvent.start.value + paramVal - 1;
-            simulation_logger.info(`Adjusted duration: endYear set to ${consolidated_result.endYear}`);
-          }
-        }
-        //for initial amount investment percentage, and Roth optimizer, 
-        //don't need to adjust start/end years but add metadata
-        else if (['initialAmount', 'investmentPercentage', 'rothOptimizer'].includes(parameterType)) {
-          //add metadata about the parameter for the UI 
-          (consolidated_result as any).parameterMetadata = {
-            type: parameterType,
-            value: paramVal,
-            eventName: eventName || null
-          };
-          
-          if (parameterType === 'rothOptimizer') {
-            simulation_logger.info(`Set Roth Optimizer flag to ${paramVal}`);
-          } else {
-            simulation_logger.info(`Set ${parameterType} to ${paramVal} for event "${eventName}"`);
-          }
+        //add metadata about the parameter for the UI 
+        (consolidated_result as any).parameterMetadata = {
+          type: parameterType,
+          value: paramVal,
+          eventName: eventName || null
+        };
+        
+        if (parameterType === 'rothOptimizer') {
+          simulation_logger.info(`Set Roth Optimizer flag to ${paramVal}`);
+        } else {
+          simulation_logger.info(`Set ${parameterType} to ${paramVal} for event "${eventName}"`);
         }
         
         //add result with its parameter value to the results array
@@ -189,10 +176,10 @@ export const runParameterSweep1D = async (req: Request, res: Response) => {
       data: results
     });
   } catch (error) {
-    simulation_logger.error(`Error running parameter sweep: ${error instanceof Error ? error.stack : String(error)}`);
+    simulation_logger.error(`Error in parameter sweep: ${error instanceof Error ? error.stack : String(error)}`);
     res.status(500).json({
       success: false,
-      message: "Failed to run parameter sweep simulation",
+      message: "Failed to run parameter sweep",
       error: error instanceof Error ? error.message : String(error)
     });
   }
