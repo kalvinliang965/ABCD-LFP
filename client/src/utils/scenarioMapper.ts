@@ -100,7 +100,7 @@ export function map_form_to_scenario_raw(
   const investmentTypes = new Set<InvestmentTypeRaw>(
     allInvestmentTypes.map((it: any) => {
       const mappedType = {
-        name: it.name,
+        name: it.name.toLowerCase(),
         description: it.description,
         returnAmtOrPct: it.returnAmtOrPct,
         returnDistribution: it.returnDistribution,
@@ -120,7 +120,7 @@ export function map_form_to_scenario_raw(
   // Map investments
   const investments = new Set<InvestmentRaw>(
     investmentsConfig.investments.map(inv => ({
-      investmentType: inv.investmentType || '',
+      investmentType: inv.investmentType.toLowerCase() || '',
       value: inv.value || 0,
       taxStatus: inv.taxStatus.toLowerCase().replace(/_/g, '-') || 'non-retirement',
       id: inv.id,
