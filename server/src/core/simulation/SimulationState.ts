@@ -44,7 +44,7 @@ export interface SimulationState {
   federal_tax_service: FederalTaxService;
   state_tax_service: StateTaxService;
   spending_strategy: Array<string>;
-  expense_withrawal_strategy: Array<string>;
+  get_expense_withrawal_strategy: () => Array<string>;
   investment_type_manager: InvestmentTypeManager
   event_manager: EventManager,
   account_manager: AccountManager,
@@ -132,7 +132,7 @@ export async function create_simulation_state(
       roth_conversion_start: scenario.roth_conversion_start,
       roth_conversion_end: scenario.roth_conversion_end,
       spending_strategy: scenario.spending_strategy,
-      expense_withrawal_strategy: scenario.expense_withdrawal_strategy,
+      get_expense_withrawal_strategy: () => scenario.expense_withdrawal_strategy,
       get_roth_conversion_strategy: () => scenario.roth_conversion_strategy,
       user,
       spouse,
@@ -157,6 +157,21 @@ export async function create_simulation_state(
         state_tax_service.adjust_for_inflation(annual_inflation_rate);
         investment_type_manager.resample_all();
         event_manager.reset_all();
+
+        simulation_logger.info(`adjusted federal taxable income bracket
+          ${federal_tax_service.__taxable_income_bracket.to_string()}
+          `);
+
+        simulation_logger.info(`adjusted federal capital gains bracket
+          ${federal_tax_service.__capital_gains_bracket.to_string()}
+          `);
+        simulation_logger.info(`adjusted standard deduction
+          ${federal_tax_service.__standard_deductions.to_string()}
+          `);
+
+        simulation_logger.info(`adjusted state taxable income bracket
+          ${state_tax_service.__taxable_income_brackets.to_string()}
+          `);
       },
       advance_year: () => {
 

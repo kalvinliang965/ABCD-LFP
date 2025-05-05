@@ -80,7 +80,7 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   // withdrawal from investments to fill withdrawal_amount
   if(withdrawal_amount > 0) {
     simulation_logger.debug(`It's the year ${state.get_current_year()}. We need to withdraw ${withdrawal_amount} from investments`);
-    const withrawaled = state.withdrawal_processor.execute_withdrawal(state.expense_withrawal_strategy, withdrawal_amount);
+    const withrawaled = state.withdrawal_processor.execute_withdrawal(state.get_expense_withrawal_strategy(), withdrawal_amount);
     return withdrawal_amount === withrawaled;
   }
   return true;

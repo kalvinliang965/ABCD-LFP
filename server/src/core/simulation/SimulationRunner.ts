@@ -132,12 +132,11 @@ function simulate_year(
     profiler?: Profiler
 ): boolean {
     try {
+        simulation_logger.debug("------------------------------------------------");
         simulation_logger.info(
             `Simulating new year ${simulation_state.get_current_year()}`, 
-            {
-                simulation_state: simulation_state,
-            }
         ); 
+        simulation_logger.debug("------------------------------------------------");
 
         simulation_logger.debug("Running income events");
         profiler?.start("run_income_event");
@@ -145,7 +144,7 @@ function simulate_year(
         profiler?.end("run_income_event");
         
         if (simulation_state.user.get_age() >= 74) {
-            simulation_logger.debug("Performing rmd...");
+            simulation_logger.info("Performing rmd...");
             profiler?.start("process_rmd");
             process_rmd(simulation_state, rmd_table);
             if (profiler) {
@@ -156,9 +155,10 @@ function simulate_year(
         simulation_logger.info("Updating investments...");
         profiler?.start("update_investment");
         update_investment(simulation_state);
+        
         profiler?.end("update_investment");
         if (simulation_state.roth_conversion_opt) {
-            simulation_logger.debug("Running roth conversion optimizer...");
+            simulation_logger.info("Running roth conversion optimizer...");
             profiler?.start("process_roth_conversion");
             process_roth_conversion(simulation_state);
             profiler?.end("process_roth_conversion");

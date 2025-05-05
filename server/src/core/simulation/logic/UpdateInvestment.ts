@@ -9,12 +9,10 @@ export function update_investment(simulation_state: SimulationState) {
     // we could just iterate the non-retirment account list
     // but here i just wanna double check for invalid account type
     for (const investment of simulation_state.account_manager.all().values()) {
-        simulation_logger.debug(`Updating investment ${investment.id}`, {
-            tax_status: investment.tax_status,
-            cost_basis: investment.get_cost_basis(),
-            value: investment.get_value(),
-            investment_type: investment.investment_type,
-        });
+        simulation_logger.debug(`Updating investment ${investment.id}`);
+        simulation_logger.debug(`tax_status: ${investment.tax_status}`);
+        simulation_logger.debug(`cost basis: ${investment.get_cost_basis()}`);
+        simulation_logger.debug(`value: ${investment.get_value()}`);
 
 
         // steps d: capital gains
@@ -77,5 +75,8 @@ export function update_investment(simulation_state: SimulationState) {
         const avg = (investment.get_value() + investment_previous_value) / 2
         const expense = avg * investment_type.expense_ratio;
         investment.incr_value(-1 * expense);
+
+        simulation_logger.debug(`new cost basis: ${investment.get_cost_basis()}`);
+        simulation_logger.debug(`new value: ${investment.get_value()}`);
     }
 }
