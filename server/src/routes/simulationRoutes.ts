@@ -4,10 +4,6 @@ import Scenario from "../db/models/Scenario";
 import { authenticateJWT } from "../middleware/auth.middleware";
 import { create_simulation_engine } from "../core/simulation/SimulationEngine";
 import {
-  create_simulation_result,
-  createConsolidatedSimulationResult,
-} from "../core/simulation/SimulationResult";
-import {
   save_simulation_result,
   get_simulation_result_by_id,
   get_simulation_results_by_scenario_id,
