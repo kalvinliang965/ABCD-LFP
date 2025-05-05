@@ -132,9 +132,11 @@ export function run_rebalance_investment(
 			const investment = state.account_manager.after_tax.get(investment_id) || 
 			                  state.account_manager.non_retirement.get(investment_id) || 
 			                  state.account_manager.pre_tax.get(investment_id);
-			
+
 			if (!investment || investment.tax_status !== account_type) {
-				simulation_logger.error(`Second investment ${investment_id} is not in ${account_type} account type`);
+				simulation_logger.error(
+					`Second investment ${investment_id} is not in ${account_type} account type`
+				);
 				continue;
 			}
 		}
