@@ -17,15 +17,28 @@ export function process_roth_conversion(simulation_state: SimulationState) {
         }
 
         const income = simulation_state.user_tax_data.get_cur_year_income() 
-        const taxable_income = income - 0.15 * simulation_state.user_tax_data.get_cur_year_ss()
-        const current_bracket = simulation_state
-                        .federal_tax_service
-                        .find_bracket_with_income(taxable_income, IncomeType.TAXABLE_INCOME, simulation_state.get_tax_filing_status());
+        simulation_logger.debug(`current year income ${income}`);
+        simulation_logger.debug(`current year ss ${simulation_state.user_tax_data.get_cur_year_ss()}`);
+        const taxable_income = income - 0.15 * simulation_state.user_tax_data.get_cur_year_ss();
+        simulation_logger.debug(`current year taxable income ${taxable_income}`);
+
         const standard_deduction = simulation_state
                                         .federal_tax_service
                                         .find_deduction(simulation_state.get_tax_filing_status());
+        simulation_logger.debug(`current year dedudction ${standard_deduction}`);
+        const after_deduction = taxable_income - standard_deduction;
+
+        const current_bracket = simulation_state
+                        .federal_tax_service
+                        .find_bracket_with_income(
+                            after_deduction, 
+                            IncomeType.TAXABLE_INCOME, 
+                            simulation_state.get_tax_filing_status()
+        );
+        simulation_logger.debug(`current bracket. upper: ${current_bracket.max}. lower: ${current_bracket.min}. rate: ${current_bracket.rate}`);
         const upper = current_bracket.max;
-        const transfer_amt = upper - (taxable_income - standard_deduction);
+        const transfer_amt = upper - after_deduction;
+        simulation_logger.debug(`transfer amount: ${transfer_amt}`);
         // does not go into annual contribution for after tax
         if (transfer_amt > 0) {
             const transferred = transfer_investment_value(
@@ -33,7 +46,7 @@ export function process_roth_conversion(simulation_state: SimulationState) {
                 transfer_amt,
                 simulation_state.account_manager.pre_tax_group,
                 simulation_state.account_manager.after_tax_group,
-                simulation_state.expense_withrawal_strategy,
+                simulation_state.get_expense_withrawal_strategy(),
             );
             simulation_logger.info(`${transferred} is transferred from pre tax to after tax for roth conversion`);
             simulation_state.user_tax_data.incr_cur_year_income(transferred);

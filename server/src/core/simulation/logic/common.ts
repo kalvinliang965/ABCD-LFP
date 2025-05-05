@@ -72,6 +72,11 @@ export function transfer_investment_value(
         from_investment.incr_cost_basis(-transfer_purchase);
         to_investment.incr_cost_basis(transfer_purchase);
 
+        simulation_logger.debug(`from investment new value: ${from_investment.get_value()}`);
+        simulation_logger.debug(`from investment new cost basis: ${from_investment.get_cost_basis()}`);
+        simulation_logger.debug(`to investment new value: ${to_investment.get_value()}`);
+        simulation_logger.debug(`to investment new cost basis: ${to_investment.get_cost_basis()}`);
+        
         transferred += transfer_amt;
     }
 

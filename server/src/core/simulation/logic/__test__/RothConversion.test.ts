@@ -25,14 +25,23 @@ pre_tax_2.clone = function() {
     }
   }
 
-const createBaseState = (): SimulationState => ({
+const create_base_state = (): SimulationState => ({
   account_manager: {
-    pre_tax: new Map<string, Investment>([
+    pre_tax_group: {
+      type: "pre-tax",
+      account_map: new Map<string, Investment>([
         ['pre_tax_1', pre_tax_1],
         ['pre_tax_2', pre_tax_2],
-    ]),
-    after_tax: new Map<string, Investment>(),
-    non_retirement: new Map()
+      ])
+    },
+    after_tax_group: {
+      type: "after-tax", 
+      account_map: new Map<string, Investment>(),
+    },
+    non_retirement_group: {
+      type: "non-retirement",
+      account_map: new Map<string, Investment>(),
+    }
   },
   get_tax_filing_status: () => TaxFilingStatus.INDIVIDUAL,
   federal_tax_service: {
@@ -48,7 +57,8 @@ const createBaseState = (): SimulationState => ({
   roth_conversion_opt: true,
   roth_conversion_start: 2024,
   roth_conversion_end: 2030,
-  roth_conversion_strategy: ['pre_tax_1', 'pre_tax_2'],
+  get_roth_conversion_strategy: () => ['pre_tax_1', 'pre_tax_2'],
+  get_expense_withrawal_strategy: () => [],
   user_tax_data: {
     get_cur_year_income: jest.fn().mockReturnValue(80000),
     get_cur_year_gains: jest.fn().mockReturnValue(20000),
@@ -68,10 +78,10 @@ describe('Roth Conversion Process', () => {
   
   describe('transfer_investment', () => {
     test('transfer to itself', () => {
-      const state = createBaseState();
+      const state = create_base_state();
       process_roth_conversion(state);
-      const source = state.account_manager.pre_tax;
-      const target = state.account_manager.after_tax;
+      const source = state.account_manager.pre_tax_group.account_map;
+      const target = state.account_manager.after_tax_group.account_map;
       
       const sourceInv = source.get('pre_tax_1')!;
       const targetInv = target.get('pre_tax_1')!;
@@ -84,7 +94,7 @@ describe('Roth Conversion Process', () => {
 
   describe('process_roth_conversion', () => {
     test('transfer in valid window', () => {
-      const state = createBaseState();
+      const state = create_base_state();
       
       state.get_current_year = jest.fn().mockReturnValue(2025);
       process_roth_conversion(state);
@@ -96,7 +106,7 @@ describe('Roth Conversion Process', () => {
     });
 
     test('nothing is transfer', () => {
-      const state = createBaseState();
+      const state = create_base_state();
       state.federal_tax_service.find_bracket_with_income = jest.fn().mockReturnValue({
         min: 0,
         max: 50000,
@@ -114,15 +124,15 @@ describe('Roth Conversion Process', () => {
 
   describe('boundarie test', () => {
     it('should transfter nothing on empty roth conversion strategy', () => {
-      const state = createBaseState();
-      state.roth_conversion_strategy = [];
+      const state = create_base_state();
+      state.get_roth_conversion_strategy = () => [];
       
       process_roth_conversion(state);
-      expect(state.account_manager.after_tax.size).toBe(0  );
+      expect(state.account_manager.after_tax_group.account_map.size).toBe(0  );
     });
     it('should error on account not exist', () => {
-        const state = createBaseState();
-        state.roth_conversion_strategy = ['non_existent'];
+        const state = create_base_state();
+        state.get_roth_conversion_strategy = () => ['non_existent'];
       
         expect(() => process_roth_conversion(state)).toThrow(/Investment with/);
      

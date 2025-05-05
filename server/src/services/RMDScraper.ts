@@ -28,7 +28,7 @@ export async function scrape_rmd_table(html: string): Promise<Map<number, number
     const $ = cheerio.load(html);
     // Find all tables and log their content
     const tables = $('table');
-    console.log(`Found ${tables.length} tables on the page`);
+    // console.log(`Found ${tables.length} tables on the page`);
     // Find the Uniform Lifetime Table
     // Look for a table with a caption or heading containing "Uniform Lifetime Table"
     const uniformLifetimeTable = $('table.table.table-condensed[summary*="Uniform Lifetime"]').filter((_, table) => {

@@ -77,7 +77,7 @@ export function pay_discretionary_expenses(state: SimulationState): void {
     const withdrawal_amount = payment - cash_paid;
     if(withdrawal_amount > 0) {
       simulation_logger.debug(`It's the year ${state.get_current_year()}. We need to withdraw ${withdrawal_amount} from investments`);
-      const withdrawaled = state.withdrawal_processor.execute_withdrawal(state.expense_withrawal_strategy, withdrawal_amount);
+      const withdrawaled = state.withdrawal_processor.execute_withdrawal(state.get_expense_withrawal_strategy(), withdrawal_amount);
       simulation_logger.debug(`pay discretionary expense from non cash investment: ${withdrawaled}`);
       state.event_manager.update_discretionary_expenses(expense_event.name, cash_paid + withdrawal_amount);
       simulation_logger.debug(`Updated discretionary expenses ${expense_event.name} adding withdrawal amt`);
