@@ -129,7 +129,7 @@ describe("Pay mandatory expense", () => {
         const scenario = await create_scenario(scenario_raw, "random");
         state = await create_simulation_state(scenario, federal_service, state_tax_service);
 
-        state.process_tax = jest.fn();
+        state.tax_processor.calculate_taxes = jest.fn();
 
         state.event_manager.update_initial_amount = jest.fn();
     });

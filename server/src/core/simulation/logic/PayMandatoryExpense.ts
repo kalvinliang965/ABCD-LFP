@@ -45,7 +45,8 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   // step a to c
   // details are inside
   if (cur_simulation_year !== state.get_start_year()) {
-    total_tax = state.process_tax();
+    total_tax = state.tax_processor.calculate_taxes();
+    simulation_logger.info(`Successfully processed ${total_tax} on tax`);
     state.event_manager.update_mandatory_expenses("tax", total_tax);
   }
 
@@ -78,7 +79,7 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   // step f:
   // withdrawal from investments to fill withdrawal_amount
   if(withdrawal_amount > 0) {
-    const withrawaled = state.process_investment_withdrawal(withdrawal_amount);
+    const withrawaled = state.withdrawal_processor.execute_withdrawal(state.expense_withrawal_strategy, withdrawal_amount);
     return withdrawal_amount === withrawaled;
   }
   return true;

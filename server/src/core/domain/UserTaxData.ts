@@ -7,6 +7,7 @@ export interface UserTaxData {
   incr_after_tax_contribution(amt: number): void
   incr_year_early_withdrawal(amt: number): void;
 
+  // this function uses data from previous year
   get_cur_fed_taxable_income(): number;
   get_cur_year_income(): number;
   get_cur_year_gains(): number;
