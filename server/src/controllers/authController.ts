@@ -58,7 +58,7 @@ export const signup = async (req: Request, res: Response) => {
         name: user.name,
         password: user.password
       },
-      redirectUrl: '/dashboard'
+      redirectUrl: '/scenarios'
     });
   } catch (error) {
     console.error('Signup error:', error);
@@ -126,7 +126,7 @@ export const login = async (req: Request, res: Response) => {
         email: user.email,
         name: user.name
       },
-      redirectUrl: '/dashboard'
+      redirectUrl: '/scenarios'
     });
     
       });
@@ -190,7 +190,7 @@ export const guestLogin = async (req: Request, res: Response) => {
             name: 'Guest',
             isGuest: true
           },
-          redirectUrl: '/dashboard'
+          redirectUrl: '/scenarios'
         });
       });
     } else {
@@ -204,7 +204,7 @@ export const guestLogin = async (req: Request, res: Response) => {
           name: 'Guest',
           isGuest: true
         },
-        redirectUrl: '/dashboard'
+        redirectUrl: '/scenarios'
       });
     }
   } catch (error) {
