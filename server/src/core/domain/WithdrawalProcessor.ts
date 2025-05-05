@@ -16,7 +16,8 @@ export class WithdrawalProcessor {
         strategy: string[],
         withdrawal_amount: number
     ): number {
-
+        simulation_logger.debug("--------------------------------------");
+        simulation_logger.debug(`WithdrawalProcessor.execute_withdrawal`);
         let withdrawaled=0;
         const investments = this.account_manager.all();
         for (const inv_id of strategy) {
@@ -60,6 +61,7 @@ export class WithdrawalProcessor {
           );
 
         }
+        simulation_logger.debug("--------------------------------------");
         return withdrawaled;
     }
 
