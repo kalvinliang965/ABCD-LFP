@@ -445,7 +445,6 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
                       value={simulations_per_value} 
                       onChange={(_, val) => set_simulations_per_value(val)} 
                       min={1}
-                      max={100}
                     >
                       <NumberInputField />
                       <NumberInputStepper>

@@ -2,12 +2,14 @@ import { get_standard_deduction_from_db } from "../../../../db/repositories/Stan
 import { get_state_taxbrackets_by_state, state_taxbrackets_exist_in_db } from "../../../../db/repositories/StateTaxBracketRepository";
 import { get_capital_gains_brackets, get_taxable_income_brackets } from "../../../../db/repositories/TaxBracketRepository";
 import { create_scenario_raw_yaml, scenario_yaml_string } from "../../../../services/ScenarioYamlParser";
+import { scenario_one } from "../../../domain/raw/scenario_raw";
 import { create_scenario } from "../../../domain/Scenario";
 import { IncomeType, StateType, TaxFilingStatus } from "../../../Enums";
 import { create_federal_tax_service } from "../../../tax/FederalTaxService";
 import { create_state_tax_service } from "../../../tax/StateTaxService";
 import { create_simulation_state, SimulationState } from "../../SimulationState"
 import { pay_mandatory_expenses } from "../PayMandatoryExpense";
+
 
 jest.mock("../../../../db/repositories/TaxBracketRepository", () => ({
     get_capital_gains_brackets: jest.fn(),
@@ -21,7 +23,7 @@ jest.mock("../../../../db/repositories/StateTaxBracketRepository", () => ({
     get_state_taxbrackets_by_state: jest.fn(),
 }))
 jest.mock("../../../../db/repositories/StandardDeductionRepository", () => ({
-    get_standard_deduction: jest.fn(),
+    get_standard_deduction_from_db: jest.fn(),
 }));
 
 describe("Pay mandatory expense", () => {
@@ -113,6 +115,31 @@ describe("Pay mandatory expense", () => {
                     rate: 0.0585,
                     taxpayer_type: TaxFilingStatus.INDIVIDUAL,
                     resident_state: StateType.NY,
+                },
+                {
+                    min: 0,
+                    max: 8500,
+                    rate: 0.08,
+                    taxpayer_type: TaxFilingStatus.COUPLE,
+                    resident_state: StateType.NY,
+                },{
+                    min: 8501,
+                    max: 11700,
+                    rate: 0.1,
+                    taxpayer_type: TaxFilingStatus.COUPLE,
+                    resident_state: StateType.NY,
+                },{
+                    min: 11700,
+                    max: 13900,
+                    rate: 0.15,
+                    taxpayer_type: TaxFilingStatus.COUPLE,
+                    resident_state: StateType.NY,
+                },{
+                    min: 13901,
+                    max: Infinity,
+                    rate: 0.2,
+                    taxpayer_type: TaxFilingStatus.COUPLE,
+                    resident_state: StateType.NY,
                 }
             ]);
         (state_taxbrackets_exist_in_db as jest.Mock)
@@ -125,12 +152,11 @@ describe("Pay mandatory expense", () => {
         const federal_service = await create_federal_tax_service();
         const state_tax_service = await create_state_tax_service(StateType.NY);
 
-        const scenario_raw = await create_scenario_raw_yaml(scenario_yaml_string);
-        const scenario = await create_scenario(scenario_raw);
+        const scenario = create_scenario(scenario_one);
         state = await create_simulation_state(scenario, federal_service, state_tax_service);
 
         state.tax_processor.calculate_taxes = jest.fn();
-
+        state.spouse = undefined; // no spouse
         state.event_manager.update_initial_amount = jest.fn();
     });
 
@@ -144,6 +170,7 @@ describe("Pay mandatory expense", () => {
         (state.tax_processor.calculate_taxes as jest.Mock).mockReturnValue(tax);
         (state.event_manager.update_initial_amount as jest.Mock).mockReturnValue(mandatory_expense);
         const networth = state.account_manager.get_net_worth();
+
         const num_mandatory_expense = state.event_manager.get_active_mandatory_event(state.get_current_year()).length;
         if (await pay_mandatory_expenses(state) === true) {
             const total_mandatory_expense = tax + num_mandatory_expense * mandatory_expense;

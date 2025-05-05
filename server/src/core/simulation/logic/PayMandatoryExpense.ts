@@ -23,6 +23,7 @@
  * }
  */
 
+import { some } from "lodash";
 import { simulation_logger } from "../../../utils/logger/logger";
 import { ExpenseEvent } from "../../domain/event/ExpenseEvent";
 import { cash_investment_one } from "../../domain/raw/investment_raw";
@@ -71,14 +72,20 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   simulation_logger.debug(`total amount we have to pay (including tax): ${total_amount}`);
 
   // step e: total withdrawal amount W = P - (amount of cash)
-  const withdrawal_amount = Math.max(0, total_amount - state.account_manager.cash.get_value());
-  state.account_manager.cash.incr_value(-Math.min(total_amount, state.account_manager.cash.get_value()));
-
-  simulation_logger.debug(`pay mandatory expense withdrawal from non cash investment: ${withdrawal_amount}`);
+  const cash_value = state.account_manager.cash.get_value();
+  simulation_logger.debug(`still have ${cash_value} in cash`);
+  const cash_withdraw = Math.min(cash_value, total_amount);
+  simulation_logger.debug(`withdrawaing ${cash_withdraw} from cash`);
+  state.account_manager.cash.incr_value(-cash_withdraw);
   simulation_logger.debug(`current cash: ${state.account_manager.cash.get_value()}`);
+
+  const withdrawal_amount = total_amount - cash_withdraw;
+  simulation_logger.debug(`After paying with cash, we still need to withdraw: ${withdrawal_amount}`);
+
   // step f:
   // withdrawal from investments to fill withdrawal_amount
   if(withdrawal_amount > 0) {
+
     simulation_logger.debug(`It's the year ${state.get_current_year()}. We need to withdraw ${withdrawal_amount} from investments`);
     const withrawaled = state.withdrawal_processor.execute_withdrawal(state.get_expense_withrawal_strategy(), withdrawal_amount);
     return withdrawal_amount === withrawaled;

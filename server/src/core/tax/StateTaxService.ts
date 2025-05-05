@@ -3,9 +3,11 @@ import { create_tax_brackets } from "./TaxBrackets";
 import { TaxBrackets, TaxBracket } from "./TaxBrackets";
 import { get_state_taxbrackets_by_state, create_state_taxbracket_in_db, state_taxbrackets_exist_in_db } from "../../db/repositories/StateTaxBracketRepository";
 import { simulation_logger } from "../../utils/logger/logger";
+import { prev } from "cheerio/lib/api/traversing";
 
 export interface StateTaxService {
     __taxable_income_brackets: TaxBrackets;
+    get_prev_taxable_income_bracket: () => TaxBrackets | null;
     adjust_for_inflation(rate: number): void;
     find_prev_rate(income: number, status: TaxFilingStatus): number;
     find_prev_bracket_with_rate(rate: number, status: TaxFilingStatus): TaxBracket;
@@ -19,7 +21,7 @@ export interface StateTaxService {
 export function create_state_tax_service_wo(
     taxable_income_bracket: TaxBrackets
 ): StateTaxService {
-    let prev_taxable_income_bracket: TaxBrackets;
+    let prev_taxable_income_bracket: TaxBrackets | null = null;
 
     const adjust_for_inflation = (rate: number) => {
         
@@ -90,6 +92,7 @@ export function create_state_tax_service_wo(
     }
     return {
         __taxable_income_brackets: taxable_income_bracket,
+        get_prev_taxable_income_bracket: () => prev_taxable_income_bracket,
         adjust_for_inflation,
         find_prev_rate,
         find_prev_bracket_with_rate,
