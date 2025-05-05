@@ -14,7 +14,7 @@ import {
 } from '@chakra-ui/react';
 import { Building2, Wallet, TrendingUp, BarChart } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
-import { FiArrowRight } from 'react-icons/fi';
+import { FiArrowRight, FiChevronLeft } from 'react-icons/fi';
 
 import { useEventSeries } from '../../contexts/EventSeriesContext';
 import { EventSeriesType, EventSeries } from '../../types/eventSeries';
@@ -299,7 +299,14 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
 
             
               <Flex justify="space-between" mt={8} alignItems="center">
-                <Button variant="ghost" onClick={handleBackToInvestments} leftIcon={<Text>←</Text>}>
+              <Button
+                  leftIcon={<Icon as={FiChevronLeft} />}
+                  variant="outline"
+                  colorScheme="blue"
+                  onClick={handleBackToInvestments}
+                  size="lg"
+                  _hover={{ bg: 'blue.50' }}
+                >
                   Back
                 </Button>
                 

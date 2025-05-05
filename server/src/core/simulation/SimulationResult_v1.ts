@@ -376,6 +376,7 @@ export function create_simulation_result_v1(
   };
 
   //TODO: 获得开始年份和结束年份
+  simulation_logger.debug(`allSimulations is: ${allSimulations[0].yearly_results}`);
   const begining_year = allSimulations[0].yearly_results[0].year; // since all simulation should have the same begining year
   let end_year = 0;
   //using a for loop to find the longest yearly_results array
