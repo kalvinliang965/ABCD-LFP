@@ -22,7 +22,7 @@ export function pay_discretionary_expenses(state: SimulationState): void {
     const financial_goal = state.get_financial_goal();
 
     simulation_logger.debug(`Networth: ${net_worth}, financial goal: ${financial_goal}`);
-    return net_worth >= financial_goal; 
+    return net_worth > financial_goal; 
   }
 
   if (!financial_goal_reach()) {
@@ -55,6 +55,7 @@ export function pay_discretionary_expenses(state: SimulationState): void {
     }
 
     const full_payment = amt;
+    simulation_logger.debug(`Fully payment amount ${full_payment}`);
     const partial_payment = Math.min(state.account_manager.get_net_worth() - state.get_financial_goal(), full_payment);
     // WARNING: This shouldnt be negative
     if (partial_payment <= 0) {
