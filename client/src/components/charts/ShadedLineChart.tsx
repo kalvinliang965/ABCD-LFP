@@ -186,7 +186,7 @@ const ShadedLineChart: React.FC<ShadedLineChartProps> = ({
     },
     legend: {
       data: ['Median', '10%-90%', '20%-80%', '30%-70%', '40%-60%'],
-      bottom: 0,
+      bottom: 50,
       icon: 'rect',
       itemWidth: 15,
       itemHeight: 10,
@@ -197,7 +197,7 @@ const ShadedLineChart: React.FC<ShadedLineChartProps> = ({
     grid: {
       left: '5%',
       right: '5%',
-      bottom: '15%',
+      bottom: 80,
       top: '15%',
       containLabel: true,
     },
