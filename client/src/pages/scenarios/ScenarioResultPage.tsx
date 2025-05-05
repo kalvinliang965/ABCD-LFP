@@ -385,3 +385,4 @@ const ScenarioResultPage = () => {
 };
 
 export default ScenarioResultPage;
+//make some changes in this to store the history of the simulation results 
