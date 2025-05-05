@@ -99,6 +99,22 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
   };
 
   // AI-generated code
+  // Check if an investment type is tax-exempt
+  const is_tax_exempt_investment = (investmentTypeName: string): boolean => {
+    if (!investmentTypeName) return false;
+    const investment_type = investmentTypeStorage.get_by_name(investmentTypeName);
+    return investment_type?.taxability === false;
+  };
+
+  // AI-generated code
+  // Count tax-exempt investment types
+  const count_tax_exempt_investment_types = (): number => {
+    return investmentTypes.filter(type => type.taxability === false).length;
+  };
+
+  //TODO: should prevent user from puuting tax-exempt investment into pre-tax and after-tax account
+
+  // AI-generated code
   // Handle continue button click with Cash investment validation
   const handle_continue = () => {
     if (!cash_investment_exists()) {
@@ -181,6 +197,14 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
       return false;
     }
 
+    // If investment type is tax-exempt, it must be in non-retirement
+    if (
+      is_tax_exempt_investment(newInvestment.investmentType) &&
+      newInvestment.taxStatus !== 'non-retirement'
+    ) {
+      return false;
+    }
+
     // AI-generated code
     // Check if investment type already exists under the selected tax status
     if (
@@ -225,6 +249,23 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
       toast({
         title: 'Invalid combination',
         description: 'Cash investments can only be placed in non-retirement accounts',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+        position: 'top-right',
+      });
+      return;
+    }
+
+    // AI-generated code
+    // Check tax-exempt investment tax status validation
+    if (
+      is_tax_exempt_investment(newInvestment.investmentType) &&
+      newInvestment.taxStatus !== 'non-retirement'
+    ) {
+      toast({
+        title: 'Invalid combination',
+        description: 'Tax-exempt investments can only be placed in non-retirement accounts',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -502,7 +543,8 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
                   </Text>
                 </HStack>
                 <Heading size="lg" fontWeight="bold">
-                  {investmentsConfig.investments.length} / {investmentTypes.length * 3 - 2}
+                  {investmentsConfig.investments.length} /{' '}
+                  {investmentTypes.length * 3 - 2 - count_tax_exempt_investment_types() * 2}
                 </Heading>
               </Box>
 
@@ -904,6 +946,15 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
                 newInvestment.taxStatus !== 'non-retirement' && (
                   <Text color="red.500" fontSize="sm" mt={4} textAlign="center" fontWeight="medium">
                     Cash investments can only be placed in non-retirement accounts
+                  </Text>
+                )}
+
+              {/* AI-generated code */}
+              {/* Show warning if tax-exempt investment is selected with non-compatible tax status */}
+              {is_tax_exempt_investment(newInvestment.investmentType) &&
+                newInvestment.taxStatus !== 'non-retirement' && (
+                  <Text color="red.500" fontSize="sm" mt={4} textAlign="center" fontWeight="medium">
+                    Tax-exempt investments can only be placed in non-retirement accounts
                   </Text>
                 )}
 
