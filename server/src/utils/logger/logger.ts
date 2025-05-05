@@ -25,6 +25,7 @@ const base_format = winston.format.combine(
 );
 
 let level = dev.is_dev?'debug': "info";
+//let level = "error";
 
 export const simulation_logger = winston.createLogger({
   level: dev.is_test ? 'error' : level, // use error or any valid level
