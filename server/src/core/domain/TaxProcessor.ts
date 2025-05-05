@@ -1,3 +1,4 @@
+import { state } from "@stdlib/random-base-normal";
 import { simulation_logger } from "../../utils/logger/logger";
 import { IncomeType, TaxFilingStatus } from "../Enums";
 import { FederalTaxService } from "../tax/FederalTaxService";
@@ -18,6 +19,18 @@ export class TaxProcessor {
 
         simulation_logger.debug("Processing tax...");
 
+        if (this.federal_tax_service.get_prev_standard_deductions() == null) {
+            throw new Error("Failed processing tax. No data for last year federal taxable income tax");
+        }
+    
+        if (this.state_tax_service.get_prev_taxable_income_bracket() == null) {
+            throw new Error("Failed processing tax. No data for last year state taxable income tax");
+        } 
+        
+        if (this.federal_tax_service.get_prev_capital_gains_bracket() == null) {
+            throw new Error("Failed processing tax. No data for last year federal capital gains tax");
+        }
+
         // step a: calculate previous year's federal and state income tax
         // using data from preivous year
         // in our application, 85 percent of SS are only subject to federal tax
@@ -29,14 +42,14 @@ export class TaxProcessor {
         const state_taxable_income = this.user_tax_data.get_prev_year_income();
         simulation_logger.debug(`state taxable income: ${state_taxable_income}`);
 
-        const standard_deduction = this.federal_tax_service.find_deduction(
+        const standard_deduction = this.federal_tax_service.find_prev_deduction(
             this.get_tax_filing_status()
         );
         simulation_logger.debug(`Standard deduction: ${standard_deduction}`)
 
         const fed_tax = this.calculate_tax(
             Math.max(fed_taxable_income - standard_deduction, 0),
-            this.federal_tax_service.__taxable_income_bracket.__brackets.get(this.get_tax_filing_status())!
+            this.federal_tax_service.get_prev_taxable_income_bracket()!.__brackets.get(this.get_tax_filing_status())!
         );
         if (Number.isNaN(fed_tax)) {
             throw new Error("fed tax turn NaN");
@@ -44,7 +57,7 @@ export class TaxProcessor {
 
         const state_tax = this.calculate_tax(
             Math.max(state_taxable_income, 0),
-            this.state_tax_service.__taxable_income_brackets.__brackets.get(this.get_tax_filing_status())!,
+            this.state_tax_service.get_prev_taxable_income_bracket()!.__brackets.get(this.get_tax_filing_status())!,
         )
         if (Number.isNaN(state_tax)) {
             throw new Error("state tax turn NaN");
@@ -58,7 +71,7 @@ export class TaxProcessor {
         simulation_logger.debug(`capital gains: ${this.user_tax_data.get_prev_year_gains()}`);
         let capital_gain_tax = this.calculate_tax(
             Math.max(this.user_tax_data.get_prev_year_gains(), 0),
-            this.federal_tax_service.__capital_gains_bracket.__brackets.get(this.get_tax_filing_status())!,
+            this.federal_tax_service.get_prev_capital_gains_bracket()!.__brackets.get(this.get_tax_filing_status())!,
         )
         if (Number.isNaN(capital_gain_tax)) {
             throw new Error("capital gain tax turn NaN");

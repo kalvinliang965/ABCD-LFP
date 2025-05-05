@@ -8,6 +8,7 @@ import { execute_single_simulation } from './SimulationRunner';
 export interface SimulationEngine {
     run: (num_simulations: number) => Promise<SimulationYearlyResult[]>;
     run_parallel: (num_simulation: number) => Promise<SimulationYearlyResult[]>;
+    run_linear: (num_simulation: number) => Promise<SimulationYearlyResult[]>;
 }
 
 export async function create_simulation_engine(simulation_environment: SimulationEnvironment): Promise<SimulationEngine> {
@@ -32,7 +33,7 @@ export async function create_simulation_engine(simulation_environment: Simulatio
     }
 
     // not optimize
-    async function run(num_simulations: number): Promise<SimulationYearlyResult[]> {
+    async function run_linear(num_simulations: number): Promise<SimulationYearlyResult[]> {
         const res: SimulationYearlyResult[] = [];
         let i = 0
         try {
@@ -54,7 +55,8 @@ export async function create_simulation_engine(simulation_environment: Simulatio
     }
 
     return {
-        run,
+        run: run_parallel,
         run_parallel,
+        run_linear,
     }
 }

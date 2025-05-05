@@ -31,7 +31,7 @@ export function process_roth_conversion(simulation_state: SimulationState) {
         const current_bracket = simulation_state
                         .federal_tax_service
                         .find_bracket_with_income(
-                            after_deduction, 
+                            Math.ceil(after_deduction), 
                             IncomeType.TAXABLE_INCOME, 
                             simulation_state.get_tax_filing_status()
         );
