@@ -21,6 +21,8 @@ import { runParameterSweep2D } from "./parameterSweep2D";
 import { generate_seed } from "../utils/ValueGenerator";
 import { create_simulation_result_v1 } from "../core/simulation/SimulationResult_v1";
 import { debug_simulation_result } from "../core/simulation/SimulationResult_v1";
+import { generate_investment_csv } from "../utils/logger/SimulationResultCSV";
+import User from "../db/models/User";
 // Extend the Express Request type to include user
 declare global {
   namespace Express {
@@ -74,24 +76,46 @@ router.post("/", async (req: Request, res: Response) => {
     const engine = await create_simulation_engine(simulationEnvironment);
 
     // Run multiple simulations
-    const simulationResults = await engine.run(count);
+    const simulation_results = await engine.run(count);
 
     // Create a consolidated result from all simulations
     simulation_logger.info(
-      `Creating consolidated result from ${simulationResults.length} simulations`
+      `Creating consolidated result from ${simulation_results.length} simulations`
     );
     //console.log("simulationResults", simulationResults);
     //! seed and run count should be added to the consolidated result !!!!!!!
     const simulation_result = create_simulation_result_v1(
-      simulationResults,
+      simulation_results,
       random_base_seed,
       scenarioId
     );
 
-    simulation_logger.info(`simulation_result: ${simulation_result}`);
-    // AI-generated code
-    // Add debug call to inspect simulation result
-    debug_simulation_result(simulation_result, true);
+    // Get user information for the CSV filename
+    try {
+      // If you have a User model, you might want to get the actual username
+      // const user = await User.findById(userId);
+      // username = user ? user.username : userId;
+    } catch (error) {
+      simulation_logger.warn(
+        `Could not retrieve username for CSV, using userId instead: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+
+    // Generate CSV file with investment data
+    simulation_logger.info(`Generating investment CSV file`);
+    const user = await User.findById(userId);
+    const username = user?.name;
+    simulation_logger.debug(`username: ${username}`);
+    if (!username) {
+      return res.status(404).json({
+        success: false,
+        message: "Username not found",
+      });
+    }
+    const csv_filename = generate_investment_csv(simulation_result, username);
+    simulation_logger.info(`Generated investment CSV file: ${csv_filename}`);
 
     // Save only the consolidated result to database
     const savedResult = await save_simulation_result(simulation_result);
@@ -102,7 +126,8 @@ router.post("/", async (req: Request, res: Response) => {
       simulationId: savedResult._id,
       scenarioId: scenarioId,
       //successProbability: consolidatedResult.successProbability,
-      message: `Successfully ran ${simulationResults.length} simulations and saved consolidated result`,
+      csvFilename: csv_filename,
+      message: `Successfully ran ${simulation_results.length} simulations and saved consolidated result`,
     });
   } catch (error) {
     simulation_logger.error(

@@ -230,18 +230,6 @@ export const RothConversionOptimizerForm: React.FC<RothConversionOptimizerFormPr
                 <Icon as={FiRefreshCcw} mr={3} boxSize={6} />
                 Roth Conversion Optimizer
               </Heading>
-              <HStack spacing={3}>
-                <Button
-                  variant="outline"
-                  colorScheme="blue"
-                  onClick={onBack}
-                  leftIcon={<Icon as={FiChevronLeft} />}
-                  size="md"
-                  rounded="lg"
-                >
-                  Back
-                </Button>
-              </HStack>
             </Flex>
           </CardHeader>
 

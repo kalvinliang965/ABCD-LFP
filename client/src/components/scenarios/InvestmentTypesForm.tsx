@@ -366,16 +366,6 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({ onBack
                   </MotionText>
                 </VStack>
               </HStack>
-              <Button
-                variant="outline"
-                colorScheme="blue"
-                onClick={onBack}
-                leftIcon={<Icon as={FiChevronLeft} />}
-                size="md"
-                _hover={{ bg: 'blue.50' }}
-              >
-                Back
-              </Button>
             </Flex>
           </CardHeader>
 
@@ -682,29 +672,24 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({ onBack
               </AnimatePresence>
 
               {/* Continue Button */}
-              <Flex justify="flex-end" mt={8} display="flex" gap={4}>
+              <Flex justify="space-between" mt={8} display="flex" gap={4}>
                 <Button
-                  rightIcon={<Icon as={FiChevronRight} />}
+                  leftIcon={<Icon as={FiChevronLeft} />}
+                  variant="outline"
                   colorScheme="blue"
-                  onClick={handle_continue_click}
-                  isDisabled={!can_continue}
+                  onClick={onBack}
                   size="lg"
-                  shadow="md"
-                  _hover={{
-                    transform: can_continue ? 'translateY(-2px)' : 'none',
-                    shadow: 'lg',
-                    bg: can_continue ? buttonHoverBg : undefined,
-                  }}
-                  transition="all 0.3s"
-                  borderRadius="md"
+                  _hover={{ bg: 'blue.50' }}
                 >
-                  Continue to Investments
+                  Back
                 </Button>
-                {import.meta.env.MODE === 'development' && (
+
+                <Flex gap={4}>
                   <Button
                     rightIcon={<Icon as={FiChevronRight} />}
                     colorScheme="blue"
-                    onClick={onContinue}
+                    onClick={handle_continue_click}
+                    isDisabled={!can_continue}
                     size="lg"
                     shadow="md"
                     _hover={{
@@ -715,9 +700,27 @@ export const InvestmentTypesForm: React.FC<InvestmentTypesFormProps> = ({ onBack
                     transition="all 0.3s"
                     borderRadius="md"
                   >
-                    Skip to Investments
+                    Continue to Investments
                   </Button>
-                )}
+                  {import.meta.env.MODE === 'development' && (
+                    <Button
+                      rightIcon={<Icon as={FiChevronRight} />}
+                      colorScheme="blue"
+                      onClick={onContinue}
+                      size="lg"
+                      shadow="md"
+                      _hover={{
+                        transform: can_continue ? 'translateY(-2px)' : 'none',
+                        shadow: 'lg',
+                        bg: can_continue ? buttonHoverBg : undefined,
+                      }}
+                      transition="all 0.3s"
+                      borderRadius="md"
+                    >
+                      Skip to Investments
+                    </Button>
+                  )}
+                </Flex>
               </Flex>
             </VStack>
           </CardBody>

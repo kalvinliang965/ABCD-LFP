@@ -101,10 +101,10 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
       <Box minH="100vh" bg="gray.50">
         <Box maxW="4xl" mx="auto" py={12} px={4}>
           <Box bg="white" rounded="lg" shadow="lg" overflow="hidden">
-            <Box 
-              p={6} 
+            <Box
+              p={6}
               bgGradient="linear(to-r, blue.400, purple.500)"
-              borderBottom="1px" 
+              borderBottom="1px"
               borderColor="gray.200"
               position="relative"
               overflow="hidden"
@@ -138,138 +138,6 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
             </Box>
 
             <Box p={6}>
-              <Button 
-                variant="ghost" 
-                onClick={handleBackToInvestments}
-                mb={6}
-                leftIcon={<Text>←</Text>}
-              >
-                Back
-              </Button>
-
-              {addedEvents.length > 0 && (
-                <VStack spacing={4} mb={8} align="stretch">
-                  <Heading size="md" color="gray.700">
-                    Added Events
-                  </Heading>
-                  <Box bg="gray.50" p={4} borderRadius="md">
-                    {addedEvents.map((event, index) => (
-                      <Flex
-                        key={index}
-                        p={4}
-                        bg="white"
-                        borderRadius="md"
-                        shadow="sm"
-                        mb={2}
-                        justify="space-between"
-                        align="center"
-                      >
-                        <Box>
-                          <Text fontWeight="semibold" fontSize="md" color="gray.800" mb={1}>
-                            {event.name}
-                            <Badge ml={2} colorScheme={
-                              event.type === 'income' ? 'green' : 
-                              event.type === 'expense' ? 'red' : 
-                              event.type === 'invest' ? 'blue' : 'purple'
-                            } fontSize="xs" textTransform="uppercase">
-                              {event.type}
-                            </Badge>
-                          </Text>
-                          <Text fontSize="sm" color="gray.600">
-                            {event.type !== 'invest' && event.type !== 'rebalance' ? (
-                              <>
-                                <Text as="span" fontWeight="medium" color="gray.700">Initial Amount:</Text>{' '}
-                                <Text as="span" color="green.600" fontWeight="medium">${event.initialAmount?.toLocaleString() || 0}</Text>
-                                
-                                {/* Display properties for income and expense as badges */}
-                                <Flex mt={1} flexWrap="wrap" gap={1}>
-                                  {event.inflationAdjusted && (
-                                    <Text fontSize="sm" fontWeight="medium" color="orange.600" px={1} py={0.5} 
-                                      bg="orange.50" borderRadius="md" display="inline-block">
-                                      Inflation Adjusted
-                                    </Text>
-                                  )}
-                                  
-                                  {event.type === 'expense' && event.discretionary && (
-                                    <Text fontSize="sm" fontWeight="medium" color="purple.600" px={1} py={0.5} 
-                                      bg="purple.50" borderRadius="md" display="inline-block">
-                                      Discretionary
-                                    </Text>
-                                  )}
-                                  
-                                  {event.type === 'income' && event.isSocialSecurity && (
-                                    <Text fontSize="sm" fontWeight="medium" color="blue.600" px={1} py={0.5} 
-                                      bg="blue.50" borderRadius="md" display="inline-block">
-                                      Social Security
-                                    </Text>
-                                  )}
-                                </Flex>
-                              </>
-                            ) : event.type === 'invest' ? (
-                              <>
-                                <Box>
-                                  {event.assetAllocation ? 
-                                    Object.entries(event.assetAllocation).slice(0, 3).map(([key, value], idx) => (
-                                      <Flex key={idx} mb={0.5} width="100%">
-                                        <Text fontSize="sm" fontWeight="medium" flex="1" isTruncated>
-                                          {key}:
-                                        </Text>
-                                        <Text fontSize="sm" color="blue.600" fontWeight="medium" width="50px" textAlign="right">
-                                          {Math.round(Number(value) * 100)}%
-                                        </Text>
-                                      </Flex>
-                                    ))
-                                    : <Text fontSize="sm">No allocations</Text>}
-                                  {(event as any).glidePath && 
-                                    <Text fontSize="sm" fontWeight="medium" color="blue.600" px={1} py={0.5} 
-                                    bg="blue.50" borderRadius="md" display="inline-block" mt={1} mb={1}>
-                                      <Icon as={TrendingUp} boxSize={3} mr={1} />
-                                      Glide Path
-                                    </Text>}
-                                  <Text fontSize="sm">
-                                    <Text as="span" fontWeight="medium" color="gray.700">Max cash:</Text>{' '}
-                                    <Text as="span" color="green.600" fontWeight="medium">${event.maxCash?.toLocaleString() || 0}</Text>
-                                  </Text>
-                                </Box>
-                              </>
-                            ) : (
-                              <>
-                                <Box>
-                                  {event.assetAllocation ? 
-                                    Object.entries(event.assetAllocation).slice(0, 3).map(([key, value], idx) => (
-                                      <Flex key={idx} mb={0.5} width="100%">
-                                        <Text fontSize="sm" fontWeight="medium" flex="1" isTruncated>
-                                          {key}:
-                                        </Text>
-                                        <Text fontSize="sm" color="purple.600" fontWeight="medium" width="50px" textAlign="right">
-                                          {Math.round(Number(value) * 100)}%
-                                        </Text>
-                                      </Flex>
-                                    ))
-                                    : <Text fontSize="sm">No allocations</Text>}
-                                </Box>
-                              </>
-                            )}
-                          </Text>
-                        </Box>
-                        <HStack>
-                          <IconButton
-                            aria-label="Delete event"
-                            icon={<DeleteIcon color="red.500" />}
-                            size="md"
-                            variant="ghost"
-                            _hover={{ bg: 'red.50' }}
-                            onClick={() => {
-                              handleDeleteEvent(index.toString());
-                            }}
-                          />
-                        </HStack>
-                      </Flex>
-                    ))}
-                  </Box>
-                </VStack>
-              )}
-
               <Text color="gray.600" mb={6}>
                 Select the type of event series you want to add to your financial plan.
               </Text>
@@ -305,7 +173,18 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                 })}
               </SimpleGrid>
 
-              <Flex justify="flex-end" mt={8}>
+              <Flex justify="space-between" mt={8}>
+                <Button
+                  variant="outline"
+                  onClick={handleBackToInvestments}
+                  leftIcon={<Text>←</Text>}
+                  size="lg"
+                  borderRadius="lg"
+                  borderColor="blue.300"
+                  _hover={{ bg: 'blue.50' }}
+                >
+                  Back
+                </Button>
                 <Button
                   colorScheme="blue"
                   onClick={handleSaveAndContinue}
@@ -337,15 +216,6 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
       <Box maxW="4xl" mx="auto" py={12} px={4}>
         <Box bg="white" rounded="lg" shadow="lg" overflow="hidden">
           <Box p={6}>
-            <Button
-              onClick={() => setSelectedType(null)}
-              variant="ghost"
-              colorScheme="blue"
-              mb={6}
-              leftIcon={<Text>←</Text>}
-            >
-              Back to event types
-            </Button>
             <Heading size="xl" color="gray.900">
               {typeInfo.header}
             </Heading>
@@ -359,6 +229,20 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
               existingEvents={existingEvents}
               investments={investments} //pass investments to the form
             />
+            <Flex justify="flex-start" mt={6}>
+              <Button
+                onClick={() => setSelectedType(null)}
+                variant="outline"
+                colorScheme="blue"
+                leftIcon={<Text>←</Text>}
+                size="lg"
+                borderRadius="lg"
+                borderColor="blue.300"
+                _hover={{ bg: 'blue.50' }}
+              >
+                Back to event types
+              </Button>
+            </Flex>
           </Box>
         </Box>
       </Box>

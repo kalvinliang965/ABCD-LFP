@@ -313,11 +313,15 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
       console.log('Exploration results:', sweep);
       
       console.log('Parameter sweep details:');
-      console.table(sweep.data.map((item: any) => ({
-        parameter_value: item.param,
-        success_probability: item.results?.successProbability || 'N/A',
-        error: item.error || 'None'
-      })));
+      console.table(sweep.data.map((item: any) => {
+        //get the last year's data from yearly_results (if available)
+        const lastYearData = item.results?.yearly_results?.slice(-1)[0];
+        return {
+          parameter_value: item.param,
+          success_probability: lastYearData?.success_probability ?? 'N/A',
+          error: item.error || 'None'
+        };
+      }));
       
       toast({
         title: "Exploration completed",
@@ -430,10 +434,41 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
                   {error}
                 </Alert>
               ) : scenario_data ? (
-                <RothOptimizerParameter
-                  originalValue={scenario_data.RothConversionOpt}
-                  onValueChange={handle_roth_flag_change}
-                />
+                <>
+                  <RothOptimizerParameter
+                    originalValue={scenario_data.RothConversionOpt}
+                    onValueChange={handle_roth_flag_change}
+                  />
+                  <FormControl id="simulations-per-value" isRequired mt={4}>
+                    <FormLabel>Simulations Per Value</FormLabel>
+                    <NumberInput 
+                      value={simulations_per_value} 
+                      onChange={(_, val) => set_simulations_per_value(val)} 
+                      min={1}
+                      max={100}
+                    >
+                      <NumberInputField />
+                      <NumberInputStepper>
+                        <NumberIncrementStepper />
+                        <NumberDecrementStepper />
+                      </NumberInputStepper>
+                    </NumberInput>
+                    <Text fontSize="xs" color="gray.500" mt={1}>
+                      Number of Monte Carlo simulations to run for each parameter value
+                    </Text>
+                  </FormControl>
+                  <Box mt={2}>
+                    <Text fontSize="sm" fontWeight="bold">
+                      {simulations_per_value} simulations will be run for the selected Roth optimizer setting
+                    </Text>
+                  </Box>
+                  {simulations_per_value > 50 && (
+                    <Alert status="warning" mt={2}>
+                      <AlertIcon />
+                      Large number of simulations may take a long time to complete. Consider reducing the number of simulations.
+                    </Alert>
+                  )}
+                </>
               ) : (
                 <Alert status="warning">
                   <AlertIcon />
