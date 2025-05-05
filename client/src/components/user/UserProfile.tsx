@@ -71,23 +71,6 @@ interface Scenario {
   ownerName?: string;
 }
 
-// Add type for shared scenario response
-interface SharedScenarioResponse {
-  _id: string;
-  name: string;
-  maritalStatus?: string;
-  residenceState?: string;
-  createdAt: Date;
-  ownerName: string;
-  ownerId: string;
-  permission: 'read' | 'write';
-  sharedWith?: Array<{
-    userId: string;
-    userName: string;
-    email: string;
-    permission: 'read' | 'write';
-  }>;
-}
 
 // Type declaration for the scenario service with sharing methods
 type ScenarioServiceWithSharing = typeof scenario_service & {
@@ -172,7 +155,8 @@ const UserProfile: React.FC = () => {
 
   // Handle return to dashboard
   const handleReturnToDashboard = () => {
-    navigate('/dashboard');
+    navigate('/scenarios');
+    //http://localhost:5173/scenarios
   };
 
   // Fetch user scenarios
@@ -283,7 +267,7 @@ const UserProfile: React.FC = () => {
       if (isGuestUser) {
         setUserData({
           name: 'Guest',
-          email: 'guest@gmail.com',
+          email: '',
           profilePicture: '',
           scenarios: user?.scenarios || [],
         });
@@ -384,7 +368,7 @@ const UserProfile: React.FC = () => {
         duration: 5000,
         isClosable: true,
       });
-      navigate('/dashboard');
+      navigate('/scenarios');
     } catch (error) {
       console.log('Error updating profile:', error);
       // toast({
@@ -493,7 +477,7 @@ const UserProfile: React.FC = () => {
         variant="outline"
         size="sm"
         mb={4}
-        onClick={() => navigate('/dashboard')}
+        onClick={() => navigate('/scenarios')}
       >
         Return to Dashboard
       </Button>

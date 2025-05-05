@@ -169,7 +169,7 @@ const Login: React.FC = () => {
     }
     
     // Navigate to dashboard
-    navigate('/dashboard');
+    navigate('/scenarios');
   };
 
   return (
