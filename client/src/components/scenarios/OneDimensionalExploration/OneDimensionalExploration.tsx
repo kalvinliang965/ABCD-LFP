@@ -313,11 +313,15 @@ const OneDimensionalExploration: React.FC<OneDimensionalExplorationProps> = ({
       console.log('Exploration results:', sweep);
       
       console.log('Parameter sweep details:');
-      console.table(sweep.data.map((item: any) => ({
-        parameter_value: item.param,
-        success_probability: item.results?.successProbability || 'N/A',
-        error: item.error || 'None'
-      })));
+      console.table(sweep.data.map((item: any) => {
+        //get the last year's data from yearly_results (if available)
+        const lastYearData = item.results?.yearly_results?.slice(-1)[0];
+        return {
+          parameter_value: item.param,
+          success_probability: lastYearData?.success_probability ?? 'N/A',
+          error: item.error || 'None'
+        };
+      }));
       
       toast({
         title: "Exploration completed",
