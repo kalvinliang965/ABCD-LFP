@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Heading,
@@ -16,6 +16,9 @@ import {
   HStack,
   Tooltip,
   Icon,
+  Checkbox,
+  CheckboxGroup,
+  VStack,
 } from '@chakra-ui/react';
 import { Line } from 'react-chartjs-2';
 import {
@@ -41,14 +44,46 @@ ChartJS.register(
   Legend
 );
 
+const COLOR_PALETTE = [
+  '#3b82f6', // Blue-500
+  '#f97316', // Orange-500
+  '#10b981', // Emerald-500
+  '#ef4444', // Red-500
+  '#8b5cf6', // Violet-500
+  '#14b8a6', // Teal-500
+  '#f59e0b', // Amber-500
+  '#6366f1', // Indigo-500
+  '#ec4899', // Pink-500
+  '#6b7280', // Gray-500
+];
+
 interface ParameterSweepChartsProps {
   results: any;
+  goalAmount?: number; // Optional goal amount for reference line
 }
 
 type MetricType = 'successProbability' | 'medianTotalInvestments' | 'averageTotalInvestments';
 
-const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) => {
+//function to format parameter names for display
+const formatParameterName = (paramName: string): string => {
+  if (paramName === 'rothOptimizer') {
+    return 'Roth Optimizer';
+  }
+  
+  //split by capital letters and join with spaces
+  return paramName
+    //insert a space before all capital letters
+    .replace(/([A-Z])/g, ' $1')
+    //ensure the first letter is capitalized
+    .replace(/^./, str => str.toUpperCase())
+    //trim any leading space
+    .trim();
+};
+
+const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results, goalAmount }) => {
   const [selected_metric, set_selected_metric] = useState<MetricType>('successProbability');
+  const [visibleLines, set_visible_lines] = useState<Set<string>>(new Set());
+  const [chartData, set_chart_data] = useState<any>(null);
 
   if (!results || !Array.isArray(results.data) || results.data.length === 0) {
     return (
@@ -59,6 +94,7 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
   }
 
   const is_numeric_parameter = !isNaN(Number(results.data[0].param));
+  const is_boolean_parameter = results.parameterType === 'rothOptimizer';
   const metric_label = selected_metric === 'successProbability' 
     ? 'Success Probability' 
     : selected_metric === 'medianTotalInvestments'
@@ -69,30 +105,23 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
   const successful_runs = results.data.filter((item: any) => !item.error).length;
   const total_runs = results.data.length;
 
-  //generate different colors for each parameter value
-  const generate_colors = (count: number) => {
-    const colors = [];
-    const hue_step = 360 / count;
-    for (let i = 0; i < count; i++) {
-      const hue = i * hue_step;
-      colors.push(`hsla(${hue}, 70%, 50%, 1)`);
-    }
-    return colors;
-  };
-
   //5.1 Multi-line chart, value over time
   const prepare_time_series_data = () => {
     if (!results.data[0]?.results) {
       return null;
     }
 
-    const colors = generate_colors(results.data.length);
     const datasets: Array<{
       label: string;
       data: Array<{ x: number; y: number }>;
       borderColor: string;
       backgroundColor: string;
       tension: number;
+      pointRadius: number;
+      pointHoverRadius: number;
+      pointBackgroundColor: string;
+      borderDash: number[];
+      clip: false;
     }> = [];
     const all_years = new Set<number>();
 
@@ -101,59 +130,71 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
       if (!item.results) return;
       
       const data_points: { x: number; y: number }[] = [];
+      const yearly_results = item.results.yearly_results;
       
-      if (selected_metric === 'successProbability') {
-        // For success probability, use the probability map directly
-        const probMap = item.results.probabilityOfSuccess;
-        if (probMap) {
-          // Extract years and values
-          Object.entries(probMap).forEach(([yearStr, probValue]) => {
-            const year = parseInt(yearStr);
-            all_years.add(year);
-            // Convert percentage (0-100) to decimal (0-1)
-            data_points.push({
-              x: year,
-              y: (probValue as number) / 100
+      //format parameter name to be more readable
+      const paramName = formatParameterName(results.parameterType);
+      const label = `${paramName}: ${item.param}`;
+      
+      if (yearly_results && yearly_results.length) {
+        yearly_results.forEach((yearData: { year: number; success_probability: number; total_investment: { median: number } }) => {
+          all_years.add(yearData.year);
+          if (selected_metric === 'successProbability') {
+            data_points.push({ 
+              x: yearData.year, 
+              y: yearData.success_probability 
             });
-          });
-        }
-      } else {
-        // For investment metrics, use yearlyData
-        const yearlyData = item.results.yearlyData;
-        if (yearlyData && yearlyData.length) {
-          yearlyData.forEach((snapshot: any) => {
-            // Make sure the year is available
-            if (snapshot.year) {
-              all_years.add(snapshot.year);
-              // Use the sum of all investment types instead of looking for a non-existent totalInvestments field
-              const totalValue = 
-                snapshot.total_after_tax + 
-                snapshot.total_pre_tax + 
-                snapshot.total_non_retirement;
-              
-              data_points.push({
-                x: snapshot.year,
-                y: totalValue
-              });
-            }
-          });
-        }
+          } else {
+            data_points.push({ 
+              x: yearData.year, 
+              y: yearData.total_investment.median 
+            });
+          }
+        });
       }
 
       //sort data points by year
       data_points.sort((a, b) => a.x - b.x);
 
+      const borderColor = COLOR_PALETTE[index % COLOR_PALETTE.length];
+
       datasets.push({
-        label: `${results.parameterType}: ${item.param}`,
+        label,
         data: data_points,
-        borderColor: colors[index],
-        backgroundColor: colors[index].replace('1)', '0.1)'),
+        borderColor,
+        backgroundColor: borderColor.replace(')', ', 0.1)'),
         tension: 0.2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: borderColor,
+        borderDash: index % 2 === 0 ? [] : [5, 5],
+        clip: false as const,
       });
+    });
+
+    //sort datasets by final Y value (descending) to ensure smaller values are drawn on top
+    datasets.sort((a, b) => {
+      const aLast = a.data[a.data.length - 1]?.y || 0;
+      const bLast = b.data[b.data.length - 1]?.y || 0;
+      return bLast - aLast;
     });
 
     //prepare labels (years)
     const years = Array.from(all_years).sort((a, b) => a - b);
+
+    //add goal line if goalAmount is provided
+    if (goalAmount) {
+      const goalDataset = {
+        label: 'Goal',
+        data: years.map((year: number) => ({ x: year, y: goalAmount })),
+        borderColor: 'rgba(0, 0, 0, 0.3)',
+        borderDash: [5, 5],
+        borderWidth: 1,
+        pointRadius: 0,
+        clip: false as const,
+      };
+      datasets.push(goalDataset as any);
+    }
 
     return {
       labels: years,
@@ -161,57 +202,49 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
     };
   };
 
+  //update time series data when results or selected metric changes
+  useEffect(() => {
+    const new_time_series_data = prepare_time_series_data();
+    set_chart_data(new_time_series_data);
+    
+    //initialize visible lines with all labels
+    if (new_time_series_data) {
+      const allLabels = new_time_series_data.datasets.map((ds: any) => ds.label);
+      set_visible_lines(new Set(allLabels));
+    }
+  }, [results, selected_metric, goalAmount]);
+
   //5.2 Line chart->parameter vs. final value
   const prepare_parameter_vs_metric_data = () => {
-    if (!is_numeric_parameter) {
+    if (!is_numeric_parameter && !is_boolean_parameter) {
       return null;
     }
 
-    const data_points: { x: number; y: number }[] = [];
+    const data_points: { x: number | string; y: number }[] = [];
 
     //sort data by parameter value
-    const sorted_data = [...results.data].sort((a, b) => 
-      Number(a.param) - Number(b.param)
-    );
-
-    // Debug log to inspect the structure
-    console.log("Parameter sweep data structure:", sorted_data[0]?.results);
+    const sorted_data = [...results.data].sort((a, b) => {
+      if (is_boolean_parameter) {
+        //for boolean parameters, sort by the string representation
+        return String(a.param).localeCompare(String(b.param));
+      }
+      return Number(a.param) - Number(b.param);
+    });
 
     //extract final values for the selected metric
     sorted_data.forEach((item: any) => {
       if (!item.results) return;
       
-      let value = 0;
+      const yearly_results = item.results.yearly_results;
+      if (!yearly_results || !yearly_results.length) return;
       
-      if (selected_metric === 'successProbability') {
-        if (item.results.probabilityOfSuccess) {
-          // pull the very last year's value instead of the always-zero top-level field
-          const probMap = item.results.probabilityOfSuccess;
-          const years = Object.keys(probMap).map(Number).sort((a,b) => a - b);
-          const lastYear = years[years.length - 1];
-          value = (probMap[lastYear] || 0) / 100;
-          console.log(`Parameter ${item.param}: Last year=${lastYear}, Probability=${value*100}%`);
-        }
-      } else if (selected_metric === 'medianTotalInvestments' || selected_metric === 'averageTotalInvestments') {
-        const snaps = item.results.yearlyData;
-        if (snaps && snaps.length) {
-          // grab the total investment value at the last snapshot
-          const lastSnap = snaps[snaps.length - 1];
-          // Use the sum of all investment types
-          value = lastSnap.total_after_tax + 
-                  lastSnap.total_pre_tax + 
-                  lastSnap.total_non_retirement;
-          
-          console.log(`Parameter ${item.param}: Last snapshot total investment values: 
-            after_tax=${lastSnap.total_after_tax}, 
-            pre_tax=${lastSnap.total_pre_tax}, 
-            non_retirement=${lastSnap.total_non_retirement}, 
-            Total=${value}`);
-        }
-      }
+      const lastYearData = yearly_results[yearly_results.length - 1];
+      const value = selected_metric === 'successProbability' 
+        ? lastYearData.success_probability 
+        : lastYearData.total_investment.median;
       
       data_points.push({
-        x: Number(item.param),
+        x: is_boolean_parameter ? (item.param ? 'Enabled' : 'Disabled') : Number(item.param),
         y: value,
       });
     });
@@ -224,14 +257,16 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
           data: data_points,
           borderColor: 'rgba(53, 162, 235, 1)',
           backgroundColor: 'rgba(53, 162, 235, 0.5)',
-          pointRadius: 6,
-          pointHoverRadius: 8,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: 'rgba(53, 162, 235, 1)',
+          borderDash: [],
+          clip: false as const,
         },
       ],
     };
   };
 
-  const time_series_data = prepare_time_series_data();
   const parameter_vs_metric_data = prepare_parameter_vs_metric_data();
 
   const chart_options: ChartOptions<'line'> = {
@@ -239,7 +274,7 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
     maintainAspectRatio: false,
     scales: {
       x: {
-        type: 'linear',  // Use linear scale for numeric year values
+        type: 'category',  //use category scale for years
         title: {
           display: true,
           text: 'Year',
@@ -252,21 +287,21 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
         }
       },
       y: {
+        beginAtZero: true,
+        max: selected_metric === 'successProbability' ? 1 : undefined,
         title: {
           display: true,
-          text: metric_label,
+          text: selected_metric === 'successProbability' ? 'Success Probability (%)' : 'Total Investment ($)',
           font: {
             weight: 'bold' as const
           }
         },
-        min: selected_metric === 'successProbability' ? 0 : undefined,
-        max: selected_metric === 'successProbability' ? 1 : undefined,
         ticks: {
           callback: function(value) {
             if (selected_metric === 'successProbability') {
               return (Number(value) * 100).toFixed(0) + '%';
             }
-            return value.toLocaleString();
+            return '$' + value.toLocaleString();
           }
         },
         grid: {
@@ -299,23 +334,27 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
             if (selected_metric === 'successProbability') {
               label += (context.parsed.y * 100).toFixed(1) + '%';
             } else {
-              label += context.parsed.y.toLocaleString();
+              label += '$' + context.parsed.y.toLocaleString();
             }
             return label;
           }
         }
       }
     },
+    layout: {
+      //add a few extra pixels around the edges for better visibility
+      padding: { top: 8, bottom: 8, left: 0, right: 0 }
+    }
   };
 
   const parameter_chart_options: ChartOptions<'line'> = {
     ...chart_options,
     scales: {
       x: {
-        type: 'linear',  // Use linear scale for numeric parameter values
+        type: is_boolean_parameter ? 'category' : 'linear',  //use category scale for boolean values
         title: {
           display: true,
-          text: `${results.parameterType} Value`,
+          text: `${formatParameterName(results.parameterType)} Value`,
           font: {
             weight: 'bold' as const
           }
@@ -324,7 +363,28 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
           color: 'rgba(0, 0, 0, 0.05)'
         }
       },
-      y: chart_options.scales?.y ? { ...chart_options.scales.y } : {}
+      y: {
+        beginAtZero: true,
+        max: selected_metric === 'successProbability' ? 1 : undefined,
+        title: {
+          display: true,
+          text: selected_metric === 'successProbability' ? 'Success Probability (%)' : 'Total Investment ($)',
+          font: {
+            weight: 'bold' as const
+          }
+        },
+        ticks: {
+          callback: function(value) {
+            if (selected_metric === 'successProbability') {
+              return (Number(value) * 100).toFixed(0) + '%';
+            }
+            return '$' + value.toLocaleString();
+          }
+        },
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)'
+        }
+      }
     },
   };
 
@@ -335,7 +395,7 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
           1D Visualization
         </Heading>
         <Heading size="sm" color="gray.600">
-          Parameter: {results.parameterType}
+          Parameter: {formatParameterName(results.parameterType)}
         </Heading>
         <HStack>
           <Badge colorScheme="blue">{total_runs} Runs</Badge>
@@ -364,8 +424,8 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
 
       <Tabs variant="enclosed" colorScheme="blue" mt={4}>
         <TabList>
-          <Tab><Text fontWeight="medium">Time</Text></Tab>
-          {is_numeric_parameter && <Tab><Text fontWeight="medium">Value</Text></Tab>}
+          <Tab><Text fontWeight="medium">Value Over Time</Text></Tab>
+          {(is_numeric_parameter || is_boolean_parameter) && <Tab><Text fontWeight="medium">Final Value</Text></Tab>}
         </TabList>
 
         <TabPanels>
@@ -378,8 +438,8 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
             </Text>
             
             <Box h="400px">
-              {time_series_data ? (
-                <Line data={time_series_data} options={chart_options} />
+              {chartData ? (
+                <Line data={chartData} options={chart_options} />
               ) : (
                 <Flex h="100%" align="center" justify="center">
                   <Text color="gray.500">
@@ -390,13 +450,13 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
             </Box>
           </TabPanel>
 
-          {is_numeric_parameter && (
+          {(is_numeric_parameter || is_boolean_parameter) && (
             <TabPanel>
               <Heading size="sm" mb={2}>
-                Final {metric_label} by Value
+                Final {metric_label} by Parameter Value
               </Heading>
               <Text fontSize="sm" color="gray.600" mb={4}>
-                Shows final outcomes for different values
+                Shows final outcomes for different parameter values
               </Text>
               
               <Box h="400px">
