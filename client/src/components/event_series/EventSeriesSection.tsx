@@ -101,10 +101,10 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
       <Box minH="100vh" bg="gray.50">
         <Box maxW="4xl" mx="auto" py={12} px={4}>
           <Box bg="white" rounded="lg" shadow="lg" overflow="hidden">
-            <Box 
-              p={6} 
+            <Box
+              p={6}
               bgGradient="linear(to-r, blue.400, purple.500)"
-              borderBottom="1px" 
+              borderBottom="1px"
               borderColor="gray.200"
               position="relative"
               overflow="hidden"
@@ -138,14 +138,6 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
             </Box>
 
             <Box p={6}>
-              <Button 
-                variant="ghost" 
-                onClick={handleBackToInvestments}
-                mb={6}
-                leftIcon={<Text>←</Text>}
-              >
-                Back
-              </Button>
 
               {addedEvents.length > 0 && (
                 <VStack spacing={4} mb={8} align="stretch">
@@ -305,7 +297,12 @@ const EventSeriesSection: React.FC<EventSeriesSectionProps> = ({
                 })}
               </SimpleGrid>
 
-              <Flex justify="flex-end" mt={8}>
+            
+              <Flex justify="space-between" mt={8} alignItems="center">
+                <Button variant="ghost" onClick={handleBackToInvestments} leftIcon={<Text>←</Text>}>
+                  Back
+                </Button>
+                
                 <Button
                   colorScheme="blue"
                   onClick={handleSaveAndContinue}
