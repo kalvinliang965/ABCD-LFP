@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
 import Scenario from "../db/models/Scenario";
 import { create_simulation_engine } from "../core/simulation/SimulationEngine";
-import { createConsolidatedSimulationResult } from "../core/simulation/SimulationResult";
+import { create_simulation_result_v1 } from "../core/simulation/SimulationResult_v1";
 import { simulation_logger } from "../utils/logger/logger";
 import { create_simulation_environment } from "../core/simulation/ LoadSimulationEnvironment";
 import cloneDeep from "lodash.clonedeep";
+import SimulationResultModel_v1 from "../db/models/SimulationResult_v1";
 
 //route to run a parameter sweep simulation for 2D
 export const runParameterSweep2D = async (req: Request, res: Response) => {
@@ -31,6 +32,19 @@ export const runParameterSweep2D = async (req: Request, res: Response) => {
     }
     
     simulation_logger.info(`2D Parameter sweep simulation request received for scenario ${scenarioId} by user ${userId}`);
+    simulation_logger.info(`Number of simulations to run per parameter combination: ${numSimulations}`);
+    
+    //get the seed from the most recent simulation result
+    const lastSim = await SimulationResultModel_v1.findOne({ scenarioId }).sort({ createdAt: -1 });
+    if (!lastSim) {
+      return res.status(404).json({
+        success: false,
+        message: "No previous simulation found for this scenario",
+      });
+    }
+    
+    const seedToUse = lastSim.seed;
+    simulation_logger.info(`Using seed ${seedToUse} from previous simulation for parameter sweep`);
     
     //determine list of parameter values to test for parameter 1
     const param1_values = parameter1.range
@@ -49,12 +63,17 @@ export const runParameterSweep2D = async (req: Request, res: Response) => {
       : [parameter2.value];
       
     simulation_logger.info(`Running 2D parameter sweep for parameter1 "${parameter1.type}" with ${param1_values.length} values and parameter2 "${parameter2.type}" with ${param2_values.length} values`);
+    
+    // Calculate total number of simulations
+    const totalCombinations = param1_values.length * param2_values.length;
+    const totalSimulations = totalCombinations * numSimulations;
+    simulation_logger.info(`Total parameter combinations: ${totalCombinations}, Total simulations to run: ${totalSimulations}`);
 
     //create a map to store results with the key being a string of "param1Value,param2Value"
     const results: Record<string, any> = {};
     
-    //create simulation environment for original scenario
-    const original_environment = await create_simulation_environment(scenarioId);
+    //create simulation environment for original scenario using the same seed
+    const original_environment = await create_simulation_environment(scenarioId, seedToUse);
     
     //run simulations for each combination of parameter values
     for (const param1_val of param1_values) {
@@ -236,11 +255,14 @@ export const runParameterSweep2D = async (req: Request, res: Response) => {
           //create simulation engine with the modified environment
           const engine = await create_simulation_engine(mod_environment);
           
+          //log the number of simulations being run for this combination
+          simulation_logger.info(`Running ${numSimulations} simulations for parameter combination: ${param_description}`);
+          
           //run simulations with the modified scenario
           const simulation_results = await engine.run(numSimulations);
           
           //create a consolidated result with the original scenarioId
-          const consolidated_result = createConsolidatedSimulationResult(simulation_results, scenarioId);
+          const consolidated_result = create_simulation_result_v1(simulation_results, seedToUse, scenarioId);
           
           //add metadata about the parameters for the UI
           (consolidated_result as any).parameterMetadata = {
