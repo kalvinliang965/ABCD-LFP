@@ -1,5 +1,6 @@
 import { SimulationYearlyResult } from "./SimulationYearlyResult";
 import { simulation_logger } from "../../utils/logger/logger";
+import { generate_csv_file } from "../../utils/logger/SimulationResultCSV";
 
 //TODO: 这里开始都可以被移走到另一个专门管理simulation result的文件
 // AI-generated code

@@ -142,16 +142,6 @@ const Sidebar: React.FC = () => {
       </Flex>
 
       <VStack spacing={1} align="stretch" p="20px 0" className="sidebar-menu">
-        <NavGroup title="Main" sidebarOpen={sidebarOpen}>
-          <NavItem
-            icon={FaHome}
-            to="/dashboard"
-            isActive={location.pathname === '/dashboard'}
-            sidebarOpen={sidebarOpen}
-          >
-            Dashboard
-          </NavItem>
-        </NavGroup>
 
         <NavGroup title="Scenarios" sidebarOpen={sidebarOpen}>
           <NavItem
@@ -167,14 +157,6 @@ const Sidebar: React.FC = () => {
         </NavGroup>
 
         <NavGroup title="Simulation" sidebarOpen={sidebarOpen}>
-          <NavItem
-            icon={FaPlay}
-            to="/simulation/run"
-            isActive={location.pathname === '/simulation/run'}
-            sidebarOpen={sidebarOpen}
-          >
-            Run Simulation
-          </NavItem>
           <NavItem
             icon={FaChartLine}
             to="/simulation/results"
@@ -208,14 +190,6 @@ const Sidebar: React.FC = () => {
         </NavGroup>
 
         <NavGroup title="Account" sidebarOpen={sidebarOpen}>
-          <NavItem
-            icon={FaCog}
-            to="/settings"
-            isActive={location.pathname === '/settings'}
-            sidebarOpen={sidebarOpen}
-          >
-            Settings
-          </NavItem>
           <NavItem
             icon={FaSignOutAlt}
             to="/logout"

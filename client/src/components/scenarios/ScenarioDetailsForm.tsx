@@ -129,23 +129,6 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                   <Icon as={FiEdit3} mr={3} />
                   Scenario Details
                 </Heading>
-                <HStack spacing={3}>
-                  {onBack && (
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        console.log('ScenarioDetailsForm: Back button clicked');
-                        onBack();
-                      }}
-                      size="md"
-                      rounded="lg"
-                      borderColor="blue.300"
-                      _hover={{ bg: 'blue.50' }}
-                    >
-                      Back
-                    </Button>
-                  )}
-                </HStack>
               </Flex>
             </CardHeader>
 
@@ -194,7 +177,7 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
                         placeholder="My Financial Plan"
                         pl={10}
                         borderRadius="lg"
-                        focusBorderColor={isNameError ? "red.400" : "blue.300"}
+                        focusBorderColor={isNameError ? 'red.400' : 'blue.300'}
                         borderWidth="2px"
                         _hover={{ borderColor: isNameError ? 'red.300' : 'blue.300' }}
                         fontSize="md"
@@ -398,7 +381,29 @@ export const ScenarioDetailsForm: React.FC<ScenarioDetailsFormProps> = ({
               borderTopWidth="1px"
               borderColor={borderColor}
             >
-              <Flex justifyContent="flex-end" width="100%">
+              <Flex justifyContent="space-between" width="100%" align="center">
+                {onBack && (
+                  <MotionBox
+                    variants={item}
+                    whileHover={{ scale: 1.03 } as any}
+                    whileTap={{ scale: 0.98 } as any}
+                  >
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        console.log('ScenarioDetailsForm: Back button clicked');
+                        onBack();
+                      }}
+                      size="lg"
+                      rounded="lg"
+                      borderColor="blue.300"
+                      leftIcon={<Icon as={FiArrowRight} transform="rotate(180deg)" />}
+                      _hover={{ bg: 'blue.50' }}
+                    >
+                      Back
+                    </Button>
+                  </MotionBox>
+                )}
                 <MotionBox
                   variants={item}
                   whileHover={{ scale: 1.03 } as any}
