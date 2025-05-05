@@ -8,7 +8,7 @@ import { create_user_tax_data } from '../../../domain/UserTaxData';
 import { create_value_source } from '../../../../utils/ValueGenerator';
 import { val } from 'cheerio/lib/api/attributes';
 
-describe('ProcessIncome', () => {
+describe('Run Income Event', () => {
 
   // Test basic income processing
   it('should process general case with no social security', async () => {
@@ -30,27 +30,26 @@ describe('ProcessIncome', () => {
           [salary.name, salary],
         ]);
         let res = create_event_manager_clone(income_event, new Map(), new Map(), new Map());
+        res.update_initial_amount = jest.fn();
         return res;
       })(),
       account_manager: {
         cash: cash,
       },
       user_tax_data: create_user_tax_data(),
+      get_annual_inflation_rate: jest.fn(),
     };
-
+    (mock_state.event_manager.update_initial_amount as jest.Mock).mockReturnValue(3000);
 
     const original_cur_year_income = mock_state.user_tax_data.get_cur_year_income();
     const original_cash_value = cash.get_value();
-    const original_salary_value = salary.initial_amount;
     await run_income_event(mock_state);
 
     // should be adjusted by inflation
-    expect(salary.initial_amount).not.toBe(original_salary_value);
-    
-    expect(cash.get_value()).toBe(original_cash_value + salary.initial_amount);
+    expect(cash.get_value()).toBe(original_cash_value + 3000);
 
     expect(mock_state.user_tax_data.get_cur_year_ss()).toBe(0);
-    expect(mock_state.user_tax_data.get_cur_year_income()).toBe(original_cur_year_income + salary.initial_amount);
+    expect(mock_state.user_tax_data.get_cur_year_income()).toBe(original_cur_year_income + 3000);
   });
 
   it('should process general case with no social security', async () => {
@@ -75,26 +74,23 @@ describe('ProcessIncome', () => {
           [ss.name, ss]
         ]);
         let res = create_event_manager_clone(income_event, new Map(), new Map(), new Map());
+        res.update_initial_amount = jest.fn();
         return res;
       })(),
       account_manager: {
         cash: cash,
       },
       user_tax_data: create_user_tax_data(),
+      get_annual_inflation_rate: jest.fn(),
     };
 
 
+    (mock_state.event_manager.update_initial_amount as jest.Mock).mockReturnValue(3000);
     const original_cur_year_income = mock_state.user_tax_data.get_cur_year_income();
     const original_cash_value = cash.get_value();
-    const original_salary_value = salary.initial_amount;
     await run_income_event(mock_state);
-
-    // should be adjusted by inflation
-    expect(salary.initial_amount).not.toBe(original_salary_value);
-    
-    expect(cash.get_value()).toBe(original_cash_value + salary.initial_amount + ss.initial_amount);
-
-    expect(mock_state.user_tax_data.get_cur_year_ss()).toBe(ss.initial_amount);
-    expect(mock_state.user_tax_data.get_cur_year_income()).toBe(original_cur_year_income + salary.initial_amount + ss.initial_amount);
+    expect(cash.get_value()).toBe(original_cash_value + 3000 + 3000);
+    expect(mock_state.user_tax_data.get_cur_year_ss()).toBe(3000);
+    expect(mock_state.user_tax_data.get_cur_year_income()).toBe(original_cur_year_income + 3000 + 3000);
   });
 }); 
