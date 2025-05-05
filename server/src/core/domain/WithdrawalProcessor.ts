@@ -78,8 +78,13 @@ export class WithdrawalProcessor {
         // if sold investment from non-retirement accont
         // we have to calculate capital gains
         if (investment.tax_status === TaxStatus.NON_RETIREMENT) {
-            const gains = original_amount - withdrawed_amount;
+            simulation_logger.debug("processing capital gains");
+            simulation_logger.debug(`original amount: ${original_amount}`);
+            simulation_logger.debug(`purchase amount: ${cost_basis}`);
+            const gains = original_amount - cost_basis;
+            simulation_logger.debug(`investment gains: ${gains}`);
             const capital_gains = fraction * gains;
+            simulation_logger.debug(`capital gains for this year increased by ${capital_gains} (${fraction} of the total gains).`)
             this.user_tax_data.incr_cur_year_gains(capital_gains);
         } 
         
