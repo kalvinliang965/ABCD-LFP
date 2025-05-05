@@ -58,14 +58,14 @@ const MyScenariosPage: React.FC = () => {
       setDrafts(draftScenarios.data);
       setLoading(false);
     } catch (error) {
-      console.error('error fetching drafts:', error);
-      toast({
-        title: 'Error',
-        description: 'failed to fetch draft scenarios',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      console.log('error fetching drafts:', error);
+      // toast({
+      //   title: 'Error',
+      //   description: 'failed to fetch draft scenarios',
+      //   status: 'error',
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
       setLoading(false);
     }
   };
@@ -75,14 +75,14 @@ const MyScenariosPage: React.FC = () => {
       const scenarios = await scenario_service.get_all_scenarios();
       setActualScenarios(scenarios.data);
     } catch (error) {
-      console.error('error fetching actual scenarios:', error);
-      toast({
-        title: 'Error',
-        description: 'failed to fetch scenarios',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      console.log('error fetching actual scenarios:', error);
+      // toast({
+      //   title: 'Error',
+      //   description: 'failed to fetch scenarios',
+      //   status: 'error',
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 
@@ -113,14 +113,14 @@ const MyScenariosPage: React.FC = () => {
         isClosable: true,
       });
     } catch (error) {
-      console.error('Error deleting draft:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete draft scenario',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      console.log('Error deleting draft:', error);
+      // toast({
+      //   title: 'Error',
+      //   description: 'Failed to delete draft scenario',
+      //   status: 'error',
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 
@@ -136,14 +136,14 @@ const MyScenariosPage: React.FC = () => {
         isClosable: true,
       });
     } catch (error) {
-      console.error('Error deleting scenario:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete scenario',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      console.log('Error deleting scenario:', error);
+      // toast({
+      //   title: 'Error',
+      //   description: 'Failed to delete scenario',
+      //   status: 'error',
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 

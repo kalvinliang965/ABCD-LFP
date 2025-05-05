@@ -276,14 +276,14 @@ function NewScenarioPage() {
           });
           setStep('Scenario_name&type');
         } catch (error) {
-          console.error('Error loading scenario:', error);
-          toast({
-            title: 'Error',
-            description: 'Failed to load scenario data',
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-          });
+          console.log('Error loading scenario:', error);
+          // toast({
+          //   title: 'Error',
+          //   description: 'Failed to load scenario data',
+          //   status: 'error',
+          //   duration: 3000,
+          //   isClosable: true,
+          // });
           navigate('/scenarios');
         }
       }

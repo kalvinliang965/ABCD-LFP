@@ -52,7 +52,11 @@ function calculate_success_probability(
 ): number {
   let success_probability = 0;
   for (let i = 0; i < allSimulations.length; i++) {
-    if (allSimulations[i].yearly_results[loop_for_year].is_goal_met) {
+    // Means user did not reach this year(user dead or financial planner terminate)
+    if (allSimulations[i].yearly_results[loop_for_year] == undefined) {
+      continue;
+    }
+    else if (allSimulations[i].yearly_results[loop_for_year].is_goal_met) {
       success_probability++;
     }
   }

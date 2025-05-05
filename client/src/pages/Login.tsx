@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import './Login.css';
 import axios, { AxiosError } from 'axios';
-import { FaGoogle } from 'react-icons/fa';
+import { FaGoogle, FaUser } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-
+import { v4 as uuidv4 } from 'uuid'; 
 import { appConfig } from '../config/appConfig';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -11,7 +11,7 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
-  const { checkAuthStatus } = useAuth();
+  const { checkAuthStatus, loginAsGuest } = useAuth();
 
   useEffect(() => {
     // get the DOM elements, querySelector gets the first element, querySelectorAll gets all elements
@@ -100,6 +100,7 @@ const Login: React.FC = () => {
         localStorage.setItem('token', response.data.token);
         await checkAuthStatus();
         navigate(response.data.redirectUrl || '/scenarios');
+        console.log('Login successful:'+response.data.redirectUrl);
       } else {
         console.error('Login failed');
       }
@@ -149,6 +150,36 @@ const Login: React.FC = () => {
     window.location.href = `${appConfig.api.baseURL}/auth/google`;
   };
 
+  // Handle guest login
+  const handleGuestLogin = async () => {
+    try {
+      // Call the API to create a guest account
+      const response = await axios.post(
+        `${appConfig.api.baseURL}/auth/guest-login`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+
+      if (response.data.success) {
+        // Store token
+        localStorage.setItem('token', response.data.token);
+        
+        // Update auth context
+        await checkAuthStatus();
+        
+        // Navigate to dashboard
+        navigate(response.data.redirectUrl || '/scenarios');
+      } else {
+        console.error('Guest login failed');
+      }
+    } catch (error) {
+      console.error('Error during guest login:', error);
+      alert('Failed to login as guest. Please try again.');
+    }
+  };
+
   return (
     <div className="shell">
       <div className="container a-container" id="a-container">
@@ -190,6 +221,14 @@ const Login: React.FC = () => {
             <button type="button" className="google-button" onClick={handleGoogleSignIn}>
               <FaGoogle className="google-icon" />
               <span>Sign in with Google</span>
+            </button>
+          </div>
+
+          {/* guest login button */}
+          <div className="guest-sign-in">
+            <button type="button" className="guest-button" onClick={handleGuestLogin}>
+              <FaUser className="guest-icon" />
+              <span>Continue as Guest</span>
             </button>
           </div>
 

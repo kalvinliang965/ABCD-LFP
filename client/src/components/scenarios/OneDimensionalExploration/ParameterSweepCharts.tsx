@@ -16,9 +16,6 @@ import {
   HStack,
   Tooltip,
   Icon,
-  Checkbox,
-  CheckboxGroup,
-  VStack,
 } from '@chakra-ui/react';
 import { Line } from 'react-chartjs-2';
 import {
@@ -62,7 +59,7 @@ interface ParameterSweepChartsProps {
   goalAmount?: number; // Optional goal amount for reference line
 }
 
-type MetricType = 'successProbability' | 'medianTotalInvestments' | 'averageTotalInvestments';
+type MetricType = 'successProbability' | 'medianTotalInvestments';
 
 //function to format parameter names for display
 const formatParameterName = (paramName: string): string => {
@@ -97,9 +94,7 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results, go
   const is_boolean_parameter = results.parameterType === 'rothOptimizer';
   const metric_label = selected_metric === 'successProbability' 
     ? 'Success Probability' 
-    : selected_metric === 'medianTotalInvestments'
-    ? 'Median Total Investments'
-    : 'Average Total Investments';
+    : 'Median Total Investments';
   
   //count successful simulations
   const successful_runs = results.data.filter((item: any) => !item.error).length;
@@ -418,7 +413,6 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results, go
         >
           <option value="successProbability">Success Probability</option>
           <option value="medianTotalInvestments">Median Total Investments</option>
-          <option value="averageTotalInvestments">Average Total Investments</option>
         </Select>
       </FormControl>
 

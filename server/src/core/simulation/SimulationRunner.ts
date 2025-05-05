@@ -133,7 +133,7 @@ function simulate_year(
 ): boolean {
     try {
         simulation_logger.info(
-            "Simulating new year", 
+            `Simulating new year ${simulation_state.get_current_year()}`, 
             {
                 simulation_state: simulation_state,
             }
@@ -152,7 +152,7 @@ function simulate_year(
                 profiler?.end("process_rmd");
             }
         }
-
+                    
         simulation_logger.info("Updating investments...");
         profiler?.start("update_investment");
         update_investment(simulation_state);

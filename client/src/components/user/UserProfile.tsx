@@ -71,23 +71,6 @@ interface Scenario {
   ownerName?: string;
 }
 
-// Add type for shared scenario response
-interface SharedScenarioResponse {
-  _id: string;
-  name: string;
-  maritalStatus?: string;
-  residenceState?: string;
-  createdAt: Date;
-  ownerName: string;
-  ownerId: string;
-  permission: 'read' | 'write';
-  sharedWith?: Array<{
-    userId: string;
-    userName: string;
-    email: string;
-    permission: 'read' | 'write';
-  }>;
-}
 
 // Type declaration for the scenario service with sharing methods
 type ScenarioServiceWithSharing = typeof scenario_service & {
@@ -103,7 +86,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3346';
 const UserProfile: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToast();
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, isGuestUser } = useAuth();
   
   // Ensure TypeScript recognizes the sharing methods
   const scenarioServiceWithSharing = scenario_service as ScenarioServiceWithSharing;
@@ -172,7 +155,8 @@ const UserProfile: React.FC = () => {
 
   // Handle return to dashboard
   const handleReturnToDashboard = () => {
-    navigate('/dashboard');
+    navigate('/scenarios');
+    //http://localhost:5173/scenarios
   };
 
   // Fetch user scenarios
@@ -182,14 +166,14 @@ const UserProfile: React.FC = () => {
       const scenarios = await scenario_service.get_all_scenarios();
       setUserScenarios(scenarios.data);
     } catch (error) {
-      console.error('Error fetching user scenarios:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch scenarios',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      console.log('Error fetching user scenarios:', error);
+      // toast({
+      //   title: 'Error',
+      //   description: 'Failed to fetch scenarios',
+      //   status: 'error',
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     } finally {
       setScenariosLoading(false);
     }
@@ -254,13 +238,13 @@ const UserProfile: React.FC = () => {
         isClosable: true,
       });
     } catch (error) {
-      console.error('Error revoking access:', error);
+      console.log('Error revoking access:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to revoke access',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
+        // title: 'Error',
+        // description: 'Failed to revoke access',
+        // status: 'error',
+        // duration: 3000,
+        // isClosable: true,
       });
     }
   };
@@ -279,6 +263,18 @@ const UserProfile: React.FC = () => {
     try {
       setIsLoading(true);
 
+      // For guest users, just use guest name and email
+      // if (isGuestUser) {
+      //   setUserData({
+      //     name: 'Guest',
+      //     email: '',
+      //     profilePicture: '',
+      //     scenarios: user?.scenarios || [],
+      //   });
+      //   setIsLoading(false);
+      //   return;
+      // }
+
       // Try to get user data from the API directly
       const token = localStorage.getItem('token');
       let profileData;
@@ -295,12 +291,22 @@ const UserProfile: React.FC = () => {
       }
 
       if (profileData) {
-        setUserData({
-          name: profileData.name || '',
-          email: profileData.email || '',
-          profilePicture: profileData.profilePicture || '',
-          scenarios: profileData.scenarios || [],
-        });
+        // If the user is a guest, override the display name and email
+        if (profileData.isGuest) {
+          setUserData({
+            name: 'Guest',
+            email: '',
+            profilePicture: profileData.profilePicture || '',
+            scenarios: profileData.scenarios || [],
+          });
+        } else {
+          setUserData({
+            name: profileData.name || '',
+            email: profileData.email || '',
+            profilePicture: profileData.profilePicture || '',
+            scenarios: profileData.scenarios || [],
+          });
+        }
 
         // Update the auth context if needed
         if (updateUser && !user) {
@@ -308,55 +314,19 @@ const UserProfile: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('Error fetching user profile:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load user profile',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      console.log('Error fetching user profile:', error);
+      // toast({
+      //   title: 'Error',
+      //   description: 'Failed to load user profile',
+      //   status: 'error',
+      //   duration: 5000,
+      //   isClosable: true,
+      // });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // // Fetch scenarios shared by the user
-  // const fetchSharedByMeScenarios = async () => {
-  //   try {
-  //     const response = await scenarioServiceWithSharing.get_shared_by_me_scenarios();
-      
-  //     if (response && response.data && Array.isArray(response.data)) {
-  //       // Create a mapping of scenarioId -> sharedWith array
-  //       const scenarioShares: Record<string, Array<{
-  //         userId: string;
-  //         userName: string;
-  //         email: string;
-  //         permission: 'read' | 'write';
-  //       }>> = {};
-        
-  //       response.data.forEach((item: any) => {
-  //         if (item._id && Array.isArray(item.sharedWith)) {
-  //           scenarioShares[item._id] = item.sharedWith;
-  //         }
-  //       });
-        
-  //       setSharedByMeData(scenarioShares);
-  //     } else {
-  //       setSharedByMeData({});
-  //     }
-  //   } catch (error) {
-  //     console.log('Error fetching scenarios shared by me:', error);
-  //     // toast({
-  //     //   title: 'Error',
-  //     //   description: 'Failed to fetch your shared scenarios',
-  //     //   status: 'error',
-  //     //   duration: 3000,
-  //     //   isClosable: true,
-  //     // });
-  //     setSharedByMeData({});
-  //   }
-  // };
 
   // Helper function to determine if a user has write permission
   const hasWritePermission = (permission: string | undefined): boolean => {
@@ -408,16 +378,16 @@ const UserProfile: React.FC = () => {
         duration: 5000,
         isClosable: true,
       });
-      navigate('/dashboard');
+      navigate('/scenarios');
     } catch (error) {
-      console.error('Error updating profile:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update profile',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      console.log('Error updating profile:', error);
+      // toast({
+      //   title: 'Error',
+      //   description: 'Failed to update profile',
+      //   status: 'error',
+      //   duration: 5000,
+      //   isClosable: true,
+      // });
     } finally {
       setIsLoading(false);
     }
@@ -449,14 +419,14 @@ const UserProfile: React.FC = () => {
           isClosable: true,
         });
       } catch (err: any) {
-        console.error('Error sharing scenario:', err);
-        toast({
-          title: 'Share failed',
-          description: err.response?.data?.message || 'Failed to share scenario',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
+        console.log('Error sharing scenario:', err);
+        // toast({
+        //   title: 'Share failed',
+        //   description: err.response?.data?.message || 'Failed to share scenario',
+        //   status: 'error',
+        //   duration: 3000,
+        //   isClosable: true,
+        // });
       }
     }
   };
@@ -517,7 +487,7 @@ const UserProfile: React.FC = () => {
         variant="outline"
         size="sm"
         mb={4}
-        onClick={() => navigate('/dashboard')}
+        onClick={() => navigate('/scenarios')}
       >
         Return to Dashboard
       </Button>
@@ -545,6 +515,9 @@ const UserProfile: React.FC = () => {
             <Text fontSize="lg" color={textColor}>
               {userData.email}
             </Text>
+            {user?.isGuest && (
+              <Badge colorScheme="orange">Guest User</Badge>
+            )}
           </VStack>
         </Flex>
         <HStack spacing={4} mt={{ base: 4, md: 0 }}>

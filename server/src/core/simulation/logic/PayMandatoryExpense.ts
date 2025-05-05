@@ -45,7 +45,8 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   // step a to c
   // details are inside
   if (cur_simulation_year !== state.get_start_year()) {
-    total_tax = state.process_tax();
+    total_tax = state.tax_processor.calculate_taxes();
+    simulation_logger.info(`Successfully processed ${total_tax} on tax`);
     state.event_manager.update_mandatory_expenses("tax", total_tax);
   }
 
@@ -67,18 +68,19 @@ export function pay_mandatory_expenses(state: SimulationState): boolean {
   
   simulation_logger.debug(`total mandatory expenses: ${mandatory_expenses}`);
   const total_amount = mandatory_expenses + total_tax;
-  simulation_logger.debug(`total amount we have to pay (including tax): ${mandatory_expenses}`);
+  simulation_logger.debug(`total amount we have to pay (including tax): ${total_amount}`);
 
   // step e: total withdrawal amount W = P - (amount of cash)
   const withdrawal_amount = Math.max(0, total_amount - state.account_manager.cash.get_value());
   state.account_manager.cash.incr_value(-Math.min(total_amount, state.account_manager.cash.get_value()));
 
   simulation_logger.debug(`pay mandatory expense withdrawal from non cash investment: ${withdrawal_amount}`);
-
+  simulation_logger.debug(`current cash: ${state.account_manager.cash.get_value()}`);
   // step f:
   // withdrawal from investments to fill withdrawal_amount
   if(withdrawal_amount > 0) {
-    const withrawaled = state.process_investment_withdrawal(withdrawal_amount);
+    simulation_logger.debug(`It's the year ${state.get_current_year()}. We need to withdraw ${withdrawal_amount} from investments`);
+    const withrawaled = state.withdrawal_processor.execute_withdrawal(state.expense_withrawal_strategy, withdrawal_amount);
     return withdrawal_amount === withrawaled;
   }
   return true;

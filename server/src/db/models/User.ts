@@ -9,6 +9,7 @@ export interface UserDocument extends Document {
   password: string;
   googleId?: string;
   profilePicture?: string;
+  isGuest?: boolean;
   createdAt: Date;
   updatedAt: Date;
   scenarios: Array<{
@@ -54,6 +55,10 @@ const UserSchema = new Schema({
   },
   profilePicture: {
     type: String
+  },
+  isGuest: {
+    type: Boolean,
+    default: false
   },
   scenarios: [
     {
