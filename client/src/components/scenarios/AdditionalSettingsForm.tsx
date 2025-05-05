@@ -178,15 +178,6 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
                   Additional Settings
                 </Heading>
               </HStack>
-              <Button
-                variant="ghost"
-                colorScheme="blue"
-                onClick={onBack}
-                leftIcon={<Icon as={FiChevronLeft} />}
-                size="md"
-              >
-                Back
-              </Button>
             </Flex>
           </CardHeader>
 
@@ -319,10 +310,19 @@ export const AdditionalSettingsForm: React.FC<AdditionalSettingsFormProps> = ({
             borderTopWidth="1px"
             borderColor={borderColor}
           >
-            <Flex justifyContent="flex-end" width="100%" alignItems="center">
-              <Text color="gray.500" fontSize="sm" mr="auto">
-                All settings completed
-              </Text>
+            <Flex justifyContent="space-between" width="100%" alignItems="center">
+              <Button
+                variant="outline"
+                colorScheme="blue"
+                onClick={onBack}
+                leftIcon={<Icon as={FiChevronLeft} />}
+                size="lg"
+                borderRadius="lg"
+                borderColor="blue.300"
+                _hover={{ bg: 'blue.50' }}
+              >
+                Back
+              </Button>
               <Button
                 colorScheme="blue"
                 size="lg"
