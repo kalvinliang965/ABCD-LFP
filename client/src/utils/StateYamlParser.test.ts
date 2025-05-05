@@ -1,5 +1,5 @@
-import { create_state_tax_raw_yaml } from '../StateYamlParser';
-import { TaxFilingStatus, StateType } from '../../core/Enums';
+import { create_state_tax_raw_yaml } from './StateYamlParser';
+import { TaxFilingStatus, StateType } from '../types/Enum';
 
 describe('State Tax YAML Parser', () => {
   const validYAML = `
