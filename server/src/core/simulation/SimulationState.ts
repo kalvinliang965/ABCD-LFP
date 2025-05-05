@@ -188,14 +188,19 @@ export async function create_simulation_state(
           }
           const investment = investments.get(inv_id)!;
           const purchase_price = investment.get_cost_basis();
-          simulation_logger.debug(`Planning to sell investment: ${inv_id}`, {
-            purchase_price: purchase_price,
-            tax_status: investment.tax_status,
-          })
-          simulation_logger.debug(`${withdrawal_amount - withdrawaled} left`);
+          const investment_value = investment.get_value();
+          const remaining = withdrawal_amount - withdrawaled;
+
+          simulation_logger.debug(`Planning to sell investment: ${inv_id}. cost basis: ${purchase_price} value: ${investment.get_value()} tax status: ${investment.tax_status}`);
+          simulation_logger.debug(`${remaining} left`);
           
+          if (purchase_price === 0) {
+            simulation_logger.debug("We do not own the investment anymore");
+            continue;
+          }
+
           // we are withdrawing amount needed to reach
-          const going_to_withdraw = Math.min(withdrawal_amount - withdrawaled, purchase_price);
+          const going_to_withdraw = Math.min(remaining, purchase_price);
 
           simulation_logger.debug(`going to withdraw ${going_to_withdraw} from ${inv_id}`);
           investment.incr_cost_basis(-going_to_withdraw);
@@ -203,8 +208,8 @@ export async function create_simulation_state(
           // if sold investment from non-retirement accont
           // we have to calculate capital gains
           if (investment.tax_status === TaxStatus.NON_RETIREMENT) {
-            const fraction = (going_to_withdraw / investment.get_cost_basis());
-            const gains = investment.get_value() - investment.get_cost_basis();
+            const fraction = (going_to_withdraw / purchase_price);
+            const gains = investment.get_value() - purchase_price;
             const capital_gains = fraction * gains;
             state.user_tax_data.incr_cur_year_gains(capital_gains);
           } 

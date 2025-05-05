@@ -159,7 +159,6 @@ export function create_scenario(scenario_raw: ScenarioRaw, seed: string = "defau
       })
     )
 
-    console.log(roth_conversion_strategy);
     // append more in rmd
     const in_roth = new Set(roth_conversion_strategy);
     for (const inv of account_manager.pre_tax.values()) {
