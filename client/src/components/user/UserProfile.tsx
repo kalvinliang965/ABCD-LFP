@@ -264,16 +264,16 @@ const UserProfile: React.FC = () => {
       setIsLoading(true);
 
       // For guest users, just use guest name and email
-      if (isGuestUser) {
-        setUserData({
-          name: 'Guest',
-          email: '',
-          profilePicture: '',
-          scenarios: user?.scenarios || [],
-        });
-        setIsLoading(false);
-        return;
-      }
+      // if (isGuestUser) {
+      //   setUserData({
+      //     name: 'Guest',
+      //     email: '',
+      //     profilePicture: '',
+      //     scenarios: user?.scenarios || [],
+      //   });
+      //   setIsLoading(false);
+      //   return;
+      // }
 
       // Try to get user data from the API directly
       const token = localStorage.getItem('token');
@@ -291,12 +291,22 @@ const UserProfile: React.FC = () => {
       }
 
       if (profileData) {
-        setUserData({
-          name: profileData.name || '',
-          email: profileData.email || '',
-          profilePicture: profileData.profilePicture || '',
-          scenarios: profileData.scenarios || [],
-        });
+        // If the user is a guest, override the display name and email
+        if (profileData.isGuest) {
+          setUserData({
+            name: 'Guest',
+            email: '',
+            profilePicture: profileData.profilePicture || '',
+            scenarios: profileData.scenarios || [],
+          });
+        } else {
+          setUserData({
+            name: profileData.name || '',
+            email: profileData.email || '',
+            profilePicture: profileData.profilePicture || '',
+            scenarios: profileData.scenarios || [],
+          });
+        }
 
         // Update the auth context if needed
         if (updateUser && !user) {
@@ -505,7 +515,7 @@ const UserProfile: React.FC = () => {
             <Text fontSize="lg" color={textColor}>
               {userData.email}
             </Text>
-            {isGuestUser && (
+            {user?.isGuest && (
               <Badge colorScheme="orange">Guest User</Badge>
             )}
           </VStack>

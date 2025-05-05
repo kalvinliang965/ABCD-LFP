@@ -142,6 +142,80 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
+export const guestLogin = async (req: Request, res: Response) => {
+  try {
+    // Generate a random guest ID
+    const randomId = Math.random().toString(36).substring(2, 15);
+    const guestEmail = `guest-${randomId}@guest.com`;
+    const guestName = `Guest-${randomId.substring(0, 4)}`;
+    
+    // Generate a random password
+    const guestPassword = Math.random().toString(36).substring(2, 12);
+    
+    // Create a new user with guest flag
+    const guestUser = new User({
+      email: guestEmail,
+      password: guestPassword, // Will be hashed by pre-save hook
+      name: guestName,
+      isGuest: true // Add this field to your User schema
+    });
+    
+    await guestUser.save();
+    
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: guestUser._id, email: guestUser.email, isGuest: true },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    
+    // Set up session for the user
+    if (req.login) {
+      req.login(guestUser, (err) => {
+        if (err) {
+          console.error("Error during guest login:", err);
+          return res.status(500).json({
+            success: false,
+            message: 'Error during guest login'
+          });
+        }
+        
+        res.json({
+          success: true,
+          message: 'Guest login successful',
+          token,
+          user: {
+            id: guestUser._id,
+            email: guestUser.email,
+            name: 'Guest',
+            isGuest: true
+          },
+          redirectUrl: '/dashboard'
+        });
+      });
+    } else {
+      res.json({
+        success: true,
+        message: 'Guest login successful',
+        token,
+        user: {
+          id: guestUser._id,
+          email: guestUser.email,
+          name: 'Guest',
+          isGuest: true
+        },
+        redirectUrl: '/dashboard'
+      });
+    }
+  } catch (error) {
+    console.error('Guest login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating guest account'
+    });
+  }
+};
+
 /**
  * User Controllers
  */
