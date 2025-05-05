@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import './Login.css';
 import axios, { AxiosError } from 'axios';
-import { FaGoogle } from 'react-icons/fa';
+import { FaGoogle, FaUser } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-
+import { v4 as uuidv4 } from 'uuid'; 
 import { appConfig } from '../config/appConfig';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -11,7 +11,7 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
-  const { checkAuthStatus } = useAuth();
+  const { checkAuthStatus, loginAsGuest } = useAuth();
 
   useEffect(() => {
     // get the DOM elements, querySelector gets the first element, querySelectorAll gets all elements
@@ -149,6 +149,29 @@ const Login: React.FC = () => {
     window.location.href = `${appConfig.api.baseURL}/auth/google`;
   };
 
+  // Handle guest login
+  const handleGuestLogin = () => {
+    // Generate a temporary guest ID
+    const guestId = uuidv4();
+    const guestUser = {
+      _id: guestId,
+      name: 'Guest User',
+      email: `guest-${guestId.slice(0, 8)}@example.com`,
+      isGuest: true
+    };
+
+    // Store guest information in localStorage
+    localStorage.setItem('guestUser', JSON.stringify(guestUser));
+    
+    // Update auth context with guest user (assuming you'll add this method)
+    if (loginAsGuest) {
+      loginAsGuest(guestUser);
+    }
+    
+    // Navigate to dashboard
+    navigate('/dashboard');
+  };
+
   return (
     <div className="shell">
       <div className="container a-container" id="a-container">
@@ -190,6 +213,14 @@ const Login: React.FC = () => {
             <button type="button" className="google-button" onClick={handleGoogleSignIn}>
               <FaGoogle className="google-icon" />
               <span>Sign in with Google</span>
+            </button>
+          </div>
+
+          {/* guest login button */}
+          <div className="guest-sign-in">
+            <button type="button" className="guest-button" onClick={handleGuestLogin}>
+              <FaUser className="guest-icon" />
+              <span>Continue as Guest</span>
             </button>
           </div>
 
