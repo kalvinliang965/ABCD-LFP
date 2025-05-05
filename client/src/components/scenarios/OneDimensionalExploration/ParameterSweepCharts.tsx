@@ -56,7 +56,6 @@ const COLOR_PALETTE = [
 
 interface ParameterSweepChartsProps {
   results: any;
-  goalAmount?: number; // Optional goal amount for reference line
 }
 
 type MetricType = 'successProbability' | 'medianTotalInvestments';
@@ -77,7 +76,7 @@ const formatParameterName = (paramName: string): string => {
     .trim();
 };
 
-const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results, goalAmount }) => {
+const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) => {
   const [selected_metric, set_selected_metric] = useState<MetricType>('successProbability');
   const [visibleLines, set_visible_lines] = useState<Set<string>>(new Set());
   const [chartData, set_chart_data] = useState<any>(null);
@@ -91,7 +90,7 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results, go
   }
 
   const is_numeric_parameter = !isNaN(Number(results.data[0].param));
-  const is_boolean_parameter = results.parameterType === 'rothOptimizer';
+  const is_roth_parameter = results.parameterType === 'rothOptimizer';
   const metric_label = selected_metric === 'successProbability' 
     ? 'Success Probability' 
     : 'Median Total Investments';
@@ -159,8 +158,8 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results, go
         borderColor,
         backgroundColor: borderColor.replace(')', ', 0.1)'),
         tension: 0.2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
+        pointRadius: 2,
+        pointHoverRadius: 4,
         pointBackgroundColor: borderColor,
         borderDash: index % 2 === 0 ? [] : [5, 5],
         clip: false as const,
@@ -176,20 +175,6 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results, go
 
     //prepare labels (years)
     const years = Array.from(all_years).sort((a, b) => a - b);
-
-    //add goal line if goalAmount is provided
-    if (goalAmount) {
-      const goalDataset = {
-        label: 'Goal',
-        data: years.map((year: number) => ({ x: year, y: goalAmount })),
-        borderColor: 'rgba(0, 0, 0, 0.3)',
-        borderDash: [5, 5],
-        borderWidth: 1,
-        pointRadius: 0,
-        clip: false as const,
-      };
-      datasets.push(goalDataset as any);
-    }
 
     return {
       labels: years,
@@ -207,11 +192,11 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results, go
       const allLabels = new_time_series_data.datasets.map((ds: any) => ds.label);
       set_visible_lines(new Set(allLabels));
     }
-  }, [results, selected_metric, goalAmount]);
+  }, [results, selected_metric]);
 
   //5.2 Line chart->parameter vs. final value
   const prepare_parameter_vs_metric_data = () => {
-    if (!is_numeric_parameter && !is_boolean_parameter) {
+    if (!is_numeric_parameter || is_roth_parameter) {
       return null;
     }
 
@@ -219,10 +204,6 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results, go
 
     //sort data by parameter value
     const sorted_data = [...results.data].sort((a, b) => {
-      if (is_boolean_parameter) {
-        //for boolean parameters, sort by the string representation
-        return String(a.param).localeCompare(String(b.param));
-      }
       return Number(a.param) - Number(b.param);
     });
 
@@ -239,7 +220,7 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results, go
         : lastYearData.total_investment.median;
       
       data_points.push({
-        x: is_boolean_parameter ? (item.param ? 'Enabled' : 'Disabled') : Number(item.param),
+        x: Number(item.param),
         y: value,
       });
     });
@@ -252,8 +233,8 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results, go
           data: data_points,
           borderColor: 'rgba(53, 162, 235, 1)',
           backgroundColor: 'rgba(53, 162, 235, 0.5)',
-          pointRadius: 4,
-          pointHoverRadius: 6,
+          pointRadius: 2,
+          pointHoverRadius: 4,
           pointBackgroundColor: 'rgba(53, 162, 235, 1)',
           borderDash: [],
           clip: false as const,
@@ -346,7 +327,7 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results, go
     ...chart_options,
     scales: {
       x: {
-        type: is_boolean_parameter ? 'category' : 'linear',  //use category scale for boolean values
+        type: 'linear',  // Always use linear scale for numeric parameters
         title: {
           display: true,
           text: `${formatParameterName(results.parameterType)} Value`,
@@ -419,7 +400,7 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results, go
       <Tabs variant="enclosed" colorScheme="blue" mt={4}>
         <TabList>
           <Tab><Text fontWeight="medium">Value Over Time</Text></Tab>
-          {(is_numeric_parameter || is_boolean_parameter) && <Tab><Text fontWeight="medium">Final Value</Text></Tab>}
+          {is_numeric_parameter && !is_roth_parameter && <Tab><Text fontWeight="medium">Final Value</Text></Tab>}
         </TabList>
 
         <TabPanels>
@@ -444,7 +425,7 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results, go
             </Box>
           </TabPanel>
 
-          {(is_numeric_parameter || is_boolean_parameter) && (
+          {is_numeric_parameter && !is_roth_parameter && (
             <TabPanel>
               <Heading size="sm" mb={2}>
                 Final {metric_label} by Parameter Value
