@@ -4,7 +4,6 @@
 import { create_federal_tax_service } from "../core/tax/FederalTaxService";
 // import { getRMDFactorForAge } from "./services/RMDScraper"; // Import the RMD function
 import { create_simulation_engine } from "../core/simulation/SimulationEngine";
-import { state_tax_yaml_string } from "../services/StateYamlParser";
 import { create_simulation_environment, create_simulation_environment_parallel } from "../core/simulation/ LoadSimulationEnvironment";
 import { Profiler } from "../utils/Profiler";
 import { delete_all_federal_brackets_from_db } from "../db/repositories/TaxBracketRepository";
