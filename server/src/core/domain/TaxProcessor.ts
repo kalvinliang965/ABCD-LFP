@@ -24,10 +24,6 @@ export class TaxProcessor {
         simulation_logger.debug(`previous year total income: ${this.user_tax_data.get_prev_year_income()}`);
         simulation_logger.debug(`previous year early withdrawal: ${this.user_tax_data.get_prev_year_early_withdrawal()}`);
         simulation_logger.debug(`federal taxable income: ${fed_taxable_income}`);
-
-        console.log(`previous year total income: ${this.user_tax_data.get_prev_year_income()}`);
-        console.log(`previous year early withdrawal: ${this.user_tax_data.get_prev_year_early_withdrawal()}`);
-        console.log(`federal taxable income: ${fed_taxable_income}`);
         
         const state_taxable_income = this.user_tax_data.get_prev_year_income();
         simulation_logger.debug(`state taxable income: ${state_taxable_income}`);
