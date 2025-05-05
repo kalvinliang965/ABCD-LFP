@@ -112,6 +112,9 @@ export interface FederalTaxService {
     __taxable_income_bracket: TaxBrackets,
     __capital_gains_bracket: TaxBrackets,
     __standard_deductions: StandardDeduction
+    get_prev_taxable_income_bracket: () => TaxBrackets | null,
+    get_prev_capital_gains_bracket: () => TaxBrackets | null,
+    get_prev_standard_deductions: () => StandardDeduction | null,
     print_taxable_income_bracket(): void;
     print_capital_gains_bracket(): void;
     print_standard_deductions_info(): void;
@@ -134,9 +137,10 @@ export function create_federal_service_wo(
 ): FederalTaxService {
 
     // contain tax info from previous year
-    let prev_taxable_income_bracket: TaxBrackets;
-    let prev_capital_gains_bracket: TaxBrackets;
-    let prev_standard_deductions: StandardDeduction;
+    let prev_taxable_income_bracket: TaxBrackets | null = null;
+    let prev_capital_gains_bracket: TaxBrackets | null = null;
+    let prev_standard_deductions: StandardDeduction | null = null;
+
 
     // these are for debugging purposes
     const print_taxable_income_bracket = () =>  {
@@ -296,6 +300,10 @@ export function create_federal_service_wo(
         __taxable_income_bracket: taxable_income_bracket,
         __capital_gains_bracket: capital_gains_bracket,
         __standard_deductions: standard_deductions,
+
+        get_prev_taxable_income_bracket: () => prev_taxable_income_bracket,
+        get_prev_capital_gains_bracket: () => prev_capital_gains_bracket,
+        get_prev_standard_deductions: () => prev_standard_deductions,
         print_taxable_income_bracket,
         print_capital_gains_bracket,
         print_standard_deductions_info,
