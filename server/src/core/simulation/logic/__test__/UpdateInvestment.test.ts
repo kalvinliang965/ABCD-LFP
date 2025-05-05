@@ -24,9 +24,9 @@ pre_tax_300_non_tax_exempt.tax_status = TaxStatus.PRE_TAX;
 pre_tax_300_non_tax_exempt.incr_value = jest.fn()
 
 
-const createBaseState = (): SimulationState => ({
+const create_base_state = (): SimulationState => ({
   account_manager: {
-    all: new Map<string, Investment>([
+    all:() =>  new Map<string, Investment>([
         ['non_retirment_tax_exempt', non_retirement_300_tax_exempt],
         ['non_retirment_non_tax_exempt', non_retirement_300_non_tax_exempt],
         ['pre_tax_300_non_tax_exempt', pre_tax_300_non_tax_exempt],
@@ -61,7 +61,7 @@ const createBaseState = (): SimulationState => ({
 
 describe('updateInvestment', () => {
   it('should update ordinary income if tax-exempt and non-retirment account', () => {
-    const simulation_state = createBaseState();
+    const simulation_state = create_base_state();
     update_investment(simulation_state);
 
     // only non_retirement_300_non_tax_exempt is updated
