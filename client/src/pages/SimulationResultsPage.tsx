@@ -326,7 +326,7 @@ const SimulationResults: React.FC = () => {
             Change Chart Selection
           </Button>
 
-          <Button colorScheme="blue" onClick={() => navigate(`/dashboard`)}>
+          <Button colorScheme="blue" onClick={() => navigate(`/scenarios`)}>
             Back to Dashboard
           </Button>
         </Flex>
