@@ -46,20 +46,28 @@ export function create_simulation_yearly_result(): SimulationYearlyResult {
   
             const investments: Record<string, number> = {};
 
-            for (const inv of simulation_state.account_manager.all.values()) {
+            for (const inv of simulation_state.account_manager.all().values()) {
                 if (inv.id in investments) {
                     throw new Error(`Duplicate inv.id ${inv.id}`);
                 }
                 investments[inv.id] = inv.get_value();
             }
             
+            const networth = simulation_state.account_manager.get_net_worth()
+            const financial_goal = simulation_state.get_financial_goal();
+            const is_goal_met = networth >= financial_goal;
+
+            if (is_goal_met === undefined) {
+
+                throw new Error(`Is goal met is undefined. networth ${networth}. financial goal ${financial_goal}`);
+            }
             const year_snapshot: YearResult = {
                 // Here are the one haifeng ask for
                 year: simulation_state.get_current_year(),
                 total_after_tax: simulation_state.account_manager.get_total_after_tax_value(),
                 total_pre_tax: simulation_state.account_manager.get_total_pre_tax_value(),
                 total_non_retirement: simulation_state.account_manager.get_total_non_retirement_value(),
-                is_goal_met: simulation_state.account_manager.get_net_worth() >= simulation_state.get_financial_goal(),
+                is_goal_met,
 
                 // here are the one kate added but haifeng didnt ask for
                 cash_value: simulation_state.account_manager.cash.get_value(), 

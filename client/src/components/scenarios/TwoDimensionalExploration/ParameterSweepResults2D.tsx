@@ -16,12 +16,14 @@ import {
   Tooltip,
   VStack,
   Flex,
+  Stack,
+  useToken,
 } from '@chakra-ui/react';
 import { InfoIcon } from '@chakra-ui/icons';
 import Plot from 'react-plotly.js';
 
 //define the metric types
-type MetricType = 'successProbability' | 'medianTotalInvestments' | 'averageTotalInvestments';
+type MetricType = 'successProbability' | 'medianTotalInvestments';
 
 interface ParameterSweepResults2DProps {
   results: any;
@@ -46,6 +48,20 @@ const formatParameterName = (paramType: string): string => {
 
 const ParameterSweepResults2D: React.FC<ParameterSweepResults2DProps> = ({ results }) => {
   const [selected_metric, set_selected_metric] = useState<MetricType>('successProbability');
+  const [tabIndex, setTabIndex] = useState(0);
+  
+  const [bg, mid, dark] = useToken('colors', [
+    'red.100',     // light background
+    selected_metric === 'successProbability' ? 'purple.400' : 'blue.400',  // mid-tone accent
+    selected_metric === 'successProbability' ? 'purple.700' : 'blue.700',  // dark accent
+  ]);
+  
+  //build a Plotly colorscale array with normalized stops
+  const brandScale: Array<[number, string]> = [
+    [0.0, bg],
+    [0.5, mid],
+    [1.0, dark]
+  ];
 
   if (!results || !results.data || Object.keys(results.data).length === 0) {
     return (
@@ -60,12 +76,22 @@ const ParameterSweepResults2D: React.FC<ParameterSweepResults2DProps> = ({ resul
   
   const metric_label = selected_metric === 'successProbability' 
     ? 'Success Probability' 
-    : selected_metric === 'medianTotalInvestments'
-    ? 'Median Total Investments'
-    : 'Average Total Investments';
+    : 'Median Total Investments';
 
   const successful_runs = Object.values(results.data).filter((item: any) => !item.error).length;
   const total_runs = Object.keys(results.data).length;
+  
+  //estimate simulations per combination by checking run_count in the first available result
+  let simulations_per_combination = 0;
+  for (const item of Object.values(results.data) as any[]) {
+    if (item.results && item.results.run_count) {
+      simulations_per_combination = item.results.run_count;
+      break;
+    }
+  }
+  
+  //calculate total simulations
+  const total_simulations = total_runs * simulations_per_combination;
 
   const prepare_plot_data = () => {
     if (!results || !results.data) {
@@ -119,22 +145,18 @@ const ParameterSweepResults2D: React.FC<ParameterSweepResults2DProps> = ({ resul
       let metric_value = 0;
       
       if (selected_metric === 'successProbability') {
-        if (value.results.probabilityOfSuccess) {
-          //pull the very last year's value
-          const prob_map = value.results.probabilityOfSuccess;
-          const years = Object.keys(prob_map).map(Number).sort((a, b) => a - b);
-          const last_year = years[years.length - 1];
-          metric_value = (prob_map[last_year] || 0) / 100;
+        //get the last year's success probability from yearly_results
+        const yearly_results = value.results.yearly_results;
+        if (yearly_results && yearly_results.length > 0) {
+          const lastYearData = yearly_results[yearly_results.length - 1];
+          metric_value = lastYearData.success_probability;
         }
-      } else if (selected_metric === 'medianTotalInvestments' || selected_metric === 'averageTotalInvestments') {
-        const snaps = value.results.yearlyData;
-        if (snaps && snaps.length) {
-          //get total investment value at the last snapshot
-          const last_snap = snaps[snaps.length - 1];
-          //use the sum of all investment types
-          metric_value = last_snap.total_after_tax + 
-                  last_snap.total_pre_tax + 
-                  last_snap.total_non_retirement;
+      } else if (selected_metric === 'medianTotalInvestments') {
+        //get the last year's median total investment
+        const yearly_results = value.results.yearly_results;
+        if (yearly_results && yearly_results.length > 0) {
+          const lastYearData = yearly_results[yearly_results.length - 1];
+          metric_value = lastYearData.total_investment.median;
         }
       }
       
@@ -166,6 +188,35 @@ const ParameterSweepResults2D: React.FC<ParameterSweepResults2DProps> = ({ resul
     );
   }
 
+  //AI: Function to determine appropriate tick format based on parameter type
+  const getTickFormat = (paramType: string): string => {
+    if (paramType === 'startYear' || paramType === 'duration') {
+      return 'd'; // Plain integer format for years
+    } else if (paramType.includes('Amount') || paramType.includes('Investment')) {
+      return '$,~s'; // Currency format for monetary values
+    } else {
+      return ''; // Default format
+    }
+  };
+
+  //AI: Tick format for values based on metric
+  const tickformat = selected_metric === 'successProbability' ? ',.0%' : '$,~s';
+  
+  //AI: Common hover label styling
+  const hoverlabel = {
+    bgcolor: 'rgba(255,255,255,0.9)',
+    bordercolor: '#ddd',
+    font: { family: 'Inter, sans-serif', size: 12, color: '#000' }
+  };
+
+  //AI: Common layout settings
+  const commonLayout = {
+    paper_bgcolor: 'white',
+    plot_bgcolor: 'white',
+    font: { family: 'Inter, sans-serif', color: '#333', size: 12 },
+    margin: { l: 60, r: 40, t: 60, b: 60 },
+  };
+
   //create the surface plot data
   const surface_plot_data = {
     data: [
@@ -174,20 +225,22 @@ const ParameterSweepResults2D: React.FC<ParameterSweepResults2DProps> = ({ resul
         x: plot_data.y, 
         y: plot_data.x, 
         z: plot_data.z,
-        colorscale: selected_metric === 'successProbability' ? 'Greens' : 'Blues',
+        colorscale: brandScale,
+        hoverlabel,
         colorbar: {
           title: metric_label,
           titleside: 'right',
           titlefont: {
             size: 14,
           },
-          tickformat: selected_metric === 'successProbability' ? ',.0%' : '$,.0f',
+          tickformat,
+          outlinewidth: 0,
         },
         contours: {
           z: {
             show: true,
             usecolormap: true,
-            highlightcolor: "#42f462",
+            highlightcolor: dark,
             project: { z: true }
           }
         },
@@ -199,6 +252,7 @@ const ParameterSweepResults2D: React.FC<ParameterSweepResults2DProps> = ({ resul
       }
     ],
     layout: {
+      ...commonLayout,
       title: `Surface Plot: ${metric_label} by ${formatParameterName(parameter1_type)} and ${formatParameterName(parameter2_type)}`,
       autosize: true,
       height: 500,
@@ -206,30 +260,27 @@ const ParameterSweepResults2D: React.FC<ParameterSweepResults2DProps> = ({ resul
         xaxis: {
           title: formatParameterName(parameter2_type),
           titlefont: { size: 12 },
+          tickformat: getTickFormat(parameter2_type),
+          showgrid: false,
         },
         yaxis: {
           title: formatParameterName(parameter1_type),
           titlefont: { size: 12 },
+          tickformat: getTickFormat(parameter1_type),
+          showgrid: false,
         },
         zaxis: {
           title: metric_label,
           titlefont: { size: 12 },
-          tickformat: selected_metric === 'successProbability' ? ',.0%' : '$,.0f',
+          tickformat,
         },
-        camera: {
-          eye: { x: 1.5, y: 1.5, z: 1 }
-        }
+        aspectratio: { x: 1, y: 1, z: 0.5 },
+        camera: { eye: { x: 1.3, y: 1.3, z: 0.8 } }
       },
-      margin: {
-        l: 65,
-        r: 50,
-        b: 65,
-        t: 90,
-      }
     },
     config: {
       responsive: true,
-      displayModeBar: true,
+      displayModeBar: false,
     }
   };
 
@@ -241,21 +292,27 @@ const ParameterSweepResults2D: React.FC<ParameterSweepResults2DProps> = ({ resul
         z: plot_data.z,
         x: plot_data.y,
         y: plot_data.x, 
-        colorscale: selected_metric === 'successProbability' ? 'Greens' : 'Blues',
+        colorscale: brandScale,
+        hoverlabel,
         colorbar: {
           title: metric_label,
           titleside: 'right',
           titlefont: {
             size: 14,
           },
-          tickformat: selected_metric === 'successProbability' ? ',.0%' : '$,.0f',
+          tickformat,
+          outlinewidth: 0,
         },
         contours: {
           coloring: 'heatmap',
           showlabels: true,
           labelfont: {
-            size: 10,
-            color: 'white',
+            size: 11,
+            color: '#111',
+          },
+          line: { 
+            width: 1.3, 
+            color: dark 
           }
         },
         hovertemplate: 
@@ -266,27 +323,27 @@ const ParameterSweepResults2D: React.FC<ParameterSweepResults2DProps> = ({ resul
       }
     ],
     layout: {
+      ...commonLayout,
       title: `Contour Plot: ${metric_label} by ${formatParameterName(parameter1_type)} and ${formatParameterName(parameter2_type)}`,
       autosize: true,
       height: 500,
       xaxis: {
         title: formatParameterName(parameter2_type),
         titlefont: { size: 12 },
+        tickformat: getTickFormat(parameter2_type),
+        showgrid: false,
       },
       yaxis: {
         title: formatParameterName(parameter1_type),
         titlefont: { size: 12 },
+        tickformat: getTickFormat(parameter1_type),
+        autorange: 'reversed' as const,
+        showgrid: false,
       },
-      margin: {
-        l: 65,
-        r: 50,
-        b: 65,
-        t: 90,
-      }
     },
     config: {
       responsive: true,
-      displayModeBar: true,
+      displayModeBar: false,
     }
   };
 
@@ -300,16 +357,27 @@ const ParameterSweepResults2D: React.FC<ParameterSweepResults2DProps> = ({ resul
         <HStack spacing={2} justify="space-between">
           <Heading size="md">2D Parameter Sweep Results</Heading>
           
-          <HStack>
+          <Stack direction={["column", "row"]} spacing={2} align="flex-end">
             <Tooltip 
               label={`${successful_runs} of ${total_runs} parameter combinations completed successfully`}
               placement="top"
             >
               <Badge colorScheme={successful_runs === total_runs ? "green" : "yellow"} fontSize="sm">
-                {successful_runs}/{total_runs} completed
+                {successful_runs}/{total_runs} parameter combinations
               </Badge>
             </Tooltip>
-          </HStack>
+            
+            {simulations_per_combination > 0 && (
+              <Tooltip 
+                label={`${simulations_per_combination} simulations run for each parameter combination`}
+                placement="top"
+              >
+                <Badge colorScheme="blue" fontSize="sm">
+                  Total simulations: {total_simulations.toLocaleString()}
+                </Badge>
+              </Tooltip>
+            )}
+          </Stack>
         </HStack>
         
         <Box>
@@ -321,7 +389,12 @@ const ParameterSweepResults2D: React.FC<ParameterSweepResults2DProps> = ({ resul
             </Select>
           </FormControl>
           
-          <Tabs colorScheme="blue" variant="enclosed">
+          <Tabs 
+            colorScheme="blue" 
+            variant="enclosed" 
+            onChange={index => setTabIndex(index)} 
+            index={tabIndex}
+          >
             <TabList>
               <Tab>Surface Plot (3D)</Tab>
               <Tab>Contour Plot (2D)</Tab>
@@ -331,41 +404,53 @@ const ParameterSweepResults2D: React.FC<ParameterSweepResults2DProps> = ({ resul
               <TabPanel>
                 <VStack>
                   <Box width="100%" height="500px">
-                    <Plot
-                      data={surface_plot_data.data}
-                      layout={surface_plot_data.layout}
-                      config={{
-                        ...surface_plot_data.config,
-                        toImageButtonOptions: {
-                          format: 'png',
-                          filename: `surface_plot_${parameter1_type}_${parameter2_type}`,
-                          width: 1200,
-                          height: 800,
-                        }
-                      }}
-                      style={{ width: '100%', height: '100%' }}
-                      useResizeHandler={true}
-                      onInitialized={(figure) => {
-                        if (figure && figure.plot) {
-                          const canvas = figure.plot.querySelector('canvas');
-                          if (canvas) {
-                            canvas.setAttribute('willReadFrequently', 'true');
+                    {tabIndex === 0 && (
+                      <Plot
+                        data={surface_plot_data.data}
+                        layout={{
+                          ...surface_plot_data.layout,
+                          scene: {
+                            ...surface_plot_data.layout.scene,
+                            xaxis: {
+                              ...surface_plot_data.layout.scene.xaxis,
+                              title: {
+                                text: formatParameterName(parameter2_type),
+                                font: { size: 14 }
+                              }
+                            },
+                            yaxis: {
+                              ...surface_plot_data.layout.scene.yaxis,
+                              title: {
+                                text: formatParameterName(parameter1_type),
+                                font: { size: 14 }
+                              }
+                            },
+                            zaxis: {
+                              ...surface_plot_data.layout.scene.zaxis,
+                              title: {
+                                text: metric_label,
+                                font: { size: 14 }
+                              }
+                            }
                           }
-                        }
-                      }}
-                      onUpdate={(figure) => {
-                        if (figure && figure.plot) {
-                          const canvas = figure.plot.querySelector('canvas');
-                          if (canvas) {
-                            canvas.setAttribute('willReadFrequently', 'true');
+                        }}
+                        config={{
+                          ...surface_plot_data.config,
+                          toImageButtonOptions: {
+                            format: 'png',
+                            filename: `surface_plot_${parameter1_type}_${parameter2_type}`,
+                            width: 1200,
+                            height: 800,
                           }
-                        }
-                      }}
-                    />
+                        }}
+                        style={{ width: '100%', height: '100%' }}
+                        useResizeHandler={true}
+                      />
+                    )}
                   </Box>
                   <Text fontSize="sm" color="gray.500" mt={2}>
                     <InfoIcon mr={1} />
-                    Tip: Click and drag to rotate the 3D view. Double-click to reset.
+                    Tip: Click and drag to rotate the 3D view. Double-click to reset. Axes show {formatParameterName(parameter1_type)}, {formatParameterName(parameter2_type)}, and {metric_label}.
                   </Text>
                 </VStack>
               </TabPanel>
@@ -373,41 +458,44 @@ const ParameterSweepResults2D: React.FC<ParameterSweepResults2DProps> = ({ resul
               <TabPanel>
                 <VStack>
                   <Box width="100%" height="500px">
-                    <Plot
-                      data={contour_plot_data.data}
-                      layout={contour_plot_data.layout}
-                      config={{
-                        ...contour_plot_data.config,
-                        toImageButtonOptions: {
-                          format: 'png',
-                          filename: `contour_plot_${parameter1_type}_${parameter2_type}`,
-                          width: 1200,
-                          height: 800,
-                        }
-                      }}
-                      style={{ width: '100%', height: '100%' }}
-                      useResizeHandler={true}
-                      onInitialized={(figure) => {
-                        if (figure && figure.plot) {
-                          const canvas = figure.plot.querySelector('canvas');
-                          if (canvas) {
-                            canvas.setAttribute('willReadFrequently', 'true');
+                    {tabIndex === 1 && (
+                      <Plot
+                        data={contour_plot_data.data}
+                        layout={{
+                          ...contour_plot_data.layout,
+                          xaxis: {
+                            ...contour_plot_data.layout.xaxis,
+                            title: {
+                              text: formatParameterName(parameter2_type),
+                              font: { size: 14 }
+                            }
+                          },
+                          yaxis: {
+                            ...contour_plot_data.layout.yaxis,
+                            title: {
+                              text: formatParameterName(parameter1_type),
+                              font: { size: 14 }
+                            },
+                            autorange: 'reversed' as const,
                           }
-                        }
-                      }}
-                      onUpdate={(figure) => {
-                        if (figure && figure.plot) {
-                          const canvas = figure.plot.querySelector('canvas');
-                          if (canvas) {
-                            canvas.setAttribute('willReadFrequently', 'true');
+                        }}
+                        config={{
+                          ...contour_plot_data.config,
+                          toImageButtonOptions: {
+                            format: 'png',
+                            filename: `contour_plot_${parameter1_type}_${parameter2_type}`,
+                            width: 1200,
+                            height: 800,
                           }
-                        }
-                      }}
-                    />
+                        }}
+                        style={{ width: '100%', height: '100%' }}
+                        useResizeHandler={true}
+                      />
+                    )}
                   </Box>
                   <Text fontSize="sm" color="gray.500" mt={2}>
                     <InfoIcon mr={1} />
-                    Contour lines represent equal values of {metric_label.toLowerCase()}.
+                    Contour lines represent equal values of {metric_label.toLowerCase()}. Horizontal axis: {formatParameterName(parameter2_type)}, Vertical axis: {formatParameterName(parameter1_type)}.
                   </Text>
                 </VStack>
               </TabPanel>

@@ -129,7 +129,7 @@ describe("Pay mandatory expense", () => {
         const scenario = await create_scenario(scenario_raw);
         state = await create_simulation_state(scenario, federal_service, state_tax_service);
 
-        state.process_tax = jest.fn();
+        state.tax_processor.calculate_taxes = jest.fn();
 
         state.event_manager.update_initial_amount = jest.fn();
     });
@@ -141,7 +141,7 @@ describe("Pay mandatory expense", () => {
         const tax = 0; // first year， there are 0 tax from previous year
         const mandatory_expense = 200;
         const cash = state.account_manager.cash.get_value();
-        (state.process_tax as jest.Mock).mockReturnValue(tax);
+        (state.tax_processor.calculate_taxes as jest.Mock).mockReturnValue(tax);
         (state.event_manager.update_initial_amount as jest.Mock).mockReturnValue(mandatory_expense);
         const networth = state.account_manager.get_net_worth();
         const num_mandatory_expense = state.event_manager.get_active_mandatory_event(state.get_current_year()).length;
@@ -161,7 +161,7 @@ describe("Pay mandatory expense", () => {
         const tax = 300;
         const mandatory_expense = 200;
         const cash = state.account_manager.cash.get_value();
-        (state.process_tax as jest.Mock).mockReturnValue(tax);
+        (state.tax_processor.calculate_taxes as jest.Mock).mockReturnValue(tax);
         (state.event_manager.update_initial_amount as jest.Mock).mockReturnValue(mandatory_expense);
         const networth = state.account_manager.get_net_worth();
         const num_mandatory_expense = state.event_manager.get_active_mandatory_event(state.get_current_year()).length;

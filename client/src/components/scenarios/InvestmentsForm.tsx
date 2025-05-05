@@ -391,15 +391,6 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
                     Investment Portfolio
                   </Heading>
                 </HStack>
-                <Button
-                  variant="ghost"
-                  colorScheme="blue"
-                  onClick={onBack}
-                  leftIcon={<Icon as={FiChevronLeft} />}
-                  size="md"
-                >
-                  Back
-                </Button>
               </Flex>
             </CardHeader>
             <CardBody p={8} textAlign="center">
@@ -452,15 +443,6 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
                   Investment Portfolio
                 </Heading>
               </HStack>
-              <Button
-                variant="ghost"
-                colorScheme="blue"
-                onClick={onBack}
-                leftIcon={<Icon as={FiChevronLeft} />}
-                size="md"
-              >
-                Back
-              </Button>
             </Flex>
           </CardHeader>
 
@@ -947,26 +929,39 @@ export const InvestmentsForm: React.FC<InvestmentsFormProps> = ({
             borderColor={borderColor}
           >
             <Flex justifyContent="space-between" width="100%" alignItems="center">
-              <Text color="gray.500" fontSize="sm">
-                {investmentsConfig.investments.length} investment
-                {investmentsConfig.investments.length !== 1 ? 's' : ''} added
-                {investmentsConfig.investments.length > 0 && !cash_investment_exists() && (
-                  <Text as="span" color="red.500" ml={2} fontWeight="medium">
-                    (Cash investment required)
-                  </Text>
-                )}
-              </Text>
               <Button
+                leftIcon={<Icon as={FiChevronLeft} />}
+                variant="outline"
                 colorScheme="blue"
+                onClick={onBack}
                 size="lg"
-                onClick={handle_continue}
-                isDisabled={investmentsConfig.investments.length === 0}
-                px={8}
-                rightIcon={<Icon as={FiChevronRight} />}
-                fontWeight="bold"
+                _hover={{ bg: 'blue.50' }}
               >
-                Continue
+                Back
               </Button>
+
+              <Flex alignItems="center">
+                <Text color="gray.500" fontSize="sm" mr={4}>
+                  {investmentsConfig.investments.length} investment
+                  {investmentsConfig.investments.length !== 1 ? 's' : ''} added
+                  {investmentsConfig.investments.length > 0 && !cash_investment_exists() && (
+                    <Text as="span" color="red.500" ml={2} fontWeight="medium">
+                      (Cash investment required)
+                    </Text>
+                  )}
+                </Text>
+                <Button
+                  colorScheme="blue"
+                  size="lg"
+                  onClick={handle_continue}
+                  isDisabled={investmentsConfig.investments.length === 0}
+                  px={8}
+                  rightIcon={<Icon as={FiChevronRight} />}
+                  fontWeight="bold"
+                >
+                  Continue
+                </Button>
+              </Flex>
             </Flex>
           </CardFooter>
         </Card>

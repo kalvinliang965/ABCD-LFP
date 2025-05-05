@@ -210,33 +210,6 @@ export const LifeExpectancyForm: React.FC<LifeExpectancyFormProps> = ({
                   <Icon as={FiActivity} mr={3} />
                   Life Expectancy
                 </Heading>
-                <HStack spacing={3}>
-                  <Button
-                    variant="outline"
-                    colorScheme="blue"
-                    onClick={onBack}
-                    leftIcon={<Icon as={FiChevronLeft} />}
-                    size="md"
-                    rounded="lg"
-                    borderColor="blue.300"
-                    _hover={{ bg: 'blue.50' }}
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    colorScheme="blue"
-                    onClick={onContinue}
-                    rightIcon={<Icon as={FiChevronRight} />}
-                    size="md"
-                    rounded="lg"
-                    bgGradient="linear(to-r, blue.400, teal.500)"
-                    _hover={{
-                      bgGradient: 'linear(to-r, blue.500, teal.600)',
-                    }}
-                  >
-                    Continue
-                  </Button>
-                </HStack>
               </Flex>
             </CardHeader>
 

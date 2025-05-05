@@ -1,5 +1,6 @@
 import { SimulationYearlyResult } from "./SimulationYearlyResult";
 import { simulation_logger } from "../../utils/logger/logger";
+import { generate_csv_file } from "../../utils/logger/SimulationResultCSV";
 
 //TODO: 这里开始都可以被移走到另一个专门管理simulation result的文件
 // AI-generated code
@@ -51,7 +52,11 @@ function calculate_success_probability(
 ): number {
   let success_probability = 0;
   for (let i = 0; i < allSimulations.length; i++) {
-    if (allSimulations[i].yearly_results[loop_for_year].is_goal_met) {
+    // Means user did not reach this year(user dead or financial planner terminate)
+    if (allSimulations[i].yearly_results[loop_for_year] == undefined) {
+      continue;
+    }
+    else if (allSimulations[i].yearly_results[loop_for_year].is_goal_met) {
       success_probability++;
     }
   }
@@ -361,7 +366,7 @@ export function create_simulation_result_v1(
   }
   simulation_logger.info(`Now you are in consolidatedSimulationResult`);
   //all simulation should give us how many simulations we have
-  simulation_logger.debug(`allSimulations length is: ${allSimulations.length}`);
+  simulation_logger.silly(`allSimulations length is: ${allSimulations.length}`);
 
   const yearly_simulation_results: simulation_result = {
     scenarioId: scenarioId,
@@ -382,8 +387,8 @@ export function create_simulation_result_v1(
         allSimulations[i].yearly_results[longest_yearly_results - 1].year;
     }
   }
-  simulation_logger.debug(`begining year is: ${begining_year}`);
-  simulation_logger.debug(`end year is: ${end_year}`);
+  simulation_logger.silly(`begining year is: ${begining_year}`);
+  simulation_logger.silly(`end year is: ${end_year}`);
 
   //TODO:计算每年的simulation的所有需要的信息
   for (
@@ -403,7 +408,7 @@ export function create_simulation_result_v1(
     let total_discretionary_expenses_pct: shaded_chart;
     //TODO:1 写入今年年份
     curr_year = begining_year + loop_for_year;
-    simulation_logger.debug(`curr_year is: ${curr_year}`);
+    simulation_logger.silly(`curr_year is: ${curr_year}`);
 
     //TODO:2 计算每年成功概率
     success_probability = calculate_success_probability(

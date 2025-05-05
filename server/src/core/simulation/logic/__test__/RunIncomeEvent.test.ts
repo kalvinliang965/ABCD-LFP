@@ -4,7 +4,7 @@ import { create_investment } from '../../../domain/investment/Investment';
 import { create_event_manager, create_event_manager_clone } from '../../../domain/EventManager';
 import create_income_event, { IncomeEvent } from '../../../domain/event/IncomeEvent';
 import { salary_income_event_one, ss_income_event_one } from '../../../domain/raw/event_raw/event_raw';
-import { create_user_tax_data } from '../../UserTaxData';
+import { create_user_tax_data } from '../../../domain/UserTaxData';
 import { create_value_source } from '../../../../utils/ValueGenerator';
 import { val } from 'cheerio/lib/api/attributes';
 

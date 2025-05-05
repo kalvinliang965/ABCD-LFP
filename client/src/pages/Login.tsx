@@ -99,7 +99,7 @@ const Login: React.FC = () => {
       if (response.data.success) {
         localStorage.setItem('token', response.data.token);
         await checkAuthStatus();
-        navigate(response.data.redirectUrl || '/dashboard');
+        navigate(response.data.redirectUrl || '/scenarios');
       } else {
         console.error('Login failed');
       }
@@ -133,7 +133,7 @@ const Login: React.FC = () => {
       if (response.data.success) {
         localStorage.setItem('token', response.data.token);
 
-        navigate(response.data.redirectUrl || '/dashboard');
+        navigate(response.data.redirectUrl || '/scenarios');
       } else {
         console.error('Signup failed');
       }

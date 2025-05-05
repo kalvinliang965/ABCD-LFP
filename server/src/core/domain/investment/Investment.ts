@@ -3,6 +3,7 @@ import { ChangeType, TaxStatus } from "../../Enums";
 import { InvestmentRaw } from "../raw/investment_raw";
 import { Cloneable } from "../../../utils/CloneUtil";
 import { has_required_word_occurrences } from "../../../utils/general";
+import { simulation_logger } from "../../../utils/logger/logger";
 /**
  * Public information about an investment
  */
@@ -61,8 +62,20 @@ export function create_investment(raw_data: InvestmentRaw): Investment {
       id,
       get_value: () => value,
       get_cost_basis: () => cost_basis,
-      incr_value: (amt: number) => (value += amt),
-      incr_cost_basis: (amt: number) => (cost_basis += amt),
+      incr_value: (amt: number) => {
+        value += amt;
+        if (Number.isNaN(value)) {
+          simulation_logger.error(`${id} value became NaN. Adding ${amt}`);
+          throw new Error(`${id} value become NaN. Adding ${amt}`);
+        }
+      },
+      incr_cost_basis: (amt: number) => {
+        cost_basis += amt;
+        if (Number.isNaN(cost_basis)) {
+          simulation_logger.error(`${id} Cost basis became NaN. Adding ${amt}`);
+          throw new Error(`${id} Cost basis become NaN. Adding ${amt}`);
+        }
+      },
       is_retirement: () =>
         tax_status === TaxStatus.AFTER_TAX || tax_status === TaxStatus.PRE_TAX,
       clone: () => create_investment(raw_data),

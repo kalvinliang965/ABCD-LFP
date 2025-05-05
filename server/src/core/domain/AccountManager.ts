@@ -15,15 +15,13 @@ export type AccountGroup = {
 // Parse investments by tax status
 function parse_investments(
   investments: Investment[]
-): [Investment, AccountMap, AccountMap, AccountMap, AccountMap] {
+): [Investment, AccountMap, AccountMap, AccountMap] {
   let cash_account = undefined;
   const non_retirement_account = new Map<string, Investment>();
   const pre_tax_account = new Map<string, Investment>();
   const after_tax_account = new Map<string, Investment>();
-  const all = new Map<string, Investment>();
 
   for (const investment of investments) {
-    all.set(investment.id, investment);
     switch (investment.tax_status) {
       case TaxStatus.NON_RETIREMENT:
         if (
@@ -55,7 +53,6 @@ function parse_investments(
     non_retirement_account,
     pre_tax_account,
     after_tax_account,
-    all,
   ];
 }
 
@@ -65,7 +62,7 @@ export interface AccountManager {
   non_retirement: AccountMap;
   pre_tax: AccountMap;
   after_tax: AccountMap;
-  all: AccountMap;
+  all: () => AccountMap;
   non_retirement_group: AccountGroup;
   after_tax_group: AccountGroup;
   pre_tax_group: AccountGroup;
@@ -112,17 +109,44 @@ export function create_account_manager(
       seen.add(new_id);
     }
 
-    const [cash, non_retirement, pre_tax, after_tax, all] =
+    const [cash, non_retirement, pre_tax, after_tax] =
       parse_investments(investments);
 
 
     simulation_logger.info("Successfully created account manager");
+
+    const all = () => {
+        const res = new Map()
+
+        for (const [key, val] of non_retirement) {
+          res.set(key,val);
+        }
+        for (const [key, val] of pre_tax) {
+          if (res.has(key)) {
+            throw new Error(`Duplicate key ${key}`);
+          }
+          res.set(key,val);
+        }
+        for (const [key, val] of after_tax) {
+          if (res.has(key)) {
+            throw new Error(`Duplicate key ${key}`);
+          }
+          res.set(key,val);
+        }
+        if (res.has(cash.id)) {
+          throw new Error(`Duplicate key ${cash.id}`);
+        }
+        res.set(cash.id, cash);
+        return res;
+    };
+
     return {
       legacy_id_registry,
       cash,
       non_retirement,
       pre_tax,
       after_tax,
+      all,
       non_retirement_group: {
         type: "non-retirement",
         account_map: non_retirement
@@ -135,11 +159,10 @@ export function create_account_manager(
         type: "pre-tax",
         account_map: pre_tax
       },
-      all,
       // Chen removed cash.get_value() at 2025-04-30
       get_net_worth: () => {
         let res = 0;
-        all.forEach((inv: Investment) => {
+        Array.from(all().values()).forEach((inv: Investment) => {
           res += inv.get_value();
         });
         return res;

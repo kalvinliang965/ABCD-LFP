@@ -12,9 +12,11 @@ import { Event } from "../domain/event/Event";
 import { AccountManager } from "../domain/AccountManager";
 import { InvestmentTypeManager } from "../domain/InvestmentTypeManager";
 import { EventManager } from "../domain/EventManager";
-import UserTaxData, { create_user_tax_data } from "./UserTaxData";
+import UserTaxData, { create_user_tax_data } from "../domain/UserTaxData";
 import { simulation_logger } from "../../utils/logger/logger";
 import { create_value_source } from "../../utils/ValueGenerator";
+import { TaxProcessor } from "../domain/TaxProcessor";
+import { WithdrawalProcessor } from "../domain/WithdrawalProcessor";
 export type EventMap = Map<string, Event>;
 
 export interface PersonDetails {
@@ -27,7 +29,7 @@ export interface SimulationState {
   roth_conversion_opt: boolean;
   roth_conversion_start: number;
   roth_conversion_end: number;
-  roth_conversion_strategy: Array<string>;
+  get_roth_conversion_strategy: () => Array<string>;
   rmd_strategy: Array<string>;
   user: PersonDetails;
   spouse?: PersonDetails;
@@ -42,15 +44,15 @@ export interface SimulationState {
   state_tax_service: StateTaxService;
   spending_strategy: Array<string>;
   expense_withrawal_strategy: Array<string>;
-  process_investment_withdrawal: (withdrawal_amount: number) => number;
   investment_type_manager: InvestmentTypeManager
   event_manager: EventManager,
   account_manager: AccountManager,
-  process_tax(): number,
   setup(): void;
   advance_year(): void;
   get_after_tax_contribution_limit(): number;
   
+  tax_processor: TaxProcessor;
+  withdrawal_processor: WithdrawalProcessor;
 
   // calculate investment market value
   total_after_tax_value:Map<number, number>;
@@ -115,6 +117,9 @@ export async function create_simulation_state(
     let after_tax_contribution_limit = scenario.after_tax_contribution_limit;
     let annual_inflation_rate = 0;
 
+    const get_tax_filing_status = () => tax_filing_status;
+    const get_financial_goal = () => scenario.financialGoal;
+
     const state: SimulationState = {
       get_annual_inflation_rate: () => annual_inflation_rate,
       rmd_strategy: scenario.rmd_strategy,
@@ -127,7 +132,7 @@ export async function create_simulation_state(
       roth_conversion_end: scenario.roth_conversion_end,
       spending_strategy: scenario.spending_strategy,
       expense_withrawal_strategy: scenario.expense_withdrawal_strategy,
-      roth_conversion_strategy: scenario.roth_conversion_strategy,
+      get_roth_conversion_strategy: () => scenario.roth_conversion_strategy,
       user,
       spouse,
       get_early_withdrawal_penalty: () => early_withdrawal_penalty,
@@ -136,8 +141,8 @@ export async function create_simulation_state(
       },
       // get current tax info
       user_tax_data,
-      get_tax_filing_status: () => tax_filing_status,
-      get_financial_goal: () => scenario.financialGoal,
+      get_tax_filing_status,
+      get_financial_goal,
       
       get_current_year: () => current_year,
       get_start_year:() => start_year,
@@ -166,111 +171,13 @@ export async function create_simulation_state(
       event_manager,
       investment_type_manager,
       account_manager,
+
+      tax_processor: new TaxProcessor(user_tax_data, federal_tax_service, state_tax_service, get_tax_filing_status),
+      withdrawal_processor: new WithdrawalProcessor(account_manager, user_tax_data, user.get_age),
       
       federal_tax_service,
       state_tax_service,
       get_after_tax_contribution_limit: () => after_tax_contribution_limit,
-      process_investment_withdrawal: (withdrawal_amount: number) => {
-        let withdrawaled=0;
-        const investments = state.account_manager.all;
-        for (const inv_id of state.expense_withrawal_strategy) {
-          
-          // withdrawaled enough money
-          if (withdrawaled > withdrawal_amount) {
-            console.log("success");
-            return withdrawaled;
-          }
-
-          if (!investments.has(inv_id)) {
-            simulation_logger.error(`Investment "${inv_id}" does not exist`);
-            throw new Error(`Investment "${inv_id}" does not exist`)
-          }
-          const investment = investments.get(inv_id)!;
-          const purchase_price = investment.get_cost_basis();
-          simulation_logger.debug(`Planning to sell investment: ${inv_id}`, {
-            purchase_price,
-            tax_status: investment.tax_status,
-          })
-          simulation_logger.debug(`${withdrawal_amount - withdrawaled} left`);
-          
-          // we are withdrawing amount needed to reach
-          const going_to_withdraw = Math.min(withdrawal_amount - withdrawaled, purchase_price);
-
-          simulation_logger.debug(`going to withdraw ${going_to_withdraw} from ${inv_id}`);
-          investment.incr_cost_basis(-going_to_withdraw);
-          // step) f.i
-          // if sold investment from non-retirement accont
-          // we have to calculate capital gains
-          if (investment.tax_status === TaxStatus.NON_RETIREMENT) {
-            const fraction = (going_to_withdraw / investment.get_cost_basis());
-            const gains = investment.get_value() - investment.get_cost_basis();
-            const capital_gains = fraction * gains;
-            state.user_tax_data.incr_cur_year_gains(capital_gains);
-          } 
-          
-          if (investment.tax_status === TaxStatus.PRE_TAX) {
-            state.user_tax_data.incr_cur_year_income(going_to_withdraw);
-          }
-          
-          // update withrawal
-          if (
-            state.user.get_age() < 59 && (
-              investment.tax_status === TaxStatus.PRE_TAX || 
-              investment.tax_status === TaxStatus.AFTER_TAX
-          )) {
-            state.user_tax_data.incr_year_early_withdrawal(going_to_withdraw);
-          }
-
-          withdrawaled += going_to_withdraw;
-          simulation_logger.debug(`recieved ${going_to_withdraw} from selling ${investment.id}`)
-          simulation_logger.debug(`total withdrawaled: ${withdrawaled}`);
-        }
-        return withdrawaled;
-      },
-      process_tax: (): number => {
-        simulation_logger.debug("Processing tax...");
-        // step a: calculate previous year's federal and state income tax
-        // using data from preivous year
-        // in our application, 85 percent of SS are only subject to federal tax
-        const fed_taxable_income = state.user_tax_data.get_cur_fed_taxable_income();
-        simulation_logger.debug(`previous year total income: ${state.user_tax_data.get_prev_year_income()}`);
-        simulation_logger.debug(`previous year early withdrawal: ${state.user_tax_data.get_prev_year_early_withdrawal()}`);
-        simulation_logger.debug(`federal taxable income: ${fed_taxable_income}`);
-
-        const state_taxable_income = state.user_tax_data.get_cur_year_income();
-        simulation_logger.debug(`state taxable income: ${state_taxable_income}`);
-
-        const standard_deduction = state.federal_tax_service.find_deduction(state.get_tax_filing_status());
-        simulation_logger.debug(`Standard deduction: ${standard_deduction}`)
-
-        const fed_tax = Math.max(fed_taxable_income * state.federal_tax_service.find_rate(fed_taxable_income, IncomeType.TAXABLE_INCOME, state.get_tax_filing_status()) - standard_deduction, 0);
-        const state_tax = Math.max(state_taxable_income * state.state_tax_service.find_rate(state_taxable_income, state.get_tax_filing_status()), 0);
-        simulation_logger.debug(`federal tax: ${fed_tax}`);
-        simulation_logger.debug(`state tax: ${state_tax}`);
-
-        // step b: calculate previous year's capital gains
-        // if capital gains is negative, we move on
-        let capital_gain_tax = Math.max(
-          state.user_tax_data.get_prev_year_gains(),
-          0,
-        );
-        simulation_logger.debug(`capital gains: ${capital_gain_tax}`);
-        if (capital_gain_tax != 0) {
-          const capital_gain_rate = state.federal_tax_service
-                  .find_rate(capital_gain_tax, IncomeType.CAPITAL_GAINS, state.get_tax_filing_status());
-          capital_gain_tax *= capital_gain_rate; 
-        }
-        simulation_logger.debug(`capital gains tax: ${capital_gain_tax}`);
-
-        // step c: calculate previous year withdrawal tax 
-        // we assume 10% early withdrawal
-        const withdrawal_tax = state.user_tax_data.get_prev_year_early_withdrawal() * 0.10;
-        simulation_logger.debug(`withdrawal tax: ${withdrawal_tax}`);
-
-        const total_tax = Math.max(fed_tax + state_tax + withdrawal_tax + capital_gain_tax, 0);
-        simulation_logger.info(`Successfully process tax for ${state.get_current_year() - 1}: ${total_tax}`)
-        return total_tax;
-      },
     };
 
     return state;
