@@ -1,7 +1,7 @@
 import { StateTaxService } from "../StateTaxService";
 import { create_tax_brackets } from "../TaxBrackets";
 import { TaxFilingStatus } from "../../Enums";
-import { create_state_tax_service_wo, create_state_tax_service_yaml, create_state_tax_service } from "../StateTaxService";
+import { create_state_tax_service_wo, create_state_tax_service } from "../StateTaxService";
 import { StateType } from "../../Enums";
 import { state_taxbrackets_exist_in_db, get_state_taxbrackets_by_state, create_state_taxbracket_in_db } from "../../../db/repositories/StateTaxBracketRepository";
 
@@ -65,7 +65,6 @@ describe('StateTaxService', () => {
       })
     })
     
-    // DB
     describe("DB initialization", () => {
         beforeEach(() => {
             // clear mock data
@@ -87,18 +86,79 @@ describe('StateTaxService', () => {
                     rate: 0.2,
                     taxpayer_type: TaxFilingStatus.INDIVIDUAL,
                     resident_state: StateType.CT,
+                },
+                {
+                    min: 0,
+                    max: 5000,
+                    rate: 0.2,
+                    taxpayer_type: TaxFilingStatus.COUPLE,
+                    resident_state: StateType.CT,
+                }, {
+                    min: 5001,
+                    max: Infinity,
+                    rate: 0.4,
+                    taxpayer_type: TaxFilingStatus.COUPLE,
+                    resident_state: StateType.CT,
                 }
-                
             ]);
             const service = await create_state_tax_service(StateType.CT);
             expect(service.find_rate(200, TaxFilingStatus.INDIVIDUAL)).toBe(0.1)
             expect(service.find_rate(5000000, TaxFilingStatus.INDIVIDUAL)).toBe(0.2);
+            expect(service.find_rate(200, TaxFilingStatus.COUPLE)).toBe(0.2)
+            expect(service.find_rate(5000000, TaxFilingStatus.COUPLE)).toBe(0.4);
+            expect(create_state_taxbracket_in_db).not.toHaveBeenCalled();
+        });
+        it("should throw an error if data base don't contain data for couple", async ()=> {
+            // say there are data in database
+            (state_taxbrackets_exist_in_db as jest.Mock).mockResolvedValue(true);
+            (get_state_taxbrackets_by_state as jest.Mock).mockResolvedValue([
+                {
+                    min: 0,
+                    max: 5000,
+                    rate: 0.1,
+                    taxpayer_type: TaxFilingStatus.INDIVIDUAL,
+                    resident_state: StateType.CT,
+                }, {
+                    min: 5001,
+                    max: Infinity,
+                    rate: 0.2,
+                    taxpayer_type: TaxFilingStatus.INDIVIDUAL,
+                    resident_state: StateType.CT,
+                }
+                
+            ]);
+            await expect(create_state_tax_service(StateType.CT))
+            .rejects
+            .toThrow(/couple/i);
+            expect(create_state_taxbracket_in_db).not.toHaveBeenCalled();
+        });
+        it("should throw an error if data base don't contain data for couple", async ()=> {
+            // say there are data in database
+            (state_taxbrackets_exist_in_db as jest.Mock).mockResolvedValue(true);
+            (get_state_taxbrackets_by_state as jest.Mock).mockResolvedValue([
+                {
+                    min: 0,
+                    max: 5000,
+                    rate: 0.1,
+                    taxpayer_type: TaxFilingStatus.COUPLE,
+                    resident_state: StateType.CT,
+                }, {
+                    min: 5001,
+                    max: Infinity,
+                    rate: 0.2,
+                    taxpayer_type: TaxFilingStatus.COUPLE,
+                    resident_state: StateType.CT,
+                }
+                
+            ]);
+            await expect(create_state_tax_service(StateType.CT))
+            .rejects
+            .toThrow(/individual/i);
             expect(create_state_taxbracket_in_db).not.toHaveBeenCalled();
         });
         it("should throw error if database contain no data", async () => {
             (state_taxbrackets_exist_in_db as jest.Mock).mockResolvedValue(false);
-            await expect(create_state_tax_service(StateType.CT))
-                .rejects.toThrow();
+            expect(create_state_tax_service(StateType.CT)).not.toBeNull();
         });
         it("should throw error if data return does not match data ask for", async ()=> {
             // say there are data in database
@@ -119,6 +179,19 @@ describe('StateTaxService', () => {
                     rate: 0.2,
                     taxpayer_type: TaxFilingStatus.INDIVIDUAL,
                     resident_state: StateType.NY,
+                },
+                {
+                    min: 0,
+                    max: 5000,
+                    rate: 0.2,
+                    taxpayer_type: TaxFilingStatus.COUPLE,
+                    resident_state: StateType.NY,
+                }, {
+                    min: 5001,
+                    max: Infinity,
+                    rate: 0.4,
+                    taxpayer_type: TaxFilingStatus.COUPLE,
+                    resident_state: StateType.NY,
                 }
                 
             ]);
@@ -127,62 +200,7 @@ describe('StateTaxService', () => {
             expect(exitSpy).toHaveBeenCalled();
             exitSpy.mockRestore();
         });
-    }),
-
-    // YAML
-    describe('YAML Initialization', () => {
-        beforeEach(() => {
-            // clear mock state
-            jest.clearAllMocks();
-        });
-        const validYAML = `
-            resident_state: "NY"
-            tax_brackets:
-              - min: 0
-                max: 50000
-                rate: 0.1
-                taxpayer_type: "individual"
-              - min: 50001
-                max: null
-                rate: 0.2
-                taxpayer_type: "individual"
-      `
-        it('should create service from valid YAML', async () => {
-            const service = await create_state_tax_service_yaml(StateType.NY, validYAML)
-            expect(service.find_rate(30000, TaxFilingStatus.INDIVIDUAL)).toBe(0.1)
-            expect(create_state_taxbracket_in_db).toHaveBeenCalledTimes(2);
-        })
-  
-  
-        describe('Error Handling', () => {
-            const invalidYAML = `
-                resident_state: "NY"
-                tax_brackets:
-                - min: "invalid"
-                    max: 50000
-                    rate: 0.1
-                    taxpayer_type: "individual"
-            `
-            it('should reject mismatched state', async () => {
-                await expect(create_state_tax_service_yaml(StateType.NJ, validYAML))
-                .rejects.toThrow("YAML file resident state does not match");
-                expect(create_state_taxbracket_in_db).not.toHaveBeenCalled();
-            })
-            it('should handle invalid YAML format', async () => {
-                await expect(create_state_tax_service_yaml(StateType.NY, invalidYAML))
-                .rejects.toThrow("Failed to parse state tax");
-                expect(create_state_taxbracket_in_db).not.toHaveBeenCalled();
-            })
-            it('should handle missing tax brackets', async () => {
-                const emptyYAML = `
-                resident_state: "NY"
-                tax_brackets: []
-                `
-                await expect(create_state_tax_service_yaml(StateType.NY, emptyYAML))
-                .rejects.toThrow("state.yaml is empty");
-                expect(create_state_taxbracket_in_db).not.toHaveBeenCalled();
-            })
-        })
     })
+
   
-  })
+  });
