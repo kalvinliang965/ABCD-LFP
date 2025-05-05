@@ -1,4 +1,3 @@
-import { create_state_tax_raw_yaml, StateTaxYAML } from "../../services/StateYamlParser";
 import { StateType, TaxFilingStatus } from "../Enums";
 import { create_tax_brackets } from "./TaxBrackets";
 import { TaxBrackets, TaxBracket } from "./TaxBrackets";
@@ -102,31 +101,31 @@ export function create_state_tax_service_wo(
     }
 }
 
-/**
- * ! This function shouldn't be use anymore. our program assume yaml is parse in front end.
- * @param resident_state 
- * @param yaml_string 
- * @returns 
- */
-export async function create_state_tax_service_yaml(resident_state: StateType , yaml_string: string) {
-    try {
-        const taxable_income_bracket = create_tax_brackets()
-        const brackets: Array<StateTaxYAML> = create_state_tax_raw_yaml(yaml_string);
-        if (brackets.length <= 0) {
-            throw new Error("state.yaml is empty");
-        }
-        for (const bracket of brackets) {
-            if (resident_state != bracket.resident_state) {
-                throw new Error("YAML file resident state does not match with user's state");
-            }
-            taxable_income_bracket.add_bracket(bracket.min, bracket.max, bracket.rate, bracket.taxpayer_type);
-            await create_state_taxbracket_in_db(bracket.min, bracket.max, bracket.rate, bracket.taxpayer_type, resident_state);
-        }
-        return create_state_tax_service_wo(taxable_income_bracket);
-    } catch(error) {
-        throw new Error(`Failed to initialize State tax data: ${error}`);
-    }
-}
+// /**
+//  * ! This function shouldn't be use anymore. our program assume yaml is parse in front end.
+//  * @param resident_state 
+//  * @param yaml_string 
+//  * @returns 
+//  */
+// export async function create_state_tax_service_yaml(resident_state: StateType , yaml_string: string) {
+//     try {
+//         const taxable_income_bracket = create_tax_brackets()
+//         const brackets: Array<StateTaxYAML> = create_state_tax_raw_yaml(yaml_string);
+//         if (brackets.length <= 0) {
+//             throw new Error("state.yaml is empty");
+//         }
+//         for (const bracket of brackets) {
+//             if (resident_state != bracket.resident_state) {
+//                 throw new Error("YAML file resident state does not match with user's state");
+//             }
+//             taxable_income_bracket.add_bracket(bracket.min, bracket.max, bracket.rate, bracket.taxpayer_type);
+//             await create_state_taxbracket_in_db(bracket.min, bracket.max, bracket.rate, bracket.taxpayer_type, resident_state);
+//         }
+//         return create_state_tax_service_wo(taxable_income_bracket);
+//     } catch(error) {
+//         throw new Error(`Failed to initialize State tax data: ${error}`);
+//     }
+// }
 
 export async function create_state_tax_service(entered_resident_state: StateType): Promise<StateTaxService> {
     try {
@@ -137,14 +136,30 @@ export async function create_state_tax_service(entered_resident_state: StateType
             taxable_income_bracket.add_bracket(0, Infinity, 0, TaxFilingStatus.COUPLE);
         } else {
             const tax_bracket_list = await get_state_taxbrackets_by_state(entered_resident_state);
+            let has_couple = false;
+            let has_individual = false;
             tax_bracket_list.forEach((ti) => {
                 const { min, max, rate, taxpayer_type, resident_state } = ti;
+                if (taxpayer_type === TaxFilingStatus.INDIVIDUAL) {
+                    has_individual = true;
+                } 
+                if (taxpayer_type === TaxFilingStatus.COUPLE) {
+                    has_couple = true;
+                }
                 if (resident_state != entered_resident_state) {
                     simulation_logger.error("load_state_taxable_income_brackets() loadded wrong data");
                     process.exit(1);
                 }
                 taxable_income_bracket.add_bracket(min, max, rate, taxpayer_type);
             });
+            if (!has_individual) {
+                simulation_logger.error(`Database data incomplete. Does not contain state tax of individual taxpayer`);
+                throw new Error(`Database data incomplete. Does not contain state tax of individual taxpayer`);
+            }
+            if (!has_couple) {
+                simulation_logger.error(`Database data incomplete. Does not contain state tax of couple taxpayer`);
+                throw new Error(`Database data incomplete. Does not contain state tax of couple taxpayer`);
+            }
         }
         return create_state_tax_service_wo(taxable_income_bracket);
     } catch(error) {
