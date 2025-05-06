@@ -55,11 +55,16 @@ interface SimulationResult_v1 {
 }
 
 const SimulationResults: React.FC = () => {
-  // Get parameters from URL - could be either simulationId or scenarioId
-  const { simulationId} = useParams<{ simulationId?: string}>();
+  // Get parameters from URL and location state
+  const { simulationId: simFromUrl } = useParams<{ simulationId?: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  
+  const simFromState = location.state?.simulationId;
   const scenarioId = location.state?.scenarioId || null;
+
+  // prefer the explicit run ID, then fall back to "most recent for scenario"
+  const idToUse = simFromUrl || simFromState || scenarioId;
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,18 +89,18 @@ const SimulationResults: React.FC = () => {
   useEffect(() => {
     const fetchSimulationResults = async () => {
       console.log('Current URL:', window.location.href);
-      console.log('Route params:', { simulationId, scenarioId });
+      console.log('Route params:', { simulationId: simFromUrl, scenarioId });
       
       // Determine which ID to use (prioritize simulationId if available)
-      const idToUse = simulationId || scenarioId;
-      const idType = simulationId ? 'simulationId' : 'scenarioId';
+      const idToUse = simFromUrl || simFromState || scenarioId;
+      const idType = simFromUrl ? 'simulationId' : 'scenarioId';
       
       if (!idToUse) {
         // Try to get ID from location state
         const stateId = location.state?.simulationId || location.state?.scenarioId;
         if (stateId) {
           console.log(`Using ${idType} from state:`, stateId);
-          const path = simulationId ? `/simulations/${stateId}` : `/scenarios/${stateId}/results`;
+          const path = simFromUrl ? `/simulations/${stateId}` : `/scenarios/${stateId}/results`;
           navigate(path, { replace: true });
           return;
         }
@@ -106,21 +111,21 @@ const SimulationResults: React.FC = () => {
 
       setLoading(true);
       try {
-        console.log(`Fetching simulation results for ${idType}:`, idToUse);
+        console.log(`Fetching simulation results for simulationId:`, idToUse);
         
         let response;
         // Call the appropriate service method based on ID type
-        if (simulationId) {
-          // Get results by simulation ID
+        if (simFromUrl || simFromState) {
+          // we have an exact run ID → fetch that one
           response = await simulation_service.get_simulation_results(idToUse);
-          console.log('API response: for simulationId', response);
+          console.log('API response for specific simulation:', response);
         } else {
-          // Get results by scenario ID
+          // no run ID → fetch all for scenario and pick the latest
           response = await simulation_service.get_simulations_by_scenario(idToUse);
-          console.log('API response: for scenarioId', response);
+          console.log('API response for all simulations by scenario:', response);
         }
         
-        console.log('API response: for all', response);
+        console.log('API response for all:', response);
         setRawResponse(response);
         
         if (!response.success) {
@@ -129,7 +134,7 @@ const SimulationResults: React.FC = () => {
         
         // Handle both single result and array of results
         let result;
-        if (!simulationId && scenarioId && Array.isArray(response.data) && response.data.length > 0) {
+        if (!simFromUrl && scenarioId && Array.isArray(response.data) && response.data.length > 0) {
           // If retrieving by scenarioId, use the most recent result if multiple exist
           // because same scenarioId can have multiple simulation results
           result = response.data.sort((a, b) => 
@@ -201,7 +206,7 @@ const SimulationResults: React.FC = () => {
     };
 
     fetchSimulationResults();
-  }, [simulationId, scenarioId, navigate, location]);
+  }, [simFromUrl, simFromState, scenarioId, navigate, location]);
 
   // Handle showing charts
   const handleShowCharts = () => {
@@ -338,7 +343,7 @@ const SimulationResults: React.FC = () => {
   // Get ID info for display
   const idInfo = scenarioId 
     ? `Scenario ID: ${scenarioId}` 
-    : (simulationId ? `Simulation ID: ${simulationId}` : '');
+    : (simFromUrl ? `Simulation ID: ${simFromUrl}` : '');
 
   return (
     <Container maxW="container.xl" py={8}>
