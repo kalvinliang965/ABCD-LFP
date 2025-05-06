@@ -1,4 +1,4 @@
-import { InflationType, StateOfResidence } from '../components/scenarios/AdditionalSettingsForm';
+import { InflationType, StateOfResidence } from '../types/Enum';
 import { ExpectancyType } from '../components/scenarios/LifeExpectancyForm';
 import { ScenarioType } from '../components/scenarios/ScenarioDetailsForm';
 import {
@@ -71,15 +71,20 @@ describe('scenarioMapper', () => {
   const mockAdditionalSettings = {
     inflationConfig: { type: 'fixed' as InflationType, value: 2.5 },
     afterTaxContributionLimit: 6000,
-    financialGoal: { value: 1000000 },
+    financialGoal: 1000000,
     stateOfResidence: 'NY' as StateOfResidence,
   };
 
   const mockRMDSettings = {
     enableRMD: true,
     startAge: 72,
+    currentAge: 65,
     accountPriority: ['pre-tax', 'after-tax', 'non-retirement'],
-    availableAccounts: ['pre-tax', 'after-tax', 'non-retirement'],
+    availableAccounts: [
+      { id: 'pre-tax', name: 'Pre-tax' },
+      { id: 'after-tax', name: 'After-tax' },
+      { id: 'non-retirement', name: 'Non-retirement' },
+    ],
   };
 
   const mockSpendingStrategy = {
@@ -88,7 +93,11 @@ describe('scenarioMapper', () => {
   };
 
   const mockWithdrawalStrategy = {
-    availableAccounts: ['non-retirement', 'after-tax', 'pre-tax'],
+    availableAccounts: [
+      { id: 'non-retirement', name: 'Non-retirement' },
+      { id: 'after-tax', name: 'After-tax' },
+      { id: 'pre-tax', name: 'Pre-tax' },
+    ],
     accountPriority: ['non-retirement', 'after-tax', 'pre-tax'],
   };
 
@@ -96,7 +105,7 @@ describe('scenarioMapper', () => {
     roth_conversion_opt: true,
     roth_conversion_start: 65,
     roth_conversion_end: 75,
-    availableAccounts: ['pre-tax'],
+    availableAccounts: [{ id: 'pre-tax', name: 'Pre-tax' }],
     accountPriority: ['pre-tax'],
   };
 
@@ -361,7 +370,7 @@ describe('scenarioMapper', () => {
       []
     );
 
-    expect(result.martialStatus).toBe('couple');
+    expect(result.maritalStatus).toBe('couple');
     expect(result.birthYears).toEqual([1980, 1982]);
     expect(result.lifeExpectancy).toEqual([
       { type: 'normal', parameters: { userMeanAge: 85, userStandardDeviation: 5 } },
@@ -437,8 +446,13 @@ describe('scenarioMapper', () => {
     const rmdDisabled = {
       enableRMD: false,
       startAge: 72,
+      currentAge: 65,
       accountPriority: ['pre-tax', 'after-tax', 'non-retirement'],
-      availableAccounts: ['pre-tax', 'after-tax', 'non-retirement'],
+      availableAccounts: [
+        { id: 'pre-tax', name: 'Pre-tax' },
+        { id: 'after-tax', name: 'After-tax' },
+        { id: 'non-retirement', name: 'Non-retirement' },
+      ],
     };
 
     const result = map_form_to_scenario_raw(
@@ -475,13 +489,14 @@ describe('scenarioMapper', () => {
     const minimalAdditionalSettings = {
       inflationConfig: { type: 'fixed' as InflationType, value: 2.5 },
       afterTaxContributionLimit: 6000,
-      financialGoal: { value: 0 },
+      financialGoal: 0,
       stateOfResidence: 'NY' as StateOfResidence,
     };
 
     const minimalRMDSettings = {
       enableRMD: false,
       startAge: 72,
+      currentAge: 65,
       accountPriority: [],
       availableAccounts: [],
     };
@@ -518,7 +533,7 @@ describe('scenarioMapper', () => {
 
     expect(result).toBeDefined();
     expect(result.name).toBe('Minimal Scenario');
-    expect(result.martialStatus).toBe('individual');
+    expect(result.maritalStatus).toBe('individual');
     expect(result.birthYears).toEqual([1980]);
     expect(result.lifeExpectancy).toEqual([{ type: 'fixed', value: 85 }]);
     expect(result.investments.size).toBe(0);
