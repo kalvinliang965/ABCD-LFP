@@ -26,7 +26,7 @@ export function process_roth_conversion(simulation_state: SimulationState) {
                                         .federal_tax_service
                                         .find_deduction(simulation_state.get_tax_filing_status());
         simulation_logger.debug(`current year dedudction ${standard_deduction}`);
-        const after_deduction = taxable_income - standard_deduction;
+        const after_deduction = Math.max(taxable_income - standard_deduction, 0);
 
         const current_bracket = simulation_state
                         .federal_tax_service
