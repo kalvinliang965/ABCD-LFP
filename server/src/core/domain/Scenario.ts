@@ -16,7 +16,7 @@ import { TaxStatus, parse_state_type, parse_taxpayer_type } from "../Enums";
 import { AccountManager, create_account_manager } from "./AccountManager";
 import { AccountMap } from "./AccountManager";
 import { create_investment_type_manager, InvestmentTypeManager } from "./InvestmentTypeManager";
-import { dev } from "../../config/environment";
+import { env_status } from "../../config/environment";
 import { create_event_manager, EventManager } from "./EventManager";
 import { Distribution, parse_distribution } from "./raw/common";
 import { simulation_logger } from "../../utils/logger/logger";

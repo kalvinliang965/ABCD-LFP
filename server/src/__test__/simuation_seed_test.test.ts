@@ -82,11 +82,11 @@ describe("Seed test", () => {
 
         const env1 = await create_simulation_environment(scenario_id, seed1);
         const engine1 = await create_simulation_engine(env1); 
-        const result1: SimulationYearlyResult[] = await engine1.run(N);
+        const result1: SimulationYearlyResult[] = await engine1.run_linear(N);
 
         const env2 = await create_simulation_environment(scenario_id, seed2);
         const engine2 = await create_simulation_engine(env2); 
-        const result2: SimulationYearlyResult[] = await engine2.run(N);
+        const result2: SimulationYearlyResult[] = await engine2.run_linear(N);
         
         expect(compare_result(result1, result2)).toBe(true);
     });
@@ -101,12 +101,12 @@ describe("Seed test", () => {
         const N = 10;
         const env1 = await create_simulation_environment(scenario_id, seed1);
         const engine1 = await create_simulation_engine(env1); 
-        const result1: SimulationYearlyResult[] = await engine1.run(N);
+        const result1: SimulationYearlyResult[] = await engine1.run_linear(N);
 
         
         const env2 = await create_simulation_environment(scenario_id, seed2);
         const engine2 = await create_simulation_engine(env2); 
-        const result2: SimulationYearlyResult[] = await engine2.run(N);
+        const result2: SimulationYearlyResult[] = await engine2.run_linear(N);
         
 
         expect(compare_result(result1, result2)).toBe(false);

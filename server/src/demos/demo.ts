@@ -26,7 +26,7 @@ async function clear_tax_data_before_scraping() {
   await delete_all_standard_deduction_from_db();
 }
 
-async function simulation_engine_demo(scenario_id: string, N: number) {
+async function simulation_engine_linear_demo(scenario_id: string, N: number) {
   await clear_tax_data_before_scraping();
   const profiler = new Profiler();
   
@@ -42,7 +42,20 @@ async function simulation_engine_demo(scenario_id: string, N: number) {
   profiler.start("run_linear");
   await simulation_engine_linear.run_linear(N);
   profiler.end("run_linear");
+  profiler.export_to_CSV();
+}
 
+
+async function simulation_engine_parallel_demo(scenario_id: string, N: number) {
+  await clear_tax_data_before_scraping();
+  const profiler = new Profiler();
+  
+  const random_base_seed = generate_seed();
+  
+  // set up the environment
+  profiler.start("create_simulation_environment");
+  const simulation_environment = await create_simulation_environment_parallel(scenario_id, random_base_seed);
+  profiler.end("create_simulation_environment");
 
   // parallel run
   const simulation_engine_parallel = await create_simulation_engine(simulation_environment);
@@ -52,7 +65,6 @@ async function simulation_engine_demo(scenario_id: string, N: number) {
   
   profiler.export_to_CSV();
 }
-
 async function optimize_simulation_initialization_demo(N: number) { 
 
   const random_base_seed = generate_seed();
@@ -72,6 +84,7 @@ async function optimize_simulation_initialization_demo(N: number) {
   profiler.printSummary();
 }
 export async function run_demo() {
-  await simulation_engine_demo("680d5df88650c1b31ef2604f", 10000);
+  // await simulation_engine_parallel_demo("680d5df88650c1b31ef2604f", 1000);
+  // await simulation_engine_linear_demo("680d5df88650c1b31ef2604f", 1000);
   // await optimize_scenario_environment_initialization_demo(1);
 }

@@ -170,24 +170,7 @@ const Sidebar: React.FC = () => {
           </NavItem>
         </NavGroup>
 
-        <NavGroup title="Exploration" sidebarOpen={sidebarOpen}>
-          <NavItem
-            icon={FaSearch}
-            to="/exploration/one-dimension"
-            isActive={location.pathname === '/exploration/one-dimension'}
-            sidebarOpen={sidebarOpen}
-          >
-            One-Dimensional
-          </NavItem>
-          <NavItem
-            icon={FaCubes}
-            to="/exploration/two-dimension"
-            isActive={location.pathname === '/exploration/two-dimension'}
-            sidebarOpen={sidebarOpen}
-          >
-            Two-Dimensional
-          </NavItem>
-        </NavGroup>
+
 
         <NavGroup title="Account" sidebarOpen={sidebarOpen}>
           <NavItem
