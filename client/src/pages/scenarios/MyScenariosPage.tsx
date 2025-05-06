@@ -160,7 +160,7 @@ const MyScenariosPage: React.FC = () => {
               Plan and simulate your financial future
             </Text>
           </Box>
-          <Button
+          {/* <Button
             onClick={() => handle_sample_scenario(SAMPLE_SCENARIOS[0])}
             size="sm"
             colorScheme="blue"
@@ -170,7 +170,7 @@ const MyScenariosPage: React.FC = () => {
             transition="all 0.2s"
           >
             New Scenario
-          </Button>
+          </Button> */}
         </Flex>
 
         {/* Info box with improved styling */}
