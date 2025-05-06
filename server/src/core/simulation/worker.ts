@@ -1,19 +1,17 @@
 import { parentPort, isMainThread } from "worker_threads";
 import { execute_single_simulation } from "./SimulationRunner";
-import { SimulationTaskData } from "./SimulationWorkerPool";
 import { SimulationEnvironment } from "./ LoadSimulationEnvironment";
-import { TaxFilingStatus } from "../Enums";
-import { TaxBracket } from "../tax/TaxBrackets";
-import { parse } from "superjson";
+import { parse, stringify } from "superjson";
 
 if (!isMainThread) {
     parentPort?.on("message", async(message) => {
         try {
             if (message.type === "run") {
-                const data: {environment: SimulationEnvironment, index: number} = parse(message.data);
-                const result = await execute_single_simulation(data.environment, data.index);
+                const environment: SimulationEnvironment = parse(message.data.environment);
+                const index = message.data.index;
+                const result = await execute_single_simulation(environment, index);
                 // send result back to parent thread
-                parentPort?.postMessage({status: "success", data: result});
+                parentPort?.postMessage({status: "success", data: stringify(result.yearly_results)});
             } else {
                 parentPort?.postMessage({
                     status: "error",

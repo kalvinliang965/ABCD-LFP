@@ -19,6 +19,8 @@ import { create_simulation_result_v1 } from "../core/simulation/SimulationResult
 import { debug_simulation_result } from "../core/simulation/SimulationResult_v1";
 import { generate_investment_csv } from "../utils/logger/SimulationResultCSV";
 import User from "../db/models/User";
+import superjson from "superjson";
+
 // Extend the Express Request type to include user
 declare global {
   namespace Express {
@@ -78,7 +80,7 @@ router.post("/", async (req: Request, res: Response) => {
     simulation_logger.info(
       `Creating consolidated result from ${simulation_results.length} simulations`
     );
-    //console.log("simulationResults", simulationResults);
+    console.log("simulationResults", simulation_results);
     //! seed and run count should be added to the consolidated result !!!!!!!
     const simulation_result = create_simulation_result_v1(
       simulation_results,

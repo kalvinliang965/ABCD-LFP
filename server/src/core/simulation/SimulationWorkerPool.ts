@@ -32,7 +32,7 @@ export class SimulationWorkerPool {
         // spawning "pool_size" amt of workers
         // spwan worker and keep them waiting
         for (let i = 0; i < pool_size; ++i) {
-            const worker = new Worker(worker_path);
+            const worker = new Worker(worker_path, { eval: false});
             worker.on('error', (err) => {
                 this.handle_worker_error(worker, err);
             });
