@@ -14,14 +14,22 @@ import {
   VStack,
   Code,
   useColorModeValue,
+  HStack,
 } from '@chakra-ui/react';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { simulation_service } from '../services/simulationService';
+import { scenario_service } from '../services/scenarioService';
 
 import ProbabilityOfSuccessChart from '../components/charts/ProbabilityOfSuccessChart';
 import ShadedLineChart from '../components/charts/ShadedLineChart';
 import StackedBarChart from '../components/charts/StackedBarChart';
+
+//import exploration components
+import OneDimensionalExploration from '../components/scenarios/OneDimensionalExploration/OneDimensionalExploration';
+import { ParameterSweepResults as OneDResults } from '../components/scenarios/OneDimensionalExploration';
+import TwoDimensionalExploration from '../components/scenarios/TwoDimensionalExploration/TwoDimensionalExploration';
+import { ParameterSweepResults2D as TwoDResults } from '../components/scenarios/TwoDimensionalExploration';
 
 // Define chart types
 const CHART_TYPES = [
@@ -55,17 +63,24 @@ interface SimulationResult_v1 {
 }
 
 const SimulationResults: React.FC = () => {
-  // Get parameters from URL - could be either simulationId or scenarioId
-  const { simulationId} = useParams<{ simulationId?: string}>();
+  // Get parameters from URL and location state
+  const { simulationId: simFromUrl } = useParams<{ simulationId?: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  
+  const simFromState = location.state?.simulationId;
   const scenarioId = location.state?.scenarioId || null;
+
+  // Identify run ID and fallback to scenario ID
+  const runId = simFromUrl || simFromState;
+  const idToUse = runId || scenarioId;
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [simulationData, setSimulationData] = useState<any>(null);
   const [rawResponse, setRawResponse] = useState<any>(null);
   const [showDebug, setShowDebug] = useState(false);
+  const [scenarioName, setScenarioName] = useState<string>('');
 
   // New state variables for chart selection
   const [showChartSelection, setShowChartSelection] = useState(true);
@@ -74,6 +89,35 @@ const SimulationResults: React.FC = () => {
   // New state variables for the stacked bar chart
   const [aggregationType, setAggregationType] = useState<'median' | 'average'>('median');
   const [aggregationThreshold, setAggregationThreshold] = useState<number>(0);
+
+  //exploration modals & their results
+  const [isOneDimOpen, setIsOneDimOpen] = useState(false);
+  const [oneDimSweepData, setOneDimSweepData] = useState<any>(null);
+
+  const [isTwoDimOpen, setIsTwoDimOpen] = useState(false);
+  const [twoDimSweepData, setTwoDimSweepData] = useState<any>(null);
+
+  // open/close helpers
+  const openOneDimExploration = () => setIsOneDimOpen(true);
+  const closeOneDimExploration = () => setIsOneDimOpen(false);
+
+  const openTwoDimExploration = () => setIsTwoDimOpen(true);
+  const closeTwoDimExploration = () => setIsTwoDimOpen(false);
+
+  // "on complete" callbacks
+  const handleOneDimComplete = (results: any) => {
+    console.log('1D complete:', results);
+    setOneDimSweepData(results);
+    setTwoDimSweepData(null);
+    setIsOneDimOpen(false);
+  };
+
+  const handleTwoDimComplete = (results: any) => {
+    console.log('2D complete:', results);
+    setTwoDimSweepData(results);
+    setOneDimSweepData(null);
+    setIsTwoDimOpen(false);
+  };
 
   // Debugging helper
   // const toggleDebug = () => {
@@ -84,16 +128,13 @@ const SimulationResults: React.FC = () => {
   useEffect(() => {
     const fetchSimulationResults = async () => {
       console.log('Current URL:', window.location.href);
-      console.log('Route params:', { simulationId, scenarioId });
-      // Determine which ID to use (prefer scenarioId if available)
-      const idToUse = scenarioId || simulationId;
-      const idType = scenarioId ? 'scenarioId' : 'simulationId';
+      console.log('Route params:', { simulationId: idToUse, scenarioId });
       
       if (!idToUse) {
         // Try to get ID from location state
         const stateId = location.state?.scenarioId || location.state?.simulationId;
         if (stateId) {
-          console.log(`Using ${idType} from state:`, stateId);
+          console.log(`Using ID from state:`, stateId);
           const path = scenarioId ? `/scenarios/${stateId}/results` : `/simulations/${stateId}`;
           navigate(path, { replace: true });
           return;
@@ -103,23 +144,35 @@ const SimulationResults: React.FC = () => {
         return;
       }
 
+      // Fetch scenario name if we have a scenarioId
+      if (scenarioId) {
+        try {
+          const response = await scenario_service.get_scenario_by_id(scenarioId);
+          if (response?.data) {
+            setScenarioName(response.data.name || 'Unnamed Scenario');
+          }
+        } catch (err) {
+          console.error('Error fetching scenario details:', err);
+        }
+      }
+
       setLoading(true);
       try {
-        console.log(`Fetching simulation results for ${idType}:`, idToUse);
+        console.log(`Fetching simulation results for simulationId:`, idToUse);
         
         let response;
         // Call the appropriate service method based on ID type
-        if (scenarioId) {
-          // Get results by scenario ID
-          response = await simulation_service.get_simulations_by_scenario(idToUse);
-          console.log('API response: for scenarioId', response);
-        } else {
-          // Get results by simulation ID
+        if (runId) {
+          // we have an exact run ID → fetch that one specific simulation
           response = await simulation_service.get_simulation_results(idToUse);
-          console.log('API response: for simulationId', response);
+          console.log('API response for specific simulation:', response);
+        } else {
+          // no run ID → fetch all for scenario and pick the latest
+          response = await simulation_service.get_simulations_by_scenario(idToUse);
+          console.log('API response for all simulations by scenario:', response);
         }
         
-        console.log('API response: for all', response);
+        console.log('API response for all:', response);
         setRawResponse(response);
         
         if (!response.success) {
@@ -128,7 +181,10 @@ const SimulationResults: React.FC = () => {
         
         // Handle both single result and array of results
         let result;
-        if (scenarioId && Array.isArray(response.data) && response.data.length > 0) {
+        if (runId) {
+          // Direct result when fetching by simulation ID
+          result = response.data;
+        } else if (Array.isArray(response.data) && response.data.length > 0) {
           // If retrieving by scenarioId, use the most recent result if multiple exist
           // because same scenarioId can have multiple simulation results
           result = response.data.sort((a, b) => 
@@ -200,7 +256,7 @@ const SimulationResults: React.FC = () => {
     };
 
     fetchSimulationResults();
-  }, [simulationId, scenarioId, navigate, location]);
+  }, [runId, scenarioId, navigate, location]);
 
   // Handle showing charts
   const handleShowCharts = () => {
@@ -335,35 +391,21 @@ const SimulationResults: React.FC = () => {
   };
 
   // Get ID info for display
-  const idInfo = scenarioId 
-    ? `Scenario ID: ${scenarioId}` 
-    : (simulationId ? `Simulation ID: ${simulationId}` : '');
+  const idInfo = runId
+    ? `Simulation ID: ${runId}`
+    : (scenarioName
+        ? `Scenario: ${scenarioName}`
+        : `Scenario ID: ${scenarioId}`);
 
   return (
     <Container maxW="container.xl" py={8}>
       <Heading as="h1" mb={2}>
-        Simulation Results
-      </Heading>
+      Simulation Visualizations      </Heading>
       
       {idInfo && (
         <Text mb={4} color="gray.600" fontSize="sm">
           {idInfo}
         </Text>
-      )}
-
-      {/* <Flex justifyContent="flex-end" mb={4}>
-        <Button size="sm" colorScheme="gray" onClick={toggleDebug}>
-          {showDebug ? "Hide Debug" : "Show Debug"}
-        </Button>
-      </Flex> */}
-
-      {showDebug && rawResponse && (
-        <Box mb={6} p={4} bg="gray.50" borderRadius="md" overflow="auto" maxHeight="300px">
-          <Heading size="sm" mb={2}>Debug: API Response</Heading>
-          <Code display="block" whiteSpace="pre" p={2}>
-            {JSON.stringify(rawResponse, null, 2)}
-          </Code>
-        </Box>
       )}
 
       {error && (
@@ -380,6 +422,88 @@ const SimulationResults: React.FC = () => {
         </Flex>
       ) : (
         <>{showChartSelection ? renderChartSelectionUI() : renderCharts()}</>
+      )}
+
+      <Box
+        borderWidth="1px" borderRadius="lg" p={6}
+        shadow="md" bg={useColorModeValue('white','gray.700')}
+        mb={8}
+        mt={10}
+      >
+        <Heading size="lg" mb={4}>
+          Simulation Parameter Exploration
+        </Heading>
+        <Text fontSize="md" color="gray.600" mb={6}>
+          {runId 
+            ? `Results for simulation: ${runId}` 
+            : (scenarioName 
+                ? `Scenario: ${scenarioName}` 
+                : (scenarioId ? `Scenario ID: ${scenarioId}` : ''))}
+        </Text>
+
+        {!oneDimSweepData && !twoDimSweepData && (
+          <Text mb={6} color="gray.600">
+            Run a parameter exploration to see how different parameter values affect the scenario outcomes over time.
+            The visualization will include both time series charts and parameter impact analysis.
+          </Text>
+        )}
+
+        {/* Exploration options */}
+        <Box mt={4} mb={6}>
+          <Text fontWeight="bold" mb={3}>
+            Exploration Options:
+          </Text>
+          <HStack spacing={4} justify="flex-start">
+            <Button colorScheme="blue" onClick={openOneDimExploration}>
+              One-dimensional Scenario Exploration
+            </Button>
+            <Button colorScheme="purple" onClick={openTwoDimExploration}>
+              Two-dimensional Scenario Exploration
+            </Button>
+          </HStack>
+        </Box>
+      </Box>
+
+      {showDebug && rawResponse && (
+        <Box mb={6} p={4} bg="gray.50" borderRadius="md" overflow="auto" maxHeight="300px">
+          <Heading size="sm" mb={2}>Debug: API Response</Heading>
+          <Code display="block" whiteSpace="pre" p={2}>
+            {JSON.stringify(rawResponse, null, 2)}
+          </Code>
+        </Box>
+      )}
+
+      {/* ——— Inline 1D sweep results ——— */}
+      {oneDimSweepData && (
+        <Box mb={8}>
+          <OneDResults results={oneDimSweepData} />
+        </Box>
+      )}
+
+      {/* ——— Inline 2D sweep results ——— */}
+      {twoDimSweepData && (
+        <Box mb={8}>
+          <TwoDResults results={twoDimSweepData} />
+        </Box>
+      )}
+
+      {/* Fix modals conditionally rendered only when scenarioId exists */}
+      {scenarioId && (
+        <>
+          <OneDimensionalExploration
+            isOpen={isOneDimOpen}
+            onClose={closeOneDimExploration}
+            scenarioId={scenarioId || ''}
+            onExplorationComplete={handleOneDimComplete}
+          />
+
+          <TwoDimensionalExploration
+            isOpen={isTwoDimOpen}
+            onClose={closeTwoDimExploration}
+            scenarioId={scenarioId || ''}
+            onExplorationComplete={handleTwoDimComplete}
+          />
+        </>
       )}
     </Container>
   );
