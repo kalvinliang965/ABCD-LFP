@@ -289,6 +289,11 @@ const TwoDimensionalExploration: React.FC<TwoDimensionalExplorationProps> = ({
     if (parameter1.step_size <= 0) return false;
     if (parameter2.step_size <= 0) return false;
     
+    // make sure each range actually produces at least two distinct values
+    const count1 = Math.floor((parameter1.upper_bound - parameter1.lower_bound) / parameter1.step_size) + 1;
+    const count2 = Math.floor((parameter2.upper_bound - parameter2.lower_bound) / parameter2.step_size) + 1;
+    if (count1 < 2 || count2 < 2) return false;
+    
     //check for too many steps
     if ((parameter1.upper_bound - parameter1.lower_bound) / parameter1.step_size > 20) return false;
     if ((parameter2.upper_bound - parameter2.lower_bound) / parameter2.step_size > 20) return false;
@@ -658,6 +663,17 @@ const TwoDimensionalExploration: React.FC<TwoDimensionalExplorationProps> = ({
               <Alert status="error">
                 <AlertIcon />
                 Parameters must be different for 2D exploration
+              </Alert>
+            )}
+            
+            {(parameter1.type && parameter2.type) && (
+              (Math.floor((parameter1.upper_bound - parameter1.lower_bound) / parameter1.step_size) + 1) < 2 ||
+              (Math.floor((parameter2.upper_bound - parameter2.lower_bound) / parameter2.step_size) + 1) < 2
+            ) && (
+              <Alert status="error" mt={2}>
+                <AlertIcon />
+                Each parameter range must include at least two values. <br/>
+                Please increase the range or decrease the step size.
               </Alert>
             )}
           </VStack>
