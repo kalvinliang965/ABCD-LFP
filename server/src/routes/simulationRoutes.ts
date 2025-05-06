@@ -80,7 +80,6 @@ router.post("/", async (req: Request, res: Response) => {
     simulation_logger.info(
       `Creating consolidated result from ${simulation_results.length} simulations`
     );
-    console.log("simulationResults", simulation_results);
     //! seed and run count should be added to the consolidated result !!!!!!!
     const simulation_result = create_simulation_result_v1(
       simulation_results,
