@@ -41,6 +41,20 @@ ChartJS.register(
   Legend
 );
 
+// const COLOR_PALETTE = [
+//   '#f4dc17', // yellow
+//   '#b15928', // brown
+//   '#a6cee3', // light blue
+//   '#1f78b4', // dark blue
+//   '#b2df8a', // light green
+//   '#33a02c', // dark green
+//   '#fb9a99', // light red
+//   '#e31a1c', // dark red
+//   '#fdbf6f', // light orange
+//   '#ff7f00', // dark orange
+//   '#cab2d6', // light purple
+  
+// ];
 const COLOR_PALETTE = [
   '#3b82f6', // Blue-500
   '#f97316', // Orange-500
@@ -52,6 +66,8 @@ const COLOR_PALETTE = [
   '#6366f1', // Indigo-500
   '#ec4899', // Pink-500
   '#6b7280', // Gray-500
+  '#6a3d9a', // dark purple
+  '#1f78b4', // dark blue
 ];
 
 interface ParameterSweepChartsProps {
@@ -158,7 +174,7 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
         borderColor,
         backgroundColor: borderColor.replace(')', ', 0.1)'),
         tension: 0.2,
-        pointRadius: 2,
+        pointRadius: 3,
         pointHoverRadius: 4,
         pointBackgroundColor: borderColor,
         borderDash: index % 2 === 0 ? [] : [5, 5],
@@ -233,7 +249,7 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
           data: data_points,
           borderColor: 'rgba(53, 162, 235, 1)',
           backgroundColor: 'rgba(53, 162, 235, 0.5)',
-          pointRadius: 2,
+          pointRadius: 3,
           pointHoverRadius: 4,
           pointBackgroundColor: 'rgba(53, 162, 235, 1)',
           borderDash: [],
@@ -291,6 +307,30 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
         labels: {
           boxWidth: 12,
           usePointStyle: true
+        },
+        onHover: (event, legendItem, legend) => {
+          if (legend.chart.data.datasets) {
+            const index = legendItem.datasetIndex as number;
+            
+            legend.chart.data.datasets.forEach((dataset, i) => {
+              const meta = legend.chart.getDatasetMeta(i);
+              // Fade out all datasets except the hovered one
+              meta.hidden = i !== index;
+            });
+            
+            legend.chart.update();
+          }
+        },
+        onLeave: (event, legendItem, legend) => {
+          if (legend.chart.data.datasets) {
+            legend.chart.data.datasets.forEach((dataset, i) => {
+              const meta = legend.chart.getDatasetMeta(i);
+              // Show all datasets when leaving
+              meta.hidden = false;
+            });
+            
+            legend.chart.update();
+          }
         }
       },
       tooltip: {
@@ -362,6 +402,15 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
         }
       }
     },
+    plugins: {
+      legend: {
+        position: 'top' as const,
+        labels: {
+          boxWidth: 12,
+          usePointStyle: true
+        }
+      },
+    }
   };
 
   return (
@@ -423,6 +472,9 @@ const ParameterSweepCharts: React.FC<ParameterSweepChartsProps> = ({ results }) 
                 </Flex>
               )}
             </Box>
+            <Text fontSize="xs" color="gray.500" mt={2} textAlign="center">
+              Tip: Hover over a legend item to highlight just that line
+            </Text>
           </TabPanel>
 
           {is_numeric_parameter && !is_roth_parameter && (
