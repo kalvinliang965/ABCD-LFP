@@ -166,6 +166,9 @@ function NewScenarioPage() {
   //state for name validation
   const [isNameError, setIsNameError] = useState(false);
   const [nameErrorMessage, setNameErrorMessage] = useState('');
+  // Track whether we're editing a draft or a published scenario
+  // This helps determine whether to check for duplicate names
+  const [isDraftScenario, setIsDraftScenario] = useState<boolean>(true);
 
   //add useEffect to load scenario data when in edit mode
   useEffect(() => {
@@ -175,6 +178,9 @@ function NewScenarioPage() {
           const response = await scenario_service.get_scenario_by_id(id);
           const scenario = response.data;
 
+          // Save whether this is a draft scenario
+          setIsDraftScenario(scenario.isDraft || false);
+          
           //set the current scenario ID in localStorage
           localStorage.setItem('current_scenario_id', id);
 
@@ -410,18 +416,22 @@ function NewScenarioPage() {
         return;
       }
 
-      try {
-        //check if the scenario name already exists using the dedicated function
-        const nameExists = await scenario_service.check_scenario_name_exists(scenarioDetails.name);
-        
-        if (nameExists) {
-          setIsNameError(true);
-          setNameErrorMessage('A scenario with this name already exists. Please choose a different name.');
-          return;
+      //only check for duplicates on brand-new drafts or when editing a draft
+      //skip this check when editing an existing published scenario
+      if (!isEditMode || isDraftScenario) {
+        try {
+          //check if the scenario name already exists using the dedicated function
+          const nameExists = await scenario_service.check_scenario_name_exists(scenarioDetails.name);
+          
+          if (nameExists) {
+            setIsNameError(true);
+            setNameErrorMessage('A scenario with this name already exists. Please choose a different name.');
+            return;
+          }
+        } catch (checkError) {
+          console.error('Error checking scenario names:', checkError);
+          //continue if name check fails - don't block the user
         }
-      } catch (checkError) {
-        console.error('Error checking scenario names:', checkError);
-        //continue if name check fails - don't block the user
       }
 
       //reset error state if validation passes
@@ -664,9 +674,9 @@ function NewScenarioPage() {
     console.log('=====================================================');
 
     try {
-      // First save the final version
-      await save_draft(get_current_draft_state(), false);
-      console.log("Complete scenario saved to database");
+      //mark it "published" instead of draft by setting is_draft to false
+      await save_draft(get_current_draft_state(), /* is_draft= */ false);
+      console.log("Complete scenario saved to database as non-draft");
 
       // Clean investment type data from localStorage
       investmentTypeStorage.clear();
@@ -676,19 +686,21 @@ function NewScenarioPage() {
       localStorage.removeItem('current_editing_scenario_id');
 
       // Show success toast and navigate to scenarios page
-    toast({
-        title: 'Scenario Created',
-        description: 'Your scenario has been created successfully.',
+      toast({
+        title: isEditMode ? 'Scenario Updated' : 'Scenario Created',
+        description: isEditMode 
+          ? 'Your scenario has been updated successfully.'
+          : 'Your scenario has been created successfully.',
         status: 'success',
-      duration: 3000,
-      isClosable: true,
-    });
+        duration: 3000,
+        isClosable: true,
+      });
       navigate('/scenarios');
     } catch (error) {
       console.error('Error saving scenario:', error);
       toast({
-        title: 'Error Creating Scenario',
-        description: 'There was a problem creating your scenario. Please try again.',
+        title: isEditMode ? 'Error Updating Scenario' : 'Error Creating Scenario',
+        description: 'There was a problem saving your scenario. Please try again.',
         status: 'error',
         duration: 5000,
         isClosable: true,

@@ -131,15 +131,6 @@ const UserProfile: React.FC = () => {
   const [shareEmail, setShareEmail] = useState<string>('');
   const [sharePermission, setSharePermission] = useState<string>('read');
 
-  // Additional state variables
-  const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
-  const {
-    isOpen: isEditModalOpen,
-    onOpen: onEditModalOpen,
-    onClose: onEditModalClose,
-  } = useDisclosure();
-  const [editScenarioName, setEditScenarioName] = useState('');
-
   // Data for scenarios shared by the user
   const [sharedByMeData, setSharedByMeData] = useState<Record<string, Array<{
     userId: string;
@@ -251,11 +242,15 @@ const UserProfile: React.FC = () => {
   
   // Navigate to a scenario with appropriate permissions
   const navigateToScenario = (scenarioId: string, canEdit: boolean) => {
-    navigate(`/scenarios/${scenarioId}`, { 
-      state: { 
-        mode: canEdit ? 'edit' : 'view' 
-      }
-    });
+    if (canEdit) {
+      navigate(`/scenarios/edit/${scenarioId}`);
+    } else {
+      navigate(`/scenarios/${scenarioId}`, { 
+        state: { 
+          mode: 'view' 
+        }
+      });
+    }
   };
 
   // Fetch user profile data
@@ -439,13 +434,7 @@ const UserProfile: React.FC = () => {
 
   // Handle editing a scenario
   const handleEditScenario = (id: string) => {
-    // Find the scenario to edit
-    const scenarioToEdit = userScenarios.find(s => s._id === id);
-    if (scenarioToEdit) {
-      setSelectedScenarioId(id);
-      setEditScenarioName(scenarioToEdit.name);
-      onEditModalOpen();
-    }
+    navigate(`/scenarios/edit/${id}`);
   };
 
   // Fetch data on component mount
@@ -572,6 +561,14 @@ const UserProfile: React.FC = () => {
                         <Heading size="md">{scenario.name}</Heading>
                         <HStack>
                           <IconButton
+                            aria-label="Edit scenario"
+                            icon={<FaEdit />}
+                            size="sm"
+                            colorScheme="green"
+                            variant="ghost"
+                            onClick={() => handleEditScenario(scenario._id)}
+                          />
+                          <IconButton
                             aria-label="Share scenario"
                             icon={<FaShareAlt />}
                             size="sm"
@@ -620,14 +617,14 @@ const UserProfile: React.FC = () => {
                         </Box>
                       )}
 
-                      {/* <Button 
+                      <Button 
                         size="sm" 
                         colorScheme="blue" 
                         mt={3}
-                        onClick={() => navigateToScenario(scenario._id, true)}
+                        onClick={() => handleEditScenario(scenario._id)}
                       >
-                        Open Scenario
-                      </Button> */}
+                        Edit Scenario
+                      </Button>
                     </CardBody>
                   </Card>
                 ))}
@@ -678,14 +675,14 @@ const UserProfile: React.FC = () => {
                       <Text fontSize="sm" color={textColor} mb={2}>
                         Created: {new Date(scenario.createdAt || new Date()).toLocaleDateString()}
                       </Text>
-                      {/* <Button 
+                      <Button 
                         size="sm" 
-                        colorScheme="blue" 
+                        colorScheme={hasWritePermission(scenario.permission) ? "green" : "blue"}
                         mt={3}
                         onClick={() => navigateToScenario(scenario._id, hasWritePermission(scenario.permission))}
                       >
-                        Open Scenario
-                      </Button> */}
+                        {hasWritePermission(scenario.permission) ? "Edit Scenario" : "View Scenario"}
+                      </Button>
                     </CardBody>
                   </Card>
                 ))}
