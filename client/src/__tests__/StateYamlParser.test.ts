@@ -1,4 +1,4 @@
-import { create_state_tax_raw_yaml } from './StateYamlParser';
+import { create_state_tax_raw_yaml } from '../utils/StateYamlParser';
 import { TaxFilingStatus, StateType } from '../types/Enum';
 
 describe('State Tax YAML Parser', () => {
