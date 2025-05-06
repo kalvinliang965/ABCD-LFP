@@ -26,11 +26,6 @@ import { FaChartLine, FaHistory, FaArrowRight } from 'react-icons/fa';
 import { Layout } from '../../layouts';
 import { scenario_service } from '../../services/scenarioService';
 import { simulation_service } from '../../services/simulationService';
-// AI-generated code
-// Prompt: Import the OneDimensionalExploration component from its new location
-import OneDimensionalExploration from '../../components/scenarios/OneDimensionalExploration/OneDimensionalExploration';
-import { ParameterSweepResults } from '../../components/scenarios/OneDimensionalExploration';
-import { TwoDimensionalExploration, ParameterSweepResults2D } from '../../components/scenarios/TwoDimensionalExploration';
 
 // Interface for simulation history items
 interface SimulationHistoryItem {
@@ -53,56 +48,16 @@ const ScenarioResultPage = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [apiResponse, setApiResponse] = useState<any>(null);
-  // AI-generated code
-  // Prompt: Add state and handlers for the OneDimensionalExploration modal
-  const [isOneDimModalOpen, set_is_one_dim_modal_open] = useState<boolean>(false);
-  const [isTwoDimModalOpen, set_is_two_dim_modal_open] = useState<boolean>(false);
-  const [parameterSweepResults, set_parameter_sweep_results] = useState<any>(null);
-  const [parameterSweep2DResults, set_parameter_sweep_2d_results] = useState<any>(null);
-  
+
   // New state for simulation history
   const [simulationHistory, setSimulationHistory] = useState<SimulationHistoryItem[]>([]);
   const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
 
-  const open_one_dim_exploration = () => {
-    set_is_one_dim_modal_open(true);
-  };
-
-  const close_one_dim_exploration = () => {
-    set_is_one_dim_modal_open(false);
-  };
-  
-  const open_two_dim_exploration = () => {
-    set_is_two_dim_modal_open(true);
-  };
-
-  const close_two_dim_exploration = () => {
-    set_is_two_dim_modal_open(false);
-  };
-  
-  const handle_exploration_complete = (results: any) => {
-    console.log('1D Exploration completed with results:', results);
-    set_parameter_sweep_results(results);
-    set_parameter_sweep_2d_results(null);
-    
-    // Refresh simulation history after a new exploration is completed
-    fetch_simulation_history();
-  };
-  
-  const handle_2d_exploration_complete = (results: any) => {
-    console.log('2D Exploration completed with results:', results);
-    set_parameter_sweep_2d_results(results);
-    set_parameter_sweep_results(null);
-    
-    // Refresh simulation history after a new exploration is completed
-    fetch_simulation_history();
-  };
-
   // Function to navigate to SimulationResultsPage with a specific simulation
   const view_simulation_results = (simulationId: string) => {
     navigate(`/simulations/${simulationId}`, { 
-      state: { scenarioId: scenarioId } 
+      state: { simulationId, scenarioId } 
     });
   };
 
@@ -220,10 +175,6 @@ const ScenarioResultPage = () => {
   };
 
   return (
-
-
-
-    
     <Layout title={`Simulation Results: ${scenarioName}`}>
       <Box maxW="1200px" mx="auto" px={4}>
          
@@ -306,80 +257,7 @@ const ScenarioResultPage = () => {
             </SimpleGrid>
           )}
         </Box>
-        <Box
-          p={6} 
-          borderWidth="1px"
-          borderRadius="lg"
-          boxShadow="md"
-          bg="white"
-          mb={6}
-        >
-          <Heading size="lg" mb={4}>
-            Simulation Results
-          </Heading>
-          <Text fontSize="md" color="gray.600" mb={6}>
-            Results for scenario: <b>{scenarioName}</b>
-          </Text>
-
-          {!parameterSweepResults && !parameterSweep2DResults && (
-            <Text mb={6} color="gray.600">
-              Run a parameter exploration to see how different parameter values affect the scenario outcomes over time.
-              The visualization will include both time series charts and parameter impact analysis.
-            </Text>
-          )}
-
-          {/* Exploration options */}
-          <Box mt={4} mb={6}>
-            <Text fontWeight="bold" mb={3}>
-              Exploration Options:
-            </Text>
-            <HStack spacing={4} justify="flex-start">
-              {/* AI-generated code
-                 Prompt: Update one-dimensional exploration button to open the modal */}
-              <Button colorScheme="blue" onClick={open_one_dim_exploration}>
-                One-dimensional Scenario Exploration
-              </Button>
-              <Button colorScheme="purple" onClick={open_two_dim_exploration}>
-                Two-dimensional Scenario Exploration
-              </Button>
-            </HStack>
-          </Box>
-        </Box>
-        
-        {/* Parameter sweep results section */}
-        {parameterSweepResults && (
-          <Box mb={6}>
-            <ParameterSweepResults results={parameterSweepResults} />
-          </Box>
-        )}
-        
-        {/* 2D Parameter sweep results section */}
-        {parameterSweep2DResults && (
-          <Box mb={6}>
-            <ParameterSweepResults2D results={parameterSweep2DResults} />
-          </Box>
-        )}
-       
       </Box>
-
-      {/* AI-generated code
-         Prompt: Add the OneDimensionalExploration modal component */}
-      {scenarioId && (
-        <>
-          <OneDimensionalExploration
-            isOpen={isOneDimModalOpen}
-            onClose={close_one_dim_exploration}
-            scenarioId={scenarioId}
-            onExplorationComplete={handle_exploration_complete}
-          />
-          <TwoDimensionalExploration
-            isOpen={isTwoDimModalOpen}
-            onClose={close_two_dim_exploration}
-            scenarioId={scenarioId}
-            onExplorationComplete={handle_2d_exploration_complete}
-          />
-        </>
-      )}
     </Layout>
   );
 };
