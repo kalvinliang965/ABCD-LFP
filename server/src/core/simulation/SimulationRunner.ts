@@ -117,7 +117,6 @@ export async function execute_single_simulation(
         // increase uesr age and tax status
         simulation_state.advance_year();
     }
-
     return simulation_result;
 }
 

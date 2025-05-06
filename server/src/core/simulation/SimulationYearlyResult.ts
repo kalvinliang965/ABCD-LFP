@@ -1,5 +1,6 @@
 import { SimulationState } from "./SimulationState"
 import { equal_record } from "../../utils/general";
+import { simulation_logger } from "../../utils/logger/logger";
 
 // edit: I dont think financial goal is needed here
 // this is kalvin's code
@@ -32,7 +33,6 @@ export interface YearResult {
 export interface SimulationYearlyResult {
     yearly_results: Array<YearResult>,
     update(simulation_state: SimulationState): void,
-    success_probability(): number,
 } 
 
 // take in the name of the scenario...
@@ -41,11 +41,11 @@ export function create_simulation_yearly_result(): SimulationYearlyResult {
     // we dont need a fast look up, so array is fine
     const yearly_results: YearResult[] = [];
     return {
-        yearly_results,
+        yearly_results: yearly_results,
         update: async (simulation_state: SimulationState) => {
   
             const investments: Record<string, number> = {};
-
+            simulation_logger.warn("update result");
             for (const inv of simulation_state.account_manager.all().values()) {
                 if (inv.id in investments) {
                     throw new Error(`Duplicate inv.id ${inv.id}`);
@@ -92,10 +92,6 @@ export function create_simulation_yearly_result(): SimulationYearlyResult {
                 success++;
             }
         },
-
-        success_probability: () => {
-            return yearly_results.length > 0 ? success / yearly_results.length : 0;
-        }
     }
 }
 

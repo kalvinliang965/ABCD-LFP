@@ -4,6 +4,7 @@ import { SimulationEnvironment } from './ LoadSimulationEnvironment';
 import { Profiler } from '../../utils/Profiler';
 import { SimulationWorkerPool } from './SimulationWorkerPool';
 import { execute_single_simulation } from './SimulationRunner';
+import { parse } from "superjson";
 
 export interface SimulationEngine {
     run: (num_simulations: number) => Promise<SimulationYearlyResult[]>;
@@ -21,7 +22,7 @@ export async function create_simulation_engine(simulation_environment: Simulatio
             const promise = Array(num_simulation).fill(null).map((_, i) => 
                 pool.run_simulation(simulation_environment, i)
             );
-            const worker_result = await Promise.all(promise);
+            const worker_result: SimulationYearlyResult[] = (await Promise.all(promise)).map((from_worker: any) => ({ yearly_results: parse(from_worker.data) }) as SimulationYearlyResult);
             simulation_logger.info("All worker completed assigned tasks");
             return worker_result.filter(result => result !== null);
         } catch(error) {
