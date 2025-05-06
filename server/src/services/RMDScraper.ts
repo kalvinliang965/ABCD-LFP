@@ -9,7 +9,7 @@ import cheerio from 'cheerio';
 import { tax_config } from '../config/tax';
 import { simulation_logger } from '../utils/logger/logger';
 import { extractNumbers } from '../utils/NumberUtils';
-import { dev } from '../config/environment';
+import { env_status } from '../config/environment';
 
 const RMD_URL = tax_config.RMD_URL;
 
@@ -89,7 +89,7 @@ export async function scrape_rmd_table(html: string): Promise<Map<number, number
         simulation_logger.error(`RMD table is missing age ${i}`);
         throw new Error(`RMD table is missing age ${i}`);
       }
-      if (dev.is_dev) {
+      if (env_status.is_dev) {
         simulation_logger.debug(`RMD table contain age: ${i}, factor: ${rmd_factors.get(i)!}`);
       }
     }

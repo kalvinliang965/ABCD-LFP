@@ -1,7 +1,7 @@
 import path from 'path';
 import winston from 'winston';
 import fs from "fs";
-import { dev } from '../../config/environment';
+import { env_status } from '../../config/environment';
 
 // create logs folder
 const project_root = path.join(__dirname, `../../../`);
@@ -24,18 +24,18 @@ const base_format = winston.format.combine(
   winston.format.errors({ stack: true })
 );
 
-let level = dev.is_dev?'debug': "info";
+let level = env_status.is_dev?'debug': "info";
 // let level = "error";
 
 export const simulation_logger = winston.createLogger({
-  level: dev.is_test ? 'error' : level, // use error or any valid level
-  silent: dev.is_test, // this disables ALL logging
+  level: env_status.is_test ? 'error' : level, // use error or any valid level
+  silent: env_status.is_test, // this disables ALL logging
   format: winston.format.combine(
     base_format,
     winston.format.label({ label: 'SIMULATION' }),
     winston.format.json(),
   ),
-  transports: dev.is_test
+  transports: env_status.is_test
     ? [] // you can leave this empty because `silent: true` handles it
     : [
         new winston.transports.Console({

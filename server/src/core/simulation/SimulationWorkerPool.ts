@@ -7,6 +7,7 @@ import { ScenarioRaw } from "../domain/raw/scenario_raw";
 import { fileURLToPath } from "url";
 import path from "path";
 import { stringify } from "superjson";
+import { env_status } from "../../config/environment";
 
 
 export interface SimulationTaskData {
@@ -27,7 +28,7 @@ export class SimulationWorkerPool {
         if (!isMainThread) {
             throw new Error("attempt to spawn worker to run sumlation on none main thread");
         }
-        const worker_path = path.join(__dirname, "worker.ts");
+        const worker_path = path.join(__dirname, env_status.is_prod? "worker.js": "worker.ts");
 
         // spawning "pool_size" amt of workers
         // spwan worker and keep them waiting
