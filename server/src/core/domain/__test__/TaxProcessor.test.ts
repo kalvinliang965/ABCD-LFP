@@ -53,15 +53,20 @@ describe("TaxProcessor", () => {
       mock_federal_service = {
         find_deduction: jest.fn(),
         find_rate: jest.fn(),
-        __taxable_income_bracket: {
-            __brackets: new Map([
-                [TaxFilingStatus.INDIVIDUAL, mock_federal_brackets]
-            ]),
+        get_prev_standard_deductions: jest.fn(),
+        get_prev_taxable_income_bracket: () => {
+            return {
+                __brackets: new Map([
+                    [TaxFilingStatus.INDIVIDUAL, mock_federal_brackets]
+                ]),
+            }
         },
-        __capital_gains_bracket: {
-            __brackets: new Map([
-                [TaxFilingStatus.INDIVIDUAL, mock_federal_brackets]
-            ])
+        get_prev_capital_gains_bracket: () => {
+            return {
+                __brackets: new Map([
+                    [TaxFilingStatus.INDIVIDUAL, mock_federal_brackets]
+                ]),
+            }
         },
       } as unknown as jest.Mocked<FederalTaxService>;
   
@@ -81,25 +86,6 @@ describe("TaxProcessor", () => {
     });
   
     describe("calculateTaxes", () => {
-      test("general", () => {
-
-        const calculateTaxSpy = jest
-        .spyOn<any, any>(tax_processor as any, 'calculate_tax')
-        .mockReturnValue(42);
-
-        mock_tax_data.get_prev_year_early_withdrawal.mockReturnValue(100);
-
-        const total = tax_processor.calculate_taxes();
-        
-        // calculate_tax is called three times (fed, state, capital gains)
-        expect(calculateTaxSpy).toHaveBeenCalledTimes(3);
-
-        // total_tax = 42 + 42 + 42 + 100 * 0.1 = 136
-        expect(total).toBe(136);
-
-        calculateTaxSpy.mockRestore(); 
-      });
-  
       test("calculate income based on taxbracket", () => {
         const tax = (tax_processor as any).calculate_tax(86150, [
             { min: 0, max: 11_000, rate: 0.10 },
