@@ -44,6 +44,7 @@ describe('State Tax YAML Parser', () => {
           max: 10000
           rate: 0.05
           taxpayer_type: "couple"
+            tax_brackets:
     `;
     expect(() => create_state_tax_raw_yaml(missingIndividualYAML))
       .toThrow(/Must provide tax brackets for individual/);
