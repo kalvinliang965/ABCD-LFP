@@ -156,7 +156,7 @@ const Sidebar: React.FC = () => {
           </NavItem>
         </NavGroup>
 
-        <NavGroup title="Simulation" sidebarOpen={sidebarOpen}>
+        {/* <NavGroup title="Simulation" sidebarOpen={sidebarOpen}>
           <NavItem
             icon={FaChartLine}
             to="/simulation/results"
@@ -168,7 +168,7 @@ const Sidebar: React.FC = () => {
           >
             Results & Charts
           </NavItem>
-        </NavGroup>
+        </NavGroup> */}
 
 
 
