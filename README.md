@@ -55,6 +55,12 @@ To run this project, you need to set up environment variables for both the serve
 
 2. **create google oauth key**
 
+```
+GOOGLE_CLIENT_ID=<your-client-id>
+GOOGLE_CLIENT_SECRET=<your-client-secret>
+SESSION_SECRET=<your-session-secret>
+CLIENT_URL=<url> (e.g.http://localhost:5173)
+```
 
 ### Client Setup
 
