@@ -37,7 +37,6 @@ export interface SimulationYearlyResult {
 
 // take in the name of the scenario...
 export function create_simulation_yearly_result(): SimulationYearlyResult {
-    let success = 0;
     // we dont need a fast look up, so array is fine
     const yearly_results: YearResult[] = [];
     return {
@@ -87,10 +86,6 @@ export function create_simulation_yearly_result(): SimulationYearlyResult {
             }
             //push the snapshot into the result
             yearly_results.push(year_snapshot);
-            //update success count if goal is met
-            if (year_snapshot.is_goal_met) {
-                success++;
-            }
         },
     }
 }

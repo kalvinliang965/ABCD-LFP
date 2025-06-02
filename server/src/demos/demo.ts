@@ -84,7 +84,7 @@ async function optimize_simulation_initialization_demo(N: number) {
   profiler.printSummary();
 }
 export async function run_demo() {
-  // await simulation_engine_parallel_demo("680d5df88650c1b31ef2604f", 1000);
-  // await simulation_engine_linear_demo("680d5df88650c1b31ef2604f", 1000);
+  // await simulation_engine_parallel_demo("680d5df88650c1b31ef2604f", 100);
+  await simulation_engine_linear_demo("680d5df88650c1b31ef2604f", 100);
   // await optimize_scenario_environment_initialization_demo(1);
 }

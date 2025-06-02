@@ -1,14 +1,9 @@
-import { SimulationYearlyResult } from "../../core/simulation/SimulationYearlyResult";
 import { simulation_result } from "../../core/simulation/SimulationResult_v1";
 import path from "path";
 import fs from "fs";
 
-export function generate_csv_file(
-  simulation_results: SimulationYearlyResult[]
-): string {
+export function generate_csv_file(): string {
   const csv_file = `simulation_results_investment.csv`;
-  const fs = require("fs");
-  const path = require("path");
 
   // Create the directory if it doesn't exist
 

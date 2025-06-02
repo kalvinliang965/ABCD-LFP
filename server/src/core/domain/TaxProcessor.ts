@@ -1,6 +1,5 @@
-import { state } from "@stdlib/random-base-normal";
 import { simulation_logger } from "../../utils/logger/logger";
-import { IncomeType, TaxFilingStatus } from "../Enums";
+import { TaxFilingStatus } from "../Enums";
 import { FederalTaxService } from "../tax/FederalTaxService";
 import { StateTaxService } from "../tax/StateTaxService";
 import { TaxBracket } from "../tax/TaxBrackets";
@@ -70,9 +69,10 @@ export class TaxProcessor {
         // if capital gains is negative, we move on
         simulation_logger.debug(`capital gains: ${this.user_tax_data.get_prev_year_gains()}`);
         let capital_gain_tax = this.calculate_tax(
-            Math.max(this.user_tax_data.get_prev_year_gains(), 0),
+            Math.max(fed_taxable_income, 0),
             this.federal_tax_service.get_prev_capital_gains_bracket()!.__brackets.get(this.get_tax_filing_status())!,
         )
+        
         if (Number.isNaN(capital_gain_tax)) {
             throw new Error("capital gain tax turn NaN");
         }

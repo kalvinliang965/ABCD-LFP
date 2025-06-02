@@ -55,19 +55,20 @@ export enum StateType {
     NY = "NY",
     NJ = "NJ",
     CT = "CT",
+    OTHER = "other",
 }
 
 export function parse_state_type(state: string) {
   switch (state) {
     case "NY":
-      return StateType.NY;
+        return StateType.NY;
     case "CT":
-      return StateType.CT;
+        return StateType.CT;
     case "NJ":
-      return StateType.NJ;
+        return StateType.NJ;
     default:
-      throw new Error("Invalid state");
-  }
+        return StateType.OTHER;    
+    }
 }
 
 export enum TaxStatus {

@@ -1,8 +1,7 @@
 import { Cloneable } from "../../../utils/CloneUtil";
 import  { ValueGenerator, ValueSource } from "../../../utils/ValueGenerator";
-import { ChangeType, DistributionType, StatisticType } from "../../Enums";
+import { ChangeType } from "../../Enums";
 import { Distribution, parse_distribution, parse_start_condition, StartCondition } from "../raw/common";
-import { EventRaw } from "../raw/event_raw/event_raw";
 import { ExpenseEvent } from "./ExpenseEvent";
 import { IncomeEvent } from "./IncomeEvent";
 import { InvestEvent } from "./InvestEvent";
@@ -31,14 +30,9 @@ export function parse_expected_annual_change(
         throw new Error("Invalid changeAmtOrPct");
     }
   }
-
-  try {
-    const change_type: ChangeType = parse_change_amt_or_pct();
-    const change_distribution: ValueGenerator = parse_distribution(distribution, value_source);
-    return [change_type, change_distribution];
-  } catch (error) {
-    throw error;
-  }
+  const change_type: ChangeType = parse_change_amt_or_pct();
+  const change_distribution: ValueGenerator = parse_distribution(distribution, value_source);
+  return [change_type, change_distribution];
 }
 
 export interface Event extends Cloneable<Event> {

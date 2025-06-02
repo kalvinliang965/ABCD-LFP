@@ -1,7 +1,5 @@
 import {
-  DistributionType,
   ChangeType,
-  StatisticType,
 } from "../../Enums";
 import {
   ValueGenerator,

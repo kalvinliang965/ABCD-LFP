@@ -11,7 +11,6 @@ import { EventUnion } from "./event/Event";
 import { ChangeType } from "../Enums";
 import { prune_overlapping_rebalance_events } from "../simulation/logic/RebalanceInvestments";
 import { ValueSource } from "../../utils/ValueGenerator";
-import { string } from "zod";
 import { reset_record, update_record } from "../../utils/general";
 export type InvestEventMap = Map<string, InvestEvent>;
 export type IncomeEventMap = Map<string, IncomeEvent>;

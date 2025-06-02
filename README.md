@@ -53,15 +53,7 @@ To run this project, you need to set up environment variables for both the serve
    touch .env
    ```
 
-2. **Add the following content to the `.env` file:**
-
-   ```plaintext
-   GOOGLE_CLIENT_ID=368549888816-i3rrgfoc1sgqda8o4hf40tve2lv1n4b5.apps.googleusercontent.com
-    GOOGLE_CLIENT_SECRET=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
-    SESSION_SECRET=some_random_string_for_session_security
-    CLIENT_URL=http://localhost:5173
-
-   ```
+2. **create google oauth key**
 
 
 ### Client Setup

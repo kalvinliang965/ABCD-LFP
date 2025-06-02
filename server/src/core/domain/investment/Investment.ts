@@ -1,5 +1,4 @@
-import { create_investment_type, InvestmentType } from "./InvestmentType";
-import { ChangeType, TaxStatus } from "../../Enums";
+import { TaxStatus } from "../../Enums";
 import { InvestmentRaw } from "../raw/investment_raw";
 import { Cloneable } from "../../../utils/CloneUtil";
 import { has_required_word_occurrences } from "../../../utils/general";
@@ -44,7 +43,7 @@ export function create_investment(raw_data: InvestmentRaw): Investment {
     }
 
     // reformat the id of it contain some tax status
-    let old_id: string = raw_data.id;
+    const old_id: string = raw_data.id;
     let id: string = old_id;
     // the id must contain both [investment type] + [tax_status]
     if (!has_required_word_occurrences(old_id, [tax_status.valueOf(), investment_type])) {
